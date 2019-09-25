@@ -67,6 +67,8 @@ struct caching_allocator : A
 #endif
   }
 
+  GT_INLINE void construct(pointer) {}
+
   void clear_cache()
   {
     for (auto it = free_.begin(); it != free_.end(); it++) {
@@ -140,8 +142,7 @@ using device_allocator =
   caching_allocator<T, thrust::device_malloc_allocator<T>>;
 #else
 template <typename T>
-using device_allocator =
-  caching_allocator<T, thrust::device_allocator<T>>;
+using device_allocator = caching_allocator<T, thrust::device_allocator<T>>;
 #endif
 
 struct device
