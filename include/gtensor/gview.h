@@ -48,7 +48,8 @@ public:
 
 private:
   template <size_type... I>
-  GT_INLINE const_reference access(std::index_sequence<I...>, const shape_type& idx) const
+  GT_INLINE const_reference access(std::index_sequence<I...>,
+                                   const shape_type& idx) const
   {
     return e_(idx[I]...);
   }
@@ -322,7 +323,8 @@ inline auto swapaxes(E&& _e, int axis1, int axis2)
       strides[d] = e.strides()[d];
     }
   }
-  // FIXME, afterwards it's not col-major order anymore, os unravel will go wrong
+  // FIXME, afterwards it's not col-major order anymore, os unravel will go
+  // wrong
   // FIXME, could use sanity checks
   return gview<EC, N>(std::forward<EC>(e), 0, shape, strides);
 }

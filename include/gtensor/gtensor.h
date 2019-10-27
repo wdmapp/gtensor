@@ -242,8 +242,9 @@ inline std::enable_if_t<is_gcontainer<std::decay_t<E>>::value, E> eval(E&& e)
 }
 
 template <typename E>
-inline std::enable_if_t<!is_gcontainer<std::decay_t<E>>::value,
-                        gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>
+inline std::enable_if_t<
+  !is_gcontainer<std::decay_t<E>>::value,
+  gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>
 eval(E&& e)
 {
   return {std::forward<E>(e)};
