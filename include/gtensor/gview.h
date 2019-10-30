@@ -200,7 +200,7 @@ inline auto gview<EC, N>::operator=(value_type val) -> gview&
 // view
 
 template <size_type N, typename E>
-auto view(E&& _e, const std::vector<gslice>& slices)
+auto view(E&& _e, const std::vector<gdesc>& descs)
 {
   using EC = select_gview_adaptor_t<E>;
 
@@ -211,39 +211,64 @@ auto view(E&& _e, const std::vector<gslice>& slices)
   const auto& old_strides = e.strides();
   gt::shape_type<N> shape, strides;
   int new_i = 0, old_i = 0;
-  for (int i = 0; i < slices.size(); i++) {
-    // std::cout << "slice " << slices[i] << " old_shape " << old_shape[i]
+  for (int i = 0; i < descs.size(); i++) {
+    // std::cout << "slice " << descs[i] << " old_shape " << old_shape[i]
     //           << " old_stride " << old_strides[i] << "\n";
-    if (slices[i].type() == gslice::ALL) {
+    if (descs[i].type() == gdesc::ALL) {
       shape[new_i] = old_shape[old_i];
       strides[new_i] = old_strides[old_i];
       new_i++;
       old_i++;
-    } else if (slices[i].type() == gslice::VALUE) {
-      offset += slices[i].value() * old_strides[old_i];
+    } else if (descs[i].type() == gdesc::VALUE) {
+      offset += descs[i].value() * old_strides[old_i];
       old_i++;
-    } else if (slices[i].type() == gslice::NEWAXIS) {
+    } else if (descs[i].type() == gdesc::NEWAXIS) {
       shape[new_i] = 1;
       strides[new_i] = 0;
       new_i++;
-    } else if (slices[i].type() == gslice::SLICE) {
-      int start = slices[i].start();
+    } else if (descs[i].type() == gdesc::SLICE) {
+      auto slice = descs[i].slice();
+      int start = slice.start;
+      int stop = slice.stop;
+      int step = slice.step;
+      if (step == gslice::none) {
+        step = 1;
+      }
+      if (step == 0) {
+        throw std::runtime_error(
+          "view: the step parameter in a slice cannot be zero!");
+      }
       if (start == gslice::none) {
-        start = 0;
+        start = step > 0 ? 0 : old_shape[old_i] - 1;
       } else if (start < 0) {
         start += old_shape[old_i];
       }
-      int stop = slices[i].stop();
       if (stop == gslice::none) {
-        stop = old_shape[old_i];
-      } else if (stop <= 0) {
+        stop = step > 0 ? old_shape[old_i] : -1;
+      } else if (stop == 0 && step == 1) {
+        // FIXME, keep this?, different from numpy, though convenient
+        stop += old_shape[old_i];
+      } else if (stop < 0) {
         stop += old_shape[old_i];
       }
-      // std::cout << "start " << start << ":" << stop << "\n";
-      assert(start < stop);
-      assert(stop <= old_shape[old_i]);
-      shape[new_i] = stop - start;
-      strides[new_i] = old_strides[old_i];
+      // std::cout << "slice " << start << ":" << stop << ":" << step << "\n";
+      // FIXME? Could just return 0-size
+      if (step > 0 && start >= stop) {
+        throw std::runtime_error("view: start must be less than stop!");
+      }
+      if (step < 0 && stop >= start) {
+        throw std::runtime_error("view: start must be less than stop!");
+      }
+      if ((step > 0 && stop > old_shape[old_i]) ||
+          (step < 0 && start > old_shape[old_i])) {
+        throw std::runtime_error("view: cannot exceed underlying shape!");
+      }
+      if (step > 0) {
+        shape[new_i] = (stop - start - 1) / step + 1;
+      } else {
+        shape[new_i] = (start - stop - 1) / (-step) + 1;
+      }
+      strides[new_i] = old_strides[old_i] * step;
       offset += start * old_strides[old_i];
       new_i++;
       old_i++;
@@ -267,6 +292,24 @@ auto view(E&& _e, const std::vector<gslice>& slices)
   assert(new_i == N);
   return gview<EC, N>(std::forward<EC>(e), offset, shape, strides);
 }
+
+template <typename E, typename... Args>
+auto view(E&& e, Args&&... args)
+{
+  constexpr std::size_t N = view_dimension<E, Args...>();
+  std::vector<gdesc> descs{std::forward<Args>(args)...};
+  return view<N, E>(std::forward<E>(e), descs);
+}
+
+#if 0
+template <size_type N, typename E, typename... Args>
+auto view(E&& e, Args&&... args)
+{
+  static_assert(N == view_dimension<E, Args...>(), "view dimension does not match slices given");
+  std::vector<gdesc> descs{std::forward<Args>(args)...};
+  return view<N, E>(std::forward<E>(e), descs);
+}
+#endif
 
 // ======================================================================
 // reshape

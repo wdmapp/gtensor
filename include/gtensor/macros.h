@@ -36,7 +36,11 @@ inline void doCudaCheck(cudaError_t code, const char *file, int line)
   }
 }
 
+#ifndef NDEBUG
 #define cudaSyncIfEnabled() cudaCheck(cudaDeviceSynchronize())
+#else
+#define cudaSyncIfEnabled() do {} while(0)
+#endif
 
 #endif
 

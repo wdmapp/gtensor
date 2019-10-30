@@ -51,6 +51,23 @@ struct assigner<2, space::host>
 };
 
 template <>
+struct assigner<3, space::host>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs)
+  {
+    // printf("assigner<3, host>\n");
+    for (int k = 0; k < lhs.shape(2); k++) {
+      for (int j = 0; j < lhs.shape(1); j++) {
+	for (int i = 0; i < lhs.shape(0); i++) {
+	  lhs(i, j, k) = rhs(i, j, k);
+	}
+      }
+    }
+  }
+};
+
+template <>
 struct assigner<6, space::host>
 {
   template <typename E1, typename E2>
@@ -74,6 +91,16 @@ struct assigner<6, space::host>
 };
 
 #ifdef __CUDACC__
+
+template <typename Elhs, typename Erhs>
+__global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
+{
+  int i = threadIdx.x + blockIdx.x * BS_X;
+
+  if (i < lhs.shape(0)) {
+    lhs(i) = rhs(i);
+  }
+}
 
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_2(Elhs lhs, Erhs rhs)
@@ -142,6 +169,23 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs rhs)
     lhs(i, j, k, l, m, n) = rhs(i, j, k, l, m, n);
   }
 }
+
+template <>
+struct assigner<1, space::device>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs)
+  {
+    // printf("assigner<1, device>\n");
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X);
+
+    cudaSyncIfEnabled();
+    kernel_assign_1<<<numBlocks, numThreads>>>(lhs.to_kernel(),
+                                               rhs.to_kernel());
+    cudaSyncIfEnabled();
+  }
+};
 
 template <>
 struct assigner<2, space::device>
@@ -249,10 +293,13 @@ void assign(E1& lhs, const E2& rhs)
 {
   static_assert(expr_dimension<E1>() == expr_dimension<E2>(),
                 "cannot assign expressions of different dimension");
+  // FIXME, need to check for brodcasting
+#if 0
   if (lhs.shape() != rhs.shape()) {
     std::cout << "not the same shape! " << lhs.shape() << rhs.shape() << "\n";
   }
   assert(lhs.shape() == rhs.shape());
+#endif
   detail::assigner<expr_dimension<E1>(),
                    space_t<expr_space_type<E1>, expr_space_type<E2>>>::run(lhs,
                                                                            rhs);
