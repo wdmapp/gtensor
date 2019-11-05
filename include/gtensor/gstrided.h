@@ -5,10 +5,22 @@
 #include "defs.h"
 #include "expression.h"
 #include "strides.h"
+#include "gslice.h"
 
 namespace gt
 {
 
+template<typename E, typename... Args>
+constexpr int view_dimension()
+{
+  constexpr std::size_t N_new = detail::count_convertible<gnewaxis, Args...>();
+  constexpr std::size_t N_value = detail::count_convertible<int, Args...>();
+  return expr_dimension<E>() - N_value + N_new;
+}
+
+template <typename E, typename... Args>
+auto view(E&& e, Args&&... args);
+  
 template <typename D>
 struct gtensor_inner_types;
 
@@ -47,6 +59,11 @@ public:
   GT_INLINE const_reference operator()(Args&&... args) const;
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args);
+
+  template <typename... Args>
+  inline auto view(Args&&... args) const;
+  template <typename... Args>
+  inline auto view(Args&&... args);
 
   GT_INLINE const_reference data_access(size_type i) const;
   GT_INLINE reference data_access(size_type i);
@@ -107,6 +124,20 @@ inline auto gstrided<D>::operator()(Args&&... args) -> reference
   return data_access(index(std::forward<Args>(args)...));
 }
 
+template <typename D>
+template <typename... Args>
+inline auto gstrided<D>::view(Args&&... args)
+{
+  return gt::view(derived(), std::forward<Args>(args)...);
+}
+  
+template <typename D>
+template <typename... Args>
+inline auto gstrided<D>::view(Args&&... args) const
+{
+  return gt::view(derived(), std::forward<Args>(args)...);
+}
+  
 template <typename D>
 inline auto gstrided<D>::data_access(size_type i) const -> const_reference
 {
