@@ -27,11 +27,15 @@
 
 #ifdef __CUDACC__
 
-#define cudaCheck(what) { doCudaCheck(what, __FILE__, __LINE__); }
-inline void doCudaCheck(cudaError_t code, const char *file, int line)
+#define cudaCheck(what)                                                        \
+  {                                                                            \
+    doCudaCheck(what, __FILE__, __LINE__);                                     \
+  }
+inline void doCudaCheck(cudaError_t code, const char* file, int line)
 {
   if (code != cudaSuccess) {
-    fprintf(stderr,"cudaCheck: %d (%s) %s %d\n", code, cudaGetErrorString(code), file, line);
+    fprintf(stderr, "cudaCheck: %d (%s) %s %d\n", code,
+            cudaGetErrorString(code), file, line);
     abort();
   }
 }
@@ -39,7 +43,9 @@ inline void doCudaCheck(cudaError_t code, const char *file, int line)
 #ifndef NDEBUG
 #define cudaSyncIfEnabled() cudaCheck(cudaDeviceSynchronize())
 #else
-#define cudaSyncIfEnabled() do {} while(0)
+#define cudaSyncIfEnabled()                                                    \
+  do {                                                                         \
+  } while (0)
 #endif
 
 #endif

@@ -10,15 +10,18 @@
 #include "gtensor_view.h"
 #include "gview.h"
 
-namespace gt {
+namespace gt
+{
 
 // ======================================================================
 // gtensor
 
-template <typename T, int N, typename S> class gtensor;
+template <typename T, int N, typename S>
+class gtensor;
 
 template <typename T, int N, typename S>
-struct gtensor_inner_types<gtensor<T, N, S>> {
+struct gtensor_inner_types<gtensor<T, N, S>>
+{
   using space_type = S;
   constexpr static size_type dimension = N;
 
@@ -31,7 +34,8 @@ struct gtensor_inner_types<gtensor<T, N, S>> {
 };
 
 template <typename T, int N, typename S = space::host>
-class gtensor : public gcontainer<gtensor<T, N, S>> {
+class gtensor : public gcontainer<gtensor<T, N, S>>
+{
 public:
   using self_type = gtensor<T, N, S>;
   using base_type = gcontainer<self_type>;
@@ -50,9 +54,10 @@ public:
 
   using base_type::base_type;
   gtensor() = default;
-  explicit gtensor(const shape_type &shape);
+  explicit gtensor(const shape_type& shape);
   gtensor(helper::nd_initializer_list_t<T, N> il);
-  template <typename E> gtensor(const expression<E> &e);
+  template <typename E>
+  gtensor(const expression<E>& e);
 
   using base_type::operator=;
 
@@ -60,8 +65,8 @@ public:
   gtensor_view<T, N, S> to_kernel();
 
 private:
-  GT_INLINE const storage_type &storage_impl() const;
-  GT_INLINE storage_type &storage_impl();
+  GT_INLINE const storage_type& storage_impl() const;
+  GT_INLINE storage_type& storage_impl();
   GT_INLINE const_reference data_access_impl(size_type i) const;
   GT_INLINE reference data_access_impl(size_type i);
 
@@ -75,12 +80,14 @@ private:
 // gtensor implementation
 
 template <typename T, int N, typename S>
-inline gtensor<T, N, S>::gtensor(const shape_type &shape)
-    : base_type(shape, calc_strides(shape)), storage_(calc_size(shape)) {}
+inline gtensor<T, N, S>::gtensor(const shape_type& shape)
+  : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
+{}
 
 template <typename T, int N, typename S>
 inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
-    : base_type({}, {}) {
+  : base_type({}, {})
+{
   // FIXME?! this kinda changes row-major list into transposed col-major array
   shape_type shape = helper::nd_initializer_list_shape<N>(il);
   base_type::resize(shape);
@@ -89,42 +96,49 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
 
 template <typename T, int N, typename S>
 template <typename E>
-inline gtensor<T, N, S>::gtensor(const expression<E> &e) {
+inline gtensor<T, N, S>::gtensor(const expression<E>& e)
+{
   this->resize(e.derived().shape());
   *this = e.derived();
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::storage_impl() const -> const storage_type & {
+inline auto gtensor<T, N, S>::storage_impl() const -> const storage_type&
+{
   return storage_;
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::storage_impl() -> storage_type & {
+inline auto gtensor<T, N, S>::storage_impl() -> storage_type&
+{
   return storage_;
 }
 
 #pragma nv_exec_check_disable
 template <typename T, int N, typename S>
 inline auto gtensor<T, N, S>::data_access_impl(size_t i) const
-    -> const_reference {
+  -> const_reference
+{
   return storage_[i];
 }
 
 #pragma nv_exec_check_disable
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference {
+inline auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
+{
   return storage_[i];
 }
 
 template <typename T, int N, typename S>
-inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() const {
-  return gtensor_view<T, N, S>(const_cast<gtensor<T, N, S> *>(this)->data(),
+inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() const
+{
+  return gtensor_view<T, N, S>(const_cast<gtensor<T, N, S>*>(this)->data(),
                                this->shape(), this->strides());
 }
 
 template <typename T, int N, typename S>
-inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() {
+inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel()
+{
   return gtensor_view<T, N, S>(this->data(), this->shape(), this->strides());
 }
 
@@ -137,19 +151,22 @@ inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() {
 // and maybe this should be .assign or operator=
 
 template <typename T, int N, typename S>
-void copy(const gtensor_view<T, N> &from, gtensor<T, N, S> &to) {
+void copy(const gtensor_view<T, N>& from, gtensor<T, N, S>& to)
+{
   assert(from.size() == to.size());
   thrust::copy(from.data(), from.data() + from.size(), to.data());
 }
 
 template <typename T, int N, typename S>
-void copy(const gtensor<T, N, S> &from, gtensor_view<T, N> &to) {
+void copy(const gtensor<T, N, S>& from, gtensor_view<T, N>& to)
+{
   assert(from.size() == to.size());
   thrust::copy(from.data(), from.data() + from.size(), to.data());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
-void copy(const gtensor<T, N, S_from> &from, gtensor<T, N, S_to> &to) {
+void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
+{
   assert(from.size() == to.size());
   thrust::copy(from.data(), from.data() + from.size(), to.data());
 }
@@ -158,7 +175,8 @@ void copy(const gtensor<T, N, S_from> &from, gtensor<T, N, S_to> &to) {
 // launch
 
 template <typename F>
-__global__ void kernel_launch(gt::shape_type<1> shape, F f) {
+__global__ void kernel_launch(gt::shape_type<1> shape, F f)
+{
   int i = threadIdx.x + blockIdx.x * BS_X;
 
   if (i < shape[0])
@@ -166,7 +184,8 @@ __global__ void kernel_launch(gt::shape_type<1> shape, F f) {
 }
 
 template <typename F>
-__global__ void kernel_launch(gt::shape_type<2> shape, F f) {
+__global__ void kernel_launch(gt::shape_type<2> shape, F f)
+{
   int i = threadIdx.x + blockIdx.x * BS_X;
   int j = threadIdx.y + blockIdx.y * BS_Y;
 
@@ -176,7 +195,8 @@ __global__ void kernel_launch(gt::shape_type<2> shape, F f) {
 }
 
 template <typename F>
-__global__ void kernel_launch(gt::shape_type<3> shape, F f) {
+__global__ void kernel_launch(gt::shape_type<3> shape, F f)
+{
   int i = threadIdx.x + blockIdx.x * BS_X;
   int j = threadIdx.y + blockIdx.y * BS_Y;
   int k = blockIdx.z;
@@ -187,7 +207,8 @@ __global__ void kernel_launch(gt::shape_type<3> shape, F f) {
 }
 
 template <typename F>
-__global__ void kernel_launch(gt::shape_type<4> shape, F f) {
+__global__ void kernel_launch(gt::shape_type<4> shape, F f)
+{
   int i = threadIdx.x + blockIdx.x * BS_X;
   int j = threadIdx.y + blockIdx.y * BS_Y;
   int b = blockIdx.z;
@@ -202,29 +223,43 @@ __global__ void kernel_launch(gt::shape_type<4> shape, F f) {
 
 #endif
 
-namespace detail {
-template <int N, typename Sp> struct launch;
+namespace detail
+{
+template <int N, typename Sp>
+struct launch;
 
-template <> struct launch<1, space::host> {
-  template <typename F> static void run(const gt::shape_type<1> &shape, F &&f) {
+template <>
+struct launch<1, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<1>& shape, F&& f)
+  {
     for (int i = 0; i < shape[0]; i++) {
       std::forward<F>(f)(i);
     }
   }
 };
 
-template <> struct launch<2, space::host> {
-  template <typename F> static void run(const gt::shape_type<2> &shape, F &&f) {
+template <>
+struct launch<2, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<2>& shape, F&& f)
+  {
     for (int j = 0; j < shape[1]; j++) {
       for (int i = 0; i < shape[0]; i++) {
-	std::forward<F>(f)(i, j);
+        std::forward<F>(f)(i, j);
       }
     }
   }
 };
 
-template <> struct launch<3, space::host> {
-  template <typename F> static void run(const gt::shape_type<3> &shape, F &&f) {
+template <>
+struct launch<3, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<3>& shape, F&& f)
+  {
     for (int k = 0; k < shape[2]; k++) {
       for (int j = 0; j < shape[1]; j++) {
         for (int i = 0; i < shape[0]; i++) {
@@ -236,8 +271,12 @@ template <> struct launch<3, space::host> {
 };
 
 #ifdef __CUDACC__
-template <> struct launch<1, space::device> {
-  template <typename F> static void run(const gt::shape_type<1> &shape, F &&f) {
+template <>
+struct launch<1, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<1>& shape, F&& f)
+  {
     dim3 numThreads(BS_X);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X);
 
@@ -245,8 +284,12 @@ template <> struct launch<1, space::device> {
   }
 };
 
-template <> struct launch<2, space::device> {
-  template <typename F> static void run(const gt::shape_type<2> &shape, F &&f) {
+template <>
+struct launch<2, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<2>& shape, F&& f)
+  {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y);
 
@@ -254,8 +297,12 @@ template <> struct launch<2, space::device> {
   }
 };
 
-template <> struct launch<3, space::device> {
-  template <typename F> static void run(const gt::shape_type<3> &shape, F &&f) {
+template <>
+struct launch<3, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<3>& shape, F&& f)
+  {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2]);
@@ -264,8 +311,12 @@ template <> struct launch<3, space::device> {
   }
 };
 
-template <> struct launch<4, space::device> {
-  template <typename F> static void run(const gt::shape_type<4> &shape, F &&f) {
+template <>
+struct launch<4, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<4>& shape, F&& f)
+  {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3]);
@@ -278,12 +329,14 @@ template <> struct launch<4, space::device> {
 } // namespace detail
 
 template <int N, typename F>
-inline void launch_host(const gt::shape_type<N> &shape, F &&f) {
+inline void launch_host(const gt::shape_type<N>& shape, F&& f)
+{
   detail::launch<N, space::host>::run(shape, std::forward<F>(f));
 }
 
 template <int N, typename F>
-inline void launch(const gt::shape_type<N> &shape, F &&f) {
+inline void launch(const gt::shape_type<N>& shape, F&& f)
+{
   detail::launch<N, space::device>::run(shape, std::forward<F>(f));
 }
 
@@ -299,35 +352,42 @@ using gtensor_view_device = gtensor_view<T, N, space::device>;
 // ======================================================================
 // empty_like
 
-template <typename E> inline auto empty_like(const expression<E> &_e) {
-  const auto &e = _e.derived();
+template <typename E>
+inline auto empty_like(const expression<E>& _e)
+{
+  const auto& e = _e.derived();
   return gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>(
-      e.shape());
+    e.shape());
 }
 
 // ======================================================================
 // zeros_like
 
-template <typename E> inline auto zeros_like(const expression<E> &_e) {
-  const auto &e = _e.derived();
+template <typename E>
+inline auto zeros_like(const expression<E>& _e)
+{
+  const auto& e = _e.derived();
   return gtensor<expr_value_type<E>, expr_dimension<E>()>(e.shape());
 }
 
 // ======================================================================
 // eval
 
-template <typename E> using is_gcontainer = std::is_base_of<gcontainer<E>, E>;
+template <typename E>
+using is_gcontainer = std::is_base_of<gcontainer<E>, E>;
 
 template <typename E>
-inline std::enable_if_t<is_gcontainer<std::decay_t<E>>::value, E> eval(E &&e) {
+inline std::enable_if_t<is_gcontainer<std::decay_t<E>>::value, E> eval(E&& e)
+{
   return std::forward<E>(e);
 }
 
 template <typename E>
 inline std::enable_if_t<
-    !is_gcontainer<std::decay_t<E>>::value,
-    gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>
-eval(E &&e) {
+  !is_gcontainer<std::decay_t<E>>::value,
+  gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>
+eval(E&& e)
+{
   return {std::forward<E>(e)};
 }
 

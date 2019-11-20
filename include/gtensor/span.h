@@ -33,7 +33,11 @@ public:
   GT_INLINE const_pointer data() const { return data_; }
   GT_INLINE pointer data() { return data_; }
 
-  GT_INLINE const_reference operator[](size_type i) const { assert(i < size_); return data_[i]; }
+  GT_INLINE const_reference operator[](size_type i) const
+  {
+    assert(i < size_);
+    return data_[i];
+  }
   GT_INLINE reference operator[](size_type i) { return data_[i]; }
 
 private:
