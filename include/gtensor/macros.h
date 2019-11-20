@@ -41,10 +41,15 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
 }
 
 #ifndef NDEBUG
-#define cudaSyncIfEnabled() cudaCheck(cudaDeviceSynchronize())
+#define cudaSyncIfEnabled()                                                    \
+  do {                                                                         \
+    cudaCheck(cudaGetLastError());                                             \
+    cudaCheck(cudaDeviceSynchronize());                                        \
+  } while (0)
 #else
 #define cudaSyncIfEnabled()                                                    \
   do {                                                                         \
+    cudaCheck(cudaGetLastError());                                             \
   } while (0)
 #endif
 
