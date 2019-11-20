@@ -59,9 +59,9 @@ struct assigner<3, space::host>
     // printf("assigner<3, host>\n");
     for (int k = 0; k < lhs.shape(2); k++) {
       for (int j = 0; j < lhs.shape(1); j++) {
-	for (int i = 0; i < lhs.shape(0); i++) {
-	  lhs(i, j, k) = rhs(i, j, k);
-	}
+        for (int i = 0; i < lhs.shape(0); i++) {
+          lhs(i, j, k) = rhs(i, j, k);
+        }
       }
     }
   }
@@ -146,7 +146,8 @@ __global__ void kernel_assign_5(Elhs lhs, Erhs rhs)
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
   int tidy = threadIdx.y + blockIdx.y * blockDim.y;
   int tidz = blockIdx.z;
-  if (tidx < lhs.shape(0) * lhs.shape(1) && tidy < lhs.shape(2) * lhs.shape(3)) {
+  if (tidx < lhs.shape(0) * lhs.shape(1) &&
+      tidy < lhs.shape(2) * lhs.shape(3)) {
     int j = tidx / lhs.shape(0), i = tidx % lhs.shape(0);
     int l = tidy / lhs.shape(2), k = tidy % lhs.shape(2);
     int m = tidz;
@@ -161,7 +162,8 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs rhs)
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
   int tidy = threadIdx.y + blockIdx.y * blockDim.y;
   int tidz = blockIdx.z;
-  if (tidx < lhs.shape(0) * lhs.shape(1) && tidy < lhs.shape(2) * lhs.shape(3)) {
+  if (tidx < lhs.shape(0) * lhs.shape(1) &&
+      tidy < lhs.shape(2) * lhs.shape(3)) {
     int j = tidx / lhs.shape(0), i = tidx % lhs.shape(0);
     int l = tidy / lhs.shape(2), k = tidy % lhs.shape(2);
     int n = tidz / lhs.shape(4), m = tidz % lhs.shape(4);
