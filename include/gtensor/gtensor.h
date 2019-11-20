@@ -280,7 +280,9 @@ struct launch<1, space::device>
     dim3 numThreads(BS_X);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X);
 
+    cudaSyncIfEnabled();
     kernel_launch<<<numBlocks, numThreads>>>(shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
   }
 };
 
@@ -293,7 +295,9 @@ struct launch<2, space::device>
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y);
 
+    cudaSyncIfEnabled();
     kernel_launch<<<numBlocks, numThreads>>>(shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
   }
 };
 
@@ -307,7 +311,9 @@ struct launch<3, space::device>
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2]);
 
+    cudaSyncIfEnabled();
     kernel_launch<<<numBlocks, numThreads>>>(shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
   }
 };
 
@@ -321,7 +327,9 @@ struct launch<4, space::device>
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3]);
 
+    cudaSyncIfEnabled();
     kernel_launch<<<numBlocks, numThreads>>>(shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
   }
 };
 #endif
