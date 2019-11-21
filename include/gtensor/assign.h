@@ -7,8 +7,8 @@
 namespace gt
 {
 
-constexpr const int BS_X = 32;
-constexpr const int BS_Y = 32;
+constexpr const int BS_X = 16;
+constexpr const int BS_Y = 16;
 
 // ======================================================================
 // assign
