@@ -32,7 +32,10 @@ struct caching_allocator : A
   using size_type = typename A::size_type;
   using difference_type = typename A::difference_type;
 
-  using base_type::base_type;
+  caching_allocator() {}
+  caching_allocator(const caching_allocator&) {}
+
+  ~caching_allocator() {}
 
   pointer allocate(size_type cnt)
   {
