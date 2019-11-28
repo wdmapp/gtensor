@@ -7,8 +7,8 @@
 namespace gt
 {
 
-constexpr const int BS_X = 32;
-constexpr const int BS_Y = 32;
+constexpr const int BS_X = 16;
+constexpr const int BS_Y = 16;
 
 // ======================================================================
 // assign
@@ -157,8 +157,9 @@ __global__ void kernel_assign_5(Elhs lhs, Erhs rhs)
 }
 
 template <typename Elhs, typename Erhs>
-__global__ void kernel_assign_6(Elhs lhs, Erhs rhs)
+__global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
 {
+  auto rhs = _rhs;
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
   int tidy = threadIdx.y + blockIdx.y * blockDim.y;
   int tidz = blockIdx.z;
