@@ -220,7 +220,9 @@ struct assigner<3, space::device>
                    (lhs.shape(1) + BS_Y - 1) / BS_Y, lhs.shape(2));
 
     cudaSyncIfEnabled();
-    // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
+    /*std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
+    std::cout << "numBlocks="<<numBlocks.x<<" "<<numBlocks.y<<" "<<numBlocks.z<<
+    ", numThreads="<<numThreads.x<<" "<<numThreads.y<<" "<<numThreads.z<<"\n";*/
     kernel_assign_3<<<numBlocks, numThreads>>>(lhs.to_kernel(),
                                                rhs.to_kernel());
     cudaSyncIfEnabled();
