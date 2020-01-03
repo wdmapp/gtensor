@@ -128,6 +128,13 @@ inline auto gstrided<D>::operator()(Args&&... args) -> reference
 
 template <typename D>
 template <typename... Args>
+inline auto gstrided<D>::view(Args&&... args) const&
+{
+  return gt::view(derived(), std::forward<Args>(args)...);
+}
+
+template <typename D>
+template <typename... Args>
 inline auto gstrided<D>::view(Args&&... args) &
 {
   return gt::view(derived(), std::forward<Args>(args)...);
@@ -135,9 +142,9 @@ inline auto gstrided<D>::view(Args&&... args) &
 
 template <typename D>
 template <typename... Args>
-inline auto gstrided<D>::view(Args&&... args) const&
+inline auto gstrided<D>::view(Args&&... args) &&
 {
-  return gt::view(derived(), std::forward<Args>(args)...);
+  return gt::view(std::move(*this).derived(), std::forward<Args>(args)...);
 }
 
 template <typename D>
