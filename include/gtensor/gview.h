@@ -315,8 +315,12 @@ auto view(E&& e, Args&&... args)
 // reshape
 
 template <size_type N, typename E>
-inline auto reshape(E&& e, gt::shape_type<N> shape)
+inline auto reshape(E&& _e, gt::shape_type<N> shape)
 {
+  using EC = select_gview_adaptor_t<E>;
+
+  EC e(std::forward<E>(_e));
+
   size_type size_e = e.size();
   size_type size = 1;
   int dim_adjust = -1;
@@ -335,9 +339,7 @@ inline auto reshape(E&& e, gt::shape_type<N> shape)
     shape[dim_adjust] = e.size() / size;
   }
   assert(calc_size(shape) == calc_size(e.shape()));
-  static_assert(std::is_reference<E>::value,
-                "reshape_view: cannot take ownership yet");
-  return gview<E, N>(std::forward<E>(e), 0, shape, calc_strides(shape));
+  return gview<E, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
 }
 
 // ======================================================================
