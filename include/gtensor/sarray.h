@@ -63,7 +63,7 @@ inline std::ostream& operator<<(std::ostream& os, const sarray<T, N>& arr);
 
 template <typename T, std::size_t N>
 template <typename... U, std::enable_if_t<sizeof...(U) == N, int>>
-sarray<T, N>::sarray(U... args) : data_{args...}
+sarray<T, N>::sarray(U... args) : data_{T(args)...}
 {}
 
 template <typename T, std::size_t N>
