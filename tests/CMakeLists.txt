@@ -12,7 +12,7 @@ macro(add_gtensor_test name)
   endif()
 endmacro()
 
-if (GTENSOR_CUDDA)
+if (GTENSOR_CUDA)
   add_gtensor_test(test_thrust_ext)
 endif()
 
