@@ -301,16 +301,6 @@ auto view(E&& e, Args&&... args)
   return view<N>(std::forward<E>(e), descs);
 }
 
-#if 0
-template <size_type N, typename E, typename... Args>
-auto view(E&& e, Args&&... args)
-{
-  static_assert(N == view_dimension<E, Args...>(), "view dimension does not match slices given");
-  std::vector<gdesc> descs{std::forward<Args>(args)...};
-  return view<N, E>(std::forward<E>(e), descs);
-}
-#endif
-
 // ======================================================================
 // reshape
 
