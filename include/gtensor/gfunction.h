@@ -187,7 +187,8 @@ public:
 
   using shape_type = gt::shape_type<dimension()>;
 
-  gfunction(F&& f, E&&... e) : f_(f), e_(std::forward<E>(e)...) {}
+  gfunction(F&& f, E&&... e) : f_(std::forward<F>(f)), e_(std::forward<E>(e)...)
+  {}
 
   shape_type shape() const;
   int shape(int i) const;
