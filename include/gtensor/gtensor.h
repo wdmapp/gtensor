@@ -150,22 +150,29 @@ inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel()
 // FIXME, there should be only one, more general version,
 // and maybe this should be .assign or operator=
 
-template <typename T, int N, typename S>
-void copy(const gtensor_view<T, N>& from, gtensor<T, N, S>& to)
-{
-  assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
-}
-
-template <typename T, int N, typename S>
-void copy(const gtensor<T, N, S>& from, gtensor_view<T, N>& to)
+template <typename T, int N, typename S_from, typename S_to>
+void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   thrust::copy(from.data(), from.data() + from.size(), to.data());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
-void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
+void copy(const gtensor_view<T, N, S_from>& from, gtensor<T, N, S_to>& to)
+{
+  assert(from.size() == to.size());
+  thrust::copy(from.data(), from.data() + from.size(), to.data());
+}
+
+template <typename T, int N, typename S_from, typename S_to>
+void copy(const gtensor<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
+{
+  assert(from.size() == to.size());
+  thrust::copy(from.data(), from.data() + from.size(), to.data());
+}
+
+template <typename T, int N, typename S_from, typename S_to>
+void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   thrust::copy(from.data(), from.data() + from.size(), to.data());
