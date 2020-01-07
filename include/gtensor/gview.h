@@ -298,25 +298,19 @@ auto view(E&& e, Args&&... args)
 {
   constexpr std::size_t N = view_dimension<E, Args...>();
   std::vector<gdesc> descs{std::forward<Args>(args)...};
-  return view<N, E>(std::forward<E>(e), descs);
+  return view<N>(std::forward<E>(e), descs);
 }
-
-#if 0
-template <size_type N, typename E, typename... Args>
-auto view(E&& e, Args&&... args)
-{
-  static_assert(N == view_dimension<E, Args...>(), "view dimension does not match slices given");
-  std::vector<gdesc> descs{std::forward<Args>(args)...};
-  return view<N, E>(std::forward<E>(e), descs);
-}
-#endif
 
 // ======================================================================
 // reshape
 
 template <size_type N, typename E>
-inline auto reshape(E&& e, gt::shape_type<N> shape)
+inline auto reshape(E&& _e, gt::shape_type<N> shape)
 {
+  using EC = select_gview_adaptor_t<E>;
+
+  EC e(std::forward<E>(_e));
+
   size_type size_e = e.size();
   size_type size = 1;
   int dim_adjust = -1;
@@ -335,9 +329,7 @@ inline auto reshape(E&& e, gt::shape_type<N> shape)
     shape[dim_adjust] = e.size() / size;
   }
   assert(calc_size(shape) == calc_size(e.shape()));
-  static_assert(std::is_reference<E>::value,
-                "reshape_view: cannot take ownership yet");
-  return gview<E, N>(std::forward<E>(e), 0, shape, calc_strides(shape));
+  return gview<E, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
 }
 
 // ======================================================================

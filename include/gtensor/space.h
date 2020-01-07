@@ -48,7 +48,12 @@ struct caching_allocator : A
       std::cout << "ALLOC: allocating " << cnt << " bytes from cache\n";
 #endif
     } else {
+#ifdef DEBUG
+      std::cout << "ALLOC: total used " << used_ * sizeof(T) << ", allocing "
+                << cnt * sizeof(T) << "\n";
+#endif
       p = base_type::allocate(cnt);
+      used_ += cnt;
 #ifdef DEBUG
       std::cout << "ALLOC: allocating " << cnt << " bytes\n";
 #endif
@@ -72,7 +77,7 @@ struct caching_allocator : A
 
   GT_INLINE void construct(pointer) {}
 
-  void clear_cache()
+  static void clear_cache()
   {
     for (auto it = free_.begin(); it != free_.end(); it++) {
       base_type::deallocate(it->second, it->first);
@@ -89,6 +94,7 @@ struct caching_allocator : A
 private:
   static std::multimap<size_type, pointer> free_;
   static std::map<pointer, size_type> allocated_;
+  static size_t used_;
 };
 
 template <class T, class A>
@@ -100,6 +106,9 @@ template <class T, class A>
 std::map<typename caching_allocator<T, A>::pointer,
          typename caching_allocator<T, A>::size_type>
   caching_allocator<T, A>::allocated_;
+
+template <class T, class A>
+size_t caching_allocator<T, A>::used_;
 
 template <class T, class AT, class U, class AU>
 inline bool operator==(const caching_allocator<T, AT>&,

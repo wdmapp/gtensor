@@ -32,20 +32,27 @@ protected:
 public:
   using derived_type = D;
 
-  GT_INLINE const derived_type& derived() const;
-  GT_INLINE derived_type& derived();
+  GT_INLINE const derived_type& derived() const&;
+  GT_INLINE derived_type& derived() &;
+  derived_type derived() &&;
 };
 
 template <typename D>
-inline auto expression<D>::derived() const -> const derived_type&
+inline auto expression<D>::derived() const& -> const derived_type&
 {
   return static_cast<const derived_type&>(*this);
 }
 
 template <typename D>
-inline auto expression<D>::derived() -> derived_type&
+inline auto expression<D>::derived() & -> derived_type&
 {
   return static_cast<derived_type&>(*this);
+}
+
+template <typename D>
+inline auto expression<D>::derived() && -> derived_type
+{
+  return static_cast<derived_type&&>(*this);
 }
 
 // ======================================================================
