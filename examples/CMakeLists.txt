@@ -30,3 +30,7 @@ get_target_property(gtensor_INCLUDE_DIRS gtensor INTERFACE_INCLUDE_DIRECTORIES)
 add_executable(daxpy)
 target_cxx_sources(daxpy PRIVATE src/daxpy.cxx)
 target_link_libraries(daxpy gtensor)
+
+add_executable(stencil1d)
+target_cxx_sources(stencil1d PRIVATE src/stencil1d.cxx)
+target_link_libraries(stencil1d gtensor)
