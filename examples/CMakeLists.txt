@@ -6,6 +6,7 @@ option(GTENSOR_CUDA "support CUDA" ON)
 
 if (GTENSOR_CUDA)
   enable_language(CUDA)
+  list(APPEND CMAKE_CUDA_FLAGS "-DWITH_CUDA")
 endif()
 
 function(target_cxx_sources TARGET)
