@@ -35,3 +35,7 @@ target_link_libraries(daxpy gtensor)
 add_executable(stencil1d)
 target_cxx_sources(stencil1d PRIVATE src/stencil1d.cxx)
 target_link_libraries(stencil1d gtensor)
+
+add_executable(mult_table)
+target_cxx_sources(mult_table PRIVATE src/mult_table.cxx)
+target_link_libraries(mult_table gtensor)

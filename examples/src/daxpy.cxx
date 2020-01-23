@@ -1,20 +1,19 @@
 /*
- * =====================================================================================
+ * ============================================================================
  *
  *       Filename:  daxpy.cxx
  *
- *    Description: Example showing how element-wise operations are simple to
- *                 perform in Gtensor 
+ *    Description: Example showing how to declare and use gtensor arrays on
+ *                 both host and device.
  *
  *        Version:  1.0
  *        Created:  01/06/2020 10:28:50 AM
  *       Revision:  none
- *       Compiler:  gcc
+ *       Compiler:  gcc, nvcc
  *
- *         Author:  YOUR NAME (), 
- *   Organization:  
+ *         Author:  Bryce Allen (bdallen@uchicago.edu) 
  *
- * =====================================================================================
+ * ===========================================================================
  */
 
 #include <iostream>
@@ -25,8 +24,8 @@
 
 using namespace std;
 
-// provides convenient shortcuts for commont gtensor functions, for example
-// _s for gt::gslice
+// provides convenient shortcuts for common gtensor functions, for example
+// underscore ('_') to represent open slice ends.
 using namespace gt::placeholders;
 
 //#define EXPLICIT_KERNEL
@@ -35,11 +34,21 @@ using namespace gt::placeholders;
  * Templated function for daxpy that can work with host gtensor or device
  * gtensor. Relies on C++11 mandatory copy elision to move the result into the
  * LHS it is assigned to, rather than copying all the data (very important for
- * large arrays).
+ * large arrays). Input arrays are passed by reference, again to avoid copying
+ * all the data which would happen by default (just like std::vector, gtensor
+ * has copy semantics by default).
  */
 template <typename S>
 gt::gtensor<double, 1, S> daxpy(double a, const gt::gtensor<double, 1, S> &x,
                                 const gt::gtensor<double, 1, S> &y) {
+    // This generates a gfunction template, which is an un-evaluated
+    // expression. The expression can be composed with other operations before
+    // being evaluated - useful for defining common operations that are
+    // combined in different ways at different places in the code, while still
+    // using a single kernel call to evaluate when possible.
+    // For simplicity in this example, we are using gtensor in the return code,
+    // which forces evaluation and saves the result in a new gtensor object
+    // of the appopriate size.
     return a * x + y;
 }
 
@@ -50,16 +59,24 @@ int main(int argc, char **argv)
     int nprint = 32;
 
     double a = 0.5;
+
+    // Define and allocate two 1d vectors of size n on the host. Declare
+    // but don't allocate a third 1d host vector for storing the result.
     gt::gtensor<double, 1, gt::space::host> h_x(gt::shape(n));
     gt::gtensor<double, 1, gt::space::host> h_y = gt::empty_like(h_x);
     gt::gtensor<double, 1, gt::space::host> h_axpy;
 
+    // initialize the vectors, x is twice it's index values and y is equal
+    // to it's index values. We will perform .5*x + y, so the result
+    // axpy(i) = 2i.
     for (int i=0; i<n; i++) {
         h_x(i) = 2.0 * static_cast<double>(i);
         h_y(i) = static_cast<double>(i);
     }
 
 #ifdef WITH_CUDA
+    // Define and allocate device versions of h_x and h_y, and declare
+    // a varaible for the result on gpu.
     gt::gtensor<double, 1, gt::space::device> d_x(gt::shape(n));
     gt::gtensor<double, 1, gt::space::device> d_y = gt::empty_like(d_x);
     gt::gtensor<double, 1, gt::space::device> d_axpy;
@@ -98,6 +115,8 @@ int main(int argc, char **argv)
     h_axpy = daxpy(a, h_x, h_y);
 #endif // WITH_CUDA
 
+    // Define a slice to print a subset of elements for spot checking the
+    // result.
     auto print_slice = gt::gslice(_, _, n/nprint);
     cout << "a       = " << a << endl;
     cout << "x       = " << h_x.view(print_slice)  << endl;
