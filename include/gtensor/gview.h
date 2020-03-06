@@ -257,7 +257,7 @@ auto view(E&& _e, const std::vector<gdesc>& descs)
         throw std::runtime_error("view: start must be less than stop!");
       }
       if (step < 0 && stop >= start) {
-        throw std::runtime_error("view: start must be less than stop!");
+        throw std::runtime_error("view: start must be greater than stop!");
       }
       if ((step > 0 && stop > old_shape[old_i]) ||
           (step < 0 && start > old_shape[old_i])) {
