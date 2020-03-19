@@ -41,14 +41,13 @@ using namespace gt::placeholders;
 template <typename S>
 gt::gtensor<double, 1, S> daxpy(double a, const gt::gtensor<double, 1, S> &x,
                                 const gt::gtensor<double, 1, S> &y) {
-    // This generates a gfunction template, which is an un-evaluated
-    // expression. The expression can be composed with other operations before
-    // being evaluated - useful for defining common operations that are
-    // combined in different ways at different places in the code, while still
-    // using a single kernel call to evaluate when possible.
-    // For simplicity in this example, we are using gtensor in the return code,
-    // which forces evaluation and saves the result in a new gtensor object
-    // of the appopriate size.
+    // The expression 'a * x + y' generates a gfunction template, which is an
+    // un-evaluated expression. In this case, the return statement and return
+    // type force evaluation so a new gtensor is created. It can be useful to
+    // instead set the return type to 'auto', in which case the un-evaluated
+    // expression will be returned and can be combined with other operations
+    // before being evaluated, or assigned to a gtensor to force immediate
+    // evaluation.
     return a * x + y;
 }
 
@@ -67,7 +66,7 @@ int main(int argc, char **argv)
     gt::gtensor<double, 1, gt::space::host> h_axpy;
 
     // initialize the vectors, x is twice it's index values and y is equal
-    // to it's index values. We will perform .5*x + y, so the result
+    // to it's index values. We will perform .5*x + y, so the result should be
     // axpy(i) = 2i.
     for (int i=0; i<n; i++) {
         h_x(i) = 2.0 * static_cast<double>(i);
@@ -101,7 +100,7 @@ int main(int argc, char **argv)
     gt::launch<1>(d_x.shape(), GT_LAMBDA(int i) mutable {
       k_axpy(i) = a * k_x(i) + k_y(i);
     });
-#else
+#else // implicit kernel
     // This automatically generates a computation kernel to run on the
     // device.
     d_axpy = daxpy(a, d_x, d_y);
