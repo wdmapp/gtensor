@@ -95,7 +95,7 @@ struct assigner<6, space::host>
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
 {
-  int i = threadIdx.x + blockIdx.x * BS_X;
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
 
   if (i < lhs.shape(0)) {
     lhs(i) = rhs(i);
@@ -180,8 +180,9 @@ struct assigner<1, space::device>
   static void run(E1& lhs, const E2& rhs)
   {
     // printf("assigner<1, device>\n");
-    dim3 numThreads(BS_X, BS_Y);
-    dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X);
+    const int BS_1D = 256;
+    dim3 numThreads(BS_1D);
+    dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
 
     cudaSyncIfEnabled();
     kernel_assign_1<<<numBlocks, numThreads>>>(lhs.to_kernel(),

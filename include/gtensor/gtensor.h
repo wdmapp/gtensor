@@ -184,7 +184,7 @@ void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 template <typename F>
 __global__ void kernel_launch(gt::shape_type<1> shape, F f)
 {
-  int i = threadIdx.x + blockIdx.x * BS_X;
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
 
   if (i < shape[0])
     f(i);
@@ -301,8 +301,9 @@ struct launch<1, space::device>
   template <typename F>
   static void run(const gt::shape_type<1>& shape, F&& f)
   {
-    dim3 numThreads(BS_X);
-    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X);
+    const int BS_1D = 256;
+    dim3 numThreads(BS_1D);
+    dim3 numBlocks((shape[0] + BS_1D - 1) / BS_1D);
 
     cudaSyncIfEnabled();
     kernel_launch<<<numBlocks, numThreads>>>(shape, std::forward<F>(f));
