@@ -4,7 +4,7 @@
 
 #include "defs.h"
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 #include <thrust/device_ptr.h>
 #endif
 
@@ -45,7 +45,7 @@ private:
   size_type size_ = 0;
 };
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 
 // ======================================================================
 // device_span

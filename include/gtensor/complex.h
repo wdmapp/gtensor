@@ -2,7 +2,7 @@
 #ifndef GTENSOR_COMPLEX_H
 #define GTENSOR_COMPLEX_H
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 #include <thrust/complex.h>
 #else
 #include <complex>
@@ -11,7 +11,7 @@
 namespace gt
 {
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 template <typename T>
 using complex = thrust::complex<T>;
 #else

@@ -90,7 +90,7 @@ struct assigner<6, space::host>
   }
 };
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
@@ -185,8 +185,8 @@ struct assigner<1, space::device>
     dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
 
     cudaSyncIfEnabled();
-    kernel_assign_1<<<numBlocks, numThreads>>>(lhs.to_kernel(),
-                                               rhs.to_kernel());
+    hipLaunchKernelGGL(kernel_assign_1, numBlocks, numThreads, 0, 0,
+                       lhs.to_kernel(), rhs.to_kernel());
     cudaSyncIfEnabled();
   }
 };
@@ -203,8 +203,8 @@ struct assigner<2, space::device>
                    (lhs.shape(1) + BS_Y - 1) / BS_Y);
 
     cudaSyncIfEnabled();
-    kernel_assign_2<<<numBlocks, numThreads>>>(lhs.to_kernel(),
-                                               rhs.to_kernel());
+    hipLaunchKernelGGL(kernel_assign_2, numBlocks, numThreads, 0, 0,
+                       lhs.to_kernel(), rhs.to_kernel());
     cudaSyncIfEnabled();
   }
 };
@@ -224,8 +224,8 @@ struct assigner<3, space::device>
     /*std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     std::cout << "numBlocks="<<numBlocks.x<<" "<<numBlocks.y<<" "<<numBlocks.z<<
     ", numThreads="<<numThreads.x<<" "<<numThreads.y<<" "<<numThreads.z<<"\n";*/
-    kernel_assign_3<<<numBlocks, numThreads>>>(lhs.to_kernel(),
-                                               rhs.to_kernel());
+    hipLaunchKernelGGL(kernel_assign_3, numBlocks, numThreads, 0, 0,
+                       lhs.to_kernel(), rhs.to_kernel());
     cudaSyncIfEnabled();
   }
 };
@@ -244,8 +244,8 @@ struct assigner<4, space::device>
 
     cudaSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
-    kernel_assign_4<<<numBlocks, numThreads>>>(lhs.to_kernel(),
-                                               rhs.to_kernel());
+    hipLaunchKernelGGL(kernel_assign_4, numBlocks, numThreads, 0, 0,
+                       lhs.to_kernel(), rhs.to_kernel());
     cudaSyncIfEnabled();
   }
 };
@@ -264,8 +264,8 @@ struct assigner<5, space::device>
 
     cudaSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
-    kernel_assign_5<<<numBlocks, numThreads>>>(lhs.to_kernel(),
-                                               rhs.to_kernel());
+    hipLaunchKernelGGL(kernel_assign_5, numBlocks, numThreads, 0, 0,
+                       lhs.to_kernel(), rhs.to_kernel());
     cudaSyncIfEnabled();
   }
 };
@@ -284,8 +284,8 @@ struct assigner<6, space::device>
 
     cudaSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
-    kernel_assign_6<<<numBlocks, numThreads>>>(lhs.to_kernel(),
-                                               rhs.to_kernel());
+    hipLaunchKernelGGL(kernel_assign_6, numBlocks, numThreads, 0, 0,
+                       lhs.to_kernel(), rhs.to_kernel());
     cudaSyncIfEnabled();
   }
 };

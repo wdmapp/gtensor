@@ -86,6 +86,13 @@ inline gtensor_view<T, N, S>::gtensor_view(pointer data,
     assert(attr.type == cudaMemoryTypeDevice ||
            attr.type == cudaMemoryTypeManaged);
   }
+#elif __HCC__
+  if (std::is_same<S, space::device>::value) {
+    hipPointerAttributes attr;
+    hipCheck(hipPointerGetAttributes(&attr, thrust::raw_pointer_cast(data)));
+    assert(attr.type == hipMemoryTypeDevice ||
+           attr.isManaged == true);
+  }
 #endif
 #endif
 }

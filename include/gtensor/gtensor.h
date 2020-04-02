@@ -2,7 +2,7 @@
 #ifndef GTENSOR_GTENSOR_H
 #define GTENSOR_GTENSOR_H
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 #include "thrust_ext.h"
 #endif
 
@@ -142,7 +142,7 @@ inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel()
   return gtensor_view<T, N, S>(this->data(), this->shape(), this->strides());
 }
 
-#ifdef __CUDACC__
+#if (__CUDACC__ || __HCC__)
 
 // ======================================================================
 // copies
@@ -371,6 +371,89 @@ struct launch<5, space::device>
     kernel_launch<<<numBlocks, numThreads>>>(shape, std::forward<F>(f));
   }
 };
+#elif defined(__HCC__)
+template <>
+struct launch<1, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<1>& shape, F&& f)
+  {
+    const int BS_1D = 256;
+    dim3 numThreads(BS_1D);
+    dim3 numBlocks((shape[0] + BS_1D - 1) / BS_1D);
+
+    cudaSyncIfEnabled();
+    hipLaunchKernelGGL(kernel_launch, numBlocks, numThreads, 0, 0,
+                       shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
+  }
+};
+
+template <>
+struct launch<2, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<2>& shape, F&& f)
+  {
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y);
+
+    cudaSyncIfEnabled();
+    hipLaunchKernelGGL(kernel_launch, numBlocks, numThreads, 0, 0,
+                       shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
+  }
+};
+
+template <>
+struct launch<3, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<3>& shape, F&& f)
+  {
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
+                   shape[2]);
+
+    cudaSyncIfEnabled();
+    hipLaunchKernelGGL(kernel_launch, numBlocks, numThreads, 0, 0,
+                       shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
+  }
+};
+
+template <>
+struct launch<4, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<4>& shape, F&& f)
+  {
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
+                   shape[2] * shape[3]);
+
+    cudaSyncIfEnabled();
+    hipLaunchKernelGGL(kernel_launch, numBlocks, numThreads, 0, 0,
+                       shape, std::forward<F>(f));
+    cudaSyncIfEnabled();
+  }
+};
+
+template <>
+struct launch<5, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<5>& shape, F&& f)
+  {
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
+                   shape[2] * shape[3] * shape[4]);
+
+    hipLaunchKernelGGL(kernel_launch, numBlocks, numThreads, 0, 0,
+                       shape, std::forward<F>(f));
+  }
+};
+
 #endif
 
 } // namespace detail

@@ -73,7 +73,9 @@ int main(int argc, char **argv)
         h_y(i) = static_cast<double>(i);
     }
 
-#ifdef WITH_CUDA
+#ifdef GTENSOR_HAVE_DEVICE
+    cout << "gtensor have device" << endl;
+
     // Define and allocate device versions of h_x and h_y, and declare
     // a varaible for the result on gpu.
     gt::gtensor<double, 1, gt::space::device> d_x(gt::shape(n));
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
 #else
     // host implementation - simply call directly using host gtensors
     h_axpy = daxpy(a, h_x, h_y);
-#endif // WITH_CUDA
+#endif // GTENSOR_HAVE_DEVICE
 
     // Define a slice to print a subset of elements for spot checking the
     // result.

@@ -10,6 +10,10 @@
 #ifndef GTENSOR_THRUST_EXT_H
 #define GTENSOR_THRUST_EXT_H
 
+#ifdef __HCC__
+#include "hip/hip_runtime.h"
+#endif
+
 #include "gtl.h"
 #include "macros.h"
 

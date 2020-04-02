@@ -10,8 +10,16 @@
 #define GTENSOR_MACROS_H
 
 #ifdef __CUDACC__
+#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
+    do {                                                                                           \
+        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
+    } while (0)
 
-#define GT_INLINE __host__ __device__ /* FIXME inline */
+#endif
+
+#if (__CUDACC__ || __HCC__)
+
+#define GT_INLINE __host__ __device__
 #define GT_LAMBDA [=] __host__ __device__
 
 #else
@@ -53,6 +61,35 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
   } while (0)
 #endif
 
-#endif
+#elif __HCC__
 
-#endif
+#define cudaCheck(what)                                                        \
+  {                                                                            \
+    doHipCheck(what, __FILE__, __LINE__);                                     \
+  }
+inline void doHipCheck(hipError_t code, const char* file, int line)
+{
+  if (code != hipSuccess) {
+    fprintf(stderr, "gpuCheck: %d (%s) %s %d\n", code,
+            hipGetErrorString(code), file, line);
+    abort();
+  }
+}
+
+#ifndef NDEBUG
+#define cudaSyncIfEnabled()                                                    \
+  do {                                                                         \
+    cudaCheck(hipGetLastError());                                             \
+    cudaCheck(hipDeviceSynchronize());                                        \
+  } while (0)
+#else // NDEBUG defined
+#define cudaSyncIfEnabled()                                                    \
+  do {                                                                         \
+    cudaCheck(hipGetLastError());                                             \
+  } while (0)
+#endif // NDEBUG
+
+#endif // end __CUDACC__/__HCC__
+
+
+#endif // GTENSORS_MACROS_H
