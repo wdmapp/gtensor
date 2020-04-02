@@ -4,7 +4,7 @@
 
 #include "defs.h"
 
-#if (__CUDACC__ || __HCC__)
+#ifdef GTENSOR_HAVE_DEVICE
 #include <thrust/device_ptr.h>
 #endif
 
@@ -45,7 +45,7 @@ private:
   size_type size_ = 0;
 };
 
-#if (__CUDACC__ || __HCC__)
+#ifdef GTENSOR_HAVE_DEVICE
 
 // ======================================================================
 // device_span

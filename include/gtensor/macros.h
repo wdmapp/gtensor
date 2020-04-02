@@ -2,22 +2,14 @@
 // ======================================================================
 // macros.h
 //
-// Macros to help with portability with / without CUDA
+// Macros to help with portability with / without GPU and CUDA vs HIP
 //
 // Copyright (C) 2019 Kai Germaschewski
 
 #ifndef GTENSOR_MACROS_H
 #define GTENSOR_MACROS_H
 
-#ifdef __CUDACC__
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
-    } while (0)
-
-#endif
-
-#if (__CUDACC__ || __HCC__)
+#if GTENSOR_HAVE_DEVICE
 
 #define GT_INLINE __host__ __device__
 #define GT_LAMBDA [=] __host__ __device__
@@ -34,6 +26,11 @@
 #endif
 
 #ifdef __CUDACC__
+
+#define gtLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
+    do {                                                                                           \
+        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
+    } while (0)
 
 #define cudaCheck(what)                                                        \
   {                                                                            \
@@ -63,6 +60,8 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
 
 #elif __HCC__
 
+#define gtLaunchKernel(...)    hipLaunchKernelGGL(__VA_ARGS__)
+
 #define cudaCheck(what)                                                        \
   {                                                                            \
     doHipCheck(what, __FILE__, __LINE__);                                     \
@@ -90,6 +89,5 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
 #endif // NDEBUG
 
 #endif // end __CUDACC__/__HCC__
-
 
 #endif // GTENSORS_MACROS_H

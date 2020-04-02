@@ -152,7 +152,7 @@ gtensor_view<T, N> adapt(T* data, const int* shape_data)
   return adapt<N, T>(data, {shape_data, N});
 }
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_HAVE_DEVICE
 template <size_type N, typename T>
 gtensor_view<T, N, space::device> adapt_device(T* data,
                                                const shape_type<N>& shape)

@@ -11,7 +11,7 @@
 namespace gt
 {
 
-#if (__CUDACC__ || __HCC__)
+#ifdef GTENSOR_HAVE_DEVICE
 template <typename T>
 using complex = thrust::complex<T>;
 #else

@@ -8,7 +8,7 @@
 #include <map>
 #include <vector>
 
-#if (__CUDACC__ || __HCC__)
+#ifdef GTENSOR_HAVE_DEVICE
 #include <thrust/device_allocator.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -137,7 +137,7 @@ struct kernel;
 struct host
 {
   template <typename T>
-#if (__CUDACC__ || __HCC__)
+#ifdef GTENSOR_HAVE_DEVICE
   using Vector = thrust::host_vector<T>;
 #else
   using Vector = std::vector<T>;
@@ -146,7 +146,7 @@ struct host
   using Span = span<T>;
 };
 
-#if (__CUDACC__ || __HCC__)
+#ifdef GTENSOR_HAVE_DEVICE
 
 #if THRUST_VERSION <= 100903
 template <typename T>
