@@ -11,7 +11,7 @@ namespace gt
 // calculates strides corresponding to col-major layout of given shape
 
 template <typename S>
-S calc_strides(const S& shape)
+GT_INLINE S calc_strides(const S& shape)
 {
   S strides;
   int stride = 1;
@@ -26,8 +26,13 @@ S calc_strides(const S& shape)
   return strides;
 }
 
+// ======================================================================
+// unravel
+//
+// given 1-d index and strides, calculate multi-d index
+//
 template <typename S>
-S unravel(size_type i, const S& strides)
+GT_INLINE S unravel(size_type i, const S& strides)
 {
   S idx;
   for (int d = strides.size() - 1; d >= 0; d--) {
