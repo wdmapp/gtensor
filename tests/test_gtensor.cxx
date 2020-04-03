@@ -151,7 +151,7 @@ TEST(gtensor, assign_expression_2d_resize)
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gtensor, device_assign_gtensor)
 {
@@ -210,7 +210,7 @@ TEST(gtensor_kernel, kernel_call)
   // FIXME, 1-d arrays ctor is ambiguous-ish
   gt::gtensor<double, 1, gt::space::device> b(gt::shape(3));
 
-  kernel_test<<<1, 3>>>(a.to_kernel(), b.to_kernel());
+  gtLaunchKernel(kernel_test, 1, 3, 0, 0, a.to_kernel(), b.to_kernel());
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{1., 2., 3.}));
 }
@@ -223,7 +223,7 @@ void lambda_test(const gt::gtensor_device<double, 1>& a,
 
   auto lf = GT_LAMBDA(int i) mutable { k_b(i) = k_a(i); };
 
-  kernel_test_lambda<<<1, 3>>>(b.shape(), lf);
+  gtLaunchKernel(kernel_test_lambda, 1, 3, 0, 0, b.shape(), lf);
 }
 
 TEST(gtensor_kernel, kernel_lambda_call)

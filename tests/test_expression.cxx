@@ -1,10 +1,10 @@
 
 #include <gtest/gtest.h>
 
-#include "gtensor/complex.h"
 #include "gtensor/gtensor.h"
+#include "gtensor/complex.h"
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_HAVE_DEVICE
 using space = gt::space::device;
 #else
 using space = gt::space::host;

@@ -156,7 +156,7 @@ TEST(gview, swapaxes_expression)
   EXPECT_EQ(c, (gt::gtensor<double, 2>{{22., 42.}, {24., 44.}, {26., 46.}}));
 }
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_assign_all)
 {
