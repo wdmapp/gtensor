@@ -183,3 +183,14 @@ g++ -std=c++14 \
  -I $GTENSOR_HOME/include \
  -o daxpy_host daxpy.cxx
 ```
+
+### Example using gtensor with existing GPU code
+
+If you have existing code written in CUDA or HIP, you can use the `gt::adapt`
+and `gt::adapt_device` functions to wrap existing allocated host and device
+memory in gtensor view containers. This allows you to use the convenience of
+gtensor for new code without having to do an extensive rewrite.
+
+See [trig.cu](examples/src/trig.cu) and
+[trig_adapted.cxx](examples/src/trig_adapted.cxx). The same approach will work
+for HIP with minor modifications.

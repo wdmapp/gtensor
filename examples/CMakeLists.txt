@@ -86,3 +86,12 @@ target_link_libraries(stencil1d gtensor)
 add_executable(mult_table)
 target_cxx_sources(mult_table PRIVATE src/mult_table.cxx)
 target_link_libraries(mult_table gtensor)
+
+if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
+  add_executable(trig)
+  target_cxx_sources(trig PRIVATE src/trig.cu)
+
+  add_executable(trig_adapted)
+  target_cxx_sources(trig_adapted PRIVATE src/trig_adapted.cxx)
+  target_link_libraries(trig_adapted gtensor)
+endif()
