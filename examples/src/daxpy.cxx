@@ -17,8 +17,6 @@
  */
 
 #include <iostream>
-#include <thread>
-#include <chrono>
 
 #include <gtensor/gtensor.h>
 
