@@ -18,6 +18,11 @@ Features:
 - GPU support for nVidia via CUDA and AMD via HIP/rocm. Future plans to
   support Intel GPUs
 
+## License
+
+GTensor is licensed under the 3-clause BSD license. See the [LICENSE](LICENSE)
+file for details.
+
 ## Getting Started
 
 ## Installation
