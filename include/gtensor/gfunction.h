@@ -128,54 +128,69 @@ inline void calc_shape(S& shape, const E& e)
   broadcast_shape(shape, e.shape());
 }
 
-template <typename S, typename F, typename... Es>
-inline void calc_shape(S& shape, const F& e, const Es&... es)
+template <typename S, typename E, typename... Es>
+inline void calc_shape(S& shape, const E& e, const Es&... es)
 {
   broadcast_shape(shape, e.shape());
   calc_shape(shape, es...);
 }
 
-template <typename S, typename TPL, size_type... I>
-inline void calc_shape_expand(S& shape, const TPL& e, std::index_sequence<I...>)
-{
-  return calc_shape(shape, std::get<I>(e)...);
-}
-
 } // namespace detail
 
-template <typename S, typename... E>
-inline void calc_shape(S& shape, const std::tuple<E...>& e)
+template <typename S, typename... Es>
+inline void calc_shape(S& shape, const Es&... es)
 {
   for (auto& val : shape) {
     val = 1;
   }
-  return detail::calc_shape_expand(shape, e,
-                                   std::make_index_sequence<sizeof...(E)>());
+  detail::calc_shape(shape, es...);
 }
 
 // ======================================================================
 // gfunction
 
-template <typename F, typename... E>
-class gfunction;
 
-template <typename F, typename... E>
-struct gtensor_inner_types<gfunction<F, E...>>
+namespace detail {
+  struct empty {};
+}
+
+// declare generic gfunction; unary and binary versions are defined below
+template <typename F, typename E1, typename E2> class gfunction;
+
+
+template <typename F, typename E1, typename E2>
+struct gtensor_inner_types<gfunction<F, E1, E2>>
 {
-  using space_type = space_t<expr_space_type<E>...>;
-  constexpr static size_type dimension = helper::calc_dimension<E...>();
+  using space_type = space_t<expr_space_type<E1>, expr_space_type<E2>>;
+  constexpr static size_type dimension = helper::calc_dimension<E1, E2>();
 
   using value_type =
-    decltype(std::declval<F>()(std::declval<expr_value_type<E>>()...));
+    decltype(std::declval<F>()(std::declval<expr_value_type<E1>>(),
+                               std::declval<expr_value_type<E2>>()));
   using reference = value_type;
   using const_reference = value_type;
 };
 
-template <typename F, typename... E>
-class gfunction : public expression<gfunction<F, E...>>
+
+template <typename F, typename E>
+struct gtensor_inner_types<gfunction<F, E, detail::empty>>
+{
+  using space_type = space_t<expr_space_type<E>>;
+  constexpr static size_type dimension = helper::calc_dimension<E>();
+
+  using value_type =
+    decltype(std::declval<F>()(std::declval<expr_value_type<E>>()));
+  using reference = value_type;
+  using const_reference = value_type;
+};
+
+
+template <typename F, typename E>
+class gfunction<F, E, detail::empty>
+: public expression<gfunction<F, E, detail::empty>>
 {
 public:
-  using self_type = gfunction<F, E...>;
+  using self_type = gfunction<F, E, detail::empty>;
   using base_type = expression<self_type>;
   using inner_types = gtensor_inner_types<self_type>;
   using space_type = typename inner_types::space_type;
@@ -187,7 +202,9 @@ public:
 
   using shape_type = gt::shape_type<dimension()>;
 
-  gfunction(F&& f, E&&... e) : f_(std::forward<F>(f)), e_(std::forward<E>(e)...)
+  gfunction(F&& f, E&& e)
+  : f_(std::forward<F>(f)),
+    e_(std::forward<E>(e))
   {}
 
   shape_type shape() const;
@@ -196,74 +213,121 @@ public:
   template <typename... Args>
   GT_INLINE value_type operator()(Args... args) const;
 
-  gfunction<F, to_kernel_t<E>...> to_kernel() const;
-
-private:
-  template <std::size_t... I, typename... Args>
-  GT_INLINE value_type access(std::index_sequence<I...>, Args... args) const;
+  gfunction<F, to_kernel_t<E>, detail::empty> to_kernel() const;
 
 private:
   F f_;
-  std::tuple<E...> e_;
+  E e_;
 };
+
+
+template <typename F, typename E1, typename E2>
+class gfunction : public expression<gfunction<F, E1, E2>>
+{
+public:
+  using self_type = gfunction<F, E1, E2>;
+  using base_type = expression<self_type>;
+  using inner_types = gtensor_inner_types<self_type>;
+  using space_type = typename inner_types::space_type;
+  using value_type = typename inner_types::value_type;
+  using reference = typename inner_types::reference;
+  using const_reference = typename inner_types::const_reference;
+
+  constexpr static size_type dimension() { return inner_types::dimension; };
+
+  using shape_type = gt::shape_type<dimension()>;
+
+  gfunction(F&& f, E1&& e1, E2&& e2)
+  : f_(std::forward<F>(f)),
+    e1_(std::forward<E1>(e1)),
+    e2_(std::forward<E2>(e2))
+  {}
+
+  shape_type shape() const;
+  int shape(int i) const;
+
+  template <typename... Args>
+  GT_INLINE value_type operator()(Args... args) const;
+
+  gfunction<F, to_kernel_t<E1>, to_kernel_t<E2>> to_kernel() const;
+
+private:
+  F f_;
+  E1 e1_;
+  E2 e2_;
+};
+
 
 // ----------------------------------------------------------------------
 // gfunction implementation
 
-template <typename F, typename... E>
-inline auto gfunction<F, E...>::shape() const -> shape_type
+template <typename F, typename E>
+inline auto gfunction<F, E, detail::empty>::shape() const -> shape_type
 {
   shape_type shape;
   calc_shape(shape, e_);
   return shape;
 }
 
-template <typename F, typename... E>
-inline int gfunction<F, E...>::shape(int i) const
+template <typename F, typename E>
+inline int gfunction<F, E, detail::empty>::shape(int i) const
 {
   return shape()[i];
 }
 
-template <typename F, typename... E>
+template <typename F, typename E1, typename E2>
+inline auto gfunction<F, E1, E2>::shape() const -> shape_type
+{
+  shape_type shape;
+  calc_shape(shape, e1_, e2_);
+  return shape;
+}
+
+template <typename F, typename E1, typename E2>
+inline int gfunction<F, E1, E2>::shape(int i) const
+{
+  return shape()[i];
+}
+
+template <typename F, typename E>
 template <typename... Args>
-inline auto gfunction<F, E...>::operator()(Args... args) const -> value_type
+inline auto gfunction<F, E, detail::empty>::operator()(Args... args) const -> value_type
 {
-  return access(std::make_index_sequence<sizeof...(E)>(), args...);
+  return f_(e_(args...));
 }
 
-#pragma nv_exec_check_disable
-template <typename F, typename... E>
-template <std::size_t... I, typename... Args>
-inline auto gfunction<F, E...>::access(std::index_sequence<I...>,
-                                       Args... args) const -> value_type
+template <typename F, typename E1, typename E2>
+template <typename... Args>
+inline auto gfunction<F, E1, E2>::operator()(Args... args) const -> value_type
 {
-  return f_(std::get<I>(e_)(args...)...);
+  return f_(e1_(args...), e2_(args...));
 }
 
-template <typename F, typename... E>
-auto function(F&& f, E&&... e)
+template <typename F, typename E>
+auto function(F&& f, E&& e)
 {
-  return gfunction<F, to_expression_t<E>...>(std::forward<F>(f),
-                                             std::forward<E>(e)...);
+  return gfunction<F, to_expression_t<E>, detail::empty>(std::forward<F>(f),
+                                                         std::forward<E>(e));
 }
 
-namespace detail
+template <typename F, typename E1, typename E2>
+auto function(F&& f, E1&& e1, E2&& e2)
 {
-
-template <typename F, std::size_t... I, typename... E>
-inline auto make_gfunction(const F& f, std::index_sequence<I...>,
-                           const std::tuple<E...>& e)
-{
-  return function(F(f), (std::get<I>(e).to_kernel())...);
+  return gfunction<F, to_expression_t<E1>, to_expression_t<E2>>(
+          std::forward<F>(f), std::forward<E1>(e1), std::forward<E2>(e2));
 }
 
-} // namespace detail
-
-template <typename F, typename... E>
-inline gfunction<F, to_kernel_t<E>...> gfunction<F, E...>::to_kernel() const
+template <typename F, typename E>
+inline gfunction<F, to_kernel_t<E>, detail::empty> gfunction<F, E, detail::empty>::to_kernel() const
 {
-  return detail::make_gfunction(f_, std::make_index_sequence<sizeof...(E)>(),
-                                e_);
+  return function(F(f_), e_.to_kernel());
+}
+
+
+template <typename F, typename E1, typename E2>
+inline gfunction<F, to_kernel_t<E1>, to_kernel_t<E2>> gfunction<F, E1, E2>::to_kernel() const
+{
+  return function(F(f_), e1_.to_kernel(), e2_.to_kernel());
 }
 
 #define MAKE_UNARY_OP(NAME, OP)                                                \
