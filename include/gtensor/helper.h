@@ -100,6 +100,18 @@ struct nd_init_list_shape<2, IL>
   }
 };
 
+template <typename IL>
+struct nd_init_list_shape<3, IL>
+{
+  constexpr static shape_type<3> run(IL il)
+  {
+    return {int((il.size() == 0 || il.begin()->size() == 0)
+                ? 0 : il.begin()->begin()->size()),
+            int(il.size() == 0 ? 0 : il.begin()->size()),
+            int(il.size())};
+  }
+};
+
 } // namespace detail
 
 template <size_type N, typename IL>
@@ -146,6 +158,28 @@ struct nd_init_list_copy<2, IL, T>
     }
   }
 };
+
+template <typename IL, typename T>
+struct nd_init_list_copy<3, IL, T>
+{
+  constexpr static void run(IL il, T& t)
+  {
+    int k = 0;
+    for (auto il0 : il) {
+      int j = 0;
+      for (auto il1 : il0) {
+        int i = 0;
+        for (auto val : il1) {
+          t(i, j, k) = val;
+          i++;
+        }
+        j++;
+      }
+      k++;
+    }
+  }
+};
+
 
 } // namespace detail
 

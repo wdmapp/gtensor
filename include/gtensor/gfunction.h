@@ -384,6 +384,28 @@ struct equals<2, 2>
   }
 };
 
+template <>
+struct equals<3, 3>
+{
+  template <typename E1, typename E2>
+  static bool run(const E1& e1, const E2& e2)
+  {
+    if (e1.shape() != e2.shape()) {
+      return false;
+    }
+    for (int k = 0; k < e1.shape(2); k++) {
+      for (int j = 0; j < e1.shape(1); j++) {
+        for (int i = 0; i < e1.shape(0); i++) {
+          if (e1(i, j, k) != e2(i, j, k)) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+};
+
 } // namespace detail
 
 template <typename E1, typename E2>

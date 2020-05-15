@@ -80,12 +80,50 @@ TEST(gtensor, move_ctor)
   EXPECT_EQ(b, (gt::gtensor<double, 1>{11., 12., 13.}));
 }
 
-TEST(gtensor, copy_assign)
+TEST(gtensor, copy_assign1)
 {
   gt::gtensor<double, 1> a{11., 12., 13.};
   gt::gtensor<double, 1> b;
   b = a;
 
+  EXPECT_EQ(b, a);
+}
+
+TEST(gtensor, copy_assign2)
+{
+  gt::gtensor<double, 2> a{{1., 2., 3.},
+                           {2., 4., 6.}};
+  gt::gtensor<double, 2> b;
+  b = a;
+
+  EXPECT_EQ(b.shape(), gt::shape(3, 2));
+
+  for (int i=0; i<a.shape(0); i++) {
+    for (int j = 0; j<a.shape(1); j++) {
+      EXPECT_EQ(a(i,j), static_cast<double>((i+1)*(j+1)));
+    }
+  }
+  EXPECT_EQ(b, a);
+}
+
+TEST(gtensor, copy_assign3)
+{
+  gt::gtensor<double, 3> a{{{1., 2.},
+                            {2., 4.}},
+                           {{2.,4.},
+                            {4.,8.}}};
+  gt::gtensor<double, 3> b;
+  b = a;
+
+  EXPECT_EQ(b.shape(), gt::shape(2, 2, 2));
+
+  for (int i=0; i<a.shape(0); i++) {
+    for (int j = 0; j<a.shape(1); j++) {
+      for (int k = 0; k<a.shape(2); k++) {
+        EXPECT_EQ(a(i,j,k), static_cast<double>((i+1)*(j+1)*(k+1)));
+      }
+    }
+  }
   EXPECT_EQ(b, a);
 }
 
