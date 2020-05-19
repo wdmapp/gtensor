@@ -1,0 +1,52 @@
+name: C/C++ CI CPU
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  tests-cpu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cxx: [ 'g++-7', 'g++-8', 'g++-9', 'clang++-8', 'clang++-9' ]
+    env:
+      CMAKE_CONFIG_TYPE: RelWithDebInfo
+    name: tests-cpu-${{ matrix.cxx }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=none
+      env:
+        CXX: ${{ matrix.cxx }}
+    - name: build
+      run: cmake --build build-tests-${{ matrix.cxx }} -v
+    - name: test
+      run: cmake --build build-tests-${{ matrix.cxx }} -t test
+
+  examples-cpu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cxx: [ 'g++-7', 'g++-8', 'g++-9', 'clang++-8', 'clang++-9' ]
+    env:
+      CMAKE_CONFIG_TYPE: RelWithDebInfo
+    name: examples-cpu-${{ matrix.cxx }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: cmake -S examples -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none
+      env:
+        CXX: ${{ matrix.cxx }}
+    - name: build
+      run: cmake --build build-examples-${{ matrix.cxx }} -v
+    - name: daxpy
+      run: ./build-examples-${{ matrix.cxx }}/daxpy
+    - name: stencil1d
+      run: ./build-examples-${{ matrix.cxx }}/stencil1d
+    - name: mult_table
+      run: ./build-examples-${{ matrix.cxx }}/mult_table
