@@ -406,6 +406,87 @@ struct equals<3, 3>
   }
 };
 
+template <>
+struct equals<4, 4>
+{
+  template <typename E1, typename E2>
+  static bool run(const E1& e1, const E2& e2)
+  {
+    if (e1.shape() != e2.shape()) {
+      return false;
+    }
+
+    for (int x = 0; x < e1.shape(3); x++) {
+      for (int k = 0; k < e1.shape(2); k++) {
+        for (int j = 0; j < e1.shape(1); j++) {
+          for (int i = 0; i < e1.shape(0); i++) {
+            if (e1(i, j, k, x) != e2(i, j, k, x)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+};
+
+template <>
+struct equals<5, 5>
+{
+  template <typename E1, typename E2>
+  static bool run(const E1& e1, const E2& e2)
+  {
+    if (e1.shape() != e2.shape()) {
+      return false;
+    }
+
+    for (int y = 0; y < e1.shape(4); y++) {
+      for (int x = 0; x < e1.shape(3); x++) {
+        for (int k = 0; k < e1.shape(2); k++) {
+          for (int j = 0; j < e1.shape(1); j++) {
+            for (int i = 0; i < e1.shape(0); i++) {
+              if (e1(i, j, k, x, y) != e2(i, j, k, x, y)) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+};
+
+template <>
+struct equals<6, 6>
+{
+  template <typename E1, typename E2>
+  static bool run(const E1& e1, const E2& e2)
+  {
+    if (e1.shape() != e2.shape()) {
+      return false;
+    }
+
+    for (int z = 0; z < e1.shape(5); z++) {
+      for (int y = 0; y < e1.shape(4); y++) {
+        for (int x = 0; x < e1.shape(3); x++) {
+          for (int k = 0; k < e1.shape(2); k++) {
+            for (int j = 0; j < e1.shape(1); j++) {
+              for (int i = 0; i < e1.shape(0); i++) {
+                if (e1(i, j, k, x, y, z) != e2(i, j, k, x, y, z)) {
+                  return false;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+};
+
 } // namespace detail
 
 template <typename E1, typename E2>
