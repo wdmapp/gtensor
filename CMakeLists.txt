@@ -60,9 +60,34 @@ else()
   message(FATAL_ERROR "Unsupported GTENSOR_DEVICE: ${GTENSOR_DEVICE}")
 endif()
 
-find_package(GTest)
-if (GTEST_FOUND)
-  include(CTest)
+include(CTest)
+if (BUILD_TESTING)
+  message(STATUS "build testing is ON")
+
+  # try to find gtest, otherwise fetch and add to build
+  find_package(GTest QUIET)
+
+  if (NOT GTEST_FOUND)
+    message(STATUS "googletest not found, fetching source and adding to build")
+    include(FetchContent)
+    FetchContent_Declare(googletest
+      GIT_REPOSITORY    https://github.com/google/googletest.git
+      GIT_TAG           release-1.8.0
+      )
+    FetchContent_MakeAvailable(googletest)
+    FetchContent_GetProperties(googletest)
+    if (NOT googletest_POPULATED)
+      FetchContent_Populate(googletest)
+      add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+    endif()
+    add_library(GTest::GTest INTERFACE IMPORTED)
+    target_include_directories(GTest::GTest INTERFACE "${googletest_SOURCE_DIR}/googletest/include")
+    target_link_libraries(GTest::GTest INTERFACE gtest)
+    add_library(GTest::Main INTERFACE IMPORTED)
+    target_link_libraries(GTest::Main INTERFACE gtest_main)
+  endif()
+else()
+  message(STATUS "build testing is OFF")
 endif()
 
 function(target_cxx_sources TARGET)
@@ -78,6 +103,7 @@ endfunction()
   
 target_include_directories(gtensor INTERFACE include)
 target_compile_features(gtensor INTERFACE cxx_std_14)
-if (GTEST_FOUND AND BUILD_TESTING)
+
+if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()
