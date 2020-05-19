@@ -68,6 +68,46 @@ struct assigner<3, space::host>
 };
 
 template <>
+struct assigner<4, space::host>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs)
+  {
+    // printf("assigner<4, host>\n");
+    for (int l = 0; l < lhs.shape(3); l++) {
+      for (int k = 0; k < lhs.shape(2); k++) {
+        for (int j = 0; j < lhs.shape(1); j++) {
+          for (int i = 0; i < lhs.shape(0); i++) {
+            lhs(i, j, k, l) = rhs(i, j, k, l);
+          }
+        }
+      }
+    }
+  }
+};
+
+template <>
+struct assigner<5, space::host>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs)
+  {
+    // printf("assigner<5, host>\n");
+    for (int m = 0; m < lhs.shape(4); m++) {
+      for (int l = 0; l < lhs.shape(3); l++) {
+        for (int k = 0; k < lhs.shape(2); k++) {
+          for (int j = 0; j < lhs.shape(1); j++) {
+            for (int i = 0; i < lhs.shape(0); i++) {
+              lhs(i, j, k, l, m) = rhs(i, j, k, l, m);
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+template <>
 struct assigner<6, space::host>
 {
   template <typename E1, typename E2>

@@ -83,7 +83,15 @@ namespace detail
 template <size_type N>
 struct expression_printer
 {
-  static_assert(N != N, "output not support for this dimension");
+  //static_assert(N != N, "output not support for this dimension");
+
+  // TODO: implement properly
+  template <typename E>
+  static void print_to(std::ostream& os, const E& e)
+  {
+    auto size = e.shape().size();
+    os << "{ ... (" << size << " dimensions) ...}" << "\n";
+  }
 };
 
 template <>
@@ -114,6 +122,34 @@ struct expression_printer<2>
       }
       os << " }";
       if (j < e.shape(1) - 1) {
+        os << "\n";
+      }
+    }
+    os << "}";
+  }
+};
+
+template <>
+struct expression_printer<3>
+{
+  template <typename E>
+  static void print_to(std::ostream& os, const E& e)
+  {
+    os << "{";
+    for (int k = 0; k < e.shape(2); k++) {
+      os << "{";
+      for (int j = 0; j < e.shape(1); j++) {
+        os << "{";
+        for (int i = 0; i < e.shape(0); i++) {
+          os << " " << e(i, j, k);
+        }
+        os << " }";
+        if (j < e.shape(1) - 1) {
+          os << "\n";
+        }
+      }
+      os << " }";
+      if (k < e.shape(2) - 1) {
         os << "\n";
       }
     }

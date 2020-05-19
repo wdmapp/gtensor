@@ -21,3 +21,21 @@ TEST(helper, tuple_max)
   EXPECT_EQ(gt::helper::max(id, t3), 15);
   EXPECT_EQ(gt::helper::max(id, t3a), 25);
 }
+
+TEST(helper, nd_initializer_list)
+{
+  using namespace gt::helper;
+
+  nd_initializer_list_t<int, 1> nd1 = {1,2,3,4,5,6};
+  auto nd1shape = nd_initializer_list_shape<1>(nd1);
+  EXPECT_EQ(nd1shape, gt::shape(6));
+
+  nd_initializer_list_t<int, 2> nd2 = {{1,2,3},{4,5,6}};
+  auto nd2shape = nd_initializer_list_shape<2>(nd2);
+  EXPECT_EQ(nd2shape, gt::shape(3,2));
+
+  nd_initializer_list_t<int, 3> nd3 = {{{1,},{2,},{3,}},
+                                       {{4,},{5,},{6,}}};
+  auto nd3shape = nd_initializer_list_shape<3>(nd3);
+  EXPECT_EQ(nd3shape, gt::shape(1,3,2));
+}
