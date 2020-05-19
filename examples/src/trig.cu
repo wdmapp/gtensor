@@ -4,10 +4,10 @@
 #include <cuda_runtime.h>
 
 
-__global__ void kernel_add(float *c, const float *a, const float *b, int N) {
+__global__ void kernel_add_sq(float *c, const float *a, const float *b, int N) {
     int i = threadIdx.x + blockDim.x*blockIdx.x;
     if (i < N) {
-        c[i] = a[i] + b[i];
+        c[i] = a[i]*a[i] + b[i]*b[i];
     }
 }
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     CHECK(cudaMemcpy(d_b, h_b, size, cudaMemcpyHostToDevice));
 
     // assumes block_size devices N
-    kernel_add<<<N/block_size, block_size>>>(d_c, d_a, d_b, N);
+    kernel_add_sq<<<N/block_size, block_size>>>(d_c, d_a, d_b, N);
 
     CHECK(cudaMemcpy(h_c, d_c, size, cudaMemcpyDeviceToHost));
 
