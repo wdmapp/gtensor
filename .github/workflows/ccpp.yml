@@ -50,3 +50,26 @@ jobs:
       run: ./build-examples-${{ matrix.cxx }}/stencil1d
     - name: mult_table
       run: ./build-examples-${{ matrix.cxx }}/mult_table
+
+  build-cuda:
+    runs-on: ubuntu-latest
+    container: nvidia/cuda:10.0-devel
+    env:
+      CMAKE_CONFIG_TYPE: RelWithDebInfo
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install packages
+      run: apt update && apt-get install -y wget git
+    - name: install cmake
+      run: |
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
+        bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
+    - name: cmake tests
+      run: cmake -S . -B build-tests-cuda -DGTENSOR_DEVICE=cuda
+    - name: build tests
+      run: cmake --build build-tests-cuda -v
+    - name: cmake examples
+      run: cmake -S examples -B build-examples-cuda -DGTENSOR_DEVICE=cuda
+    - name: build examples
+      run: cmake --build build-examples-cuda -v
