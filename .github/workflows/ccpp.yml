@@ -12,14 +12,12 @@ jobs:
     strategy:
       matrix:
         cxx: [ 'g++-7', 'g++-8', 'g++-9', 'clang++-8', 'clang++-9' ]
-    env:
-      CMAKE_CONFIG_TYPE: RelWithDebInfo
     name: tests-cpu-${{ matrix.cxx }}
 
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=none
+      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -32,14 +30,12 @@ jobs:
     strategy:
       matrix:
         cxx: [ 'g++-7', 'g++-8', 'g++-9', 'clang++-8', 'clang++-9' ]
-    env:
-      CMAKE_CONFIG_TYPE: RelWithDebInfo
     name: examples-cpu-${{ matrix.cxx }}
 
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S examples -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none
+      run: cmake -S examples -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -54,22 +50,45 @@ jobs:
   build-cuda:
     runs-on: ubuntu-latest
     container: nvidia/cuda:10.0-devel
-    env:
-      CMAKE_CONFIG_TYPE: RelWithDebInfo
 
     steps:
     - uses: actions/checkout@v2
     - name: install packages
-      run: apt update && apt-get install -y wget git
+      run: apt-get update && apt-get install -y wget git
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: cmake tests
-      run: cmake -S . -B build-tests-cuda -DGTENSOR_DEVICE=cuda
+      run: cmake -S . -B build-tests-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: build tests
       run: cmake --build build-tests-cuda -v
     - name: cmake examples
-      run: cmake -S examples -B build-examples-cuda -DGTENSOR_DEVICE=cuda
+      run: cmake -S examples -B build-examples-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: build examples
       run: cmake --build build-examples-cuda -v
+
+  build-hip:
+    runs-on: ubuntu-latest
+    container: rocm/dev-ubuntu-18.04
+    env:
+      CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
+      CXX: /opt/rocm/bin/hipcc
+      CXXFLAGS: -amdgpu-target=gfx803
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install packages
+      run: apt-get update && apt-get install -y wget git rocm-dev hip-base rocthrust
+    - name: install cmake
+      run: |
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
+        bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
+    - name: cmake tests
+      run: cmake -S . -B build-tests-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    - name: build tests
+      run: cmake --build build-tests-hip -v
+    - name: cmake examples
+      run: cmake -S examples -B build-examples-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    - name: build examples
+      run: cmake --build build-examples-hip -v
