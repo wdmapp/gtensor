@@ -25,6 +25,7 @@ jobs:
     - name: test
       run: cmake --build build-tests-${{ matrix.cxx }} -t test
 
+
   examples-cpu:
     runs-on: ubuntu-latest
     strategy:
@@ -46,6 +47,59 @@ jobs:
       run: ./build-examples-${{ matrix.cxx }}/examples/stencil1d
     - name: mult_table
       run: ./build-examples-${{ matrix.cxx }}/examples/mult_table
+
+
+  cmake-subdir:
+    runs-on: ubuntu-latest
+    env:
+      cxx: 'clang++-9'
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/examples
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    - name: build
+      run: cmake --build build-subdir -v
+    - name: daxpy
+      run: ./build-subdir/daxpy
+    - name: stencil1d
+      run: ./build-subdir/stencil1d
+    - name: mult_table
+      run: ./build-subdir/mult_table
+
+
+  cmake-install:
+    runs-on: ubuntu-latest
+    env:
+      cxx: 'clang++-9'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: gtensor cmake
+      run: cmake -S . -B build-install -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
+    - name: gtensor install
+      run: cmake --build build-install -v -t install
+    - name: examples cmake
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
+      working-directory: ${{ github.workspace }}/examples
+      env:
+        gtensor_DIR: ${{ github.workspace }}/gtensor-install
+    - name: examples build
+      run: cmake --build build-find-package -v
+      working-directory: ${{ github.workspace }}/examples
+    - name: daxpy
+      run: ./build-find-package/daxpy
+      working-directory: ${{ github.workspace }}/examples
+    - name: stencil1d
+      run: ./build-find-package/stencil1d
+      working-directory: ${{ github.workspace }}/examples
+    - name: mult_table
+      run: ./build-find-package/mult_table
+      working-directory: ${{ github.workspace }}/examples
+
 
   build-cuda:
     runs-on: ubuntu-latest
