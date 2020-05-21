@@ -6,7 +6,7 @@ list(APPEND CMAKE_MODULE_PATH ${GTENSOR_CMAKE_DIR})
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
 if(NOT TARGET gtensor::gtensor)
-    include("${GTENSOR_CMAKE_DIR}/gtensor-targets.cmake")
+  include("${GTENSOR_CMAKE_DIR}/gtensor-targets.cmake")
 endif()
 
 if ("${GTENSOR_DEVICE}" STREQUAL "cuda")

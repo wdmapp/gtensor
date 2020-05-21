@@ -9,17 +9,21 @@ set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'none', 'cuda', or 'hip'")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "none" "cuda" "hip")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 
+if (NOT ${CMAKE_PROJECT_NAME} STREQUAL gtensor)
+  set(BUILD_TESTING OFF)
+endif()
+
 add_library(gtensor INTERFACE)
 
 if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
-  message(STATUS "gtensor device: cuda")
+  message(STATUS "${PROJECT_NAME}: device cuda")
   enable_language(CUDA)
   target_compile_definitions(gtensor INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor INTERFACE GTENSOR_DEVICE_CUDA)
   target_compile_options(gtensor INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-extended-lambda>)
   target_compile_options(gtensor INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
-  message(STATUS "gtensor device: hip")
+  message(STATUS "${PROJECT_NAME}: device hip")
 
   if(NOT (CMAKE_CXX_COMPILER MATCHES ".*/hcc$" OR CMAKE_CXX_COMPILER MATCHES ".*/hipcc$"))
     message(FATAL_ERROR "For GTENSOR_DEVICE=hip, 'hcc' or 'clang' must be used as C++ compiler.")
@@ -43,20 +47,20 @@ elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
 
   target_link_libraries(gtensor INTERFACE roc::rocthrust)
 elseif ("${GTENSOR_DEVICE}" STREQUAL "none")
-  message(STATUS "gtensor device: none")
+  message(STATUS "${PROJECT_NAME}: device none")
 else()
   message(FATAL_ERROR "Unsupported GTENSOR_DEVICE: ${GTENSOR_DEVICE}")
 endif()
 
 include(CTest)
 if (BUILD_TESTING)
-  message(STATUS "build testing is ON")
+  message(STATUS "${PROJECT_NAME}: build testing is ON")
 
   # try to find gtest, otherwise fetch and add to build
   find_package(GTest QUIET)
 
   if (NOT GTEST_FOUND)
-    message(STATUS "googletest not found, fetching source and adding to build")
+    message(STATUS "${PROJECT_NAME}: googletest not found, fetching source and adding to build")
     include(FetchContent)
     FetchContent_Declare(googletest
       GIT_REPOSITORY    https://github.com/google/googletest.git
@@ -74,7 +78,7 @@ if (BUILD_TESTING)
     target_link_libraries(GTest::Main INTERFACE gtest_main)
   endif()
 else()
-  message(STATUS "build testing is OFF")
+  message(STATUS "${PROJECT_NAME}: build testing is OFF")
 endif()
 
 function(target_gtensor_sources TARGET)
@@ -95,17 +99,17 @@ target_include_directories(gtensor
 )
 target_compile_features(gtensor INTERFACE cxx_std_14)
 
+# alias for using gtensor within build tree (tests, submodule usage)
+add_library(gtensor::gtensor ALIAS gtensor)
+
 if (BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
 if (GTENSOR_BUILD_EXAMPLES)
-  message(STATUS "build examples is ON")
+  message(STATUS "${PROJECT_NAME}: build examples is ON")
   add_subdirectory(examples)
 endif()
-
-# alias for using gtensor within build tree (tests, submodule usage)
-add_library(gtensor::gtensor ALIAS gtensor)
 
 # See https://github.com/pabloariasal/modern-cmake-sample
 ##############################################
@@ -140,7 +144,8 @@ write_basic_package_version_file(
     COMPATIBILITY AnyNewerVersion
 )
 
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/gtensor-config.cmake.in
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/gtensor-config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/gtensor-config.cmake
     INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
 )

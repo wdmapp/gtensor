@@ -1,3 +1,34 @@
+cmake_minimum_required(VERSION 3.13...3.17.2 FATAL_ERROR)
+project(gtensor-examples
+        VERSION 0.01
+        LANGUAGES CXX
+        HOMEPAGE_URL https://github.com/wdmapp/gtensor)
+
+option(GTENSOR_EXAMPLES_USE_FIND_PACKAGE,
+    "when ON, use find_package, when OFF use a copy of gtensor as subdir"
+    OFF)
+
+# support building as a subdirectory of the main project, or
+# as an independent project with gtensor installed or gtensor
+# as a subdirectory
+if(NOT TARGET gtensor::gtensor)
+  if (GTENSOR_EXAMPLES_USE_FIND_PACKAGE)
+    message(STATUS "${PROJECT_NAME}: building with gtensor via find_package")
+    find_package(gtensor)
+  else()
+    message(STATUS "${PROJECT_NAME}: building with gtensor as a subdir")
+    file(MAKE_DIRECTORY extern/gtensor)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../include
+              ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt
+              ${CMAKE_CURRENT_SOURCE_DIR}/../gtensor-config.cmake.in
+         DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/extern/gtensor
+         PATTERN examples EXCLUDE)
+    add_subdirectory(extern/gtensor)
+  endif()
+else()
+  message(STATUS "${PROJECT_NAME}: building as gtensor subdir")
+endif()
+
 add_executable(daxpy)
 target_gtensor_sources(daxpy PRIVATE src/daxpy.cxx)
 target_link_libraries(daxpy gtensor::gtensor)
