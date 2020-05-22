@@ -9,8 +9,9 @@ set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'none', 'cuda', or 'hip'")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "none" "cuda" "hip")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 
+set(IS_MAIN_PROJECT TRUE)
 if (NOT ${CMAKE_PROJECT_NAME} STREQUAL gtensor)
-  set(BUILD_TESTING OFF)
+  set(IS_MAIN_PROJECT FALSE)
 endif()
 
 add_library(gtensor INTERFACE)
@@ -53,7 +54,7 @@ else()
 endif()
 
 include(CTest)
-if (BUILD_TESTING)
+if (BUILD_TESTING AND IS_MAIN_PROJECT)
   message(STATUS "${PROJECT_NAME}: build testing is ON")
 
   # try to find gtest, otherwise fetch and add to build
@@ -102,7 +103,7 @@ target_compile_features(gtensor INTERFACE cxx_std_14)
 # alias for using gtensor within build tree (tests, submodule usage)
 add_library(gtensor::gtensor ALIAS gtensor)
 
-if (BUILD_TESTING)
+if (BUILD_TESTING AND IS_MAIN_PROJECT)
   add_subdirectory(tests)
 endif()
 
