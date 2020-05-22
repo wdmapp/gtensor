@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -36,7 +36,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
+      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -60,7 +60,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: build
       run: cmake --build build-subdir -v
     - name: daxpy
@@ -79,11 +79,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: gtensor cmake
-      run: cmake -S . -B build-install -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
+      run: cmake -S . -B build-install -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
     - name: gtensor install
       run: cmake --build build-install -v -t install
     - name: examples cmake
-      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
       working-directory: ${{ github.workspace }}/examples
       env:
         gtensor_DIR: ${{ github.workspace }}/gtensor-install

@@ -5,13 +5,37 @@ include(CMakeFindDependencyMacro)
 list(APPEND CMAKE_MODULE_PATH ${GTENSOR_CMAKE_DIR})
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
-if(NOT TARGET gtensor::gtensor)
+set(GTENSOR_BUILD_DEVICES "@GTENSOR_BUILD_DEVICES@")
+
+if (NOT TARGET gtensor::gtensor_@GTENSOR_DEFAULT_DEVICE@)
+  message(STATUS "include targets ${GTENSOR_BUILD_DEVICES}")
   include("${GTENSOR_CMAKE_DIR}/gtensor-targets.cmake")
+  # Promote all targets to global so we can alias them below. See also
+  # https://cmake.org/cmake/help/v3.13/command/add_library.html#alias-libraries
+  foreach(DEVICE IN LISTS GTENSOR_BUILD_DEVICES)
+    set_target_properties(gtensor::gtensor_${DEVICE}
+                          PROPERTIES IMPORTED_GLOBAL TRUE)
+  endforeach()
 endif()
 
-if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
+# Create alias gtensor::gtensor for the requested device, or the default
+# if none was specified before calling find_package(gtensor)
+if (GTENSOR_DEVICE)
+  if (NOT ${GTENSOR_DEVICE} IN_LIST GTENSOR_BUILD_DEVICES)
+    message(FATAL_ERROR
+      "gtensor: support for '${GTENSOR_DEVICE}' is not installed")
+  endif()
+  add_library(gtensor::gtensor ALIAS gtensor::gtensor_${GTENSOR_DEVICE})
+else()
+  set(GTENSOR_DEVICE @GTENSOR_DEFAULT_DEVICE@)
+  add_library(gtensor::gtensor ALIAS gtensor::gtensor_@GTENSOR_DEFAULT_DEVICE@)
+endif()
+
+if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
   enable_language(CUDA)
-elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
+endif()
+
+if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   find_dependency(HIP CONFIG PATHS "/opt/rocm/hip")
   find_dependency(rocprim CONFIG PATHS "/opt/rocm/rocprim")
   find_dependency(rocthrust CONFIG PATHS "/opt/rocm/rocthrust")
@@ -31,4 +55,5 @@ function(target_gtensor_sources TARGET)
   endif()
 endfunction()
 
-set(GTENSOR_LIBRARIES gtensor::gtensor)
+set(GTENSOR_LIBRARIES @GTENSOR_TARGETS@)
+list(TRANSFORM GTENSOR_LIBRARIES PREPEND "gtensor::")

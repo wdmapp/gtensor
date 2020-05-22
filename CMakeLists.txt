@@ -5,29 +5,74 @@ project(gtensor
         HOMEPAGE_URL https://github.com/wdmapp/gtensor)
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
-set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'none', 'cuda', or 'hip'")
-set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "none" "cuda" "hip")
+set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
+set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip")
+set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', and 'hip' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 
+set(GTENSOR_SUPPORTED_DEVICES "host;cuda;hip")
+set(GTENSOR_TARGETS "")
+
+# by default, support host plus the default device
+if (GTENSOR_BUILD_DEVICES STREQUAL "")
+  set(GTENSOR_BUILD_DEVICES ${GTENSOR_DEVICE})
+  if (NOT ${GTENSOR_DEVICE} STREQUAL "host")
+    list(APPEND GTENSOR_BUILD_DEVICES "host")
+  endif()
+elseif(NOT ${GTENSOR_DEVICE} IN_LIST GTENSOR_BUILD_DEVICES)
+  list(APPEND GTENSOR_BUILD_DEVICES ${GTENSOR_DEVICE})
+endif()
+
+# don't build tests if used as a subproject
 set(IS_MAIN_PROJECT TRUE)
 if (NOT ${CMAKE_PROJECT_NAME} STREQUAL gtensor)
   set(IS_MAIN_PROJECT FALSE)
 endif()
 
-add_library(gtensor INTERFACE)
+function(device_is_supported DEVICE)
+  if (NOT ${DEVICE} IN_LIST GTENSOR_SUPPORTED_DEVICES)
+    message(FATAL_ERROR
+      "${PROJECT_NAME}: device '${GTENSOR_DEVICE}' is not supported (${GTENSOR_SUPPORTED_DEVICES})")
+  endif()
+endfunction()
 
-if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
-  message(STATUS "${PROJECT_NAME}: device cuda")
+foreach(DEVICE IN LISTS GTENSOR_BUILD_DEVICES)
+  device_is_supported(${DEVICE})
+endforeach()
+
+macro(add_gtensor_library DEVICE)
+  device_is_supported(${DEVICE})
+  add_library(gtensor_${DEVICE} INTERFACE)
+  target_include_directories(gtensor_${DEVICE}
+    INTERFACE
+       $<INSTALL_INTERFACE:include>
+       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  )
+  target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_14)
+
+  list(APPEND GTENSOR_TARGETS gtensor_${DEVICE})
+
+  # alias for using gtensor within build tree (tests, submodule usage)
+  add_library(gtensor::gtensor_${DEVICE} ALIAS gtensor_${DEVICE})
+endmacro()
+
+message(STATUS "${PROJECT_NAME}: default device ${GTENSOR_DEVICE}")
+if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
+  message(STATUS "${PROJECT_NAME}: adding gtensor_cuda target")
+  add_gtensor_library(cuda)
   enable_language(CUDA)
-  target_compile_definitions(gtensor INTERFACE GTENSOR_HAVE_DEVICE)
-  target_compile_definitions(gtensor INTERFACE GTENSOR_DEVICE_CUDA)
-  target_compile_options(gtensor INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-extended-lambda>)
-  target_compile_options(gtensor INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
-elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
-  message(STATUS "${PROJECT_NAME}: device hip")
+  target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_HAVE_DEVICE)
+  target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_DEVICE_CUDA)
+  target_compile_options(gtensor_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-extended-lambda>)
+  target_compile_options(gtensor_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+endif()
+
+if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
+  message(STATUS "${PROJECT_NAME}: adding gtensor_hip target")
+  add_gtensor_library(hip)
 
   if(NOT (CMAKE_CXX_COMPILER MATCHES ".*/hcc$" OR CMAKE_CXX_COMPILER MATCHES ".*/hipcc$"))
-    message(FATAL_ERROR "For GTENSOR_DEVICE=hip, 'hcc' or 'clang' must be used as C++ compiler.")
+    message(FATAL_ERROR "For GTENSOR_BUILD_DEVICES=hip, 'hcc' or 'hipcc' must be used as C++ compiler.")
   endif()
 
   find_package(HIP REQUIRED CONFIG PATHS "/opt/rocm/hip")
@@ -40,18 +85,24 @@ elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
   find_package(rocthrust REQUIRED CONFIG
                PATHS "/opt/rocm/rocthrust")
 
-  target_compile_definitions(gtensor INTERFACE GTENSOR_HAVE_DEVICE)
-  target_compile_definitions(gtensor INTERFACE GTENSOR_DEVICE_HIP)
+  target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
+  target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
   # Enable to see the full hcc command and include search paths
   #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
 
-  target_link_libraries(gtensor INTERFACE roc::rocthrust)
-elseif ("${GTENSOR_DEVICE}" STREQUAL "none")
-  message(STATUS "${PROJECT_NAME}: device none")
-else()
-  message(FATAL_ERROR "Unsupported GTENSOR_DEVICE: ${GTENSOR_DEVICE}")
+  target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 endif()
+
+if ("host" IN_LIST GTENSOR_BUILD_DEVICES)
+  message(STATUS "${PROJECT_NAME}: adding gtensor_host target")
+  add_gtensor_library(host)
+  target_compile_definitions(gtensor_host INTERFACE GTENSOR_DEVICE_HOST)
+endif()
+
+# define aliases for use in tests and examples subdirs
+add_library(gtensor ALIAS gtensor_${GTENSOR_DEVICE})
+add_library(gtensor::gtensor ALIAS gtensor_${GTENSOR_DEVICE})
 
 include(CTest)
 if (BUILD_TESTING AND IS_MAIN_PROJECT)
@@ -92,16 +143,6 @@ function(target_gtensor_sources TARGET)
     set_source_files_properties(${target_gtensor_sources_PRIVATE} PROPERTIES LANGUAGE CUDA)
   endif()
 endfunction()
-  
-target_include_directories(gtensor
-    INTERFACE
-       $<INSTALL_INTERFACE:include>
-       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
-target_compile_features(gtensor INTERFACE cxx_std_14)
-
-# alias for using gtensor within build tree (tests, submodule usage)
-add_library(gtensor::gtensor ALIAS gtensor)
 
 if (BUILD_TESTING AND IS_MAIN_PROJECT)
   add_subdirectory(tests)
@@ -119,12 +160,10 @@ endif()
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/gtensor)
 
-install(TARGETS gtensor
+install(TARGETS ${GTENSOR_TARGETS}
     EXPORT gtensor-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-
-set_target_properties(gtensor PROPERTIES EXPORT_NAME gtensor)
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
