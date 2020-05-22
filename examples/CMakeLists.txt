@@ -1,97 +1,55 @@
-cmake_minimum_required(VERSION 3.13)
-project(daxpy_example LANGUAGES CXX)
-set(VERSION 0.01)
+cmake_minimum_required(VERSION 3.13...3.17.2 FATAL_ERROR)
+project(gtensor-examples
+        VERSION 0.01
+        LANGUAGES CXX
+        HOMEPAGE_URL https://github.com/wdmapp/gtensor)
 
-set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'none', 'cuda', or 'hip'")
-set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "none" "cuda" "hip")
+option(GTENSOR_EXAMPLES_USE_FIND_PACKAGE,
+    "when ON, use find_package, when OFF use a copy of gtensor as subdir"
+    OFF)
 
-add_library(gtensor INTERFACE)
-
-if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
-  message(STATUS "gtensor device: cuda")
-  enable_language(CUDA)
-  target_compile_definitions(gtensor INTERFACE GTENSOR_HAVE_DEVICE)
-  target_compile_options(gtensor INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-extended-lambda>)
-  target_compile_options(gtensor INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
-elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
-  message(STATUS "gtensor device: hip")
-
-  if(NOT (CMAKE_CXX_COMPILER MATCHES ".*/hcc$" OR CMAKE_CXX_COMPILER MATCHES ".*/hipcc$"))
-    message(FATAL_ERROR "For GTENSOR_DEVICE=hip, 'hcc' or 'clang' must be used as C++ compiler.")
+# support building as a subdirectory of the main project, or
+# as an independent project with gtensor installed or gtensor
+# as a subdirectory
+if(NOT TARGET gtensor::gtensor)
+  if (GTENSOR_EXAMPLES_USE_FIND_PACKAGE)
+    message(STATUS "${PROJECT_NAME}: building with gtensor via find_package")
+    find_package(gtensor)
+  else()
+    message(STATUS "${PROJECT_NAME}: building with gtensor as a subdir")
+    file(MAKE_DIRECTORY extern/gtensor)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../include
+              ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt
+              ${CMAKE_CURRENT_SOURCE_DIR}/../gtensor-config.cmake.in
+         DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/extern/gtensor
+         PATTERN examples EXCLUDE)
+    add_subdirectory(extern/gtensor)
   endif()
-
-  if(NOT DEFINED HIP_PATH)
-    if(DEFINED "$ENV{HIP_PATH}")
-      set(HIP_PATH "$ENV{HIP_PATH}")
-    else()
-      set(HIP_PATH "/opt/rocm/hip")
-    endif()
+  if (${GTENSOR_DEVICE} STREQUAL "cuda")
+    # Note: must be called in top level CMakeLists.txt
+    enable_language(CUDA)
   endif()
-
-  # Get FindHIP.cmake from hip installation
-  list(APPEND CMAKE_MODULE_PATH
-    ${HIP_PATH}/cmake
-  )
-  find_package(HIP REQUIRED CONFIG PATHS "${HIP_PATH}")
-  if(HIP_PLATFORM STREQUAL "nvcc")
-    message(FATAL_ERROR "Error: use GTENSOR_DEVICE=cuda for nVidia GPU support")
-  endif()
-
-  # On ROCm rocThrust requires rocPRIM
-  find_package(rocprim REQUIRED CONFIG
-               HINTS "${HIP_PATH}/../rocprim" PATHS "/opt/rocm/rocprim")
-
-  find_package(rocthrust REQUIRED CONFIG
-               HINTS "${HIP_PATH}/../rocthrust" PATHS "/opt/rocm/rocthrust")
-
-  find_package(hcc REQUIRED CONFIG
-               HINTS "${HIP_PATH}/../" PATHS "/opt/rocm")
-
-  target_compile_definitions(gtensor INTERFACE GTENSOR_HAVE_DEVICE)
-
-  # Enable to see the full hcc command and include search paths
-  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
-
-  target_link_libraries(gtensor INTERFACE roc::rocthrust)
-elseif ("${GTENSOR_DEVICE}" STREQUAL "none")
-  message(STATUS "gtensor device: none")
 else()
-  message(FATAL_ERROR "Unsupported GTENSOR_DEVICE: ${GTENSOR_DEVICE}")
+  message(STATUS "${PROJECT_NAME}: building as gtensor subdir")
 endif()
 
-function(target_cxx_sources TARGET)
-  set(options "")
-  set(oneValueArgs "")
-  set(multiValueArgs PRIVATE)
-  cmake_parse_arguments(target_cxx_sources "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  target_sources(${TARGET} PRIVATE ${target_cxx_sources_PRIVATE})
-  if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
-    set_source_files_properties(${target_cxx_sources_PRIVATE} PROPERTIES LANGUAGE CUDA)
-  endif()
-endfunction()
-
-target_include_directories(gtensor INTERFACE ../include)
-target_compile_features(gtensor INTERFACE cxx_std_14)
-
-get_target_property(gtensor_INCLUDE_DIRS gtensor INTERFACE_INCLUDE_DIRECTORIES)
-
 add_executable(daxpy)
-target_cxx_sources(daxpy PRIVATE src/daxpy.cxx)
-target_link_libraries(daxpy gtensor)
+target_gtensor_sources(daxpy PRIVATE src/daxpy.cxx)
+target_link_libraries(daxpy gtensor::gtensor)
 
 add_executable(stencil1d)
-target_cxx_sources(stencil1d PRIVATE src/stencil1d.cxx)
-target_link_libraries(stencil1d gtensor)
+target_gtensor_sources(stencil1d PRIVATE src/stencil1d.cxx)
+target_link_libraries(stencil1d gtensor::gtensor)
 
 add_executable(mult_table)
-target_cxx_sources(mult_table PRIVATE src/mult_table.cxx)
-target_link_libraries(mult_table gtensor)
+target_gtensor_sources(mult_table PRIVATE src/mult_table.cxx)
+target_link_libraries(mult_table gtensor::gtensor)
 
 if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
   add_executable(trig)
-  target_cxx_sources(trig PRIVATE src/trig.cu)
+  target_gtensor_sources(trig PRIVATE src/trig.cu)
 
   add_executable(trig_adapted)
-  target_cxx_sources(trig_adapted PRIVATE src/trig_adapted.cxx)
-  target_link_libraries(trig_adapted gtensor)
+  target_gtensor_sources(trig_adapted PRIVATE src/trig_adapted.cxx)
+  target_link_libraries(trig_adapted gtensor::gtensor)
 endif()

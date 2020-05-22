@@ -3,7 +3,7 @@ set(MPIEXEC_COMMAND${MPIEXEC_EXECUTABLE})
 
 macro(add_gtensor_test name)
   add_executable(${name})
-  target_cxx_sources(${name} PRIVATE ${name}.cxx)
+  target_gtensor_sources(${name} PRIVATE ${name}.cxx)
   target_link_libraries(${name} gtensor GTest::Main)
   if (USE_GTEST_DISCOVER_TESTS)
     gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
@@ -12,7 +12,7 @@ macro(add_gtensor_test name)
   endif()
 endmacro()
 
-if (GTENSOR_CUDA)
+if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
   add_gtensor_test(test_thrust_ext)
 endif()
 

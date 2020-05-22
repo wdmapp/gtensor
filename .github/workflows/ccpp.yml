@@ -25,6 +25,7 @@ jobs:
     - name: test
       run: cmake --build build-tests-${{ matrix.cxx }} -t test
 
+
   examples-cpu:
     runs-on: ubuntu-latest
     strategy:
@@ -35,17 +36,70 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S examples -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
       run: cmake --build build-examples-${{ matrix.cxx }} -v
     - name: daxpy
-      run: ./build-examples-${{ matrix.cxx }}/daxpy
+      run: ./build-examples-${{ matrix.cxx }}/examples/daxpy
     - name: stencil1d
-      run: ./build-examples-${{ matrix.cxx }}/stencil1d
+      run: ./build-examples-${{ matrix.cxx }}/examples/stencil1d
     - name: mult_table
-      run: ./build-examples-${{ matrix.cxx }}/mult_table
+      run: ./build-examples-${{ matrix.cxx }}/examples/mult_table
+
+
+  cmake-subdir:
+    runs-on: ubuntu-latest
+    env:
+      cxx: 'clang++-9'
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/examples
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    - name: build
+      run: cmake --build build-subdir -v
+    - name: daxpy
+      run: ./build-subdir/daxpy
+    - name: stencil1d
+      run: ./build-subdir/stencil1d
+    - name: mult_table
+      run: ./build-subdir/mult_table
+
+
+  cmake-install:
+    runs-on: ubuntu-latest
+    env:
+      cxx: 'clang++-9'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: gtensor cmake
+      run: cmake -S . -B build-install -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
+    - name: gtensor install
+      run: cmake --build build-install -v -t install
+    - name: examples cmake
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
+      working-directory: ${{ github.workspace }}/examples
+      env:
+        gtensor_DIR: ${{ github.workspace }}/gtensor-install
+    - name: examples build
+      run: cmake --build build-find-package -v
+      working-directory: ${{ github.workspace }}/examples
+    - name: daxpy
+      run: ./build-find-package/daxpy
+      working-directory: ${{ github.workspace }}/examples
+    - name: stencil1d
+      run: ./build-find-package/stencil1d
+      working-directory: ${{ github.workspace }}/examples
+    - name: mult_table
+      run: ./build-find-package/mult_table
+      working-directory: ${{ github.workspace }}/examples
+
 
   build-cuda:
     runs-on: ubuntu-latest
@@ -59,14 +113,10 @@ jobs:
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
-    - name: cmake tests
-      run: cmake -S . -B build-tests-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo
-    - name: build tests
-      run: cmake --build build-tests-cuda -v
-    - name: cmake examples
-      run: cmake -S examples -B build-examples-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo
-    - name: build examples
-      run: cmake --build build-examples-cuda -v
+    - name: cmake
+      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON
+    - name: build
+      run: cmake --build build-cuda -v
 
   build-hip:
     runs-on: ubuntu-latest
@@ -74,7 +124,7 @@ jobs:
     env:
       CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
       CXX: /opt/rocm/bin/hipcc
-      CXXFLAGS: -amdgpu-target=gfx803
+      CXXFLAGS: -amdgpu-target=gfx803 -Wno-unused-command-line-argument
 
     steps:
     - uses: actions/checkout@v2
@@ -84,11 +134,7 @@ jobs:
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
-    - name: cmake tests
-      run: cmake -S . -B build-tests-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo
-    - name: build tests
-      run: cmake --build build-tests-hip -v
-    - name: cmake examples
-      run: cmake -S examples -B build-examples-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo
-    - name: build examples
-      run: cmake --build build-examples-hip -v
+    - name: cmake
+      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON
+    - name: build
+      run: cmake --build build-hip -v

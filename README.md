@@ -1,6 +1,6 @@
 # gtensor
 
-GTensor is a multi-dimensional array C++14 header-only library for hybrid GPU
+gtensor is a multi-dimensional array C++14 header-only library for hybrid GPU
 development. It was inspired by
 [xtensor](https://xtensor.readthedocs.io/en/latest/), and designed to support
 the GPU port of the [GENE](http://genecode.org) fusion code.
@@ -20,18 +20,96 @@ Features:
 
 ## License
 
-GTensor is licensed under the 3-clause BSD license. See the [LICENSE](LICENSE)
+gtensor is licensed under the 3-clause BSD license. See the [LICENSE](LICENSE)
 file for details.
-
-## Getting Started
 
 ## Installation
 
-GTensor is a header only library - to use, simply add the gtensor base
-directory to your projects include path. Building with CUDA or HIP support
-requires some more complex setup - see the examples
-(CMakeLists.txt)[examples/CMakeLists.txt] as a starting point for how to do
-this using cmake. See also the build line below for the daxpy example.
+gtensor requires cmake 3.13+ to build and install:
+```sh
+git clone https://github.com/wdmapp/gtensor.git
+cd gtensor
+cmake -S . -B build -DGTENSOR_DEVICE=cuda \
+  -DCMAKE_INSTALL_PREFIX=/opt/gtensor \
+  -DBUILD_TESTING=OFF
+cmake --build build --target install
+```
+to build for cpu/host only, use `-DGTENSOR_DEVICE=none`, and for AMD/HIP use
+`-DGTENSOR_DEVICE=hip -DCMAKE_CXX_COMPILER=$(which hipcc)`
+(see also further HIP requirements below).
+
+### nVidia CUDA requirements
+
+gtensor for nVidia GPUs with CUDA requires
+[CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) 10.0+.
+
+### AMD HIP requirements
+
+gtensor for AMD GPUs with HIP requires ROCm 3.3.0+
+with rocthrust and rocprim. See the
+[ROCm installation guide](https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html)
+for details. In Ubuntu, after setting up the ROCm repository, the required
+packages can be installed like this:
+```
+sudo apt install rocm-dkms rocm-dev rocthrust
+```
+The official packages install to `/opt/rocm`. If using a different install
+location, add it to `CMAKE_PREFIX_PATH` when running cmake for the application.
+
+### HOST CPU (no device) requirements
+
+gtensor should build with any C++ compiler supporting C++14. It has been
+tested with g++ 7, 8, and 9 and clang++ 8, 9, and 10.
+
+## Usage
+
+Once installed, gtensor can be used by adding this to a project's
+`CMakeLists.txt`:
+
+```cmake
+# if using GTENSOR_DEVICE=cuda
+enable_language(CUDA)
+
+find_library(gtensor)
+
+# for each C++ target using gtensor
+target_gtensor_sources(myapp PRIVATE src/myapp.cxx)
+target_link_libraries(myapp gtensor::gtensor)
+```
+
+When running `cmake` for a project, add the gtensor
+install prefix to `CMAKE_PREFIX_PATH`. For example:
+```bash
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/gtensor
+```
+
+### Using gtensor as a subdirectory or git submodule
+
+gtensor also supports usage as a subdiretory of another cmake project. This
+is typically done via git submodules. For example:
+```sh
+cd /path/to/app
+git submodule add https://github.com/wdmapp/gtensor.git external/gtensor
+```
+
+In the applications `CMakeLists.txt`:
+```cmake
+# set here or on the cmake command-line with `-DGTENSOR_DEVICE=...`.
+set(GTENSOR_DEVICE "cuda" CACHE STRING)
+
+if (GTENSOR_DEVICE STREQUAL "cuda")
+  enable_language(CUDA)
+endif()
+
+# after setting GTENSOR_DEVICE
+add_subdirectory(external/gtensor)
+
+# for each C++ target using gtensor
+target_gtensor_sources(myapp PRIVATE src/myapp.cxx)
+target_link_libraries(myapp gtensor::gtensor)
+```
+
+## Getting Started
 
 ### Basic Example (host CPU only)
 

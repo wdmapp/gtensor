@@ -1,0 +1,34 @@
+# See https://github.com/pabloariasal/modern-cmake-sample
+get_filename_component(GTENSOR_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${GTENSOR_CMAKE_DIR})
+list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+if(NOT TARGET gtensor::gtensor)
+  include("${GTENSOR_CMAKE_DIR}/gtensor-targets.cmake")
+endif()
+
+if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
+  enable_language(CUDA)
+elseif ("${GTENSOR_DEVICE}" STREQUAL "hip")
+  find_dependency(HIP CONFIG PATHS "/opt/rocm/hip")
+  find_dependency(rocprim CONFIG PATHS "/opt/rocm/rocprim")
+  find_dependency(rocthrust CONFIG PATHS "/opt/rocm/rocthrust")
+endif()
+
+# function to enable configure source properties based on the
+# gtensor device backend. In particular, enable CUDA language
+# for CUDA backend, even if the file doesn't have a .cu extension.
+function(target_gtensor_sources TARGET)
+  set(options "")
+  set(oneValueArgs "")
+  set(multiValueArgs PRIVATE)
+  cmake_parse_arguments(target_gtensor_sources "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  target_sources(${TARGET} PRIVATE ${target_gtensor_sources_PRIVATE})
+  if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
+    set_source_files_properties(${target_gtensor_sources_PRIVATE} PROPERTIES LANGUAGE CUDA)
+  endif()
+endfunction()
+
+set(GTENSOR_LIBRARIES gtensor::gtensor)
