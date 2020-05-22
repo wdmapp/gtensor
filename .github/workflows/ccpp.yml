@@ -2,7 +2,7 @@ name: C/C++ CI CPU
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, 'pr/*' ]
   pull_request:
     branches: [ master ]
 
