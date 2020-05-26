@@ -10,12 +10,8 @@
 #ifndef GTENSOR_DEVICE_RUNTIME_H
 #define GTENSOR_DEVICE_RUNTIME_H
 
-#if GTENSOR_HAVE_DEVICE
-
-#ifdef __HCC__
+#ifdef GTENSOR_DEVICE_HIP
 #include "hip/hip_runtime.h"
-#endif
-
 #endif
 
 #endif

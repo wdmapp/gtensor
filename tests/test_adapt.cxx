@@ -5,7 +5,7 @@
 #ifdef GTENSOR_HAVE_DEVICE
 #include "gtensor/device_runtime.h"
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_DEVICE_CUDA
 template <typename T>
 T* malloc_device(int count)
 {
@@ -19,9 +19,9 @@ void free_device(T* p)
 {
   cudaFree(p);
 }
-#endif // __CUDACC__
+#endif // GTENSOR_DEVICE_CUDA
 
-#ifdef __HCC__
+#ifdef GTENSOR_DEVICE_HIP
 
 template <typename T>
 T* malloc_device(int count)
@@ -36,9 +36,9 @@ void free_device(T* p)
 {
   hipFree(p);
 }
-#endif // __HCC__
+#endif // GTENSOR_DEVICE_HIP
 
-#ifdef __SYCL__
+#ifdef GTENSOR_DEVICE_SYCL
 #include "thrust/sycl.h"
 
 template <typename T>
@@ -52,7 +52,7 @@ void free_device(T* p)
 {
   sycl::free(p, thrust::sycl::get_queue());
 }
-#endif // __SYCL__
+#endif // GTENSOR_DEVICE_SYCL
 
 TEST(adapt, adapt_device)
 {

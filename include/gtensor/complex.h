@@ -2,7 +2,7 @@
 #ifndef GTENSOR_COMPLEX_H
 #define GTENSOR_COMPLEX_H
 
-#if (__CUDACC__ || __HCC__)
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 #include <thrust/complex.h>
 #else
 #include <complex>

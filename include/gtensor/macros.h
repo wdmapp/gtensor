@@ -25,7 +25,7 @@
 #define GT_BOUNDSCHECK
 #endif
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_DEVICE_CUDA
 
 #define gtLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
@@ -58,7 +58,7 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
   } while (0)
 #endif
 
-#elif __HCC__
+#elif defined(GTENSOR_DEVICE_HIP)
 
 #define gtLaunchKernel(...)    hipLaunchKernelGGL(__VA_ARGS__)
 
@@ -88,6 +88,6 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
   } while (0)
 #endif // NDEBUG
 
-#endif // end __CUDACC__/__HCC__
+#endif // end GTENSOR_HAVE_DEVICE
 
 #endif // GTENSORS_MACROS_H

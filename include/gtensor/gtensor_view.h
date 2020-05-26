@@ -79,14 +79,14 @@ inline gtensor_view<T, N, S>::gtensor_view(pointer data,
   : base_type(shape, strides), storage_(data, calc_size(shape))
 {
 #ifndef NDEBUG
-#ifdef __CUDACC__
+#ifdef GTENSOR_DEVICE_CUDA
   if (std::is_same<S, space::device>::value) {
     cudaPointerAttributes attr;
     cudaCheck(cudaPointerGetAttributes(&attr, thrust::raw_pointer_cast(data)));
     assert(attr.type == cudaMemoryTypeDevice ||
            attr.type == cudaMemoryTypeManaged);
   }
-#elif __HCC__
+#elif defined(GTENSOR_DEVICE_HIP)
   if (std::is_same<S, space::device>::value) {
     hipPointerAttributes attr;
     hipCheck(hipPointerGetAttributes(&attr, thrust::raw_pointer_cast(data)));
