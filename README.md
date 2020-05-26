@@ -23,9 +23,9 @@ Features:
 gtensor is licensed under the 3-clause BSD license. See the [LICENSE](LICENSE)
 file for details.
 
-## Installation
+## Installation (cmake)
 
-gtensor requires cmake 3.13+ to build and install:
+gtensor uses cmake 3.13+ to build the tests and install:
 ```sh
 git clone https://github.com/wdmapp/gtensor.git
 cd gtensor
@@ -34,9 +34,12 @@ cmake -S . -B build -DGTENSOR_DEVICE=cuda \
   -DBUILD_TESTING=OFF
 cmake --build build --target install
 ```
-to build for cpu/host only, use `-DGTENSOR_DEVICE=none`, and for AMD/HIP use
+to build for cpu/host only, use `-DGTENSOR_DEVICE=host`, and for AMD/HIP use
 `-DGTENSOR_DEVICE=hip -DCMAKE_CXX_COMPILER=$(which hipcc)`
 (see also further HIP requirements below).
+
+Note that gtensor can still be used by applications not using cmake -
+see [Usage (GNU make)](#usage-gnu-make) for an example.
 
 ### nVidia CUDA requirements
 
@@ -61,7 +64,26 @@ location, add it to `CMAKE_PREFIX_PATH` when running cmake for the application.
 gtensor should build with any C++ compiler supporting C++14. It has been
 tested with g++ 7, 8, and 9 and clang++ 8, 9, and 10.
 
-## Usage
+### Advanced multi-device configuration
+
+By default, gtensor will install support for the device specified by
+the `GTENSOR_DEVICE` variable (default `cuda`), and also the `host` (cpu only)
+device. This can be configured with `GTENSOR_BUILD_DEVICES` as a semicolon (;)
+separated list. For example, to build support for all three backends
+(i.e. assuming a machine with both nVidia and AMD GPUs):
+```
+cmake -S . -B build -DGTENSOR_DEVICE=cuda \
+  -DGTENSOR_BUILD_DEVICES=host;cuda;hip \
+  -DCMAKE_INSTALL_PREFIX=/opt/gtensor \
+  -DBUILD_TESTING=OFF
+```
+
+This will cause targets to be created for each device: `gtensor::gtensor_cuda`,
+`gtensor::gtensor_host`, and `gtensor::gtensor_hip`. The main
+`gtensor::gtensor` target will be an alias for the default set by
+`GTENSOR_DEVICE` (the cuda target in the above example).
+
+## Usage (cmake)
 
 Once installed, gtensor can be used by adding this to a project's
 `CMakeLists.txt`:
@@ -83,6 +105,16 @@ install prefix to `CMAKE_PREFIX_PATH`. For example:
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/gtensor
 ```
 
+The default gtensor device, set with the `GTENSOR_DEVICE` cmake variable
+when installing gtensor, can be overridden by setting `GTENSOR_DEVICE`
+again in the client application before the call to `find_library(gtensor)`,
+typically via the `-D` cmake command line option. This can be useful to debug
+an application by setting `-DGTENSOR_DEVICE=host`, to see if the problem is
+related to the hybrid device model or is an algorithmic problem, or to run a
+host-only interactive debugger. Note that only devices specified with
+`GTENSOR_BUILD_DEVICES` at gtensor install time are available (the default
+device and `host` if no option was specified).
+
 ### Using gtensor as a subdirectory or git submodule
 
 gtensor also supports usage as a subdiretory of another cmake project. This
@@ -92,12 +124,12 @@ cd /path/to/app
 git submodule add https://github.com/wdmapp/gtensor.git external/gtensor
 ```
 
-In the applications `CMakeLists.txt`:
+In the application's `CMakeLists.txt`:
 ```cmake
 # set here or on the cmake command-line with `-DGTENSOR_DEVICE=...`.
-set(GTENSOR_DEVICE "cuda" CACHE STRING)
+set(GTENSOR_DEVICE "cuda" CACHE STRING "")
 
-if (GTENSOR_DEVICE STREQUAL "cuda")
+if (${GTENSOR_DEVICE} STREQUAL "cuda")
   enable_language(CUDA)
 endif()
 
@@ -108,6 +140,22 @@ add_subdirectory(external/gtensor)
 target_gtensor_sources(myapp PRIVATE src/myapp.cxx)
 target_link_libraries(myapp gtensor::gtensor)
 ```
+
+## Usage (GNU make)
+
+As a header only library, gtensor can be integrated into an existing
+GNU make project as a subdirectory fairly easily for cuda and host devices.
+
+The subdirectory is typically managed via git submodules, for example:
+```sh
+cd /path/to/app
+git submodule add https://github.com/wdmapp/gtensor.git external/gtensor
+```
+
+See [examples/Makefile](examples/Makefile) for a good way of organizing a
+project's Makefile to provide cross-device support. The examples can be
+built for different devices by setting the `GTENSOR_DEVICE` variable,
+e.g. `cd examples; make GTENSOR_DEVICE=host`.
 
 ## Getting Started
 

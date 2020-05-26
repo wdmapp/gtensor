@@ -2,7 +2,7 @@ name: C/C++ CI CPU
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, 'pr/*' ]
   pull_request:
     branches: [ master ]
 
@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -36,7 +36,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
+      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -47,6 +47,28 @@ jobs:
       run: ./build-examples-${{ matrix.cxx }}/examples/stencil1d
     - name: mult_table
       run: ./build-examples-${{ matrix.cxx }}/examples/mult_table
+
+
+  examples-cpu-gnu-make:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup gtensor subdir
+      run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
+      working-directory: ${{ github.workspace }}/examples
+    - name: build
+      run: make GTENSOR_DEVICE=host
+      working-directory: ${{ github.workspace }}/examples
+    - name: daxpy
+      run: ./daxpy
+      working-directory: ${{ github.workspace }}/examples
+    - name: stencil1d
+      run: ./stencil1d
+      working-directory: ${{ github.workspace }}/examples
+    - name: mult_table
+      run: ./mult_table
+      working-directory: ${{ github.workspace }}/examples
 
 
   cmake-subdir:
@@ -60,7 +82,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: build
       run: cmake --build build-subdir -v
     - name: daxpy
@@ -79,11 +101,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: gtensor cmake
-      run: cmake -S . -B build-install -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
+      run: cmake -S . -B build-install -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
     - name: gtensor install
       run: cmake --build build-install -v -t install
     - name: examples cmake
-      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=none -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
       working-directory: ${{ github.workspace }}/examples
       env:
         gtensor_DIR: ${{ github.workspace }}/gtensor-install
@@ -117,6 +139,13 @@ jobs:
       run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON
     - name: build
       run: cmake --build build-cuda -v
+    - name: GNU make setup gtensor subdir
+      run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
+      working-directory: ${{ github.workspace }}/examples
+    - name: GNU make build
+      run: make GTENSOR_DEVICE=cuda
+      working-directory: ${{ github.workspace }}/examples
+
 
   build-hip:
     runs-on: ubuntu-latest
@@ -136,5 +165,11 @@ jobs:
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: cmake
       run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON
-    - name: build
+    - name: cmake build
       run: cmake --build build-hip -v
+    - name: GNU make setup gtensor subdir
+      run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
+      working-directory: ${{ github.workspace }}/examples
+    - name: GNU make build
+      run: make GTENSOR_DEVICE=hip
+      working-directory: ${{ github.workspace }}/examples

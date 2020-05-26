@@ -17,13 +17,13 @@ if(NOT TARGET gtensor::gtensor)
     find_package(gtensor)
   else()
     message(STATUS "${PROJECT_NAME}: building with gtensor as a subdir")
-    file(MAKE_DIRECTORY extern/gtensor)
+    file(MAKE_DIRECTORY external/gtensor)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../include
               ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt
               ${CMAKE_CURRENT_SOURCE_DIR}/../gtensor-config.cmake.in
-         DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/extern/gtensor
+         DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/external/gtensor
          PATTERN examples EXCLUDE)
-    add_subdirectory(extern/gtensor)
+    add_subdirectory(external/gtensor)
   endif()
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     # Note: must be called in top level CMakeLists.txt
