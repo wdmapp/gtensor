@@ -145,8 +145,6 @@ target_link_libraries(myapp gtensor::gtensor)
 
 As a header only library, gtensor can be integrated into an existing
 GNU make project as a subdirectory fairly easily for cuda and host devices.
-For HIP/ROCm, determining the correct libs and includes is more complex,
-and it may be worth migrating to cmake.
 
 The subdirectory is typically managed via git submodules, for example:
 ```sh
@@ -154,32 +152,10 @@ cd /path/to/app
 git submodule add https://github.com/wdmapp/gtensor.git external/gtensor
 ```
 
-In the application's `Makefile`:
-```make
-# gtensor configuration
-GTENSOR_DIR = external/gtensor
-GTENSOR_DEVICE = cuda
-
-GTENSOR_DEFINES = -DGTENSOR_HAVE_DEVICE -DGTENSOR_DEVICE_$(GTENSOR_DEVICE) -NDEBUG
-GTENSOR_INCLUDES = -I$(GTENSOR_DIR)/include
-GTENSOR_LIBS =
-GTENSOR_FLAGS = -std=c++14 -O2
-ifeq ($(GTENSOR_DEVICE),cuda)
-  CXX = nvcc
-  GTENSOR_FLAGS += --expt-extended-lambda --expt-relaxed-constexpr
-else ($(GTENSOR_DEVICE),hip)
-  ROCM_PATH = /opt/rocm
-  AMDGPU_TARGET = gfx803
-  CXX = hipcc
-  GTENSOR_FLAGS += -hc -amdgpu-target=$(AMDGPU_TARGET)
-  # lib configuration for ROCm is complex, see ROCm documentation for details.
-  # Make sure to add rocprim and rocthrust.
-else
-  CXX = clang++
-endif
-
-CXXFLAGS += $(GTENSOR_DEFINES) $(GTENSOR_INCLUDES) $(GTENSOR_LIBS) $(GTENSOR_FLAGS)
-```
+See [examples/Makefile](examples/Makefile) for a good way of organizing a
+project's Makefile to provide cross-device support. The examples can be
+built for different devices by setting the `GTENSOR_DEVICE` variable,
+e.g. `cd examples; make GTENSOR_DEVICE=host`.
 
 ## Getting Started
 
