@@ -2,9 +2,8 @@
 #ifndef GTENSOR_GTENSOR_H
 #define GTENSOR_GTENSOR_H
 
-#if GTENSOR_HAVE_DEVICE
-#include "thrust_ext.h"
-#endif
+#include "device_backend.h"
+#include "device_copy.h"
 
 #include "gfunction.h"
 #include "gtensor_view.h"
@@ -84,6 +83,7 @@ inline gtensor<T, N, S>::gtensor(const shape_type& shape)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
 {}
 
+
 template <typename T, int N, typename S>
 inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   : base_type({}, {})
@@ -91,7 +91,19 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   // FIXME?! this kinda changes row-major list into transposed col-major array
   shape_type shape = helper::nd_initializer_list_shape<N>(il);
   base_type::resize(shape);
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(GTENSOR_USE_THRUST)
+  if (std::is_same<S, space::device>::value) {
+    gtensor<T, N, space::host> host_temp(shape);
+    helper::nd_initializer_list_copy<N>(il, host_temp);
+    gt::memcpy<T, space::host, space::device>(base_type::data(),
+                                              host_temp.data(),
+                                              host_temp.size());
+  } else {
+    helper::nd_initializer_list_copy<N>(il, (*this));
+  }
+#else
   helper::nd_initializer_list_copy<N>(il, (*this));
+#endif
 }
 
 template <typename T, int N, typename S>
@@ -154,28 +166,28 @@ template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor_view<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
 }
 
 // ======================================================================

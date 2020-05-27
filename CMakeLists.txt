@@ -6,6 +6,7 @@ project(gtensor
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
+set(GTENSOR_USE_THRUST OFF CACHE BOOL "Use thrust for cuda and hip devices")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', and 'hip' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
@@ -63,6 +64,9 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
   enable_language(CUDA)
   target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_DEVICE_CUDA)
+  if (GTENSOR_USE_THRUST)
+    target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_USE_THRUST)
+  endif()
   target_compile_options(gtensor_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-extended-lambda>)
   target_compile_options(gtensor_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
@@ -80,18 +84,20 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     message(FATAL_ERROR "Error: use GTENSOR_DEVICE=cuda for nVidia GPU support")
   endif()
 
-  find_package(rocprim REQUIRED CONFIG
-               PATHS "/opt/rocm/rocprim")
-  find_package(rocthrust REQUIRED CONFIG
-               PATHS "/opt/rocm/rocthrust")
-
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
+  if (GTENSOR_USE_THRUST)
+    target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
+    find_package(rocprim REQUIRED CONFIG
+                 PATHS "/opt/rocm/rocprim")
+    find_package(rocthrust REQUIRED CONFIG
+                 PATHS "/opt/rocm/rocthrust")
+    target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
+  endif()
+
   # Enable to see the full hcc command and include search paths
   #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
-
-  target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 endif()
 
 if ("host" IN_LIST GTENSOR_BUILD_DEVICES)

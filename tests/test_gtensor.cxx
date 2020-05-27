@@ -194,7 +194,7 @@ TEST(gtensor, assign_expression_2d_resize)
 TEST(gtensor, device_assign_gtensor)
 {
   gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
-  gt::gtensor_device<float, 2> b(a.shape());
+  gt::gtensor_device<double, 2> b(a.shape());
 
   b = a;
 
