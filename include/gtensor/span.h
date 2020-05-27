@@ -2,6 +2,8 @@
 #ifndef GTENSOR_SPAN_H
 #define GTENSOR_SPAN_H
 
+#include <cassert>
+
 #include "defs.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
