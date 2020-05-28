@@ -17,10 +17,30 @@ namespace gt {
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(T *dest, const T *src, std::size_t bytes)
+inline void memcpy(T *dest, const T *src, std::size_t count)
 {
-  thrust::copy(src, src + (bytes * sizeof(T)), dest);
+  thrust::copy(src, src + count, dest);
 }
+
+template <typename T, typename S_from, typename S_to>
+inline void memcpy(thrust::device_ptr<T> dest, const T *src, std::size_t count)
+{
+  thrust::copy(src, src + count, dest);
+}
+
+template <typename T, typename S_from, typename S_to>
+inline void memcpy(T *dest, thrust::device_ptr<const T> src, std::size_t count)
+{
+  thrust::copy(src, src + count, dest);
+}
+
+template <typename T, typename S_from, typename S_to>
+inline void memcpy(thrust::device_ptr<T> dest, thrust::device_ptr<const T> src,
+                   std::size_t count)
+{
+  thrust::copy(src, src + count, dest);
+}
+
 
 #else // using gt::backend::device_storage
 

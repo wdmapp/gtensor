@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <type_traits>
 
 #ifdef GTENSOR_HAVE_DEVICE
 #include "device_runtime.h"
@@ -188,14 +189,13 @@ struct host_allocator
 
 #ifdef GTENSOR_USE_THRUST
 
-// define no-op device_pointer/raw ponter casts
 template<typename Pointer>
-inline Pointer raw_pointer_cast(Pointer p) {
+inline auto raw_pointer_cast(Pointer p) {
   return thrust::raw_pointer_cast(p);
 }
 
 template<typename Pointer>
-inline Pointer device_pointer_cast(Pointer p) {
+inline auto device_pointer_cast(Pointer p) {
   return thrust::device_pointer_cast(p);
 }
 
