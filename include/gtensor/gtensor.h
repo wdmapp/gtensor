@@ -8,6 +8,7 @@
 #include "gfunction.h"
 #include "gtensor_view.h"
 #include "gview.h"
+#include "operator.h"
 
 namespace gt
 {
