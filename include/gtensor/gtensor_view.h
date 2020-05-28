@@ -90,11 +90,10 @@ inline gtensor_view<T, N, S>::gtensor_view(pointer data,
   }
 #elif defined(GTENSOR_DEVICE_HIP)
   if (std::is_same<S, space::device>::value) {
-    hipPointerAttributes attr;
+    hipPointerAttribute_t attr;
     hipCheck(hipPointerGetAttributes(&attr,
                                      gt::backend::raw_pointer_cast(data)));
-    assert(attr.type == hipMemoryTypeDevice ||
-           attr.isManaged == true);
+    assert(attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
   }
 #endif
 #endif
