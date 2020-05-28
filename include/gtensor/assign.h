@@ -224,10 +224,10 @@ struct assigner<1, space::device>
     dim3 numThreads(BS_1D);
     dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0, 0,
                    lhs.to_kernel(), rhs.to_kernel());
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -242,10 +242,10 @@ struct assigner<2, space::device>
     dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
                    (lhs.shape(1) + BS_Y - 1) / BS_Y);
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     gtLaunchKernel(kernel_assign_2, numBlocks, numThreads, 0, 0,
                    lhs.to_kernel(), rhs.to_kernel());
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -260,13 +260,13 @@ struct assigner<3, space::device>
     dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
                    (lhs.shape(1) + BS_Y - 1) / BS_Y, lhs.shape(2));
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     /*std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     std::cout << "numBlocks="<<numBlocks.x<<" "<<numBlocks.y<<" "<<numBlocks.z<<
     ", numThreads="<<numThreads.x<<" "<<numThreads.y<<" "<<numThreads.z<<"\n";*/
     gtLaunchKernel(kernel_assign_3, numBlocks, numThreads, 0, 0,
                    lhs.to_kernel(), rhs.to_kernel());
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -282,11 +282,11 @@ struct assigner<4, space::device>
                    (lhs.shape(1) + BS_Y - 1) / BS_Y,
                    lhs.shape(2) * lhs.shape(3));
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_4, numBlocks, numThreads, 0, 0,
                    lhs.to_kernel(), rhs.to_kernel());
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -302,11 +302,11 @@ struct assigner<5, space::device>
                    (lhs.shape(2) * lhs.shape(3) + BS_Y - 1) / BS_Y,
                    lhs.shape(4));
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_5, numBlocks, numThreads, 0, 0,
                    lhs.to_kernel(), rhs.to_kernel());
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -322,11 +322,11 @@ struct assigner<6, space::device>
                    (lhs.shape(2) * lhs.shape(3) + BS_Y - 1) / BS_Y,
                    lhs.shape(4) * lhs.shape(5));
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_6, numBlocks, numThreads, 0, 0,
                    lhs.to_kernel(), rhs.to_kernel());
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 

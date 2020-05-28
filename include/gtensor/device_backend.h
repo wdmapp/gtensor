@@ -2,6 +2,7 @@
 #define GTENSOR_DEVICE_BACKEND_H
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -11,19 +12,38 @@
 #include "thrust_ext.h"
 #endif
 
+#include "macros.h"
+
+#endif // GTENSOR_HAVE_DEVICE
+
 namespace gt {
 
 namespace backend {
 
 #ifdef GTENSOR_DEVICE_CUDA
 
-inline void checkCall(cudaError_t err, const char *info)
+void device_memcpy_hh(void *dst, const void *src, size_t bytes)
 {
-  if (err != cudaSuccess) {
-    std::cerr << "CUDA error [" << info << "]: "
-              << cudaGetErrorString(err) << std::endl;
-    std::abort();
-  }
+  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyHostToHost));
+  gtGpuCheck(cudaDeviceSynchronize());
+}
+
+void device_memcpy_dd(void *dst, const void *src, size_t bytes)
+{
+  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToDevice));
+  gtGpuCheck(cudaDeviceSynchronize());
+}
+
+void device_memcpy_dh(void *dst, const void *src, size_t bytes)
+{
+  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToHost));
+  gtGpuCheck(cudaDeviceSynchronize());
+}
+
+void device_memcpy_hd(void *dst, const void *src, size_t bytes)
+{
+  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyHostToDevice));
+  gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -32,13 +52,18 @@ struct device_allocator
   static T* allocate(int count)
   {
     T *p;
-    checkCall(cudaMalloc(&p, sizeof(T) * count), "device_malloc");
+    gtGpuCheck(cudaMalloc(&p, sizeof(T) * count));
     return p;
   }
 
   static void deallocate(T* p)
   {
-    checkCall(cudaFree(p), "device_free");
+    gtGpuCheck(cudaFree(p));
+  }
+
+  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  {
+    device_memcpy_dd(dst, src, bytes);
   }
 };
 
@@ -48,46 +73,45 @@ struct host_allocator
   static T* allocate(int count)
   {
     T *p;
-    checkCall(cudaMallocHost(&p, sizeof(T) * count), "host_malloc");
+    gtGpuCheck(cudaMallocHost(&p, sizeof(T) * count));
     return p;
   }
 
   static void deallocate(T* p)
   {
-    checkCall(cudaFreeHost(p), "host_free");
+    gtGpuCheck(cudaFreeHost(p));
+  }
+
+  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  {
+    device_memcpy_hh(dst, src, bytes);
   }
 };
-
-void device_memcpy_dd(void *dst, const void *src, size_t bytes)
-{
-  checkCall(cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToDevice),
-            "device_memcpy_dd memcpy");
-  checkCall(cudaDeviceSynchronize(), "device_memcpy_dd synchronize");
-}
-
-void device_memcpy_dh(void *dst, const void *src, size_t bytes)
-{
-  checkCall(cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToHost),
-            "device_memcpy_dh memcpy");
-  checkCall(cudaDeviceSynchronize(), "device_memcpy_dh synchronize");
-}
-
-void device_memcpy_hd(void *dst, const void *src, size_t bytes)
-{
-  checkCall(cudaMemcpy(dst, src, bytes, cudaMemcpyHostToDevice),
-            "device_memcpy_hd memcpy");
-  checkCall(cudaDeviceSynchronize(), "device_memcpy_hd synchronize");
-}
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
-inline void checkCall(hipError_t err, const char *info)
+void device_memcpy_hh(void *dst, const void *src, size_t bytes)
 {
-  if (err != hipSuccess) {
-    std::cerr << "HIP error [" << info << "]: "
-              << hipGetErrorString(err) << std::endl;
-    std::abort();
-  }
+  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyHostToHost));
+  gtGpuCheck(hipDeviceSynchronize());
+}
+
+void device_memcpy_dd(void *dst, const void *src, size_t bytes)
+{
+  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToDevice));
+  gtGpuCheck(hipDeviceSynchronize());
+}
+
+void device_memcpy_dh(void *dst, const void *src, size_t bytes)
+{
+  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToHost));
+  gtGpuCheck(hipDeviceSynchronize());
+}
+
+void device_memcpy_hd(void *dst, const void *src, size_t bytes)
+{
+  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyHostToDevice));
+  gtGpuCheck(hipDeviceSynchronize());
 }
 
 template<typename T>
@@ -96,13 +120,18 @@ struct device_allocator
   static T* allocate(int count)
   {
     T *p;
-    checkCall(hipMalloc(&p, sizeof(T) * count), "device_malloc");
+    gtGpuCheck(hipMalloc(&p, sizeof(T) * count));
     return p;
   }
 
   static void deallocate(T* p)
   {
-    checkCall(hipFree(p), "device_free");
+    gtGpuCheck(hipFree(p));
+  }
+
+  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  {
+    device_memcpy_dd(dst, src, bytes);
   }
 };
 
@@ -112,39 +141,50 @@ struct host_allocator
   static T* allocate(int count)
   {
     T *p;
-    checkCall(hipHostMalloc(&p, sizeof(T) * count, hipHostMallocDefault),
-              "host_malloc");
+    gtGpuCheck(hipHostMalloc(&p, sizeof(T) * count, hipHostMallocDefault));
     return p;
   }
 
   static void deallocate(T* p)
   {
-    checkCall(hipHostFree(p), "host_free");
+    gtGpuCheck(hipHostFree(p));
+  }
+
+  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  {
+    device_memcpy_hh(dst, src, bytes);
   }
 };
 
-void device_memcpy_dd(void *dst, const void *src, size_t bytes)
-{
-  checkCall(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToDevice),
-            "device_memcpy_dd memcpy");
-  checkCall(hipDeviceSynchronize(), "device_memcpy_dd synchronize");
-}
-
-void device_memcpy_dh(void *dst, const void *src, size_t bytes)
-{
-  checkCall(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToHost),
-            "device_memcpy_dh memcpy");
-  checkCall(hipDeviceSynchronize(), "device_memcpy_dh synchronize");
-}
-
-void device_memcpy_hd(void *dst, const void *src, size_t bytes)
-{
-  checkCall(hipMemcpy(dst, src, bytes, hipMemcpyHostToDevice),
-            "device_memcpy_hd memcpy");
-  checkCall(hipDeviceSynchronize(), "device_memcpy_hd synchronize");
-}
-
 #endif // GTENSOR_DEVICE_HIP
+
+#ifdef GTENSOR_DEVICE_HOST
+
+template<typename T>
+struct host_allocator
+{
+  static T* allocate(int count)
+  {
+    T *p = static_cast<T*>(malloc(sizeof(T) * count));
+    if (p == nullptr) {
+      std::cerr << "host allocate failed" << std::endl;
+      std::abort();
+    }
+    return p;
+  }
+
+  static void deallocate(T* p)
+  {
+    free(p);
+  }
+
+  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  {
+    std::memcpy(dst, src, bytes);
+  }
+};
+
+#endif
 
 #ifdef GTENSOR_USE_THRUST
 
@@ -172,13 +212,10 @@ inline Pointer device_pointer_cast(Pointer p) {
   return p;
 }
 
-#endif
-
+#endif // GTENSOR_USE_THRUST
 
 } // end namespace backend
 
 } // end namespace gt
-
-#endif // GTENSOR_HAVE_DEVICE
 
 #endif // GENSOR_DEVICE_BACKEND_H

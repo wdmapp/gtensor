@@ -83,7 +83,7 @@ inline gtensor_view<T, N, S>::gtensor_view(pointer data,
 #ifdef GTENSOR_DEVICE_CUDA
   if (std::is_same<S, space::device>::value) {
     cudaPointerAttributes attr;
-    cudaCheck(cudaPointerGetAttributes(&attr,
+    gtGpuCheck(cudaPointerGetAttributes(&attr,
                                        gt::backend::raw_pointer_cast(data)));
     assert(attr.type == cudaMemoryTypeDevice ||
            attr.type == cudaMemoryTypeManaged);

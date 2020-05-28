@@ -45,11 +45,15 @@ class gtensor_storage {
       resize(dv.size());
 
       if (dv.size() > 0) {
-        device_memcpy_dd(data(), dv.data(), size()*sizeof(value_type));
+        allocator_type::memcpy(data(), dv.data(), size()*sizeof(value_type));
       }
     }
 
-    gtensor_storage(gtensor_storage &&dv) = delete;
+    gtensor_storage(gtensor_storage &&dv)
+    : data_(dv.data_), size_(dv.size_), capacity_(dv.capacity_) {
+      dv.size_ = dv.capacity_ = 0;
+      dv.data_ = nullptr;
+    }
 
     // operators
     reference operator[](size_type i);
@@ -59,13 +63,22 @@ class gtensor_storage {
       resize(dv.size());
 
       if (dv.size() > 0) {
-        device_memcpy_dd(data(), dv.data(), size()*sizeof(value_type));
+        allocator_type::memcpy(data(), dv.data(), size()*sizeof(value_type));
       }
 
       return *this;
     }
 
-    gtensor_storage& operator=(gtensor_storage &&dv) = delete;
+    gtensor_storage& operator=(gtensor_storage &&dv) {
+      data_ = dv.data_;
+      size_ = dv.size_;
+      capacity_ = dv.capacity_;
+
+      dv.size_ = dv.capacity_ = 0;
+      dv.data_ = nullptr;
+
+      return *this;
+    }
 
     // functions
     void resize(size_type new_size);
@@ -82,11 +95,10 @@ class gtensor_storage {
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T>
 using device_storage = gtensor_storage<T, device_allocator<T>>;
+#endif
 
 template <typename T>
 using host_storage = gtensor_storage<T, host_allocator<T>>;
-#endif
-
 
 template <typename T, typename A>
 inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size) {
@@ -141,6 +153,59 @@ template <typename T, typename A>
 inline typename gtensor_storage<T, A>::const_pointer
 gtensor_storage<T, A>::data() const {
   return data_;
+}
+
+// ===================================================================
+// equality operators (for testing)
+
+//template <typename T, typename A,
+//          typename=std::enable_if_t<std::is_same<A, host_allocator<T>>::value>>
+template <typename T>
+bool operator==(const gtensor_storage<T, host_allocator<T>>& v1,
+                const gtensor_storage<T, host_allocator<T>>& v2)
+{
+  if (v1.size() != v2.size()) {
+    return false;
+  }
+  for (int i=0; i<v1.size(); i++) {
+    if (v1[i] != v2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+//template <typename T, typename A,
+//          typename=std::enable_if_t<
+//                     std::is_same<A, device_allocator<T>>::value>>
+template <typename T>
+bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
+                const gtensor_storage<T, device_allocator<T>>& v2)
+{
+  if (v1.size() != v2.size()) {
+    return false;
+  }
+  host_storage<T> h1(v1.size());
+  host_storage<T> h2(v2.size());
+  device_memcpy_dh(h1.data(), v1.data(), sizeof(T)*v1.size());
+  device_memcpy_dh(h2.data(), v2.data(), sizeof(T)*v2.size());
+  for (int i=0; i<v1.size(); i++) {
+    if (h1[i] != h2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+#endif
+
+template <typename T, typename A>
+bool operator!=(const gtensor_storage<T, A>& v1,
+                const gtensor_storage<T, A>& v2)
+{
+  return !(v1 == v2);
 }
 
 } // end namespace backend
