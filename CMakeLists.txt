@@ -7,11 +7,13 @@ project(gtensor
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
 set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
-set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip")
-set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', and 'hip' (semicolon separated)")
+set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
+set(GTENSOR_SYCL_USE_CPU OFF CACHE BOOL "Use thrust (sycl device only)")
+set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
+set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 
-set(GTENSOR_SUPPORTED_DEVICES "host;cuda;hip")
+set(GTENSOR_SUPPORTED_DEVICES "host;cuda;hip;sycl")
 set(GTENSOR_TARGETS "")
 
 # by default, support host plus the default device
@@ -98,6 +100,25 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
 
   # Enable to see the full hcc command and include search paths
   #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
+endif()
+
+if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
+  message(STATUS "${PROJECT_NAME}: adding gtensor_sycl target")
+  add_gtensor_library(sycl)
+
+  target_compile_options(gtensor_sycl INTERFACE -fsycl)
+  target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
+  target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL)
+
+  if (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "gpu")
+    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_GPU)
+  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "cpu")
+    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_CPU)
+  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host")
+    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_HOST)
+  else()
+      message(FATAL_ERROR "${PROJECT_NAME}: sycl selector '${GTENSOR_DEVICE_SYCL_SELECTOR}' is not supported")
+  endif()
 endif()
 
 if ("host" IN_LIST GTENSOR_BUILD_DEVICES)

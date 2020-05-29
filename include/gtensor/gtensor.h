@@ -189,8 +189,12 @@ void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
+#endif // GTENSOR_HAVE_DEVICE
+
 // ======================================================================
 // launch
+
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 template <typename F>
 __global__ void kernel_launch(gt::shape_type<1> shape, F f)
@@ -256,7 +260,7 @@ __global__ void kernel_launch(gt::shape_type<5> shape, F f)
   }
 }
 
-#endif
+#endif // CUDA or HIP
 
 namespace detail
 {
@@ -305,7 +309,7 @@ struct launch<3, space::host>
   }
 };
 
-#ifdef GTENSOR_HAVE_DEVICE
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 template <>
 struct launch<1, space::device>
 {
@@ -385,6 +389,93 @@ struct launch<5, space::device>
 
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
                    std::forward<F>(f));
+  }
+};
+
+#elif defined(GTENSOR_DEVICE_SYCL)
+
+template <>
+struct launch<1, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<1>& shape, F&& f)
+  {
+    sycl::queue &q = gt::backend::sycl::get_queue();
+    auto range = sycl::range<1>(shape[0]);
+    auto e = q.submit([&](sycl::handler &cgh) {
+      cgh.parallel_for<class Assign1>(range,
+      [=](sycl::item<1> item) mutable {
+         int i = item.get_id(0);
+         f(i);
+      });
+    });
+    e.wait();
+  }
+};
+
+template <>
+struct launch<2, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<2>& shape, F&& f)
+  {
+    sycl::queue &q = gt::backend::sycl::get_queue();
+    auto range = sycl::range<2>(shape[0], shape[1]);
+    auto e = q.submit([&](sycl::handler &cgh) {
+      cgh.parallel_for<class Assign2>(range,
+      [=](sycl::item<2> item) mutable {
+         int i = item.get_id(0);
+         int j = item.get_id(1);
+         f(i, j);
+      });
+    });
+    e.wait();
+  }
+};
+
+template <>
+struct launch<3, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<3>& shape, F&& f)
+  {
+    sycl::queue &q = gt::backend::sycl::get_queue();
+    auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
+    auto e = q.submit([&](sycl::handler &cgh) {
+      cgh.parallel_for<class Assign3>(range,
+      [=](sycl::item<3> item) mutable {
+         int i = item.get_id(0);
+         int j = item.get_id(1);
+         int k = item.get_id(2);
+         f(i, j, k);
+      });
+    });
+    e.wait();
+  }
+};
+
+template <size_type N>
+struct launch<N, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<N>& shape, F&& f)
+  {
+    sycl::queue &q = gt::backend::sycl::get_queue();
+    int size = calc_size(shape);
+    // use linear indexing for simplicity
+    auto block_size = std::min(size, BS_LINEAR);
+    auto strides = calc_strides(shape);
+    auto range = sycl::nd_range<1>(sycl::range<1>(size),
+                                   sycl::range<1>(block_size));
+    auto e = q.submit([&](sycl::handler &cgh) {
+      cgh.parallel_for<class AssignN>(range,
+        [=](sycl::nd_item<1> item) mutable {
+          int i = item.get_global_id(0);
+          auto idx = unravel(i, strides);
+          index_expression(f, idx);
+        });
+    });
+    e.wait();
   }
 };
 
