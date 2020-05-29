@@ -197,45 +197,62 @@ jobs:
 
   test-sycl:
     runs-on: ubuntu-latest
-    container: intel/oneapi-basekit-devel-ubuntu18.04
+    #container: intel/oneapi-basekit:devel-ubuntu18.04
+    container: ubuntu:18.04
     env:
-      CXX: dpcpp
+      CXX: /opt/intel/inteloneapi/compiler/latest/linux/bin/dpcpp
+      DPCPP_ROOT: /opt/intel/inteloneapi
+      INTEL_LICENSE_FILE: /opt/intel/inteloneapi/compiler/latest/licensing
+      LD_LIBRARY_PATH: /opt/intel/inteloneapi/compiler/latest/linux/lib:/opt/intel/inteloneapi/compiler/latest/linux/lib/x64:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib:/opt/intel/inteloneapi/ccl/2021.1-beta06/lib/cpu_gpu_dpcpp
 
     steps:
+    - name: install core packages
+      run: apt-get update -y && apt-get install -y wget git build-essential gnupg
+    - name: setup oneapi repos
+      run: |
+        wget -O - 'https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB' | apt-key add -
+        echo "deb https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list
+        echo 'deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu bionic-devel main' > /etc/apt/sources.list.d/intel-graphics.list
+        apt-get update -y
+    - name: install dpcpp
+      run: apt-get install -y intel-oneapi-dpcpp-compiler clinfo intel-opencl intel-level-zero-gpu level-zero
     - uses: actions/checkout@v2
-    - name: install packages
-      run: apt-get update && apt-get install -y wget git
+    - name: clinfo
+      run: |
+        mkdir -p /etc/OpenCL/vendors
+        echo "libintelocl.so" > /etc/OpenCL/vendors/intel-cpu.icd
+        clinfo
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: cmake cpu
-      run: cmake -S . -B build-sycl-cpu -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=CPU
+      run: cmake -S . -B build-sycl-cpu -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host
     - name: cmake cpu build
       run: cmake --build build-sycl-cpu -v
     - name: cmake cpu run tests
       run: cmake --build build-sycl-cpu -v -t test
-    - name: cmake cpu daxpy
+    - name: cmake cpu run daxpy
       run: ./daxpy
       working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
-    - name: cmake cpu stencil1d
-      run: ./build-find-package/stencil1d
+    - name: cmake cpu run stencil1d
+      run: ./stencil1d
       working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
-    - name: cmake cpu mult_table
-      run: ./build-find-package/mult_table
+    - name: cmake cpu run mult_table
+      run: ./mult_table
       working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
     - name: GNU make setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples
     - name: GNU make build
-      run: make GTENSOR_DEVICE=sycl
+      run: make GTENSOR_DEVICE=sycl GTENSOR_DEVICE_SYCL_SELECTOR=cpu
       working-directory: ${{ github.workspace }}/examples
-    - name: GNU make daxpy
+    - name: GNU make run daxpy
       run: ./daxpy
       working-directory: ${{ github.workspace }}/examples
-    - name: GNU make stencil1d
-      run: ./build-find-package/stencil1d
+    - name: GNU make run stencil1d
+      run: ./stencil1d
       working-directory: ${{ github.workspace }}/examples
-    - name: GNU make mult_table
-      run: ./build-find-package/mult_table
+    - name: GNU make run mult_table
+      run: ./mult_table
       working-directory: ${{ github.workspace }}/examples
