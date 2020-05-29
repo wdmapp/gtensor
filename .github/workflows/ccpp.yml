@@ -193,3 +193,49 @@ jobs:
     - name: GNU make build
       run: make GTENSOR_DEVICE=hip
       working-directory: ${{ github.workspace }}/examples
+
+
+  test-sycl:
+    runs-on: ubuntu-latest
+    container: intel/oneapi-basekit-devel-ubuntu18.04
+    env:
+      CXX: dpcpp
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install packages
+      run: apt-get update && apt-get install -y wget git
+    - name: install cmake
+      run: |
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
+        bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
+    - name: cmake cpu
+      run: cmake -S . -B build-sycl-cpu -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=CPU
+    - name: cmake cpu build
+      run: cmake --build build-sycl-cpu -v
+    - name: cmake cpu run tests
+      run: cmake --build build-sycl-cpu -v -t test
+    - name: cmake cpu daxpy
+      run: ./daxpy
+      working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
+    - name: cmake cpu stencil1d
+      run: ./build-find-package/stencil1d
+      working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
+    - name: cmake cpu mult_table
+      run: ./build-find-package/mult_table
+      working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
+    - name: GNU make setup gtensor subdir
+      run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
+      working-directory: ${{ github.workspace }}/examples
+    - name: GNU make build
+      run: make GTENSOR_DEVICE=sycl
+      working-directory: ${{ github.workspace }}/examples
+    - name: GNU make daxpy
+      run: ./daxpy
+      working-directory: ${{ github.workspace }}/examples
+    - name: GNU make stencil1d
+      run: ./build-find-package/stencil1d
+      working-directory: ${{ github.workspace }}/examples
+    - name: GNU make mult_table
+      run: ./build-find-package/mult_table
+      working-directory: ${{ github.workspace }}/examples
