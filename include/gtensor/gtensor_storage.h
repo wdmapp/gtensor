@@ -34,9 +34,7 @@ class gtensor_storage {
     gtensor_storage() : gtensor_storage(0) {}
 
     ~gtensor_storage() {
-      if (data_ != nullptr) {
-        allocator_type::deallocate(data_);
-      }
+      allocator_type::deallocate(data_);
     }
 
     // copy and move constructors
@@ -103,15 +101,13 @@ using host_storage = gtensor_storage<T, host_allocator<T>>;
 template <typename T, typename A>
 inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size) {
   if (new_size == 0) {
-    if (data_ != nullptr)
-      allocator_type::deallocate(data_);
+    allocator_type::deallocate(data_);
     capacity_ = size_ = 0;
   } else if (capacity_ == 0) {
     capacity_ = size_ = new_size;
     data_ = allocator_type::allocate(capacity_);
   } else if (new_size > capacity_) {
-    if (data_ != nullptr)
-      allocator_type::deallocate(data_);
+    allocator_type::deallocate(data_);
     capacity_ = size_ = new_size;
     data_ = allocator_type::allocate(capacity_);
   } else if (new_size < capacity_) {

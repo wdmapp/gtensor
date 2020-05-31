@@ -59,7 +59,9 @@ struct device_allocator
 
   static void deallocate(T* p)
   {
-    gtGpuCheck(cudaFree(p));
+    if (p != nullptr) {
+      gtGpuCheck(cudaFree(p));
+    }
   }
 
   static void memcpy(void *dst, const void *src, std::size_t bytes)
@@ -80,7 +82,9 @@ struct host_allocator
 
   static void deallocate(T* p)
   {
-    gtGpuCheck(cudaFreeHost(p));
+    if (p != nullptr) {
+      gtGpuCheck(cudaFreeHost(p));
+    }
   }
 
   static void memcpy(void *dst, const void *src, std::size_t bytes)
@@ -127,7 +131,9 @@ struct device_allocator
 
   static void deallocate(T* p)
   {
-    gtGpuCheck(hipFree(p));
+    if (p != nullptr) {
+      gtGpuCheck(hipFree(p));
+    }
   }
 
   static void memcpy(void *dst, const void *src, std::size_t bytes)
@@ -148,7 +154,9 @@ struct host_allocator
 
   static void deallocate(T* p)
   {
-    gtGpuCheck(hipHostFree(p));
+    if (p != nullptr) {
+      gtGpuCheck(hipHostFree(p));
+    }
   }
 
   static void memcpy(void *dst, const void *src, std::size_t bytes)
@@ -176,7 +184,9 @@ struct host_allocator
 
   static void deallocate(T* p)
   {
-    free(p);
+    if (p != nullptr) {
+      free(p);
+    }
   }
 
   static void memcpy(void *dst, const void *src, std::size_t bytes)
