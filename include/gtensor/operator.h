@@ -18,34 +18,34 @@ namespace detail
 {
 
 template <typename E>
-using EnableIfDevice = std::enable_if_t<
-  std::is_same<expr_space_type<E>, space::device>::value>;
+using EnableIfDevice =
+  std::enable_if_t<std::is_same<expr_space_type<E>, space::device>::value>;
 
 template <typename E>
-using EnableIfHost = std::enable_if_t<
-  std::is_same<expr_space_type<E>, space::host>::value>;
+using EnableIfHost =
+  std::enable_if_t<std::is_same<expr_space_type<E>, space::host>::value>;
 
 template <typename E1, typename E2>
-using EnableIfDeviceDevice = std::enable_if_t<
-  std::is_same<expr_space_type<E1>, space::device>::value
-  && std::is_same<expr_space_type<E1>, space::device>::value>;
+using EnableIfDeviceDevice =
+  std::enable_if_t<std::is_same<expr_space_type<E1>, space::device>::value &&
+                   std::is_same<expr_space_type<E1>, space::device>::value>;
 
 template <typename E1, typename E2>
-using EnableIfHostHost = std::enable_if_t<
-  std::is_same<expr_space_type<E1>, space::host>::value
-  && std::is_same<expr_space_type<E1>, space::host>::value>;
+using EnableIfHostHost =
+  std::enable_if_t<std::is_same<expr_space_type<E1>, space::host>::value &&
+                   std::is_same<expr_space_type<E1>, space::host>::value>;
 
 template <typename E1, typename E2>
-using EnableIfHostDevice = std::enable_if_t<
-  std::is_same<expr_space_type<E1>, space::host>::value
-  && std::is_same<expr_space_type<E1>, space::host>::value>;
+using EnableIfHostDevice =
+  std::enable_if_t<std::is_same<expr_space_type<E1>, space::host>::value &&
+                   std::is_same<expr_space_type<E1>, space::host>::value>;
 
 template <typename E1, typename E2>
-using EnableIfDeviceHost = std::enable_if_t<
-  std::is_same<expr_space_type<E1>, space::host>::value
-  && std::is_same<expr_space_type<E1>, space::host>::value>;
+using EnableIfDeviceHost =
+  std::enable_if_t<std::is_same<expr_space_type<E1>, space::host>::value &&
+                   std::is_same<expr_space_type<E1>, space::host>::value>;
 
-}
+} // namespace detail
 
 // ----------------------------------------------------------------------
 // ostream output
@@ -137,10 +137,9 @@ struct expression_printer<N, space::device>
   template <typename E>
   static void print_to(std::ostream& os, const E& e)
   {
-    using gt_d = gtensor<expr_value_type<E>, expr_dimension<E>(),
-                         space::device>;
-    using gt_h = gtensor<expr_value_type<E>, expr_dimension<E>(),
-                         space::host>;
+    using gt_d =
+      gtensor<expr_value_type<E>, expr_dimension<E>(), space::device>;
+    using gt_h = gtensor<expr_value_type<E>, expr_dimension<E>(), space::host>;
     gt_d dtmp(e.shape());
     gt_h htmp(e.shape());
     dtmp = e;
@@ -157,8 +156,8 @@ template <typename E,
           typename Enable = std::enable_if_t<is_expression<E>::value>>
 inline std::ostream& operator<<(std::ostream& os, const E& e)
 {
-  detail::expression_printer<expr_dimension<E>(),
-                             expr_space_type<E>>::print_to(os, e);
+  detail::expression_printer<expr_dimension<E>(), expr_space_type<E>>::print_to(
+    os, e);
   return os;
 }
 
@@ -367,14 +366,14 @@ struct equals<N1, N2, space::device, space::device>
     if (e1_.shape() != e2_.shape()) {
       return false;
     }
-    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::device>
-      d1(e1_.shape());
-    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::device>
-      d2(e2_.shape());
-    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::host>
-      h1(e1_.shape());
-    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::host>
-      h2(e2_.shape());
+    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::device> d1(
+      e1_.shape());
+    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::device> d2(
+      e2_.shape());
+    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::host> h1(
+      e1_.shape());
+    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::host> h2(
+      e2_.shape());
     d1 = e1_;
     d2 = e2_;
     copy(d1, h1);
@@ -392,10 +391,10 @@ struct equals<N1, N2, space::device, space::host>
     if (e1_.shape() != e2_.shape()) {
       return false;
     }
-    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::device>
-      d1(e1_.shape());
-    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::host>
-      h1(e1_.shape());
+    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::device> d1(
+      e1_.shape());
+    gtensor<expr_value_type<E1>, expr_dimension<E1>(), space::host> h1(
+      e1_.shape());
     d1 = e1_;
     copy(d1, h1);
     return equals<N1, N2, space::host, space::host>::run(h1, e2_);
@@ -411,10 +410,10 @@ struct equals<N1, N2, space::host, space::device>
     if (e1_.shape() != e2_.shape()) {
       return false;
     }
-    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::device>
-      d2(e2_.shape());
-    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::host>
-      h2(e2_.shape());
+    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::device> d2(
+      e2_.shape());
+    gtensor<expr_value_type<E2>, expr_dimension<E2>(), space::host> h2(
+      e2_.shape());
     d2 = e2_;
     copy(d2, h2);
     return equals<N1, N2, space::host, space::host>::run(e1_, h2);
@@ -428,10 +427,8 @@ struct equals<N1, N2, space::host, space::device>
 template <typename E1, typename E2>
 bool operator==(const expression<E1>& e1, const expression<E2>& e2)
 {
-  return detail::equals<E1::dimension(), E2::dimension(),
-                        expr_space_type<E1>, expr_space_type<E2>>::run(
-                                                               e1.derived(),
-                                                               e2.derived());
+  return detail::equals<E1::dimension(), E2::dimension(), expr_space_type<E1>,
+                        expr_space_type<E2>>::run(e1.derived(), e2.derived());
 }
 
 template <typename E1, typename E2>

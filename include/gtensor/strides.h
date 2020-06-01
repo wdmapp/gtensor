@@ -109,7 +109,8 @@ GT_INLINE void bounds_check(const S& shape, Arg arg, Args... args)
 template <typename S, class... Args>
 GT_INLINE void bounds_check(const S& shape, Args... args)
 {
-  static_assert(sizeof... (Args) == S::size(), "bounds_check: dims do not match");
+  static_assert(sizeof...(Args) == S::size(),
+                "bounds_check: dims do not match");
   detail::bounds_check<0>(shape, args...);
 }
 

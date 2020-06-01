@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
-#include "gtensor/gtensor.h"
 #include "gtensor/device_backend.h"
+#include "gtensor/gtensor.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(adapt, adapt_device)
 {
   constexpr int N = 10;
-  int *a = gt::backend::device_allocator<int>::allocate(N);
+  int* a = gt::backend::device_allocator<int>::allocate(N);
   auto aview = gt::adapt_device(a, gt::shape(N));
 
   aview = gt::scalar(7);
@@ -17,7 +17,7 @@ TEST(adapt, adapt_device)
 
   gt::copy(aview, h_a);
 
-  gt::gtensor<int, 1> h_expected{7,7,7,7,7,7,7,7,7,7};
+  gt::gtensor<int, 1> h_expected{7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
 
   EXPECT_EQ(aview, h_expected);
 
@@ -25,4 +25,3 @@ TEST(adapt, adapt_device)
 }
 
 #endif // GTENSOR_HAVE_DEVICE
-

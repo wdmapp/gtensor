@@ -2,8 +2,8 @@
 #ifndef GTENSOR_GTENSOR_VIEW_H
 #define GTENSOR_GTENSOR_VIEW_H
 
-#include "gcontainer.h"
 #include "device_backend.h"
+#include "gcontainer.h"
 
 namespace gt
 {
@@ -83,16 +83,16 @@ inline gtensor_view<T, N, S>::gtensor_view(pointer data,
 #ifdef GTENSOR_DEVICE_CUDA
   if (std::is_same<S, space::device>::value) {
     cudaPointerAttributes attr;
-    gtGpuCheck(cudaPointerGetAttributes(&attr,
-                                       gt::backend::raw_pointer_cast(data)));
+    gtGpuCheck(
+      cudaPointerGetAttributes(&attr, gt::backend::raw_pointer_cast(data)));
     assert(attr.type == cudaMemoryTypeDevice ||
            attr.type == cudaMemoryTypeManaged);
   }
 #elif defined(GTENSOR_DEVICE_HIP)
   if (std::is_same<S, space::device>::value) {
     hipPointerAttribute_t attr;
-    hipCheck(hipPointerGetAttributes(&attr,
-                                     gt::backend::raw_pointer_cast(data)));
+    hipCheck(
+      hipPointerGetAttributes(&attr, gt::backend::raw_pointer_cast(data)));
     assert(attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
   }
 #endif
@@ -160,8 +160,7 @@ gtensor_view<T, N, space::device> adapt_device(T* data,
                                                const shape_type<N>& shape)
 {
   return gtensor_view<T, N, space::device>(
-                                    gt::backend::device_pointer_cast(data),
-                                    shape, calc_strides(shape));
+    gt::backend::device_pointer_cast(data), shape, calc_strides(shape));
 }
 
 template <size_type N, typename T>

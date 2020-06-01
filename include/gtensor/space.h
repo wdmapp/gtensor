@@ -3,8 +3,8 @@
 #define GTENSOR_SPACE_H
 
 #include "defs.h"
-#include "span.h"
 #include "gtensor_storage.h"
+#include "span.h"
 
 #include <map>
 #include <vector>

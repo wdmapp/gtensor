@@ -17,46 +17,48 @@
 
 #endif // GTENSOR_HAVE_DEVICE
 
-namespace gt {
+namespace gt
+{
 
-namespace backend {
+namespace backend
+{
 
 #ifdef GTENSOR_DEVICE_CUDA
 
 template <typename T>
-void device_copy_hh(const T *src, T *dst, size_t count)
+void device_copy_hh(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyHostToHost));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
-void device_copy_dd(const T *src, T *dst, size_t count)
+void device_copy_dd(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyDeviceToDevice));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
-void device_copy_dh(const T *src, T *dst, size_t count)
+void device_copy_dh(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyDeviceToHost));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
-void device_copy_hd(const T *src, T *dst, size_t count)
+void device_copy_hd(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyHostToDevice));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
-template<typename T>
+template <typename T>
 struct device_allocator
 {
   static T* allocate(int count)
   {
-    T *p;
+    T* p;
     gtGpuCheck(cudaMalloc(&p, sizeof(T) * count));
     return p;
   }
@@ -68,18 +70,18 @@ struct device_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t bytes)
+  static void copy(const T* src, T* dst, std::size_t bytes)
   {
     device_copy_dd(src, dst, bytes);
   }
 };
 
-template<typename T>
+template <typename T>
 struct host_allocator
 {
   static T* allocate(int count)
   {
-    T *p;
+    T* p;
     gtGpuCheck(cudaMallocHost(&p, sizeof(T) * count));
     return p;
   }
@@ -91,7 +93,7 @@ struct host_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t bytes)
+  static void copy(const T* src, T* dst, std::size_t bytes)
   {
     device_copy_hh(src, dst, bytes);
   }
@@ -100,39 +102,39 @@ struct host_allocator
 #elif defined(GTENSOR_DEVICE_HIP)
 
 template <typename T>
-void device_copy_hh(const T *src, T *dst, size_t count)
+void device_copy_hh(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyHostToHost));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
-void device_copy_dd(const T *src, T *dst, size_t count)
+void device_copy_dd(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyDeviceToDevice));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
-void device_copy_dh(const T *src, T *dst, size_t count)
+void device_copy_dh(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyDeviceToHost));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToHost));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
-void device_copy_hd(const T *src, T *dst, size_t count)
+void device_copy_hd(const T* src, T* dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyHostToDevice));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
-template<typename T>
+template <typename T>
 struct device_allocator
 {
   static T* allocate(int count)
   {
-    T *p;
+    T* p;
     gtGpuCheck(hipMalloc(&p, sizeof(T) * count));
     return p;
   }
@@ -144,18 +146,18 @@ struct device_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t count)
+  static void copy(const T* src, T* dst, std::size_t count)
   {
     device_copy_dd(src, dst, count);
   }
 };
 
-template<typename T>
+template <typename T>
 struct host_allocator
 {
   static T* allocate(int count)
   {
-    T *p;
+    T* p;
     gtGpuCheck(hipHostMalloc(&p, sizeof(T) * count, hipHostMallocDefault));
     return p;
   }
@@ -167,7 +169,7 @@ struct host_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t count)
+  static void copy(const T* src, T* dst, std::size_t count)
   {
     device_copy_hh(src, dst, count);
   }
@@ -177,12 +179,12 @@ struct host_allocator
 
 #ifdef GTENSOR_DEVICE_HOST
 
-template<typename T>
+template <typename T>
 struct host_allocator
 {
   static T* allocate(int count)
   {
-    T *p = static_cast<T*>(malloc(sizeof(T) * count));
+    T* p = static_cast<T*>(malloc(sizeof(T) * count));
     if (p == nullptr) {
       std::cerr << "host allocate failed" << std::endl;
       std::abort();
@@ -197,9 +199,9 @@ struct host_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t count)
+  static void copy(const T* src, T* dst, std::size_t count)
   {
-    std::memcpy(dst, src, count*sizeof(T));
+    std::memcpy(dst, src, count * sizeof(T));
   }
 };
 
@@ -207,26 +209,30 @@ struct host_allocator
 
 #ifdef GTENSOR_USE_THRUST
 
-template<typename Pointer>
-inline auto raw_pointer_cast(Pointer p) {
+template <typename Pointer>
+inline auto raw_pointer_cast(Pointer p)
+{
   return thrust::raw_pointer_cast(p);
 }
 
-template<typename Pointer>
-inline auto device_pointer_cast(Pointer p) {
+template <typename Pointer>
+inline auto device_pointer_cast(Pointer p)
+{
   return thrust::device_pointer_cast(p);
 }
 
 #else // using gt::backend::device_storage
 
 // define no-op device_pointer/raw ponter casts
-template<typename Pointer>
-inline Pointer raw_pointer_cast(Pointer p) {
+template <typename Pointer>
+inline Pointer raw_pointer_cast(Pointer p)
+{
   return p;
 }
 
-template<typename Pointer>
-inline Pointer device_pointer_cast(Pointer p) {
+template <typename Pointer>
+inline Pointer device_pointer_cast(Pointer p)
+{
   return p;
 }
 

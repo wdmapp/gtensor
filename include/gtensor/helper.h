@@ -106,9 +106,9 @@ struct nd_init_list_shape<3, IL>
   constexpr static shape_type<3> run(IL il)
   {
     return {int((il.size() == 0 || il.begin()->size() == 0)
-                ? 0 : il.begin()->begin()->size()),
-            int(il.size() == 0 ? 0 : il.begin()->size()),
-            int(il.size())};
+                  ? 0
+                  : il.begin()->begin()->size()),
+            int(il.size() == 0 ? 0 : il.begin()->size()), int(il.size())};
   }
 };
 
@@ -179,7 +179,6 @@ struct nd_init_list_copy<3, IL, T>
     }
   }
 };
-
 
 } // namespace detail
 

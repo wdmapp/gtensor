@@ -7,6 +7,18 @@ on:
     branches: [ master ]
 
 jobs:
+
+  clang-format:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: DoozyX/clang-format-lint-action@v0.5
+      with:
+        source: '.'
+        extensions: 'h,cxx'
+        clangFormatVersion: 9
+
   tests-cpu:
     runs-on: ubuntu-latest
     strategy:
