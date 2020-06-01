@@ -23,27 +23,31 @@ namespace backend {
 
 #ifdef GTENSOR_DEVICE_CUDA
 
-void device_memcpy_hh(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_hh(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyHostToHost));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyHostToHost));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
-void device_memcpy_dd(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_dd(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToDevice));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyDeviceToDevice));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
-void device_memcpy_dh(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_dh(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToHost));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyDeviceToHost));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
-void device_memcpy_hd(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_hd(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, bytes, cudaMemcpyHostToDevice));
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T)*count, cudaMemcpyHostToDevice));
   gtGpuCheck(cudaDeviceSynchronize());
 }
 
@@ -64,9 +68,9 @@ struct device_allocator
     }
   }
 
-  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  static void copy(const T *src, T *dst, std::size_t bytes)
   {
-    device_memcpy_dd(dst, src, bytes);
+    device_copy_dd(src, dst, bytes);
   }
 };
 
@@ -87,35 +91,39 @@ struct host_allocator
     }
   }
 
-  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  static void copy(const T *src, T *dst, std::size_t bytes)
   {
-    device_memcpy_hh(dst, src, bytes);
+    device_copy_hh(src, dst, bytes);
   }
 };
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
-void device_memcpy_hh(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_hh(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyHostToHost));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyHostToHost));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
-void device_memcpy_dd(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_dd(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToDevice));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyDeviceToDevice));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
-void device_memcpy_dh(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_dh(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToHost));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyDeviceToHost));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
-void device_memcpy_hd(void *dst, const void *src, size_t bytes)
+template <typename T>
+void device_copy_hd(const T *src, T *dst, size_t count)
 {
-  gtGpuCheck(hipMemcpy(dst, src, bytes, hipMemcpyHostToDevice));
+  gtGpuCheck(hipMemcpy(dst, src, sizeof(T)*count, hipMemcpyHostToDevice));
   gtGpuCheck(hipDeviceSynchronize());
 }
 
@@ -136,9 +144,9 @@ struct device_allocator
     }
   }
 
-  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  static void copy(const T *src, T *dst, std::size_t count)
   {
-    device_memcpy_dd(dst, src, bytes);
+    device_copy_dd(src, dst, count);
   }
 };
 
@@ -159,9 +167,9 @@ struct host_allocator
     }
   }
 
-  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  static void copy(const T *src, T *dst, std::size_t count)
   {
-    device_memcpy_hh(dst, src, bytes);
+    device_copy_hh(src, dst, count);
   }
 };
 
@@ -189,9 +197,9 @@ struct host_allocator
     }
   }
 
-  static void memcpy(void *dst, const void *src, std::size_t bytes)
+  static void copy(const T *src, T *dst, std::size_t count)
   {
-    std::memcpy(dst, src, bytes);
+    std::memcpy(dst, src, count*sizeof(T));
   }
 };
 

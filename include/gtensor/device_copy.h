@@ -13,30 +13,32 @@
 
 namespace gt {
 
+namespace backend {
+
 
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(T *dest, const T *src, std::size_t count)
+inline void copy(const T *src, T *dest, std::size_t count)
 {
   thrust::copy(src, src + count, dest);
 }
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(thrust::device_ptr<T> dest, const T *src, std::size_t count)
+inline void copy(thrust::device_ptr<const T> src, T *dest, std::size_t count)
 {
   thrust::copy(src, src + count, dest);
 }
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(T *dest, thrust::device_ptr<const T> src, std::size_t count)
+inline void copy(const T *src, thrust::device_ptr<T> dest, std::size_t count)
 {
   thrust::copy(src, src + count, dest);
 }
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(thrust::device_ptr<T> dest, thrust::device_ptr<const T> src,
-                   std::size_t count)
+inline void copy(thrust::device_ptr<const T> src, thrust::device_ptr<T> dest,
+                 std::size_t count)
 {
   thrust::copy(src, src + count, dest);
 }
@@ -47,69 +49,74 @@ inline void memcpy(thrust::device_ptr<T> dest, thrust::device_ptr<const T> src,
 namespace detail {
 
 template <typename S_from, typename S_to>
-struct memcpy;
+struct copy;
 
 template <>
-struct memcpy<space::device, space::host>
+struct copy<space::device, space::host>
 {
-  static void run(void *dest, const void *src, std::size_t bytes)
+  template <typename T>
+  static void run(const T *src, T *dest, std::size_t count)
   {
-    gt::backend::device_memcpy_dh(dest, src, bytes);
+    gt::backend::device_copy_dh(src, dest, count);
   }
 };
 
 template <>
-struct memcpy<space::device, space::device>
+struct copy<space::device, space::device>
 {
-  static void run(void *dest, const void *src, std::size_t bytes)
+  template <typename T>
+  static void run(const T *src, T *dest, std::size_t count)
   {
-    gt::backend::device_memcpy_dd(dest, src, bytes);
+    gt::backend::device_copy_dd(src, dest, count);
   }
 };
 
 template <>
-struct memcpy<space::host, space::device>
+struct copy<space::host, space::device>
 {
-  static void run(void *dest, const void *src, std::size_t bytes)
+  template <typename T>
+  static void run(const T *src, T *dest, std::size_t count)
   {
-    gt::backend::device_memcpy_hd(dest, src, bytes);
+    gt::backend::device_copy_hd(src, dest, count);
   }
 };
 
 template <>
-struct memcpy<space::host, space::host>
+struct copy<space::host, space::host>
 {
-  static void run(void *dest, const void *src, std::size_t bytes)
+  template <typename T>
+  static void run(const T *src, T *dest, std::size_t count)
   {
-    std::memcpy(dest, src, bytes);
+    gt::backend::device_copy_hh(src, dest, count);
   }
 };
 
 } // end namespace detail
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(T *dest, const T *src, std::size_t count)
+inline void copy(const T *src, T *dest, std::size_t count)
 {
-  detail::memcpy<S_from, S_to>::run((void *)dest, (void *)src,
-                                    count * sizeof(T));
+  detail::copy<S_from, S_to>::run(src, dest, count);
 }
-
 
 #endif
 
+} // end namespace backend
 
 } // end namespace gt
 
 # else // not GTENSOR_HAVE_DEVICE
 
 namespace gt {
+namespace backend {
 
 template <typename T, typename S_from, typename S_to>
-inline void memcpy(T *dest, const T *src, std::size_t count)
+inline void copy(T *src, const T *dest, std::size_t count)
 {
   std::memcpy((void *)dest, (void *)src, count * sizeof(T));
 }
 
+}
 }
 
 #endif // GTENSOR_HAVE_DEVICE

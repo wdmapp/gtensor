@@ -151,7 +151,7 @@ TEST(gtensor_storage, device_copy_assign)
     h1[i] = static_cast<T>(i);
   }
 
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
   d2 = d1;
 
   EXPECT_EQ(d2.size(), N);
@@ -171,7 +171,7 @@ TEST(gtensor_storage, device_move_assign)
   for (int i=0; i<h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
   d1_copy = d1;
 
   d2 = std::move(d1);
@@ -196,7 +196,7 @@ TEST(gtensor_storage, device_move_ctor)
   for (int i=0; i<h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
   d1_copy = d1;
 
   auto d2 = std::move(d1);
@@ -230,7 +230,7 @@ TEST(gtensor_storage, device_resize_from_zero)
   EXPECT_NE(d1.data(), nullptr);
 
   // make sure new pointer is viable by copying data to it
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
 
   EXPECT_EQ(d1.size(), N);
   EXPECT_EQ(d1.capacity(), N);
@@ -245,7 +245,7 @@ TEST(gtensor_storage, device_resize_to_zero)
   for (int i=0; i<h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
 
   d1.resize(0);
 
@@ -264,7 +264,7 @@ TEST(gtensor_storage, device_resize_expand)
   for (int i=0; i<h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
 
   d1.resize(N2);
 
@@ -272,7 +272,7 @@ TEST(gtensor_storage, device_resize_expand)
   EXPECT_EQ(d1.capacity(), N2);
 
   h1.resize(N2);
-  gt::backend::device_memcpy_hd(h1.data(), d1.data(), sizeof(T)*N2);
+  gt::backend::device_copy_hd(d1.data(), h1.data(), N2);
   for (int i=0; i<N; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
@@ -288,14 +288,14 @@ TEST(gtensor_storage, device_resize_shrink)
   for (int i=0; i<h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
-  gt::backend::device_memcpy_hd(d1.data(), h1.data(), sizeof(T)*h1.size());
+  gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
 
   d1.resize(N2);
 
   EXPECT_EQ(d1.size(), N2);
   EXPECT_EQ(d1.capacity(), N);
 
-  gt::backend::device_memcpy_hd(h1.data(), d1.data(), sizeof(T)*N2);
+  gt::backend::device_copy_hd(d1.data(), h1.data(), N2);
   for (int i=0; i<N2; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }

@@ -96,9 +96,9 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   if (std::is_same<S, space::device>::value) {
     gtensor<T, N, space::host> host_temp(shape);
     helper::nd_initializer_list_copy<N>(il, host_temp);
-    gt::memcpy<T, space::host, space::device>(base_type::data(),
-                                              host_temp.data(),
-                                              host_temp.size());
+    gt::backend::copy<T, space::host, space::device>(host_temp.data(),
+                                                     base_type::data(),
+                                                     host_temp.size());
   } else {
     helper::nd_initializer_list_copy<N>(il, (*this));
   }
@@ -167,28 +167,28 @@ template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor_view<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::memcpy<T, S_from, S_to>(to.data(), from.data(), to.size());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 // ======================================================================

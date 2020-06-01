@@ -40,10 +40,10 @@ class gtensor_storage {
     // copy and move constructors
     gtensor_storage(const gtensor_storage &dv) 
     : data_(nullptr), size_(0), capacity_(0) {
-      resize_discard(dv.size());
+      resize_discard(dv.size_);
 
-      if (dv.size() > 0) {
-        allocator_type::memcpy(data(), dv.data(), size()*sizeof(value_type));
+      if (size_ > 0) {
+        allocator_type::copy(dv.data_, data_, size_);
       }
     }
 
@@ -58,10 +58,10 @@ class gtensor_storage {
     const_reference operator[](size_type i) const;
 
     gtensor_storage& operator=(const gtensor_storage &dv) {
-      resize_discard(dv.size());
+      resize_discard(dv.size_);
 
-      if (dv.size() > 0) {
-        allocator_type::memcpy(data(), dv.data(), size()*sizeof(value_type));
+      if (size_ > 0) {
+        allocator_type::copy(dv.data_, data_, size_);
       }
 
       return *this;
@@ -115,7 +115,7 @@ inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size,
     pointer new_data = allocator_type::allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      allocator_type::memcpy(new_data, data_, copy_size * sizeof(value_type));
+      allocator_type::copy(data_, new_data, copy_size);
     }
     allocator_type::deallocate(data_);
     data_ = new_data;
@@ -208,8 +208,8 @@ bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
   }
   host_storage<T> h1(v1.size());
   host_storage<T> h2(v2.size());
-  device_memcpy_dh(h1.data(), v1.data(), sizeof(T)*v1.size());
-  device_memcpy_dh(h2.data(), v2.data(), sizeof(T)*v2.size());
+  device_copy_dh(v1.data(), h1.data(), v1.size());
+  device_copy_dh(v2.data(), h2.data(), v2.size());
   for (int i=0; i<v1.size(); i++) {
     if (h1[i] != h2[i]) {
       return false;
