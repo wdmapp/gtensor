@@ -40,7 +40,7 @@ class gtensor_storage {
     // copy and move constructors
     gtensor_storage(const gtensor_storage &dv) 
     : data_(nullptr), size_(0), capacity_(0) {
-      resize(dv.size());
+      resize_discard(dv.size());
 
       if (dv.size() > 0) {
         allocator_type::memcpy(data(), dv.data(), size()*sizeof(value_type));
@@ -58,7 +58,7 @@ class gtensor_storage {
     const_reference operator[](size_type i) const;
 
     gtensor_storage& operator=(const gtensor_storage &dv) {
-      resize(dv.size());
+      resize_discard(dv.size());
 
       if (dv.size() > 0) {
         allocator_type::memcpy(data(), dv.data(), size()*sizeof(value_type));
@@ -81,10 +81,13 @@ class gtensor_storage {
     // functions
     void resize(size_type new_size);
     size_type size() const;
+    size_type capacity() const;
     pointer data();
     const_pointer data() const;
 
   private:
+    void resize(size_type new_size, bool discard);
+    void resize_discard(size_type new_size);
     value_type *data_;
     size_type size_;
     size_type capacity_;
@@ -99,23 +102,42 @@ template <typename T>
 using host_storage = gtensor_storage<T, host_allocator<T>>;
 
 template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size) {
-  if (new_size == 0) {
-    allocator_type::deallocate(data_);
-    capacity_ = size_ = 0;
-  } else if (capacity_ == 0) {
+inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size,
+                                          bool discard)
+{
+  if (capacity_ == 0) {
+    if (new_size == 0) {
+      return;
+    }
     capacity_ = size_ = new_size;
     data_ = allocator_type::allocate(capacity_);
   } else if (new_size > capacity_) {
+    pointer new_data = allocator_type::allocate(new_size);
+    if (!discard && size_ > 0) {
+      size_type copy_size = std::min(size_, new_size);
+      allocator_type::memcpy(new_data, data_, copy_size * sizeof(value_type));
+    }
     allocator_type::deallocate(data_);
+    data_ = new_data;
     capacity_ = size_ = new_size;
-    data_ = allocator_type::allocate(capacity_);
-  } else if (new_size < capacity_) {
-    // TODO: set shrink threshold?
+  } else {
+    // TODO: set reallocate shrink threshold?
     size_ = new_size;
   }
 }
 
+template <typename T, typename A>
+inline void gtensor_storage<T, A>::resize_discard(
+  gtensor_storage::size_type new_size)
+{
+  resize(new_size, true);
+}
+
+template <typename T, typename A>
+inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size)
+{
+  resize(new_size, false);
+}
 
 template <typename T, typename A>
 inline typename gtensor_storage<T, A>::reference
@@ -137,6 +159,12 @@ gtensor_storage<T, A>::size() const {
   return size_;
 }
 
+template <typename T, typename A>
+inline typename gtensor_storage<T, A>::size_type
+gtensor_storage<T, A>::capacity() const
+{
+  return capacity_;
+}
 
 template <typename T, typename A>
 inline typename gtensor_storage<T, A>::pointer
@@ -154,8 +182,6 @@ gtensor_storage<T, A>::data() const {
 // ===================================================================
 // equality operators (for testing)
 
-//template <typename T, typename A,
-//          typename=std::enable_if_t<std::is_same<A, host_allocator<T>>::value>>
 template <typename T>
 bool operator==(const gtensor_storage<T, host_allocator<T>>& v1,
                 const gtensor_storage<T, host_allocator<T>>& v2)
@@ -173,9 +199,6 @@ bool operator==(const gtensor_storage<T, host_allocator<T>>& v1,
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-//template <typename T, typename A,
-//          typename=std::enable_if_t<
-//                     std::is_same<A, device_allocator<T>>::value>>
 template <typename T>
 bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
                 const gtensor_storage<T, device_allocator<T>>& v2)
