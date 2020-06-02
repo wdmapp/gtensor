@@ -15,8 +15,7 @@ Features:
 - easily support both CPU-only and GPU-CPU hybrid code in the same code base,
   with only minimal use of #ifdef.
 - multi-dimensional array slicing similar to numpy
-- GPU support for nVidia via CUDA and AMD via HIP/rocm. Future plans to
-  support Intel GPUs
+- GPU support for nVidia via CUDA, AMD via HIP/rocm, and Intel GPUs via SYCL.
 
 ## License
 
@@ -34,12 +33,19 @@ cmake -S . -B build -DGTENSOR_DEVICE=cuda \
   -DBUILD_TESTING=OFF
 cmake --build build --target install
 ```
-to build for cpu/host only, use `-DGTENSOR_DEVICE=host`, and for AMD/HIP use
-`-DGTENSOR_DEVICE=hip -DCMAKE_CXX_COMPILER=$(which hipcc)`
-(see also further HIP requirements below).
+To build for cpu/host only, use `-DGTENSOR_DEVICE=host`, for AMD/HIP use
+`-DGTENSOR_DEVICE=hip -DCMAKE_CXX_COMPILER=$(which hipcc)`, and for
+Intel/SYCL use `-DGTENSOR_DEVICE=sycl -DCMAKE_CXX_COMPILER=$(which dpcpp)`
+See sections below for more device specific requirements.
 
 Note that gtensor can still be used by applications not using cmake -
 see [Usage (GNU make)](#usage-gnu-make) for an example.
+
+To use the internal data vector implementation instead of thrust, set
+`-DGTENSOR_USE_THRUST=OFF`. This has the advantage that device array
+allocations will not be zero initialized, which can improve performance
+significantly for some workloads, particularly when temporary arrays are
+used.
 
 ### nVidia CUDA requirements
 
@@ -48,8 +54,8 @@ gtensor for nVidia GPUs with CUDA requires
 
 ### AMD HIP requirements
 
-gtensor for AMD GPUs with HIP requires ROCm 3.3.0+
-with rocthrust and rocprim. See the
+gtensor for AMD GPUs with HIP requires ROCm 3.3.0+, and
+rocthrust and rocprim unless `-DGTENSOR_USE_THRUST=OFF`. See the
 [ROCm installation guide](https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html)
 for details. In Ubuntu, after setting up the ROCm repository, the required
 packages can be installed like this:
@@ -58,6 +64,27 @@ sudo apt install rocm-dkms rocm-dev rocthrust
 ```
 The official packages install to `/opt/rocm`. If using a different install
 location, add it to `CMAKE_PREFIX_PATH` when running cmake for the application.
+
+### Intel SYCL requirements
+
+The current SYCL implementation requires Intel OneAPI/DPC++ Beta06 or later.
+When using the instructions at
+[install via package managers](https://software.intel.com/content/www/us/en/develop/articles/oneapi-repo-instructions.html), installing the
+`intel-oneapi-dpcpp-compiler` package will pull in all required packages
+(the rest of basekit is not required).
+
+The reason for the dependence on Intel OneAPI is that the implementation uses
+the USM extension, which is not part of the current SYCL standard.
+CodePlay ComputeCpp 2.0.0 has an experimental implementation that is
+sufficiently different to require extra work to support.
+
+By default the SYCL GPU selector is used. To test on a machine without a
+GPU supported by the SYCL implementation, you can set
+`-DGTENSOR_DEVICE_SYCL_SELECTOR=host` or `-DGTENSOR_DEVICE_SYCL_SELECTOR=cpu`.
+
+The port is tested with an Intel iGPU, specifically UHD Graphics 630. It
+may also work with the experimental CUDA backend for nVidia GPUs, but this
+is untested and it's recommended to use the gtensor CUDA backend instead.
 
 ### HOST CPU (no device) requirements
 
@@ -69,18 +96,18 @@ tested with g++ 7, 8, and 9 and clang++ 8, 9, and 10.
 By default, gtensor will install support for the device specified by
 the `GTENSOR_DEVICE` variable (default `cuda`), and also the `host` (cpu only)
 device. This can be configured with `GTENSOR_BUILD_DEVICES` as a semicolon (;)
-separated list. For example, to build support for all three backends
-(i.e. assuming a machine with both nVidia and AMD GPUs):
+separated list. For example, to build support for all four backends
+(assuming a machine with multi-vendor GPUs and associated toolkits installed).
 ```
 cmake -S . -B build -DGTENSOR_DEVICE=cuda \
-  -DGTENSOR_BUILD_DEVICES=host;cuda;hip \
+  -DGTENSOR_BUILD_DEVICES=host;cuda;hip;sycl \
   -DCMAKE_INSTALL_PREFIX=/opt/gtensor \
   -DBUILD_TESTING=OFF
 ```
 
 This will cause targets to be created for each device: `gtensor::gtensor_cuda`,
-`gtensor::gtensor_host`, and `gtensor::gtensor_hip`. The main
-`gtensor::gtensor` target will be an alias for the default set by
+`gtensor::gtensor_host`, `gtensor::gtensor_hip`, and `gtensor::gtensor_sycl`.
+The main `gtensor::gtensor` target will be an alias for the default set by
 `GTENSOR_DEVICE` (the cuda target in the above example).
 
 ## Usage (cmake)
@@ -290,7 +317,8 @@ Example build for nVidia GPU using nvcc:
 ```
 GTENSOR_HOME=/path/to/gtensor
 nvcc -x cu -std=c++14 --expt-extended-lambda --expt-relaxed-constexpr \
- -DGTENSOR_HAVE_DEVICE -DNDEBUG -O3 \
+ -DGTENSOR_HAVE_DEVICE -DGTENSOR_DEVICE_CUDA -DGTENSOR_USE_THRUST \
+ -DNDEBUG -O3 \
  -I $GTENSOR_HOME/include \
  -o daxpy_cuda daxpy.cxx
 ```
@@ -298,13 +326,24 @@ nvcc -x cu -std=c++14 --expt-extended-lambda --expt-relaxed-constexpr \
 Build for AMD GPU using hipcc:
 ```
 hipcc -hc -std=c++14 \
- -DGTENSOR_HAVE_DEVICE -DNDEBUG -O3 \
+ -DGTENSOR_HAVE_DEVICE -DGTENSOR_DEVICE_HIP -DGTENSOR_USE_THRUST \
+ -DNDEBUG -O3 \
  -I $GTENSOR_HOME/include \
  -isystem /opt/rocm/rocthrust/include \
  -isystem /opt/rocm/include \
  -isystem /opt/rocm/rocprim/include \
  -isystem /opt/rocm/hip/include \
  -o daxpy_hip daxpy.cxx
+```
+
+Build for Intel GPU using dpcpp:
+```
+dpcpp -fsycl -std=c++14 \
+ -DGTENSOR_HAVE_DEVICE -DGTENSOR_DEVICE_SYCL \
+ -DGTENSOR_DEVICE_SYCL_GPU \
+ -DNDEBUG -O3 \
+ -I $GTENSOR_HOME/include \
+ -o daxpy_sycl daxpy.cxx
 ```
 
 Build for host CPU:
