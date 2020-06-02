@@ -135,10 +135,14 @@ jobs:
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
-    - name: cmake
-      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON
-    - name: build
+    - name: cmake thrust
+      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON
+    - name: cmake thrust build
       run: cmake --build build-cuda -v
+    - name: cmake nothrust
+      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF
+    - name: cmake nothrust build
+      run: cmake --build build-cuda-nothrust -v
     - name: GNU make setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples
@@ -163,10 +167,14 @@ jobs:
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
-    - name: cmake
-      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON
-    - name: cmake build
+    - name: cmake thrust
+      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON
+    - name: cmake thrust build
       run: cmake --build build-hip -v
+    - name: cmake nothrust
+      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF
+    - name: cmake nothrust build
+      run: cmake --build build-hip-nothrust -v
     - name: GNU make setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples

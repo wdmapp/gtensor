@@ -25,45 +25,45 @@
 #define GT_BOUNDSCHECK
 #endif
 
-#ifdef __CUDACC__
+#ifdef GTENSOR_DEVICE_CUDA
 
-#define gtLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
+#define gtLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...) \
+    do { \
+        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__); \
     } while (0)
 
-#define cudaCheck(what)                                                        \
-  {                                                                            \
-    doCudaCheck(what, __FILE__, __LINE__);                                     \
+#define gtGpuCheck(what)                                                      \
+  {                                                                           \
+    doCudaCheck(what, __FILE__, __LINE__);                                    \
   }
 inline void doCudaCheck(cudaError_t code, const char* file, int line)
 {
   if (code != cudaSuccess) {
-    fprintf(stderr, "cudaCheck: %d (%s) %s %d\n", code,
+    fprintf(stderr, "gpuCheck: %d (%s) %s %d\n", code,
             cudaGetErrorString(code), file, line);
     abort();
   }
 }
 
 #ifndef NDEBUG
-#define cudaSyncIfEnabled()                                                    \
-  do {                                                                         \
-    cudaCheck(cudaGetLastError());                                             \
-    cudaCheck(cudaDeviceSynchronize());                                        \
+#define gpuSyncIfEnabled()                                                    \
+  do {                                                                        \
+    gtGpuCheck(cudaGetLastError());                                           \
+    gtGpuCheck(cudaDeviceSynchronize());                                        \
   } while (0)
 #else
-#define cudaSyncIfEnabled()                                                    \
-  do {                                                                         \
-    cudaCheck(cudaGetLastError());                                             \
+#define gpuSyncIfEnabled()                                                    \
+  do {                                                                        \
+    gtGpuCheck(cudaGetLastError());                                           \
   } while (0)
 #endif
 
-#elif __HCC__
+#elif defined(GTENSOR_DEVICE_HIP)
 
 #define gtLaunchKernel(...)    hipLaunchKernelGGL(__VA_ARGS__)
 
-#define cudaCheck(what)                                                        \
-  {                                                                            \
+#define gtGpuCheck(what)                                                      \
+  {                                                                           \
     doHipCheck(what, __FILE__, __LINE__);                                     \
   }
 inline void doHipCheck(hipError_t code, const char* file, int line)
@@ -76,18 +76,19 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
 }
 
 #ifndef NDEBUG
-#define cudaSyncIfEnabled()                                                    \
-  do {                                                                         \
-    cudaCheck(hipGetLastError());                                             \
-    cudaCheck(hipDeviceSynchronize());                                        \
+#define gpuSyncIfEnabled()                                                    \
+  do {                                                                        \
+    gtGpuCheck(hipGetLastError());                                            \
+    gtGpuCheck(hipDeviceSynchronize());                                       \
   } while (0)
 #else // NDEBUG defined
-#define cudaSyncIfEnabled()                                                    \
-  do {                                                                         \
-    cudaCheck(hipGetLastError());                                             \
+#define gpuSyncIfEnabled()                                                    \
+  do {                                                                        \
+    gtGpuCheck(hipGetLastError());                                            \
   } while (0)
 #endif // NDEBUG
 
-#endif // end __CUDACC__/__HCC__
+#endif // end GTENSOR_HAVE_DEVICE
+
 
 #endif // GTENSORS_MACROS_H

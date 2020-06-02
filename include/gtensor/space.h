@@ -4,11 +4,12 @@
 
 #include "defs.h"
 #include "span.h"
+#include "gtensor_storage.h"
 
 #include <map>
 #include <vector>
 
-#ifdef GTENSOR_HAVE_DEVICE
+#ifdef GTENSOR_USE_THRUST
 #include <thrust/device_allocator.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -137,8 +138,10 @@ struct kernel;
 struct host
 {
   template <typename T>
-#ifdef GTENSOR_HAVE_DEVICE
+#ifdef GTENSOR_USE_THRUST
   using Vector = thrust::host_vector<T>;
+#elif defined(GTENSOR_HAVE_DEVICE)
+  using Vector = gt::backend::host_storage<T>;
 #else
   using Vector = std::vector<T>;
 #endif
@@ -147,6 +150,8 @@ struct host
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
+
+#ifdef GTENSOR_USE_THRUST
 
 #if THRUST_VERSION <= 100903
 template <typename T>
@@ -166,6 +171,18 @@ struct device
 };
 
 #else
+
+struct device
+{
+  template <typename T>
+  using Vector = gt::backend::device_storage<T>;
+  template <typename T>
+  using Span = device_span<T>;
+};
+
+#endif // GTENSOR_USE_THRUST
+
+#else // not GTENSOR_HAVE_DEVICE
 
 using device = host;
 

@@ -44,7 +44,7 @@ TEST(expression, space_t)
 {
   using namespace gt::space;
   gt::assert_is_same<gt::space_t<host, host>, host>();
-#ifdef __CUDACC__
+#ifdef GTENSOR_HAVE_DEVICE
   gt::assert_is_same<gt::space_t<device, device>, device>();
   gt::assert_is_same<gt::space_t<gt::space::any, device>, device>();
 #endif

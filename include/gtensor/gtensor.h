@@ -2,13 +2,13 @@
 #ifndef GTENSOR_GTENSOR_H
 #define GTENSOR_GTENSOR_H
 
-#if GTENSOR_HAVE_DEVICE
-#include "thrust_ext.h"
-#endif
+#include "device_backend.h"
+#include "device_copy.h"
 
 #include "gfunction.h"
 #include "gtensor_view.h"
 #include "gview.h"
+#include "operator.h"
 
 namespace gt
 {
@@ -84,6 +84,7 @@ inline gtensor<T, N, S>::gtensor(const shape_type& shape)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
 {}
 
+
 template <typename T, int N, typename S>
 inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   : base_type({}, {})
@@ -91,7 +92,19 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   // FIXME?! this kinda changes row-major list into transposed col-major array
   shape_type shape = helper::nd_initializer_list_shape<N>(il);
   base_type::resize(shape);
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(GTENSOR_USE_THRUST)
+  if (std::is_same<S, space::device>::value) {
+    gtensor<T, N, space::host> host_temp(shape);
+    helper::nd_initializer_list_copy<N>(il, host_temp);
+    gt::backend::copy<T, space::host, space::device>(host_temp.data(),
+                                                     base_type::data(),
+                                                     host_temp.size());
+  } else {
+    helper::nd_initializer_list_copy<N>(il, (*this));
+  }
+#else
   helper::nd_initializer_list_copy<N>(il, (*this));
+#endif
 }
 
 template <typename T, int N, typename S>
@@ -154,28 +167,28 @@ template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor_view<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
 void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  thrust::copy(from.data(), from.data() + from.size(), to.data());
+  gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 // ======================================================================
@@ -305,10 +318,10 @@ struct launch<1, space::device>
     dim3 numThreads(BS_1D);
     dim3 numBlocks((shape[0] + BS_1D - 1) / BS_1D);
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
                    shape, std::forward<F>(f));
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -321,10 +334,10 @@ struct launch<2, space::device>
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y);
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
                    shape, std::forward<F>(f));
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -338,10 +351,10 @@ struct launch<3, space::device>
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2]);
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
                    shape, std::forward<F>(f));
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 
@@ -355,10 +368,10 @@ struct launch<4, space::device>
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3]);
 
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
                    shape, std::forward<F>(f));
-    cudaSyncIfEnabled();
+    gpuSyncIfEnabled();
   }
 };
 

@@ -194,7 +194,7 @@ TEST(gtensor, assign_expression_2d_resize)
 TEST(gtensor, device_assign_gtensor)
 {
   gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
-  gt::gtensor_device<float, 2> b(a.shape());
+  gt::gtensor_device<double, 2> b(a.shape());
 
   b = a;
 
@@ -207,13 +207,16 @@ TEST(gtensor, device_assign_gtensor2)
   gt::gtensor_device<double, 2> a{{1., 2., 3.},
                                   {2., 4., 6.}};
   gt::gtensor_device<double, 2> b(a.shape());
+  gt::gtensor<double, 2> h_b(a.shape());
   b = a;
 
   EXPECT_EQ(b.shape(), gt::shape(3, 2));
 
+  gt::copy(b, h_b);
+
   for (int i=0; i<b.shape(0); i++) {
     for (int j = 0; j<b.shape(1); j++) {
-      EXPECT_EQ(b(i,j), static_cast<double>((i+1)*(j+1)));
+      EXPECT_EQ(h_b(i,j), static_cast<double>((i+1)*(j+1)));
     }
   }
   EXPECT_EQ(b, a);
@@ -226,14 +229,17 @@ TEST(gtensor, device_assign_gtensor3)
                                   {{2.,4.},
                                    {4.,8.}}};
   gt::gtensor_device<double, 3> b(a.shape());
+  gt::gtensor<double, 3> h_b(a.shape());
   b = a;
 
   EXPECT_EQ(b.shape(), gt::shape(2, 2, 2));
 
+  gt::copy(b, h_b);
+
   for (int i=0; i<b.shape(0); i++) {
     for (int j = 0; j<b.shape(1); j++) {
       for (int k = 0; k<b.shape(2); k++) {
-        EXPECT_EQ(b(i,j,k), static_cast<double>((i+1)*(j+1)*(k+1)));
+        EXPECT_EQ(h_b(i,j,k), static_cast<double>((i+1)*(j+1)*(k+1)));
       }
     }
   }
