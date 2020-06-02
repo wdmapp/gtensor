@@ -3,18 +3,22 @@
 
 #include <CL/sycl.hpp>
 
-namespace gt {
-namespace backend {
-namespace sycl {
+namespace gt
+{
+namespace backend
+{
+namespace sycl
+{
 
-/*! Get the global singleton queue object used for all thrust::* operations.
+/*! Get the global singleton queue object used for all device operations.
  *
  * TODO: allow lib clients to customize this, via a cuda-like API
  * e.g. sylcSetDevice(int), syclGetDevice(int), for multi-gpu systems.
- * The idea is to support one device per MPI process type use case, and
+ * The idea is to support one device per MPI process use cases, and
  * not worry about more complex cases.
  */
-static inline cl::sycl::queue& get_queue() {
+static inline cl::sycl::queue& get_queue()
+{
   static cl::sycl::queue q{};
   return q;
 }

@@ -113,7 +113,6 @@ auto index_expression(E expr, shape_type<6> idx)
   return expr(idx[0], idx[1], idx[2], idx[3], idx[4], idx[5]);
 }
 
-
 } // namespace gt
 
 #endif

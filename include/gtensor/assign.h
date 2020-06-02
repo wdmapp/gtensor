@@ -339,15 +339,15 @@ struct assigner<1, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs)
   {
-    sycl::queue &q = gt::backend::sycl::get_queue();
+    sycl::queue& q = gt::backend::sycl::get_queue();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
-    auto e = q.submit([&](sycl::handler &cgh) {
+    auto e = q.submit([&](sycl::handler& cgh) {
       cgh.parallel_for<class Assign1>(sycl::range<1>(lhs.shape(0)),
-      [=](sycl::item<1> item) mutable {
-         int i = item.get_id();
-         k_lhs(i) = k_rhs(i);
-      });
+                                      [=](sycl::item<1> item) mutable {
+                                        int i = item.get_id();
+                                        k_lhs(i) = k_rhs(i);
+                                      });
     });
     e.wait();
   }
@@ -359,17 +359,16 @@ struct assigner<2, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs)
   {
-    sycl::queue &q = gt::backend::sycl::get_queue();
+    sycl::queue& q = gt::backend::sycl::get_queue();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<2>(lhs.shape(0), lhs.shape(1));
-    auto e = q.submit([&](sycl::handler &cgh) {
-      cgh.parallel_for<class Assign1>(range,
-        [=](sycl::item<2> item) mutable {
-          int i = item.get_id(0);
-          int j = item.get_id(1);
-          k_lhs(i, j) = k_rhs(i, j);
-        });
+    auto e = q.submit([&](sycl::handler& cgh) {
+      cgh.parallel_for<class Assign1>(range, [=](sycl::item<2> item) mutable {
+        int i = item.get_id(0);
+        int j = item.get_id(1);
+        k_lhs(i, j) = k_rhs(i, j);
+      });
     });
     e.wait();
   }
@@ -381,18 +380,17 @@ struct assigner<3, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs)
   {
-    sycl::queue &q = gt::backend::sycl::get_queue();
+    sycl::queue& q = gt::backend::sycl::get_queue();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<3>(lhs.shape(0), lhs.shape(1), lhs.shape(2));
-    auto e = q.submit([&](sycl::handler &cgh) {
-      cgh.parallel_for<class Assign1>(range,
-        [=](sycl::item<3> item) mutable {
-          int i = item.get_id(0);
-          int j = item.get_id(1);
-          int k = item.get_id(2);
-          k_lhs(i, j, k) = k_rhs(i, j, k);
-        });
+    auto e = q.submit([&](sycl::handler& cgh) {
+      cgh.parallel_for<class Assign1>(range, [=](sycl::item<3> item) mutable {
+        int i = item.get_id(0);
+        int j = item.get_id(1);
+        int k = item.get_id(2);
+        k_lhs(i, j, k) = k_rhs(i, j, k);
+      });
     });
     e.wait();
   }
@@ -404,18 +402,18 @@ struct assigner<N, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs)
   {
-    sycl::queue &q = gt::backend::sycl::get_queue();
+    sycl::queue& q = gt::backend::sycl::get_queue();
     auto size = calc_size(lhs.shape());
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     // use linear indexing for simplicity
     auto block_size = std::min(size, BS_LINEAR);
     auto strides = calc_strides(lhs.shape());
-    auto range = sycl::nd_range<1>(sycl::range<1>(size),
-                                   sycl::range<1>(block_size));
-    auto e = q.submit([&](sycl::handler &cgh) {
-      cgh.parallel_for<class AssignN>(range,
-        [=](sycl::nd_item<1> item) mutable {
+    auto range =
+      sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
+    auto e = q.submit([&](sycl::handler& cgh) {
+      cgh.parallel_for<class AssignN>(
+        range, [=](sycl::nd_item<1> item) mutable {
           int i = item.get_global_id(0);
           auto idx = unravel(i, strides);
           index_expression(k_lhs, idx) = index_expression(k_rhs, idx);

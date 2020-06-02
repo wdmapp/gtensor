@@ -183,38 +183,38 @@ struct host_allocator
 
 // TODO: SYCL exception handler
 template <typename T>
-void device_copy(const T *src, T *dst, size_t count)
+void device_copy(const T* src, T* dst, size_t count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(dst, src, sizeof(T)*count);
+  q.memcpy(dst, src, sizeof(T) * count);
   q.wait();
 }
 
 template <typename T>
-void device_copy_hh(const T *src, T *dst, size_t count)
+void device_copy_hh(const T* src, T* dst, size_t count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_dd(const T *src, T *dst, size_t count)
+void device_copy_dd(const T* src, T* dst, size_t count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_dh(const T *src, T *dst, size_t count)
+void device_copy_dh(const T* src, T* dst, size_t count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_hd(const T *src, T *dst, size_t count)
+void device_copy_hd(const T* src, T* dst, size_t count)
 {
   device_copy(src, dst, count);
 }
 
-template<typename T>
+template <typename T>
 struct device_allocator
 {
   static T* allocate(int count)
@@ -229,7 +229,7 @@ struct device_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t count)
+  static void copy(const T* src, T* dst, std::size_t count)
   {
     device_copy_dd(src, dst, count);
   }
@@ -238,12 +238,12 @@ struct device_allocator
 // The host allocation type in SYCL allows device code to directly access
 // the code. This is generally not necessary or effecient for gtensor, so
 // we opt for the same implementation as for the HOST device below.
-template<typename T>
+template <typename T>
 struct host_allocator
 {
   static T* allocate(int count)
   {
-    T *p = static_cast<T*>(malloc(sizeof(T) * count));
+    T* p = static_cast<T*>(malloc(sizeof(T) * count));
     if (p == nullptr) {
       std::cerr << "host allocate failed" << std::endl;
       std::abort();
@@ -258,9 +258,9 @@ struct host_allocator
     }
   }
 
-  static void copy(const T *src, T *dst, std::size_t count)
+  static void copy(const T* src, T* dst, std::size_t count)
   {
-    std::memcpy(dst, src, sizeof(T)*count);
+    std::memcpy(dst, src, sizeof(T) * count);
   }
 };
 
