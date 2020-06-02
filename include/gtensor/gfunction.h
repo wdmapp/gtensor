@@ -149,14 +149,15 @@ inline void calc_shape(S& shape, const Es&... es)
 // ======================================================================
 // gfunction
 
-
-namespace detail {
-  struct empty {};
-}
+namespace detail
+{
+struct empty
+{};
+} // namespace detail
 
 // declare generic gfunction; unary and binary versions are defined below
-template <typename F, typename E1, typename E2> class gfunction;
-
+template <typename F, typename E1, typename E2>
+class gfunction;
 
 template <typename F, typename E1, typename E2>
 struct gtensor_inner_types<gfunction<F, E1, E2>>
@@ -164,13 +165,11 @@ struct gtensor_inner_types<gfunction<F, E1, E2>>
   using space_type = space_t<expr_space_type<E1>, expr_space_type<E2>>;
   constexpr static size_type dimension = helper::calc_dimension<E1, E2>();
 
-  using value_type =
-    decltype(std::declval<F>()(std::declval<expr_value_type<E1>>(),
-                               std::declval<expr_value_type<E2>>()));
+  using value_type = decltype(std::declval<F>()(
+    std::declval<expr_value_type<E1>>(), std::declval<expr_value_type<E2>>()));
   using reference = value_type;
   using const_reference = value_type;
 };
-
 
 template <typename F, typename E>
 struct gtensor_inner_types<gfunction<F, E, detail::empty>>
@@ -184,10 +183,9 @@ struct gtensor_inner_types<gfunction<F, E, detail::empty>>
   using const_reference = value_type;
 };
 
-
 template <typename F, typename E>
 class gfunction<F, E, detail::empty>
-: public expression<gfunction<F, E, detail::empty>>
+  : public expression<gfunction<F, E, detail::empty>>
 {
 public:
   using self_type = gfunction<F, E, detail::empty>;
@@ -202,10 +200,7 @@ public:
 
   using shape_type = gt::shape_type<dimension()>;
 
-  gfunction(F&& f, E&& e)
-  : f_(std::forward<F>(f)),
-    e_(std::forward<E>(e))
-  {}
+  gfunction(F&& f, E&& e) : f_(std::forward<F>(f)), e_(std::forward<E>(e)) {}
 
   shape_type shape() const;
   int shape(int i) const;
@@ -219,7 +214,6 @@ private:
   F f_;
   E e_;
 };
-
 
 template <typename F, typename E1, typename E2>
 class gfunction : public expression<gfunction<F, E1, E2>>
@@ -238,9 +232,9 @@ public:
   using shape_type = gt::shape_type<dimension()>;
 
   gfunction(F&& f, E1&& e1, E2&& e2)
-  : f_(std::forward<F>(f)),
-    e1_(std::forward<E1>(e1)),
-    e2_(std::forward<E2>(e2))
+    : f_(std::forward<F>(f)),
+      e1_(std::forward<E1>(e1)),
+      e2_(std::forward<E2>(e2))
   {}
 
   shape_type shape() const;
@@ -256,7 +250,6 @@ private:
   E1 e1_;
   E2 e2_;
 };
-
 
 // ----------------------------------------------------------------------
 // gfunction implementation
@@ -291,7 +284,8 @@ inline int gfunction<F, E1, E2>::shape(int i) const
 
 template <typename F, typename E>
 template <typename... Args>
-inline auto gfunction<F, E, detail::empty>::operator()(Args... args) const -> value_type
+inline auto gfunction<F, E, detail::empty>::operator()(Args... args) const
+  -> value_type
 {
   return f_(e_(args...));
 }
@@ -314,18 +308,19 @@ template <typename F, typename E1, typename E2>
 auto function(F&& f, E1&& e1, E2&& e2)
 {
   return gfunction<F, to_expression_t<E1>, to_expression_t<E2>>(
-          std::forward<F>(f), std::forward<E1>(e1), std::forward<E2>(e2));
+    std::forward<F>(f), std::forward<E1>(e1), std::forward<E2>(e2));
 }
 
 template <typename F, typename E>
-inline gfunction<F, to_kernel_t<E>, detail::empty> gfunction<F, E, detail::empty>::to_kernel() const
+inline gfunction<F, to_kernel_t<E>, detail::empty>
+gfunction<F, E, detail::empty>::to_kernel() const
 {
   return function(F(f_), e_.to_kernel());
 }
 
-
 template <typename F, typename E1, typename E2>
-inline gfunction<F, to_kernel_t<E1>, to_kernel_t<E2>> gfunction<F, E1, E2>::to_kernel() const
+inline gfunction<F, to_kernel_t<E1>, to_kernel_t<E2>>
+gfunction<F, E1, E2>::to_kernel() const
 {
   return function(F(f_), e1_.to_kernel(), e2_.to_kernel());
 }

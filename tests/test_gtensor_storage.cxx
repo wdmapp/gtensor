@@ -9,7 +9,7 @@ TEST(gtensor_storage, host_copy_assign)
   gt::backend::host_storage<double> h1(N);
   gt::backend::host_storage<double> h2(N);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
   h2 = h1;
@@ -24,7 +24,7 @@ TEST(gtensor_storage, host_move_assign)
   gt::backend::host_storage<double> h1(N);
   gt::backend::host_storage<double> h2;
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
 
@@ -34,7 +34,7 @@ TEST(gtensor_storage, host_move_assign)
   EXPECT_EQ(h1.data(), nullptr);
 
   EXPECT_EQ(h2.size(), N);
-  for (int i=0; i<N; i++) {
+  for (int i = 0; i < N; i++) {
     EXPECT_EQ(h2[i], (double)i);
   }
 }
@@ -44,7 +44,7 @@ TEST(gtensor_storage, host_move_ctor)
   constexpr int N = 16;
   gt::backend::host_storage<double> h1(N);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
 
@@ -54,7 +54,7 @@ TEST(gtensor_storage, host_move_ctor)
   EXPECT_EQ(h1.data(), nullptr);
 
   EXPECT_EQ(h2.size(), N);
-  for (int i=0; i<N; i++) {
+  for (int i = 0; i < N; i++) {
     EXPECT_EQ(h2[i], (double)i);
   }
 }
@@ -72,13 +72,13 @@ TEST(gtensor_storage, host_resize_from_zero)
   EXPECT_EQ(h1.capacity(), N);
   EXPECT_NE(h1.data(), nullptr);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
 
   EXPECT_EQ(h1.size(), N);
   EXPECT_EQ(h1.capacity(), N);
-  for (int i=0; i<N; i++) {
+  for (int i = 0; i < N; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
 }
@@ -88,7 +88,7 @@ TEST(gtensor_storage, host_resize_to_zero)
   constexpr int N = 16;
   gt::backend::host_storage<double> h1(N);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
 
@@ -102,10 +102,10 @@ TEST(gtensor_storage, host_resize_to_zero)
 TEST(gtensor_storage, host_resize_expand)
 {
   constexpr int N = 16;
-  constexpr int N2 = 2*N;
+  constexpr int N2 = 2 * N;
   gt::backend::host_storage<double> h1(N);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
 
@@ -113,7 +113,7 @@ TEST(gtensor_storage, host_resize_expand)
 
   EXPECT_EQ(h1.size(), N2);
   EXPECT_EQ(h1.capacity(), N2);
-  for (int i=0; i<N; i++) {
+  for (int i = 0; i < N; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
 }
@@ -121,10 +121,10 @@ TEST(gtensor_storage, host_resize_expand)
 TEST(gtensor_storage, host_resize_shrink)
 {
   constexpr int N = 16;
-  constexpr int N2 = N/2;
+  constexpr int N2 = N / 2;
   gt::backend::host_storage<double> h1(N);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = (double)i;
   }
 
@@ -132,7 +132,7 @@ TEST(gtensor_storage, host_resize_shrink)
 
   EXPECT_EQ(h1.size(), N2);
   EXPECT_EQ(h1.capacity(), N);
-  for (int i=0; i<N2; i++) {
+  for (int i = 0; i < N2; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
 }
@@ -147,7 +147,7 @@ TEST(gtensor_storage, device_copy_assign)
   gt::backend::device_storage<T> d1(N);
   gt::backend::device_storage<T> d2(N);
 
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
 
@@ -168,7 +168,7 @@ TEST(gtensor_storage, device_move_assign)
   gt::backend::device_storage<T> d2;
 
   gt::backend::host_storage<T> h1(N);
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
   gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
@@ -193,7 +193,7 @@ TEST(gtensor_storage, device_move_ctor)
   gt::backend::device_storage<T> d1_copy(N);
 
   gt::backend::host_storage<T> h1(N);
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
   gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
@@ -216,7 +216,7 @@ TEST(gtensor_storage, device_resize_from_zero)
   using T = double;
   gt::backend::device_storage<T> d1{};
   gt::backend::host_storage<T> h1(N);
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
 
@@ -242,7 +242,7 @@ TEST(gtensor_storage, device_resize_to_zero)
   using T = double;
   gt::backend::device_storage<T> d1(N);
   gt::backend::host_storage<T> h1(N);
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
   gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
@@ -257,11 +257,11 @@ TEST(gtensor_storage, device_resize_to_zero)
 TEST(gtensor_storage, device_resize_expand)
 {
   constexpr int N = 16;
-  constexpr int N2 = 2*N;
+  constexpr int N2 = 2 * N;
   using T = double;
   gt::backend::device_storage<T> d1(N);
   gt::backend::host_storage<T> h1(N);
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
   gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
@@ -273,7 +273,7 @@ TEST(gtensor_storage, device_resize_expand)
 
   h1.resize(N2);
   gt::backend::device_copy_hd(d1.data(), h1.data(), N2);
-  for (int i=0; i<N; i++) {
+  for (int i = 0; i < N; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
 }
@@ -281,11 +281,11 @@ TEST(gtensor_storage, device_resize_expand)
 TEST(gtensor_storage, device_resize_shrink)
 {
   constexpr int N = 16;
-  constexpr int N2 = N/2;
+  constexpr int N2 = N / 2;
   using T = double;
   gt::backend::device_storage<T> d1(N);
   gt::backend::host_storage<T> h1(N);
-  for (int i=0; i<h1.size(); i++) {
+  for (int i = 0; i < h1.size(); i++) {
     h1[i] = static_cast<T>(i);
   }
   gt::backend::device_copy_hd(h1.data(), d1.data(), h1.size());
@@ -296,10 +296,9 @@ TEST(gtensor_storage, device_resize_shrink)
   EXPECT_EQ(d1.capacity(), N);
 
   gt::backend::device_copy_hd(d1.data(), h1.data(), N2);
-  for (int i=0; i<N2; i++) {
+  for (int i = 0; i < N2; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
 }
 
 #endif // GTENSOR_HAVE_DEVICE
-

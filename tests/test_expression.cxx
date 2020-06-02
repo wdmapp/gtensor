@@ -1,8 +1,8 @@
 
 #include <gtest/gtest.h>
 
-#include "gtensor/gtensor.h"
 #include "gtensor/complex.h"
+#include "gtensor/gtensor.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
 using space = gt::space::device;

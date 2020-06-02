@@ -1,4 +1,3 @@
-
 #include <gtest/gtest.h>
 
 #include <gtensor/gtensor.h>
@@ -14,4 +13,3 @@ TEST(gview, newaxis)
   EXPECT_EQ(
     c, (gt::gtensor_device<double, 2>{{111., 113., 115.}, {121., 123., 125.}}));
 }
-

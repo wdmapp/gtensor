@@ -84,7 +84,6 @@ inline gtensor<T, N, S>::gtensor(const shape_type& shape)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
 {}
 
-
 template <typename T, int N, typename S>
 inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   : base_type({}, {})
@@ -96,9 +95,8 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   if (std::is_same<S, space::device>::value) {
     gtensor<T, N, space::host> host_temp(shape);
     helper::nd_initializer_list_copy<N>(il, host_temp);
-    gt::backend::copy<T, space::host, space::device>(host_temp.data(),
-                                                     base_type::data(),
-                                                     host_temp.size());
+    gt::backend::copy<T, space::host, space::device>(
+      host_temp.data(), base_type::data(), host_temp.size());
   } else {
     helper::nd_initializer_list_copy<N>(il, (*this));
   }
@@ -319,8 +317,8 @@ struct launch<1, space::device>
     dim3 numBlocks((shape[0] + BS_1D - 1) / BS_1D);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
-                   shape, std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
+                   std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -335,8 +333,8 @@ struct launch<2, space::device>
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
-                   shape, std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
+                   std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -352,8 +350,8 @@ struct launch<3, space::device>
                    shape[2]);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
-                   shape, std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
+                   std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -369,8 +367,8 @@ struct launch<4, space::device>
                    shape[2] * shape[3]);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
-                   shape, std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
+                   std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -385,8 +383,8 @@ struct launch<5, space::device>
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3] * shape[4]);
 
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0,
-                   shape, std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
+                   std::forward<F>(f));
   }
 };
 

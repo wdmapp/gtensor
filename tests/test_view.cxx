@@ -29,7 +29,8 @@ TEST(view, slice_range)
 {
   gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
 
-  EXPECT_EQ(a.view(_s(1, 3), _all), (gt::gtensor<double, 2>{{12., 13.}, {22., 23.}}));
+  EXPECT_EQ(a.view(_s(1, 3), _all),
+            (gt::gtensor<double, 2>{{12., 13.}, {22., 23.}}));
 
   gt::gtensor<double, 1> a1 = {0., 1., 2., 3., 4.};
   EXPECT_EQ(a1.view(_s(2, 4)), (gt::gtensor<double, 1>{2., 3.}));
@@ -126,7 +127,8 @@ TEST(gview, newaxis)
 
   auto bv = b.view(_all, _newaxis);
 
-  EXPECT_EQ(a + bv, (gt::gtensor_device<double, 2>{{111., 113., 115.}, {121., 123., 125.}}));
+  EXPECT_EQ(a + bv, (gt::gtensor_device<double, 2>{{111., 113., 115.},
+                                                   {121., 123., 125.}}));
 }
 
 TEST(gview, expression_all)
@@ -162,7 +164,8 @@ TEST(gview, device_assign_all)
 {
   gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
 
-  a.view(_all, _all) = gt::gtensor_device<double, 2>{{-11., -12., -13.}, {-21., -22., -23.}};
+  a.view(_all, _all) =
+    gt::gtensor_device<double, 2>{{-11., -12., -13.}, {-21., -22., -23.}};
 
   EXPECT_EQ(a,
             (gt::gtensor<double, 2>{{-11., -12., -13.}, {-21., -22., -23.}}));
@@ -172,7 +175,8 @@ TEST(gview, device_assign_sub)
 {
   gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
 
-  a.view(_s(1, 3), _s(0, 2)) = gt::gtensor<double, 2>{{-12., -13.}, {-22., -23.}};
+  a.view(_s(1, 3), _s(0, 2)) =
+    gt::gtensor<double, 2>{{-12., -13.}, {-22., -23.}};
 
   EXPECT_EQ(a, (gt::gtensor<double, 2>{{11., -12., -13.}, {21., -22., -23.}}));
 }
