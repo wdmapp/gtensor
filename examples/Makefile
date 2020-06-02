@@ -27,6 +27,16 @@ else ifeq ($(GTENSOR_DEVICE),hip)
   # Note: HIP doesn't support assert in device code
   GTENSOR_DEFINES += -DGTENSOR_HAVE_DEVICE -DNDEBUG
   GTENSOR_INCLUDES += -isystem $(ROCM_PATH)/include -isystem $(ROCM_PATH)/hip/include -isystem $(ROCM_PATH)/rocprim/include -isystem $(ROCM_PATH)/rocthrust/include
+else ifeq ($(GTENSOR_DEVICE),sycl)
+  ONEAPI_PATH ?= /opt/intel/inteloneapi
+  GTENSOR_CXX ?= $(ONEAPI_PATH)/compiler/latest/linux/bin/dpcpp
+  GTENSOR_OPTIONS += -fsycl
+
+  GTENSOR_DEVICE_SYCL_SELECTOR ?= gpu
+  GTENSOR_DEVICE_SYCL_SELECTOR_DEFINE := GTENSOR_DEVICE_SYCL_$(shell echo $(GTENSOR_DEVICE_SYCL_SELECTOR) | tr a-z A-Z)
+  GTENSOR_DEFINES += -D$(GTENSOR_DEVICE_SYCL_SELECTOR_DEFINE)
+  # Note: SYCL doesn't support assert in device code
+  GTENSOR_DEFINES += -DGTENSOR_HAVE_DEVICE -DNDEBUG
 else
   GTENSOR_CXX ?= clang++
 endif

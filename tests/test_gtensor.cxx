@@ -185,7 +185,7 @@ TEST(gtensor, assign_expression_2d_resize)
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 TEST(gtensor, device_assign_gtensor)
 {

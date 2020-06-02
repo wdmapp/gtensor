@@ -12,6 +12,8 @@
 
 #ifdef GTENSOR_DEVICE_HIP
 #include "hip/hip_runtime.h"
+#elif defined(GTENSOR_DEVICE_SYCL)
+#include <CL/sycl.hpp>
 #endif
 
 #endif
