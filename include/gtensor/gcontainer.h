@@ -72,26 +72,26 @@ inline void gcontainer<D>::resize(const shape_type& shape)
 
 #pragma nv_exec_check_disable
 template <typename D>
-inline auto gcontainer<D>::data() const -> const_pointer
+GT_INLINE auto gcontainer<D>::data() const -> const_pointer
 {
   return storage().data();
 }
 
 #pragma nv_exec_check_disable
 template <typename D>
-inline auto gcontainer<D>::data() -> pointer
+GT_INLINE auto gcontainer<D>::data() -> pointer
 {
   return storage().data();
 }
 
 template <typename D>
-inline auto gcontainer<D>::storage() const -> const storage_type&
+GT_INLINE auto gcontainer<D>::storage() const -> const storage_type&
 {
   return derived().storage_impl();
 }
 
 template <typename D>
-inline auto gcontainer<D>::storage() -> storage_type&
+GT_INLINE auto gcontainer<D>::storage() -> storage_type&
 {
   return derived().storage_impl();
 }

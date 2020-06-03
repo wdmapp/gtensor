@@ -163,13 +163,13 @@ inline gview<to_kernel_t<EC>, N> gview<EC, N>::to_kernel() const
 }
 
 template <typename EC, int N>
-inline auto gview<EC, N>::data_access_impl(size_t i) const -> const_reference
+GT_INLINE auto gview<EC, N>::data_access_impl(size_t i) const -> const_reference
 {
   return e_.data_access(offset_ + i);
 }
 
 template <typename EC, int N>
-inline auto gview<EC, N>::data_access_impl(size_t i) -> reference
+GT_INLINE auto gview<EC, N>::data_access_impl(size_t i) -> reference
 {
   return e_.data_access(offset_ + i);
 }

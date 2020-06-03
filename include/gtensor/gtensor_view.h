@@ -115,26 +115,26 @@ inline auto gtensor_view<T, N, S>::to_kernel() const -> gtensor_view
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor_view<T, N, S>::data() const -> const_pointer
+GT_INLINE auto gtensor_view<T, N, S>::data() const -> const_pointer
 {
   return storage_.data();
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor_view<T, N, S>::data() -> pointer
+GT_INLINE auto gtensor_view<T, N, S>::data() -> pointer
 {
   return storage_.data();
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor_view<T, N, S>::data_access_impl(size_t i) const
+GT_INLINE auto gtensor_view<T, N, S>::data_access_impl(size_t i) const
   -> const_reference
 {
   return storage_[i];
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor_view<T, N, S>::data_access_impl(size_t i) -> reference
+GT_INLINE auto gtensor_view<T, N, S>::data_access_impl(size_t i) -> reference
 {
   return storage_[i];
 }

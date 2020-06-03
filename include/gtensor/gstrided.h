@@ -89,39 +89,39 @@ inline gstrided<D>::gstrided(const shape_type& shape,
 {}
 
 template <typename D>
-inline int gstrided<D>::shape(int i) const
+GT_INLINE int gstrided<D>::shape(int i) const
 {
   return shape_[i];
 }
 
 template <typename D>
-inline auto gstrided<D>::shape() const -> const shape_type&
+GT_INLINE auto gstrided<D>::shape() const -> const shape_type&
 {
   return shape_;
 }
 
 template <typename D>
-inline auto gstrided<D>::strides() const -> const strides_type&
+GT_INLINE auto gstrided<D>::strides() const -> const strides_type&
 {
   return strides_;
 }
 
 template <typename D>
-inline size_type gstrided<D>::size() const
+GT_INLINE size_type gstrided<D>::size() const
 {
   return calc_size(shape());
 }
 
 template <typename D>
 template <typename... Args>
-inline auto gstrided<D>::operator()(Args&&... args) const -> const_reference
+GT_INLINE auto gstrided<D>::operator()(Args&&... args) const -> const_reference
 {
   return data_access(index(std::forward<Args>(args)...));
 }
 
 template <typename D>
 template <typename... Args>
-inline auto gstrided<D>::operator()(Args&&... args) -> reference
+GT_INLINE auto gstrided<D>::operator()(Args&&... args) -> reference
 {
   return data_access(index(std::forward<Args>(args)...));
 }
@@ -148,20 +148,20 @@ inline auto gstrided<D>::view(Args&&... args) &&
 }
 
 template <typename D>
-inline auto gstrided<D>::data_access(size_type i) const -> const_reference
+GT_INLINE auto gstrided<D>::data_access(size_type i) const -> const_reference
 {
   return derived().data_access_impl(i);
 }
 
 template <typename D>
-inline auto gstrided<D>::data_access(size_type i) -> reference
+GT_INLINE auto gstrided<D>::data_access(size_type i) -> reference
 {
   return derived().data_access_impl(i);
 }
 
 template <typename D>
 template <typename... Args>
-inline size_type gstrided<D>::index(Args&&... args) const
+GT_INLINE size_type gstrided<D>::index(Args&&... args) const
 {
 #ifdef GT_BOUNDSCHECK
   bounds_check(this->shape(), std::forward<Args>(args)...);

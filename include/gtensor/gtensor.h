@@ -114,20 +114,20 @@ inline gtensor<T, N, S>::gtensor(const expression<E>& e)
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::storage_impl() const -> const storage_type&
+GT_INLINE auto gtensor<T, N, S>::storage_impl() const -> const storage_type&
 {
   return storage_;
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::storage_impl() -> storage_type&
+GT_INLINE auto gtensor<T, N, S>::storage_impl() -> storage_type&
 {
   return storage_;
 }
 
 #pragma nv_exec_check_disable
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::data_access_impl(size_t i) const
+GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) const
   -> const_reference
 {
   return storage_[i];
@@ -135,7 +135,7 @@ inline auto gtensor<T, N, S>::data_access_impl(size_t i) const
 
 #pragma nv_exec_check_disable
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
+GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
 {
   return storage_[i];
 }
