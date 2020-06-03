@@ -284,7 +284,7 @@ inline int gfunction<F, E1, E2>::shape(int i) const
 
 template <typename F, typename E>
 template <typename... Args>
-inline auto gfunction<F, E, detail::empty>::operator()(Args... args) const
+GT_INLINE auto gfunction<F, E, detail::empty>::operator()(Args... args) const
   -> value_type
 {
   return f_(e_(args...));
@@ -292,7 +292,8 @@ inline auto gfunction<F, E, detail::empty>::operator()(Args... args) const
 
 template <typename F, typename E1, typename E2>
 template <typename... Args>
-inline auto gfunction<F, E1, E2>::operator()(Args... args) const -> value_type
+GT_INLINE auto gfunction<F, E1, E2>::operator()(Args... args) const
+  -> value_type
 {
   return f_(e1_(args...), e2_(args...));
 }

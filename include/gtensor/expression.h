@@ -38,13 +38,13 @@ public:
 };
 
 template <typename D>
-inline auto expression<D>::derived() const& -> const derived_type&
+GT_INLINE auto expression<D>::derived() const& -> const derived_type&
 {
   return static_cast<const derived_type&>(*this);
 }
 
 template <typename D>
-inline auto expression<D>::derived() & -> derived_type&
+GT_INLINE auto expression<D>::derived() & -> derived_type&
 {
   return static_cast<derived_type&>(*this);
 }
