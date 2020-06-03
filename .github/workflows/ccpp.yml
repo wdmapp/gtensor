@@ -178,18 +178,18 @@ jobs:
 
   build-hip:
     runs-on: ubuntu-latest
-    container: rocm/dev-ubuntu-18.04
+    container: rocm/dev-ubuntu-18.04:3.3
     env:
-      CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
+      CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake:/opt/rocm-3.5.0/lib/cmake
       CXX: /opt/rocm/bin/hipcc
-      CXXFLAGS: -amdgpu-target=gfx803 -Wno-unused-command-line-argument
+      HCC_AMDGPU_TARGET: gfx803
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
 
     steps:
     - uses: actions/checkout@v2
     - name: install packages
-      run: apt-get update && apt-get install -y wget git rocm-dev hip-base rocthrust clang-9
+      run: apt-get update && apt-get install -y wget git clang-9 rocthrust
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
