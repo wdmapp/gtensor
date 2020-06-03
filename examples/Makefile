@@ -23,7 +23,12 @@ else ifeq ($(GTENSOR_DEVICE),hip)
   ROCM_PATH ?= /opt/rocm
   AMDGPU_TARGET = gfx803
   GTENSOR_CXX ?= $(ROCM_PATH)/bin/hipcc
-  GTENSOR_OPTIONS += -hc -amdgpu-target=$(AMDGPU_TARGET)
+  HIP_HAS_HC = $(shell $(GTENSOR_CXX) --help | grep ' \-hc ')
+  ifeq ($(strip $(HIP_HAS_HC)),)
+    GTENSOR_OPTIONS += -x hip
+  else
+    GTENSOR_OPTIONS += -hc -amdgpu-target=$(AMDGPU_TARGET)
+  endif
   # Note: HIP doesn't support assert in device code
   GTENSOR_DEFINES += -DGTENSOR_HAVE_DEVICE -DNDEBUG
   GTENSOR_INCLUDES += -isystem $(ROCM_PATH)/include -isystem $(ROCM_PATH)/hip/include -isystem $(ROCM_PATH)/rocprim/include -isystem $(ROCM_PATH)/rocthrust/include
