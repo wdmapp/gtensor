@@ -178,9 +178,15 @@ jobs:
 
   build-hip:
     runs-on: ubuntu-latest
-    container: rocm/dev-ubuntu-18.04:3.3
+    #container: rocm/dev-ubuntu-18.04:3.3
+    container: rocm/dev-ubuntu-18.04:3.5
     env:
-      CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake:/opt/rocm-3.5.0/lib/cmake
+      # NOTE: in 3.3 tag the repo only has 3.5, so anything not pre-installed
+      # will be in the 3.5.0 directory. Since only rocthrust/rocprim are
+      # missing and they have no further dependencies, this can be worked
+      # around by simply adding the second cmake dir.
+      #CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake:/opt/rocm-3.5.0/lib/cmake
+      CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
       CXX: /opt/rocm/bin/hipcc
       HCC_AMDGPU_TARGET: gfx803
       GTEST_VERSION: 1.10.0
