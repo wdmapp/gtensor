@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <gtensor/complex.h>
 #include <gtensor/gtensor.h>
 
 TEST(complex, complex_ops)

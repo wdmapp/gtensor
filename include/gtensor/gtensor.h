@@ -5,6 +5,7 @@
 #include "device_backend.h"
 #include "device_copy.h"
 
+#include "complex.h"
 #include "gfunction.h"
 #include "gtensor_view.h"
 #include "gview.h"
