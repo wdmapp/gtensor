@@ -7,11 +7,15 @@ project(gtensor
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
 set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
-set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
-set(GTENSOR_SYCL_USE_CPU OFF CACHE BOOL "Use thrust (sycl device only)")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
+
+# SYCL specific configuration
+set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
+set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL "Using Intel OneAPI SYCL implementation")
+set(DPCPP_ROOT "/opt/intel/inteloneapi" CACHE STRING "Path to DPCPP / Intel OneAPI root")
+set(DPCPP_LIBDIR "${DPCPP_ROOT}/compiler/latest/linux/lib" CACHE STRING "Path to DPCPP compiler lib dir")
 
 set(GTENSOR_SUPPORTED_DEVICES "host;cuda;hip;sycl")
 set(GTENSOR_TARGETS "")
@@ -117,7 +121,16 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host")
     target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_HOST)
   else()
-      message(FATAL_ERROR "${PROJECT_NAME}: sycl selector '${GTENSOR_DEVICE_SYCL_SELECTOR}' is not supported")
+    message(FATAL_ERROR "${PROJECT_NAME}: sycl selector '${GTENSOR_DEVICE_SYCL_SELECTOR}' is not supported")
+  endif()
+
+  if (GTENSOR_DEVICE_SYCL_INTEL
+      AND NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
+    target_sources(gtensor_sycl INTERFACE
+                   ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
+                   ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
+                   ${DPCPP_LIBDIR}/libsycl-complex.o
+                   ${DPCPP_LIBDIR}/libsycl-cmath.o)
   endif()
 endif()
 
