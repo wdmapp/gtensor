@@ -1,8 +1,9 @@
-
 #include <gtest/gtest.h>
 
 #include "gtensor/complex.h"
 #include "gtensor/gtensor.h"
+
+#include "test_debug.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
 using space = gt::space::device;
@@ -103,6 +104,34 @@ TEST(expression, gfunction)
   EXPECT_EQ(e4, (gt::gtensor<double, 1>{11., 12.}));
 }
 
+TEST(expression, gscalar)
+{
+  gt::gtensor<double, 1> t1({1., 2.});
+
+  auto e1 = 2. * t1;
+  EXPECT_EQ(e1, (gt::gtensor<double, 1>{2., 4.}));
+
+  double n = 2.;
+  auto e2 = n * t1;
+  EXPECT_EQ(e2, (gt::gtensor<double, 1>{2., 4.}));
+
+  const double& rn = 2.;
+  auto e3 = rn * t1;
+  EXPECT_EQ(e3, (gt::gtensor<double, 1>{2., 4.}));
+}
+
+TEST(expression, gscalar_lambda)
+{
+  gt::gtensor<double, 1> t1({1., 2.});
+
+  auto scale = [](const double s, const gt::gtensor<double, 1>& x) {
+    return s * x;
+  };
+
+  auto e1 = scale(2., t1);
+  EXPECT_EQ(e1, (gt::gtensor<double, 1>{2., 4.}));
+}
+
 TEST(shape, broadcast_same)
 {
   auto a = gt::shape(2, 3, 4);
@@ -170,3 +199,31 @@ TEST(expression, shape_second)
   auto e = t1 + t2;
   EXPECT_EQ(e.shape(), (S3{2, 3, 4}));
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(expression, device_eval)
+{
+  gt::gtensor_device<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor_device<double, 2> b = {{-11., -12., -13.}, {-21., -22., -23.}};
+
+  gt::gtensor<double, 2> h_a(a.shape());
+  gt::gtensor<double, 2> h_c(a.shape());
+
+  gt::copy(a, h_a);
+
+  auto e1 = a + 2. * b; // -a
+  GT_DEBUG_TYPE(e1);
+  auto e2 = 4. * a + b; // 3a
+  GT_DEBUG_TYPE(e2);
+  auto e = (1. / 2.) * (e1 + e2);
+  GT_DEBUG_TYPE(e);
+  auto c = eval(e);
+  GT_DEBUG_TYPE(c);
+
+  gt::copy(c, h_c);
+
+  EXPECT_EQ(h_c, h_a);
+}
+
+#endif

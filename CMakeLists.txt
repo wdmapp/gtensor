@@ -6,8 +6,9 @@ project(gtensor
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
-set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
+set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
+set(GTENSOR_TEST_DEBUG OFF CACHE BOOL "Turn on debug printing for unit tests")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 
