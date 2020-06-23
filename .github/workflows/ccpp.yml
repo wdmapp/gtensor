@@ -195,7 +195,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install packages
-      run: apt-get update && apt-get install -y wget git clang-9 rocthrust
+      run: |
+        apt-get update
+        apt-get upgrade -y
+        apt-get install -y --reinstall rocm-clang-ocl rocm-cmake rocm-dbgapi rocm-dev rocm-device-libs rocm-opencl rocm-opencl-dev rocm-utils hsa-amd-aqlprofile hsa-ext-rocr-dev hsa-rocr-dev hsakmt-roct hsakmt-roct-dev llvm-amdgpu hip-base hip-rocclr comgr
+        apt-get install -y wget git clang-9 rocthrust
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
