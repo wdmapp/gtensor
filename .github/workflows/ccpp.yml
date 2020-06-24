@@ -237,6 +237,7 @@ jobs:
       LD_LIBRARY_PATH: /opt/intel/inteloneapi/compiler/latest/linux/lib:/opt/intel/inteloneapi/compiler/latest/linux/lib/x64:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/inteloneapi/compiler/latest/linux/compiler/lib:/opt/intel/inteloneapi/ccl/2021.1-beta06/lib/cpu_gpu_dpcpp
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
+      SYCL_DEVICE_TYPE: host
 
     steps:
     - name: install core packages
