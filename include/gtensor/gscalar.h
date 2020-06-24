@@ -18,7 +18,7 @@ public:
 
   constexpr static size_type dimension() { return 0; }
 
-  gscalar(T&& value) : value_(value) {}
+  gscalar(T value) : value_(value) {}
 
   shape_type shape() const { return {}; }
 
@@ -28,19 +28,16 @@ public:
     return value_;
   }
 
-  gscalar<value_type> to_kernel() const
-  {
-    return gscalar<value_type>(value_type(value_));
-  }
+  gscalar<value_type> to_kernel() const { return gscalar<value_type>(value_); }
 
 private:
-  T value_; // FIXME? would be much less fragile to never store reference
+  value_type value_;
 };
 
 template <typename T>
-gscalar<T> scalar(T&& t)
+gscalar<T> scalar(T t)
 {
-  return gscalar<T>(std::forward<T>(t));
+  return gscalar<T>(t);
 }
 
 } // namespace gt
