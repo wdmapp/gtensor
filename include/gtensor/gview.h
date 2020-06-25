@@ -126,6 +126,9 @@ public:
 
   gview(EC&& e, size_type offset, const shape_type& shape,
         const strides_type& strides);
+  gview(const gview&) = default;
+  gview(gview&&) = default;
+  self_type& operator=(self_type&& o) = default;
 
   self_type& operator=(const self_type& o);
   template <typename E>
