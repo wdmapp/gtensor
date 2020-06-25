@@ -35,9 +35,9 @@ private:
 };
 
 template <typename T>
-gscalar<T> scalar(T t)
+gscalar<T> scalar(T&& t)
 {
-  return gscalar<T>(t);
+  return gscalar<T>(std::forward<T>(t));
 }
 
 } // namespace gt
