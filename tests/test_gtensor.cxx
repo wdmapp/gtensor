@@ -70,14 +70,25 @@ TEST(gtensor, copy_ctor)
   auto b = a;
 
   EXPECT_EQ(b, a);
+
+  // underlying storage copied
+  double* adata = gt::backend::raw_pointer_cast(a.data());
+  double* bdata = gt::backend::raw_pointer_cast(b.data());
+  EXPECT_NE(adata, bdata);
 }
 
 TEST(gtensor, move_ctor)
 {
   gt::gtensor<double, 1> a{11., 12., 13.};
+  double* adata = gt::backend::raw_pointer_cast(a.data());
+
   auto b = std::move(a);
+  double* bdata = gt::backend::raw_pointer_cast(b.data());
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{11., 12., 13.}));
+
+  // verify no data was copied
+  EXPECT_EQ(adata, bdata);
 }
 
 TEST(gtensor, copy_assign1)
@@ -126,10 +137,15 @@ TEST(gtensor, copy_assign3)
 TEST(gtensor, move_assign)
 {
   gt::gtensor<double, 1> a{11., 12., 13.};
+  double* adata = gt::backend::raw_pointer_cast(a.data());
   gt::gtensor<double, 1> b;
   b = std::move(a);
+  double* bdata = gt::backend::raw_pointer_cast(b.data());
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{11., 12., 13.}));
+
+  // verify no data was copied
+  EXPECT_EQ(adata, bdata);
 }
 
 TEST(gtensor, assign_expression_1d)
@@ -185,7 +201,7 @@ TEST(gtensor, assign_expression_2d_resize)
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
 
-#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+#if defined GTENSOR_HAVE_DEVICE
 
 TEST(gtensor, device_assign_gtensor)
 {
@@ -335,6 +351,53 @@ TEST(gtensor, device_assign_expression)
   EXPECT_EQ(b,
             (gt::gtensor_device<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
+
+TEST(gtensor, device_move_ctor)
+{
+  gt::gtensor<double, 1> h_a{11., 12., 13.};
+  gt::gtensor<double, 1> h_b(h_a.shape());
+  gt::gtensor_device<double, 1> a(h_a.shape());
+
+  gt::copy(h_a, a);
+  double* adata = gt::backend::raw_pointer_cast(a.data());
+
+  auto b = std::move(a);
+  double* bdata = gt::backend::raw_pointer_cast(b.data());
+
+  // Note: explicit copy to avoid thrust implicit kernel for accessing
+  // device vector from host. Aids in understanding thrust backend behavior.
+  gt::copy(b, h_b);
+  EXPECT_EQ(h_b, (gt::gtensor<double, 1>{11., 12., 13.}));
+
+  // verify no data was copied
+  EXPECT_EQ(adata, bdata);
+}
+
+TEST(gtensor, device_move_assign)
+{
+  gt::gtensor<double, 1> h_a{11., 12., 13.};
+  gt::gtensor<double, 1> h_b(h_a.shape());
+  gt::gtensor_device<double, 1> a(h_a.shape());
+  gt::gtensor_device<double, 1> b(h_a.shape());
+
+  gt::copy(h_a, a);
+  double* adata = gt::backend::raw_pointer_cast(a.data());
+
+  b = std::move(a);
+  double* bdata = gt::backend::raw_pointer_cast(b.data());
+
+  // Note: explicit copy to avoid thrust implicit kernel for accessing
+  // device vector from host. Aids in understanding thrust backend behavior.
+  gt::copy(b, h_b);
+  EXPECT_EQ(h_b, (gt::gtensor<double, 1>{11., 12., 13.}));
+
+  // verify no data was copied
+  EXPECT_EQ(adata, bdata);
+}
+
+#endif // GTENSOR_HAVE_DEVICE
+
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 __global__ void kernel_test(gt::gtensor_view_device<double, 1> d_a,
                             gt::gtensor_view_device<double, 1> d_b)

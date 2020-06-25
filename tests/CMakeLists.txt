@@ -10,6 +10,10 @@ macro(add_gtensor_test name)
   else()
     gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
   endif()
+
+  if (GTENSOR_TEST_DEBUG)
+    target_compile_definitions(${name} PRIVATE GTENSOR_TEST_DEBUG)
+  endif()
 endmacro()
 
 if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
