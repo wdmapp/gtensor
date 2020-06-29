@@ -43,6 +43,9 @@ public:
 
   GT_INLINE constexpr static std::size_t size();
 
+  GT_INLINE const T* data() const { return data_; }
+  GT_INLINE T* data() { return data_; }
+
   GT_INLINE const T& operator[](T i) const;
   GT_INLINE T& operator[](T i);
 
