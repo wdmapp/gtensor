@@ -395,6 +395,26 @@ TEST(gtensor, device_move_assign)
   EXPECT_EQ(adata, bdata);
 }
 
+TEST(gtensor, synchronize)
+{
+  gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor_device<double, 2> b(a.shape());
+  gt::gtensor_device<double, 2> c(a.shape());
+
+  b = a;
+
+  // it's hard to force an async operation in pure gtensor, i.e. without using
+  // vendor specific API. Not necessary here since the stream (cuda/HIP) or
+  // queue will serialize multiple device copies, but at least we are
+  // exercising the function call.
+  gt::synchronize();
+
+  c = b;
+
+  EXPECT_EQ(c,
+            (gt::gtensor_device<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
 #endif // GTENSOR_HAVE_DEVICE
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)

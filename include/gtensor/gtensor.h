@@ -544,6 +544,14 @@ eval(E&& e)
   return {std::forward<E>(e)};
 }
 
+// ======================================================================
+// synchronize
+
+void inline synchronize()
+{
+  gt::backend::device_synchronize();
+}
+
 } // namespace gt
 
 #endif
