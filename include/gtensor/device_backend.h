@@ -296,6 +296,11 @@ struct host_allocator
 
 #ifdef GTENSOR_DEVICE_HOST
 
+void device_synchronize()
+{
+  // no need to synchronize on host
+}
+
 template <typename T>
 struct host_allocator
 {
