@@ -29,32 +29,33 @@ namespace backend
 
 #ifdef GTENSOR_DEVICE_CUDA
 
+void inline device_synchronize()
+{
+  gtGpuCheck(cudaStreamSynchronize(0));
+}
+
 template <typename T>
 void device_copy_hh(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
-  gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
 void device_copy_dd(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
-  gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
 void device_copy_dh(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
-  gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
 void device_copy_hd(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
-  gtGpuCheck(cudaDeviceSynchronize());
 }
 
 template <typename T>
@@ -105,32 +106,33 @@ struct host_allocator
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
+void inline device_synchronize()
+{
+  gtGpuCheck(hipStreamSynchronize(0));
+}
+
 template <typename T>
 void device_copy_hh(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
-  gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
 void device_copy_dd(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
-  gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
 void device_copy_dh(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToHost));
-  gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
 void device_copy_hd(const T* src, T* dst, size_t count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
-  gtGpuCheck(hipDeviceSynchronize());
 }
 
 template <typename T>
@@ -180,6 +182,11 @@ struct host_allocator
 };
 
 #elif defined(GTENSOR_DEVICE_SYCL)
+
+void inline device_synchronize()
+{
+  gt::backend::sycl::get_queue().wait();
+}
 
 // TODO: SYCL exception handler
 template <typename T>
@@ -288,6 +295,11 @@ struct host_allocator
 #endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
 
 #ifdef GTENSOR_DEVICE_HOST
+
+void device_synchronize()
+{
+  // no need to synchronize on host
+}
 
 template <typename T>
 struct host_allocator
