@@ -153,7 +153,7 @@ struct host
 
 #ifdef GTENSOR_USE_THRUST
 
-#if THRUST_VERSION <= 100903
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
 template <typename T>
 using device_allocator =
   caching_allocator<T, thrust::device_malloc_allocator<T>>;
