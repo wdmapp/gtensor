@@ -28,6 +28,13 @@ TEST(gtensor, ctor_from_expr)
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
 
+TEST(gtensor, ctor_from_expr_unary)
+{
+  gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor<double, 2> b = 2 * a + (-a);
+  EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
 TEST(gtensor, ctor_init_1d)
 {
   gt::gtensor<double, 1> b({3., 4., 5.});
