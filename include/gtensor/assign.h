@@ -342,12 +342,16 @@ struct assigner<1, space::device>
     sycl::queue& q = gt::backend::sycl::get_queue();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
-    auto e = q.submit([&](sycl::handler& cgh) {
-      cgh.parallel_for<class Assign1>(sycl::range<1>(lhs.shape(0)),
-                                      [=](sycl::item<1> item) mutable {
-                                        int i = item.get_id();
-                                        k_lhs(i) = k_rhs(i);
-                                      });
+    auto range = sycl::range<1>(lhs.shape(0));
+    auto e = q.submit([=](sycl::handler& cgh) {
+      using ltype = decltype(k_lhs);
+      using rtype = decltype(k_rhs);
+      using kname = gt::backend::sycl::Assign1<ltype, rtype>;
+      cgh.parallel_for<kname>(range, [=](sycl::item<1> item)
+      {
+        int i = item.get_id();
+        k_lhs(i) = k_rhs(i);
+      });
     });
     e.wait();
   }
@@ -363,8 +367,12 @@ struct assigner<2, space::device>
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<2>(lhs.shape(0), lhs.shape(1));
-    auto e = q.submit([&](sycl::handler& cgh) {
-      cgh.parallel_for<class Assign1>(range, [=](sycl::item<2> item) mutable {
+    auto e = q.submit([=](sycl::handler& cgh) {
+      using ltype = decltype(k_lhs);
+      using rtype = decltype(k_rhs);
+      using kname = gt::backend::sycl::Assign2<ltype, rtype>;
+      cgh.parallel_for<kname>(range, [=](sycl::item<2> item)
+      {
         int i = item.get_id(0);
         int j = item.get_id(1);
         k_lhs(i, j) = k_rhs(i, j);
@@ -384,8 +392,12 @@ struct assigner<3, space::device>
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<3>(lhs.shape(0), lhs.shape(1), lhs.shape(2));
-    auto e = q.submit([&](sycl::handler& cgh) {
-      cgh.parallel_for<class Assign1>(range, [=](sycl::item<3> item) mutable {
+    auto e = q.submit([=](sycl::handler& cgh) {
+      using ltype = decltype(k_lhs);
+      using rtype = decltype(k_rhs);
+      using kname = gt::backend::sycl::Assign3<ltype, rtype>;
+      cgh.parallel_for<kname>(range, [=](sycl::item<3> item)
+      {
         int i = item.get_id(0);
         int j = item.get_id(1);
         int k = item.get_id(2);
@@ -411,13 +423,15 @@ struct assigner<N, space::device>
     auto strides = calc_strides(lhs.shape());
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
-    auto e = q.submit([&](sycl::handler& cgh) {
-      cgh.parallel_for<class AssignN>(
-        range, [=](sycl::nd_item<1> item) mutable {
-          int i = item.get_global_id(0);
-          auto idx = unravel(i, strides);
-          index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
-        });
+    auto e = q.submit([=](sycl::handler& cgh) {
+      using ltype = decltype(k_lhs);
+      using rtype = decltype(k_rhs);
+      using kname = gt::backend::sycl::AssignN<ltype, rtype>;
+      cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
+        int i = item.get_global_id(0);
+        auto idx = unravel(i, strides);
+        index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
+      });
     });
     e.wait();
   }
