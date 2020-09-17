@@ -33,7 +33,7 @@ else ifeq ($(GTENSOR_DEVICE),hip)
   GTENSOR_DEFINES += -DGTENSOR_HAVE_DEVICE -DNDEBUG
   GTENSOR_INCLUDES += -isystem $(ROCM_PATH)/include -isystem $(ROCM_PATH)/hip/include -isystem $(ROCM_PATH)/rocprim/include -isystem $(ROCM_PATH)/rocthrust/include
 else ifeq ($(GTENSOR_DEVICE),sycl)
-  ONEAPI_PATH ?= /opt/intel/inteloneapi
+  ONEAPI_PATH ?= /opt/intel/oneapi
   GTENSOR_CXX ?= $(ONEAPI_PATH)/compiler/latest/linux/bin/dpcpp
   GTENSOR_OPTIONS += -fsycl
 
