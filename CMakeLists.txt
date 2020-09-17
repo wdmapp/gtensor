@@ -131,11 +131,12 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
 
   if (GTENSOR_DEVICE_SYCL_INTEL
       AND NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
-    target_sources(gtensor_sycl INTERFACE
-                   ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
-                   ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
-                   ${DPCPP_LIBDIR}/libsycl-complex.o
-                   ${DPCPP_LIBDIR}/libsycl-cmath.o)
+    target_link_options(gtensor_sycl INTERFACE -device-math-lib=fp32,fp64)
+    #target_sources(gtensor_sycl INTERFACE
+    #               ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
+    #               ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
+    #               ${DPCPP_LIBDIR}/libsycl-complex.o
+    #               ${DPCPP_LIBDIR}/libsycl-cmath.o)
   endif()
 endif()
 
