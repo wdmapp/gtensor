@@ -347,8 +347,7 @@ struct assigner<1, space::device>
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign1<ltype, rtype>;
-      cgh.parallel_for<kname>(range, [=](sycl::item<1> item)
-      {
+      cgh.parallel_for<kname>(range, [=](sycl::item<1> item) {
         int i = item.get_id();
         k_lhs(i) = k_rhs(i);
       });
@@ -371,8 +370,7 @@ struct assigner<2, space::device>
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign2<ltype, rtype>;
-      cgh.parallel_for<kname>(range, [=](sycl::item<2> item)
-      {
+      cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
         k_lhs(i, j) = k_rhs(i, j);
@@ -396,8 +394,7 @@ struct assigner<3, space::device>
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign3<ltype, rtype>;
-      cgh.parallel_for<kname>(range, [=](sycl::item<3> item)
-      {
+      cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
         int k = item.get_id(2);
