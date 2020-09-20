@@ -15,7 +15,8 @@ Features:
 - easily support both CPU-only and GPU-CPU hybrid code in the same code base,
   with only minimal use of #ifdef.
 - multi-dimensional array slicing similar to numpy
-- GPU support for nVidia via CUDA, AMD via HIP/rocm, and Intel GPUs via SYCL.
+- GPU support for nVidia via CUDA and AMD via HIP/ROCm,
+  and experimental Intel GPU support via SYCL.
 
 ## License
 

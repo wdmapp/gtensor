@@ -15,8 +15,9 @@ set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
 set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL "Using Intel OneAPI SYCL implementation")
-set(DPCPP_ROOT "/opt/intel/inteloneapi" CACHE STRING "Path to DPCPP / Intel OneAPI root")
-set(DPCPP_LIBDIR "${DPCPP_ROOT}/compiler/latest/linux/lib" CACHE STRING "Path to DPCPP compiler lib dir")
+set(DPCPP_ROOT "/opt/intel/inteloneapi/compiler/latest/linux" CACHE STRING "Path to DPCPP / Intel OneAPI root")
+set(DPCPP_LIBDIR "${DPCPP_ROOT}/lib" CACHE STRING "Path to DPCPP compiler lib dir")
+set(DPCPP_INCDIR "${DPCPP_ROOT}/include/sycl" CACHE STRING "Path to DPCPP include dir")
 
 set(GTENSOR_SUPPORTED_DEVICES "host;cuda;hip;sycl")
 set(GTENSOR_TARGETS "")
@@ -112,6 +113,7 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   add_gtensor_library(sycl)
 
   target_compile_options(gtensor_sycl INTERFACE -fsycl)
+  target_link_options(gtensor_sycl INTERFACE -fsycl)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL)
 
@@ -125,13 +127,16 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
     message(FATAL_ERROR "${PROJECT_NAME}: sycl selector '${GTENSOR_DEVICE_SYCL_SELECTOR}' is not supported")
   endif()
 
+  target_include_directories(gtensor_sycl INTERFACE ${DPCPP_INCDIR})
+
   if (GTENSOR_DEVICE_SYCL_INTEL
       AND NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
-    target_sources(gtensor_sycl INTERFACE
-                   ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
-                   ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
-                   ${DPCPP_LIBDIR}/libsycl-complex.o
-                   ${DPCPP_LIBDIR}/libsycl-cmath.o)
+    target_link_options(gtensor_sycl INTERFACE -device-math-lib=fp32,fp64)
+    #target_sources(gtensor_sycl INTERFACE
+    #               ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
+    #               ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
+    #               ${DPCPP_LIBDIR}/libsycl-complex.o
+    #               ${DPCPP_LIBDIR}/libsycl-cmath.o)
   endif()
 endif()
 

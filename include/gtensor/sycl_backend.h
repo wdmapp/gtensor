@@ -23,6 +23,24 @@ static inline cl::sycl::queue& get_queue()
   return q;
 }
 
+template <typename E1, typename E2>
+class Assign1;
+template <typename E1, typename E2>
+class Assign2;
+template <typename E1, typename E2>
+class Assign3;
+template <typename E1, typename E2>
+class AssignN;
+
+template <typename F>
+class Launch1;
+template <typename F>
+class Launch2;
+template <typename F>
+class Launch3;
+template <typename F>
+class LaunchN;
+
 } // namespace sycl
 } // namespace backend
 } // namespace gt
