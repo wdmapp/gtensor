@@ -555,30 +555,6 @@ void inline synchronize()
   gt::backend::device_synchronize();
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
-inline int device_get_count()
-{
-  return gt::backend::device_get_count();
-}
-
-inline void device_set(int device_id)
-{
-  return gt::backend::device_set(device_id);
-}
-
-inline int device_get()
-{
-  return gt::backend::device_get();
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  return gt::backend::device_get_vendor_id(device_id);
-}
-
-#endif
-
 } // namespace gt
 
 #endif

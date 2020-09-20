@@ -115,6 +115,29 @@ struct device_allocator
 };
 
 template <typename T>
+struct managed_allocator
+{
+  static T* allocate(int count)
+  {
+    T* p;
+    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * count));
+    return p;
+  }
+
+  static void deallocate(T* p)
+  {
+    if (p != nullptr) {
+      gtGpuCheck(cudaFree(p));
+    }
+  }
+
+  static void copy(const T* src, T* dst, std::size_t bytes)
+  {
+    device_copy_dd(src, dst, bytes);
+  }
+};
+
+template <typename T>
 struct host_allocator
 {
   static T* allocate(int count)
@@ -225,6 +248,29 @@ struct device_allocator
 };
 
 template <typename T>
+struct managed_allocator
+{
+  static T* allocate(int count)
+  {
+    T* p;
+    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * count));
+    return p;
+  }
+
+  static void deallocate(T* p)
+  {
+    if (p != nullptr) {
+      gtGpuCheck(hipFree(p));
+    }
+  }
+
+  static void copy(const T* src, T* dst, std::size_t count)
+  {
+    device_copy_dd(src, dst, count);
+  }
+};
+
+template <typename T>
 struct host_allocator
 {
   static T* allocate(int count)
@@ -308,8 +354,29 @@ struct device_allocator
   }
 };
 
+template <typename T>
+struct managed_allocator
+{
+  static T* allocate(int count)
+  {
+    return cl::sycl::malloc_shared<T>(count, gt::backend::sycl::get_queue());
+  }
+
+  static void deallocate(T* p)
+  {
+    if (p != nullptr) {
+      cl::sycl::free(p, gt::backend::sycl::get_queue());
+    }
+  }
+
+  static void copy(const T* src, T* dst, std::size_t count)
+  {
+    device_copy_dd(src, dst, count);
+  }
+};
+
 // The host allocation type in SYCL allows device code to directly access
-// the code. This is generally not necessary or effecient for gtensor, so
+// the data. This is generally not necessary or effecient for gtensor, so
 // we opt for the same implementation as for the HOST device below.
 template <typename T>
 struct host_allocator
