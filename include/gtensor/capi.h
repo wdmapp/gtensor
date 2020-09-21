@@ -1,11 +1,17 @@
 #ifndef GTENSOR_CAPI_H
 #define GTENSOR_CAPI_H
 
+#include "macros.h"
+
 /**
  * Expose a limited subset of gtensor API for calling from Fortran.
  *
  * The C++ namespaces are adapted to underscores when possible. For
  * allocation, the calls are simplified to exclude the allocator type.
+ *
+ * Also exposes macros gtLaunchKernel and gtGpuCheck for CUDA and AMD
+ * backends. Note that these are not currently portable to SYCL, and may
+ * be removed in the future.
  */
 
 extern "C" void gt_synchronize();
