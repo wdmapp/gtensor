@@ -11,6 +11,7 @@ set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
 set(GTENSOR_TEST_DEBUG OFF CACHE BOOL "Turn on debug printing for unit tests")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
+set(GTENSOR_BUILD_CLIB OFF CACHE BOOL "build cgtensor.a")
 
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
@@ -197,6 +198,12 @@ endif()
 if (GTENSOR_BUILD_EXAMPLES)
   message(STATUS "${PROJECT_NAME}: build examples is ON")
   add_subdirectory(examples)
+endif()
+
+if (GTENSOR_BUILD_CLIB)
+  add_library(cgtensor)
+  target_gtensor_sources(cgtensor PRIVATE src/cgtensor.cxx)
+  target_link_libraries(cgtensor gtensor::gtensor)
 endif()
 
 # See https://github.com/pabloariasal/modern-cmake-sample
