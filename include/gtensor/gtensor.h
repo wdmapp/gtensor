@@ -2,6 +2,7 @@
 #ifndef GTENSOR_GTENSOR_H
 #define GTENSOR_GTENSOR_H
 
+#include "defs.h"
 #include "device_backend.h"
 #include "device_copy.h"
 

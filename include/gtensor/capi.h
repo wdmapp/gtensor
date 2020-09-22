@@ -14,24 +14,32 @@
  * be removed in the future.
  */
 
-extern "C" void gt_synchronize();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void gt_synchronize();
 
 #ifdef GTENSOR_HAVE_DEVICE
 
 #ifndef GTENSOR_DEVICE_SYCL
 
-extern "C" int gt_backend_device_get_count();
-extern "C" void gt_backend_device_set(int device_id);
-extern "C" int gt_backend_device_get();
-extern "C" uint32_t gt_backend_device_get_vendor_id(int device_id);
+int gt_backend_device_get_count();
+void gt_backend_device_set(int device_id);
+int gt_backend_device_get();
+uint32_t gt_backend_device_get_vendor_id(int device_id);
 
 #endif // not GTENSOR_DEVICE_SYCL
 
-extern "C" void* gt_backend_device_allocate(int nbytes);
-extern "C" void* gt_backend_managed_allocate(int nbytes);
-extern "C" void gt_backend_device_deallocate(void* p);
-extern "C" void gt_backend_managed_deallocate(void* p);
+void* gt_backend_device_allocate(size_t nbytes);
+void* gt_backend_managed_allocate(size_t nbytes);
+void gt_backend_device_deallocate(void* p);
+void gt_backend_managed_deallocate(void* p);
 
 #endif // GTENSOR_HAVE_DEVICE
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GTENSOR_CAPI_H
