@@ -1,6 +1,7 @@
 #ifndef GTENSOR_CAPI_H
 #define GTENSOR_CAPI_H
 
+#include "device_runtime.h"
 #include "macros.h"
 
 /**
