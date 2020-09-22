@@ -17,9 +17,10 @@
 #include "sycl_backend.h"
 #endif
 
-#include "macros.h"
-
 #endif // GTENSOR_HAVE_DEVICE
+
+#include "defs.h"
+#include "macros.h"
 
 namespace gt
 {
@@ -34,26 +35,59 @@ void inline device_synchronize()
   gtGpuCheck(cudaStreamSynchronize(0));
 }
 
+inline int device_get_count()
+{
+  int device_count;
+  gtGpuCheck(cudaGetDeviceCount(&device_count));
+  return device_count;
+}
+
+inline void device_set(int device_id)
+{
+  gtGpuCheck(cudaSetDevice(device_id));
+}
+
+inline int device_get()
+{
+  int device_id;
+  gtGpuCheck(cudaGetDevice(&device_id));
+  return device_id;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  cudaDeviceProp prop;
+  uint32_t packed = 0;
+
+  gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
+
+  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+  return packed;
+}
+
 template <typename T>
-void device_copy_hh(const T* src, T* dst, size_t count)
+void device_copy_hh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
 }
 
 template <typename T>
-void device_copy_dd(const T* src, T* dst, size_t count)
+void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
 }
 
 template <typename T>
-void device_copy_dh(const T* src, T* dst, size_t count)
+void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
 }
 
 template <typename T>
-void device_copy_hd(const T* src, T* dst, size_t count)
+void device_copy_hd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
 }
@@ -61,7 +95,7 @@ void device_copy_hd(const T* src, T* dst, size_t count)
 template <typename T>
 struct device_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(size_t count)
   {
     T* p;
     gtGpuCheck(cudaMalloc(&p, sizeof(T) * count));
@@ -75,16 +109,39 @@ struct device_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t bytes)
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
-    device_copy_dd(src, dst, bytes);
+    device_copy_dd(src, dst, count);
+  }
+};
+
+template <typename T>
+struct managed_allocator
+{
+  static T* allocate(size_t count)
+  {
+    T* p;
+    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * count));
+    return p;
+  }
+
+  static void deallocate(T* p)
+  {
+    if (p != nullptr) {
+      gtGpuCheck(cudaFree(p));
+    }
+  }
+
+  static void copy(const T* src, T* dst, gt::size_type count)
+  {
+    device_copy_dd(src, dst, count);
   }
 };
 
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     T* p;
     gtGpuCheck(cudaMallocHost(&p, sizeof(T) * count));
@@ -98,9 +155,9 @@ struct host_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t bytes)
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
-    device_copy_hh(src, dst, bytes);
+    device_copy_hh(src, dst, count);
   }
 };
 
@@ -111,26 +168,59 @@ void inline device_synchronize()
   gtGpuCheck(hipStreamSynchronize(0));
 }
 
+inline int device_get_count()
+{
+  int device_count;
+  gtGpuCheck(hipGetDeviceCount(&device_count));
+  return device_count;
+}
+
+inline void device_set(int device_id)
+{
+  gtGpuCheck(hipSetDevice(device_id));
+}
+
+inline int device_get()
+{
+  int device_id;
+  gtGpuCheck(hipGetDevice(&device_id));
+  return device_id;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  hipDeviceProp_t prop;
+  uint32_t packed = 0;
+
+  gtGpuCheck(hipGetDeviceProperties(&prop, device_id));
+
+  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+  return packed;
+}
+
 template <typename T>
-void device_copy_hh(const T* src, T* dst, size_t count)
+void device_copy_hh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
 }
 
 template <typename T>
-void device_copy_dd(const T* src, T* dst, size_t count)
+void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
 }
 
 template <typename T>
-void device_copy_dh(const T* src, T* dst, size_t count)
+void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToHost));
 }
 
 template <typename T>
-void device_copy_hd(const T* src, T* dst, size_t count)
+void device_copy_hd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
 }
@@ -138,7 +228,7 @@ void device_copy_hd(const T* src, T* dst, size_t count)
 template <typename T>
 struct device_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     T* p;
     gtGpuCheck(hipMalloc(&p, sizeof(T) * count));
@@ -152,7 +242,30 @@ struct device_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t count)
+  static void copy(const T* src, T* dst, gt::size_type count)
+  {
+    device_copy_dd(src, dst, count);
+  }
+};
+
+template <typename T>
+struct managed_allocator
+{
+  static T* allocate(gt::size_type count)
+  {
+    T* p;
+    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * count));
+    return p;
+  }
+
+  static void deallocate(T* p)
+  {
+    if (p != nullptr) {
+      gtGpuCheck(hipFree(p));
+    }
+  }
+
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
     device_copy_dd(src, dst, count);
   }
@@ -161,7 +274,7 @@ struct device_allocator
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     T* p;
     gtGpuCheck(hipHostMalloc(&p, sizeof(T) * count, hipHostMallocDefault));
@@ -175,7 +288,7 @@ struct host_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t count)
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
     device_copy_hh(src, dst, count);
   }
@@ -190,7 +303,7 @@ void inline device_synchronize()
 
 // TODO: SYCL exception handler
 template <typename T>
-void device_copy(const T* src, T* dst, size_t count)
+void device_copy(const T* src, T* dst, gt::size_type count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memcpy(dst, src, sizeof(T) * count);
@@ -198,25 +311,25 @@ void device_copy(const T* src, T* dst, size_t count)
 }
 
 template <typename T>
-void device_copy_hh(const T* src, T* dst, size_t count)
+void device_copy_hh(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_dd(const T* src, T* dst, size_t count)
+void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_dh(const T* src, T* dst, size_t count)
+void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_hd(const T* src, T* dst, size_t count)
+void device_copy_hd(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
@@ -224,7 +337,7 @@ void device_copy_hd(const T* src, T* dst, size_t count)
 template <typename T>
 struct device_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     return cl::sycl::malloc_device<T>(count, gt::backend::sycl::get_queue());
   }
@@ -236,19 +349,40 @@ struct device_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t count)
+  static void copy(const T* src, T* dst, gt::size_type count)
+  {
+    device_copy_dd(src, dst, count);
+  }
+};
+
+template <typename T>
+struct managed_allocator
+{
+  static T* allocate(gt::size_type count)
+  {
+    return cl::sycl::malloc_shared<T>(count, gt::backend::sycl::get_queue());
+  }
+
+  static void deallocate(T* p)
+  {
+    if (p != nullptr) {
+      cl::sycl::free(p, gt::backend::sycl::get_queue());
+    }
+  }
+
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
     device_copy_dd(src, dst, count);
   }
 };
 
 // The host allocation type in SYCL allows device code to directly access
-// the code. This is generally not necessary or effecient for gtensor, so
+// the data. This is generally not necessary or effecient for gtensor, so
 // we opt for the same implementation as for the HOST device below.
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     T* p = static_cast<T*>(malloc(sizeof(T) * count));
     if (p == nullptr) {
@@ -265,7 +399,7 @@ struct host_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t count)
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
     std::memcpy(dst, src, sizeof(T) * count);
   }
@@ -275,7 +409,7 @@ struct host_allocator
 template<typename T>
 struct host_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     return cl::sycl::malloc_host<T>(count, gt::backend::sycl::get_queue());
   }
@@ -285,7 +419,7 @@ struct host_allocator
     cl::sycl::free(p, gt::backend::sycl::get_queue());
   }
 
-  static void copy(const void *src, void *dst, std::size_t count)
+  static void copy(const void *src, void *dst, gt::size_type count)
   {
     device_copy_hh(dst, src, count);
   }
@@ -304,7 +438,7 @@ void device_synchronize()
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(int count)
+  static T* allocate(gt::size_type count)
   {
     T* p = static_cast<T*>(malloc(sizeof(T) * count));
     if (p == nullptr) {
@@ -321,7 +455,7 @@ struct host_allocator
     }
   }
 
-  static void copy(const T* src, T* dst, std::size_t count)
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
     std::memcpy(dst, src, count * sizeof(T));
   }

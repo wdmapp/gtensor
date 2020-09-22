@@ -48,7 +48,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
+      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF -DGTENSOR_BUILD_CLIB=ON
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -117,7 +117,7 @@ jobs:
     - name: gtensor install
       run: cmake --build build-install -v -t install
     - name: examples cmake
-      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON -DGTENSOR_BUILD_CLIB=ON
       working-directory: ${{ github.workspace }}/examples
       env:
         gtensor_DIR: ${{ github.workspace }}/gtensor-install
@@ -161,11 +161,11 @@ jobs:
       env:
         CXX: g++-7
     - name: cmake thrust
-      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }}
+      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
     - name: cmake thrust build
       run: cmake --build build-cuda -v
     - name: cmake nothrust
-      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }}
+      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
     - name: cmake nothrust build
       run: cmake --build build-cuda-nothrust -v
     - name: GNU make setup gtensor subdir
@@ -213,11 +213,11 @@ jobs:
       env:
         CXX: clang++-9
     - name: cmake thrust
-      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }}
+      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
     - name: cmake thrust build
       run: cmake --build build-hip -v
     - name: cmake nothrust
-      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }}
+      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
     - name: cmake nothrust build
       run: cmake --build build-hip-nothrust -v
     - name: GNU make setup gtensor subdir

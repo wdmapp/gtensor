@@ -2,7 +2,7 @@
 #ifndef GTENSOR_DEFS_H
 #define GTENSOR_DEFS_H
 
-#include "macros.h"
+#include <cstddef>
 
 namespace gt
 {
