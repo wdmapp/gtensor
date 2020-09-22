@@ -34,7 +34,7 @@ uint32_t gt_backend_device_get_vendor_id(int device_id)
 
 #endif // not GTENSOR_DEVICE_SYCL
 
-void* gt_backend_device_allocate(int nbytes)
+void* gt_backend_device_allocate(size_t nbytes)
 {
   return (void*)gt::backend::device_allocator<uint8_t>::allocate(nbytes);
 }
