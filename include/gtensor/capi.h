@@ -41,6 +41,7 @@ void gt_backend_managed_deallocate(void* p);
 
 void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes);
+void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes);
 

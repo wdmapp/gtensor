@@ -73,6 +73,28 @@ TEST(clib, memcpy)
 }
 
 #define N 10
+TEST(clib, memcpy_async)
+{
+  double* a = (double*)gt_backend_managed_allocate(N * sizeof(double));
+  double* b = (double*)gt_backend_managed_allocate(N * sizeof(double));
+  for (int i = 0; i < N; i++) {
+    a[i] = ((double)i) / N;
+  }
+
+  gt_backend_memcpy_async_dd(b, a, N * sizeof(double));
+  auto bview = gt::adapt_device(b, gt::shape(N));
+  bview = bview + 1.0;
+  gt_synchronize();
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(b[i], 1.0 + ((double)i) / N);
+  }
+
+  gt_backend_managed_deallocate((void*)a);
+  gt_backend_managed_deallocate((void*)b);
+}
+
+#define N 10
 TEST(clib, memset)
 {
   uint8_t* d_a = (uint8_t*)gt_backend_device_allocate(N);

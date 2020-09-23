@@ -81,6 +81,13 @@ inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
 }
 
 template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  gtGpuCheck(
+    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+}
+
+template <typename T>
 inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
@@ -219,6 +226,13 @@ inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
 }
 
 template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  gtGpuCheck(
+    hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+}
+
+template <typename T>
 inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToHost));
@@ -330,6 +344,13 @@ template <typename T>
 inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(dst, src, sizeof(T) * count);
 }
 
 template <typename T>
