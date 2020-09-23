@@ -49,4 +49,27 @@ TEST(clib, managed_allocate)
   gt_backend_managed_deallocate((void*)a);
 }
 
+#define N 10
+TEST(clib, memcpy)
+{
+  double* h_a = (double*)gt_backend_host_allocate(N * sizeof(double));
+  double* d_a = (double*)gt_backend_device_allocate(N * sizeof(double));
+  for (int i = 0; i < N; i++) {
+    h_a[i] = ((double)i) / N;
+  }
+
+  gt_backend_memcpy_hd(d_a, h_a, N * sizeof(double));
+  auto aview = gt::adapt_device(d_a, gt::shape(N));
+  aview = aview + 1.0;
+  gt_synchronize();
+  gt_backend_memcpy_dh(h_a, d_a, N * sizeof(double));
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_a[i], 1.0 + ((double)i) / N);
+  }
+
+  gt_backend_host_deallocate((void*)h_a);
+  gt_backend_device_deallocate((void*)d_a);
+}
+
 #endif // GTENSOR_HAVE_DEVICE

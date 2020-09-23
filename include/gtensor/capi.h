@@ -32,10 +32,17 @@ uint32_t gt_backend_device_get_vendor_id(int device_id);
 
 #endif // not GTENSOR_DEVICE_SYCL
 
+void* gt_backend_host_allocate(size_t nbytes);
 void* gt_backend_device_allocate(size_t nbytes);
 void* gt_backend_managed_allocate(size_t nbytes);
+void gt_backend_host_deallocate(void* p);
 void gt_backend_device_deallocate(void* p);
 void gt_backend_managed_deallocate(void* p);
+
+void gt_backend_memcpy_hh(void* dst, const void* src, size_t bytes);
+void gt_backend_memcpy_dd(void* dst, const void* src, size_t bytes);
+void gt_backend_memcpy_dh(void* dst, const void* src, size_t bytes);
+void gt_backend_memcpy_hd(void* dst, const void* src, size_t bytes);
 
 #endif // GTENSOR_HAVE_DEVICE
 
