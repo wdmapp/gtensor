@@ -72,4 +72,23 @@ TEST(clib, memcpy)
   gt_backend_device_deallocate((void*)d_a);
 }
 
+#define N 10
+TEST(clib, memset)
+{
+  uint8_t* d_a = (uint8_t*)gt_backend_device_allocate(N);
+  uint8_t* h_a = (uint8_t*)gt_backend_host_allocate(N);
+  const int v = 0xDA;
+
+  gt_backend_memset(static_cast<void*>(d_a), v, N);
+  gt_synchronize();
+  gt_backend_memcpy_dh(h_a, d_a, N);
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_a[i], v);
+  }
+
+  gt_backend_host_deallocate((void*)h_a);
+  gt_backend_device_deallocate((void*)d_a);
+}
+
 #endif // GTENSOR_HAVE_DEVICE

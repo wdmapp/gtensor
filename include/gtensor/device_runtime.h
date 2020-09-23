@@ -10,7 +10,9 @@
 #ifndef GTENSOR_DEVICE_RUNTIME_H
 #define GTENSOR_DEVICE_RUNTIME_H
 
-#ifdef GTENSOR_DEVICE_HIP
+#ifdef GTENSOR_DEVICE_CUDA
+#include "cuda_runtime_api.h"
+#elif defined(GTENSOR_DEVICE_HIP)
 #include "hip/hip_runtime.h"
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include <CL/sycl.hpp>

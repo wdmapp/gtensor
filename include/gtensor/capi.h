@@ -39,10 +39,12 @@ void gt_backend_host_deallocate(void* p);
 void gt_backend_device_deallocate(void* p);
 void gt_backend_managed_deallocate(void* p);
 
-void gt_backend_memcpy_hh(void* dst, const void* src, size_t bytes);
-void gt_backend_memcpy_dd(void* dst, const void* src, size_t bytes);
-void gt_backend_memcpy_dh(void* dst, const void* src, size_t bytes);
-void gt_backend_memcpy_hd(void* dst, const void* src, size_t bytes);
+void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes);
+void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes);
+void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes);
+void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes);
+
+void gt_backend_memset(void* dst, int value, size_t nbytes);
 
 #endif // GTENSOR_HAVE_DEVICE
 
