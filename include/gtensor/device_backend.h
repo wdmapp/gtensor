@@ -9,7 +9,7 @@
 #ifdef GTENSOR_HAVE_DEVICE
 #include "device_runtime.h"
 
-#ifdef GTENSOR_USE_THRUST
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
 #include "thrust_ext.h"
 #endif
 

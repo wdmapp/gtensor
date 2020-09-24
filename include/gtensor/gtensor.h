@@ -7,6 +7,7 @@
 #include "device_copy.h"
 
 #include "complex.h"
+#include "complex_ops.h"
 #include "gfunction.h"
 #include "gtensor_view.h"
 #include "gview.h"
