@@ -15,11 +15,15 @@ namespace gt
 // gtensor_storage, otherwise the complex operators are missing and the
 // header should be present in all cuda versions.
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
+
 template <typename T>
 using complex = thrust::complex<T>;
-#else
+
+#else // not CUDA and GTENSOR_USE_THRUST not defined
+
 template <typename T>
 using complex = std::complex<T>;
+
 #endif
 
 template <typename T>

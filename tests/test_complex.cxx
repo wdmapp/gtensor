@@ -31,6 +31,48 @@ TEST(complex, complex_ops)
   EXPECT_EQ(h_c, c);
 }
 
+TEST(complex, norm)
+{
+  using T = gt::complex<double>;
+  auto one = T{1., 0.};
+  auto i = T{0., 1.};
+
+  EXPECT_EQ(gt::norm(one), 1);
+  EXPECT_EQ(gt::norm(i), 1);
+
+  gt::gtensor<T, 1> h_a(2);
+
+  h_a(0) = T{1., 1.};
+  h_a(1) = T{1., -1.};
+  h_a(0) = gt::norm(h_a(0));
+  h_a(1) = gt::norm(h_a(1));
+
+  EXPECT_EQ(h_a(0), h_a(1));
+}
+
+TEST(complex, conj)
+{
+  using T = gt::complex<double>;
+  auto one = T{1., 0.};
+  auto i = T{0., 1.};
+  auto minus_i = T{0., -1.};
+  auto one_one = T{1., 1.};
+  auto one_minus_one = T{1., -1.};
+
+  EXPECT_EQ(gt::conj(one), one);
+  EXPECT_EQ(gt::conj(i), minus_i);
+
+  gt::gtensor<T, 1> h_a(2);
+
+  h_a(0) = T{1., 1.};
+  h_a(1) = T{1., -1.};
+  h_a(0) = gt::conj(h_a(0));
+  h_a(1) = gt::conj(h_a(1));
+
+  EXPECT_EQ(h_a(0), one_minus_one);
+  EXPECT_EQ(h_a(1), one_one);
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(complex, device_complex_ops)
@@ -201,5 +243,81 @@ TEST(complex, device_eval)
 
   EXPECT_EQ(h_c, h_a);
 }
+
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+
+__global__ void kernel_norm(
+  gt::gtensor_view_device<gt::complex<double>, 1> d_in,
+  gt::gtensor_view_device<double, 1> d_out)
+{
+  int i = threadIdx.x;
+  if (i < d_in.shape(0)) {
+    d_out(i) = gt::norm(d_in(i));
+  }
+}
+
+__global__ void kernel_conj(
+  gt::gtensor_view_device<gt::complex<double>, 1> d_in,
+  gt::gtensor_view_device<gt::complex<double>, 1> d_out)
+{
+  int i = threadIdx.x;
+  if (i < d_in.shape(0)) {
+    d_out(i) = gt::conj(d_in(i));
+  }
+}
+
+TEST(complex, device_norm)
+{
+  const int N = 6;
+  using T = gt::complex<double>;
+  auto I = T{0., 1.0};
+  gt::gtensor<T, 1> h_a(gt::shape(N));
+  gt::gtensor<double, 1> h_norm(h_a.shape());
+
+  gt::gtensor_device<T, 1> d_a(h_a.shape());
+  gt::gtensor_device<double, 1> d_norm(d_a.shape());
+
+  for (int i = 0; i < N; i++) {
+    h_a(i) = T{1., static_cast<double>(i)};
+  }
+
+  gt::copy(h_a, d_a);
+
+  gtLaunchKernel(kernel_norm, 1, N, 0, 0, d_a.to_kernel(), d_norm.to_kernel());
+
+  gt::copy(d_norm, h_norm);
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_norm(i), gt::norm(h_a(i)));
+  }
+}
+
+TEST(complex, device_conj)
+{
+  const int N = 6;
+  using T = gt::complex<double>;
+  auto I = T{0., 1.0};
+  gt::gtensor<T, 1> h_a(gt::shape(N));
+  gt::gtensor<T, 1> h_conj(h_a.shape());
+
+  gt::gtensor_device<T, 1> d_a(h_a.shape());
+  gt::gtensor_device<T, 1> d_conj(d_a.shape());
+
+  for (int i = 0; i < N; i++) {
+    h_a(i) = T{1., static_cast<double>(i)};
+  }
+
+  gt::copy(h_a, d_a);
+
+  gtLaunchKernel(kernel_conj, 1, N, 0, 0, d_a.to_kernel(), d_conj.to_kernel());
+
+  gt::copy(d_conj, h_conj);
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_conj(i), gt::conj(h_a(i)));
+  }
+}
+
+#endif // CUDA or HIP
 
 #endif

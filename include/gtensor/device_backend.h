@@ -9,7 +9,7 @@
 #ifdef GTENSOR_HAVE_DEVICE
 #include "device_runtime.h"
 
-#ifdef GTENSOR_USE_THRUST
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
 #include "thrust_ext.h"
 #endif
 
@@ -30,7 +30,7 @@ namespace backend
 
 #ifdef GTENSOR_DEVICE_CUDA
 
-void inline device_synchronize()
+inline void device_synchronize()
 {
   gtGpuCheck(cudaStreamSynchronize(0));
 }
@@ -69,27 +69,39 @@ inline uint32_t device_get_vendor_id(int device_id)
 }
 
 template <typename T>
-void device_copy_hh(const T* src, T* dst, gt::size_type count)
+inline void device_copy_hh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
 }
 
 template <typename T>
-void device_copy_dd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
 }
 
 template <typename T>
-void device_copy_dh(const T* src, T* dst, gt::size_type count)
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  gtGpuCheck(
+    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+}
+
+template <typename T>
+inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
 }
 
 template <typename T>
-void device_copy_hd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+}
+
+inline void device_memset(void* dst, int value, gt::size_type nbytes)
+{
+  gtGpuCheck(cudaMemset(dst, value, nbytes));
 }
 
 template <typename T>
@@ -163,7 +175,7 @@ struct host_allocator
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
-void inline device_synchronize()
+inline void device_synchronize()
 {
   gtGpuCheck(hipStreamSynchronize(0));
 }
@@ -202,27 +214,39 @@ inline uint32_t device_get_vendor_id(int device_id)
 }
 
 template <typename T>
-void device_copy_hh(const T* src, T* dst, gt::size_type count)
+inline void device_copy_hh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
 }
 
 template <typename T>
-void device_copy_dd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
 }
 
 template <typename T>
-void device_copy_dh(const T* src, T* dst, gt::size_type count)
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  gtGpuCheck(
+    hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+}
+
+template <typename T>
+inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToHost));
 }
 
 template <typename T>
-void device_copy_hd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+}
+
+inline void device_memset(void* dst, int value, gt::size_type nbytes)
+{
+  gtGpuCheck(hipMemset(dst, value, nbytes));
 }
 
 template <typename T>
@@ -296,14 +320,14 @@ struct host_allocator
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
-void inline device_synchronize()
+inline void device_synchronize()
 {
   gt::backend::sycl::get_queue().wait();
 }
 
 // TODO: SYCL exception handler
 template <typename T>
-void device_copy(const T* src, T* dst, gt::size_type count)
+inline void device_copy(const T* src, T* dst, gt::size_type count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memcpy(dst, src, sizeof(T) * count);
@@ -311,27 +335,40 @@ void device_copy(const T* src, T* dst, gt::size_type count)
 }
 
 template <typename T>
-void device_copy_hh(const T* src, T* dst, gt::size_type count)
+inline void device_copy_hh(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_dd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_dh(const T* src, T* dst, gt::size_type count)
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(dst, src, sizeof(T) * count);
+}
+
+template <typename T>
+inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
 }
 
 template <typename T>
-void device_copy_hd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
 {
   device_copy(src, dst, count);
+}
+
+inline void device_memset(void* dst, int value, gt::size_type nbytes)
+{
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memset(dst, value, nbytes);
 }
 
 template <typename T>
@@ -430,7 +467,7 @@ struct host_allocator
 
 #ifdef GTENSOR_DEVICE_HOST
 
-void device_synchronize()
+inline void device_synchronize()
 {
   // no need to synchronize on host
 }
