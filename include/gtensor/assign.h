@@ -343,7 +343,7 @@ struct assigner<1, space::device>
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<1>(lhs.shape(0));
-    auto e = q.submit([=](sycl::handler& cgh) {
+    auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign1<ltype, rtype>;
@@ -366,7 +366,7 @@ struct assigner<2, space::device>
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<2>(lhs.shape(0), lhs.shape(1));
-    auto e = q.submit([=](sycl::handler& cgh) {
+    auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign2<ltype, rtype>;
@@ -390,7 +390,7 @@ struct assigner<3, space::device>
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<3>(lhs.shape(0), lhs.shape(1), lhs.shape(2));
-    auto e = q.submit([=](sycl::handler& cgh) {
+    auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign3<ltype, rtype>;
@@ -420,7 +420,7 @@ struct assigner<N, space::device>
     auto strides = calc_strides(lhs.shape());
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
-    auto e = q.submit([=](sycl::handler& cgh) {
+    auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::AssignN<ltype, rtype>;
