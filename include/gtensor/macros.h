@@ -22,7 +22,7 @@
 #else
 
 #define GT_INLINE inline
-#define GT_LAMBDA []
+#define GT_LAMBDA [=]
 
 #endif
 
