@@ -37,6 +37,23 @@ jobs:
     - name: test
       run: cmake --build build-tests-${{ matrix.cxx }} -t test
 
+  tests-cpu-cxx20:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cxx: [ 'g++-9', 'clang++-9' ]
+    name: tests-cpu-cxx20-${{ matrix.cxx }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake
+      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_STANDARD=20
+      env:
+        CXX: ${{ matrix.cxx }}
+    - name: build
+      run: cmake --build build-tests-${{ matrix.cxx }} -v
+    - name: test
+      run: cmake --build build-tests-${{ matrix.cxx }} -t test
 
   examples-cpu:
     runs-on: ubuntu-latest
