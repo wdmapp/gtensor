@@ -135,12 +135,22 @@ public:
   self_type& operator=(const expression<E>& e);
   self_type& operator=(value_type val);
 
-  // FIXME, const correctness
   gview<to_kernel_t<EC>, N> to_kernel() const;
 
-private:
-  GT_INLINE const_reference data_access_impl(size_type i) const;
-  GT_INLINE reference data_access_impl(size_type i);
+  template <typename... Args>
+  GT_INLINE const_reference operator()(Args&&... args) const;
+  template <typename... Args>
+  GT_INLINE reference operator()(Args&&... args);
+
+  template <typename... Args>
+  inline auto view(Args&&... args) &;
+  template <typename... Args>
+  inline auto view(Args&&... args) const&;
+  template <typename... Args>
+  inline auto view(Args&&... args) &&;
+
+  GT_INLINE const_reference data_access(size_type i) const;
+  GT_INLINE reference data_access(size_type i);
 
 private:
   EC e_;
@@ -166,13 +176,48 @@ inline gview<to_kernel_t<EC>, N> gview<EC, N>::to_kernel() const
 }
 
 template <typename EC, int N>
-GT_INLINE auto gview<EC, N>::data_access_impl(size_t i) const -> const_reference
+template <typename... Args>
+GT_INLINE auto gview<EC, N>::operator()(Args&&... args) const -> const_reference
+{
+  return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename EC, int N>
+template <typename... Args>
+GT_INLINE auto gview<EC, N>::operator()(Args&&... args) -> reference
+{
+  return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename EC, int N>
+template <typename... Args>
+inline auto gview<EC, N>::view(Args&&... args) const&
+{
+  return gt::view(this, std::forward<Args>(args)...);
+}
+
+template <typename EC, int N>
+template <typename... Args>
+inline auto gview<EC, N>::view(Args&&... args) &
+{
+  return gt::view(this, std::forward<Args>(args)...);
+}
+
+template <typename EC, int N>
+template <typename... Args>
+inline auto gview<EC, N>::view(Args&&... args) &&
+{
+  return gt::view(std::move(*this), std::forward<Args>(args)...);
+}
+
+template <typename EC, int N>
+GT_INLINE auto gview<EC, N>::data_access(size_t i) const -> const_reference
 {
   return e_.data_access(offset_ + i);
 }
 
 template <typename EC, int N>
-GT_INLINE auto gview<EC, N>::data_access_impl(size_t i) -> reference
+GT_INLINE auto gview<EC, N>::data_access(size_t i) -> reference
 {
   return e_.data_access(offset_ + i);
 }

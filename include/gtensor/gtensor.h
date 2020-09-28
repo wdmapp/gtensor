@@ -8,6 +8,7 @@
 
 #include "complex.h"
 #include "complex_ops.h"
+#include "gcontainer.h"
 #include "gfunction.h"
 #include "gtensor_view.h"
 #include "gview.h"
@@ -64,8 +65,7 @@ public:
 
   using base_type::operator=;
 
-  gtensor_view<T, N, S> to_kernel() const; // FIXME, const T
-  gtensor_view<T, N, S> to_kernel();
+  gtensor_view<T, N, S> to_kernel() const;
 
 private:
   GT_INLINE const storage_type& storage_impl() const;
@@ -148,12 +148,6 @@ inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() const
 {
   return gtensor_view<T, N, S>(const_cast<gtensor<T, N, S>*>(this)->data(),
                                this->shape(), this->strides());
-}
-
-template <typename T, int N, typename S>
-inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel()
-{
-  return gtensor_view<T, N, S>(this->data(), this->shape(), this->strides());
 }
 
 #if GTENSOR_HAVE_DEVICE

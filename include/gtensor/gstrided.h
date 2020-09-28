@@ -56,22 +56,6 @@ public:
   GT_INLINE size_type size() const;
 
   template <typename... Args>
-  GT_INLINE const_reference operator()(Args&&... args) const;
-  template <typename... Args>
-  GT_INLINE reference operator()(Args&&... args);
-
-  template <typename... Args>
-  inline auto view(Args&&... args) const&;
-  template <typename... Args>
-  inline auto view(Args&&... args) &;
-  template <typename... Args>
-  inline auto view(Args&&... args) &&;
-
-  GT_INLINE const_reference data_access(size_type i) const;
-  GT_INLINE reference data_access(size_type i);
-
-protected:
-  template <typename... Args>
   GT_INLINE size_type index(Args&&... args) const;
 
 protected:
@@ -110,53 +94,6 @@ template <typename D>
 GT_INLINE size_type gstrided<D>::size() const
 {
   return calc_size(shape());
-}
-
-template <typename D>
-template <typename... Args>
-GT_INLINE auto gstrided<D>::operator()(Args&&... args) const -> const_reference
-{
-  return data_access(index(std::forward<Args>(args)...));
-}
-
-template <typename D>
-template <typename... Args>
-GT_INLINE auto gstrided<D>::operator()(Args&&... args) -> reference
-{
-  return data_access(index(std::forward<Args>(args)...));
-}
-
-template <typename D>
-template <typename... Args>
-inline auto gstrided<D>::view(Args&&... args) const&
-{
-  return gt::view(derived(), std::forward<Args>(args)...);
-}
-
-template <typename D>
-template <typename... Args>
-inline auto gstrided<D>::view(Args&&... args) &
-{
-  return gt::view(derived(), std::forward<Args>(args)...);
-}
-
-template <typename D>
-template <typename... Args>
-inline auto gstrided<D>::view(Args&&... args) &&
-{
-  return gt::view(std::move(*this).derived(), std::forward<Args>(args)...);
-}
-
-template <typename D>
-GT_INLINE auto gstrided<D>::data_access(size_type i) const -> const_reference
-{
-  return derived().data_access_impl(i);
-}
-
-template <typename D>
-GT_INLINE auto gstrided<D>::data_access(size_type i) -> reference
-{
-  return derived().data_access_impl(i);
 }
 
 template <typename D>

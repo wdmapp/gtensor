@@ -23,6 +23,12 @@ template <typename E>
 using expr_value_type = typename std::decay_t<E>::value_type;
 
 // ======================================================================
+// expr_reference_type
+
+template <typename E>
+using expr_reference_type = typename std::decay_t<E>::reference;
+
+// ======================================================================
 // expr_space_type
 
 template <typename E>
