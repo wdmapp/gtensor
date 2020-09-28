@@ -138,7 +138,7 @@ public:
   gview<to_kernel_t<EC>, N> to_kernel() const;
 
   template <typename... Args>
-  GT_INLINE const_reference operator()(Args&&... args) const;
+  GT_INLINE auto operator()(Args&&... args) const;
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args);
 
@@ -149,7 +149,7 @@ public:
   template <typename... Args>
   inline auto view(Args&&... args) &&;
 
-  GT_INLINE const_reference data_access(size_type i) const;
+  GT_INLINE auto data_access(size_type i) const;
   GT_INLINE reference data_access(size_type i);
 
 private:
@@ -177,7 +177,7 @@ inline gview<to_kernel_t<EC>, N> gview<EC, N>::to_kernel() const
 
 template <typename EC, int N>
 template <typename... Args>
-GT_INLINE auto gview<EC, N>::operator()(Args&&... args) const -> const_reference
+GT_INLINE auto gview<EC, N>::operator()(Args&&... args) const
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
@@ -211,7 +211,7 @@ inline auto gview<EC, N>::view(Args&&... args) &&
 }
 
 template <typename EC, int N>
-GT_INLINE auto gview<EC, N>::data_access(size_t i) const -> const_reference
+GT_INLINE auto gview<EC, N>::data_access(size_t i) const
 {
   return e_.data_access(offset_ + i);
 }
