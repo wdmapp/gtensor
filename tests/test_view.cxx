@@ -255,7 +255,7 @@ TEST(gview, rval_view)
   GT_DEBUG_VAR(a);
   GT_DEBUG_TYPE(a);
 
-  auto multiply_view = [](const double m, auto& x) {
+  auto multiply_view = [](const double m, const auto& x) {
     return m * x.view(_all, _all);
   };
 
@@ -276,6 +276,26 @@ TEST(gview, rval_view)
   a = a + e3;
 
   EXPECT_EQ(c, a);
+}
+
+TEST(gview, const_gview_to_kernel)
+{
+  const gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+  auto a_view = a.view(_s(1, 3), _all);
+  auto a_kernel = a_view.to_kernel();
+
+  EXPECT_EQ(a_kernel, (gt::gtensor<double, 2>{{12., 13.}, {22., 23.}}));
+}
+
+TEST(gview, const_gview_operator_parens)
+{
+  const gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+  auto a_view = a.view(_s(1, 3), _all);
+  auto a_view0 = a_view(0);
+
+  const double const_double = 1.0;
+
+  EXPECT_EQ(typeid(a_view0).name(), typeid(decltype(const_double)).name());
 }
 
 #ifdef GTENSOR_HAVE_DEVICE

@@ -142,6 +142,19 @@ TEST(expression, gfunction_to_kernel_const_view)
   EXPECT_EQ(k_e.dimension(), 1);
 }
 
+TEST(expression, gfunction_to_kernel_const_view_assign)
+{
+  gt::gtensor<double, 1> t1({1., 2.});
+  const gt::gtensor<double, 1> t2({3., 4.});
+  gt::gtensor<double, 1> result(t1.shape());
+
+  auto t2_view = t2.view(gt::all());
+
+  auto e = t1 + t2_view;
+  result = gt::eval(e);
+  EXPECT_EQ(result, (gt::gtensor<double, 1>{4., 6.}));
+}
+
 TEST(expression, gscalar)
 {
   gt::gtensor<double, 1> t1({1., 2.});
