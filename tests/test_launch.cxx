@@ -12,7 +12,7 @@ void host_double_add_1d(gt::gtensor<double, 1>& a, gt::gtensor<double, 1>& out)
   auto k_out = out.to_kernel();
 
   gt::launch_host<1>(
-    a.shape(), GT_LAMBDA(int i) mutable { k_out(i) = k_a(i) + k_a(i); });
+    a.shape(), GT_LAMBDA(int i) { k_out(i) = k_a(i) + k_a(i); });
 }
 
 TEST(gtensor, launch_1d)
@@ -23,6 +23,27 @@ TEST(gtensor, launch_1d)
   host_double_add_1d(a, b);
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{22., 24., 26.}));
+}
+
+void host_double_view_reverse_1d(gt::gtensor<double, 1>& a,
+                                 gt::gtensor<double, 1>& out)
+{
+  auto k_a = a.to_kernel();
+  auto v_out = out.view(gt::slice(2, 0, -1));
+  auto k_out = v_out.to_kernel();
+
+  gt::launch_host<1>(
+    a.shape(), GT_LAMBDA(int i) { k_out(i) = k_a(i); });
+}
+
+TEST(gtensor, launch_view_reverse_1d)
+{
+  gt::gtensor<double, 1> a{11., 12., 13.};
+  gt::gtensor<double, 1> b(a.shape());
+
+  host_double_view_reverse_1d(a, b);
+
+  EXPECT_EQ(b, (gt::gtensor<double, 1>{13., 12., 11.}));
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -36,7 +57,7 @@ void device_double_add_1d(gt::gtensor_device<double, 1>& a,
   auto k_b = b.to_kernel();
 
   gt::launch<1>(
-    a.shape(), GT_LAMBDA(int i) mutable { k_b(i) = k_a(i) + k_a(i); });
+    a.shape(), GT_LAMBDA(int i) { k_b(i) = k_a(i) + k_a(i); });
   gt::copy(b, out);
 }
 
@@ -50,6 +71,31 @@ TEST(gtensor, device_launch_1d)
   EXPECT_EQ(h_b, (gt::gtensor<double, 1>{22., 24., 26.}));
 }
 
+void device_double_view_reverse_1d(gt::gtensor_device<double, 1>& a,
+                                   gt::gtensor<double, 1>& out)
+{
+  auto b = gt::empty_like(a);
+
+  auto k_a = a.to_kernel();
+  auto v_b = b.view(gt::slice(2, 0, -1));
+  auto k_b = v_b.to_kernel();
+
+  gt::launch<1>(
+    a.shape(), GT_LAMBDA(int i) { k_b(i) = k_a(i); });
+
+  gt::copy(b, out);
+}
+
+TEST(gtensor, device_launch_view_reverse_1d)
+{
+  gt::gtensor_device<double, 1> a{11., 12., 13.};
+  gt::gtensor<double, 1> h_b(a.shape());
+
+  device_double_view_reverse_1d(a, h_b);
+
+  EXPECT_EQ(h_b, (gt::gtensor<double, 1>{13., 12., 11.}));
+}
+
 void device_double_add_2d(gt::gtensor_device<double, 2>& a,
                           gt::gtensor<double, 2>& out)
 {
@@ -59,8 +105,7 @@ void device_double_add_2d(gt::gtensor_device<double, 2>& a,
   auto k_b = b.to_kernel();
 
   gt::launch<2>(
-    a.shape(),
-    GT_LAMBDA(int i, int j) mutable { k_b(i, j) = k_a(i, j) + k_a(i, j); });
+    a.shape(), GT_LAMBDA(int i, int j) { k_b(i, j) = k_a(i, j) + k_a(i, j); });
   gt::copy(b, out);
 }
 
@@ -83,7 +128,7 @@ void device_double_add_5d(gt::gtensor_device<double, 5>& a,
   auto k_b = b.to_kernel();
 
   gt::launch<5>(
-    a.shape(), GT_LAMBDA(int i, int j, int k, int l, int m) mutable {
+    a.shape(), GT_LAMBDA(int i, int j, int k, int l, int m) {
       k_b(i, j, k, l, m) = k_a(i, j, k, l, m) + k_a(i, j, k, l, m);
     });
   gt::copy(b, out);
