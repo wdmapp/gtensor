@@ -104,6 +104,44 @@ TEST(expression, gfunction)
   EXPECT_EQ(e4, (gt::gtensor<double, 1>{11., 12.}));
 }
 
+TEST(expression, gfunction_to_kernel)
+{
+  gt::gtensor<double, 1> t1({1., 2.});
+  gt::gtensor<double, 1> t2({3., 4.});
+
+  auto e = t1 + t2;
+  auto k_e = e.to_kernel();
+  EXPECT_EQ(k_e, (gt::gtensor<double, 1>{4., 6.}));
+
+  EXPECT_EQ(k_e.dimension(), 1);
+}
+
+TEST(expression, gfunction_to_kernel_const)
+{
+  gt::gtensor<double, 1> t1({1., 2.});
+  const gt::gtensor<double, 1> t2({3., 4.});
+
+  auto e = t1 + t2;
+  auto k_e = e.to_kernel();
+  EXPECT_EQ(k_e, (gt::gtensor<double, 1>{4., 6.}));
+
+  EXPECT_EQ(k_e.dimension(), 1);
+}
+
+TEST(expression, gfunction_to_kernel_const_view)
+{
+  gt::gtensor<double, 1> t1({1., 2.});
+  const gt::gtensor<double, 1> t2({3., 4.});
+
+  auto t2_view = t2.view(gt::all());
+
+  auto e = t1 + t2_view;
+  auto k_e = e.to_kernel();
+  EXPECT_EQ(k_e, (gt::gtensor<double, 1>{4., 6.}));
+
+  EXPECT_EQ(k_e.dimension(), 1);
+}
+
 TEST(expression, gscalar)
 {
   gt::gtensor<double, 1> t1({1., 2.});

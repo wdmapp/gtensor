@@ -54,6 +54,9 @@ public:
   using typename base_type::strides_type;
   using typename base_type::value_type;
 
+  using view_type = gtensor_view<T, N, S>;
+  using const_view_type = gtensor_view<typename std::add_const<T>::type, N, S>;
+
   using base_type::dimension;
 
   using base_type::base_type;
@@ -65,7 +68,8 @@ public:
 
   using base_type::operator=;
 
-  gtensor_view<T, N, S> to_kernel() const;
+  const_view_type to_kernel() const;
+  view_type to_kernel();
 
 private:
   GT_INLINE const storage_type& storage_impl() const;
@@ -144,10 +148,15 @@ GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
 }
 
 template <typename T, int N, typename S>
-inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() const
+inline auto gtensor<T, N, S>::to_kernel() const -> const_view_type
 {
-  return gtensor_view<T, N, S>(const_cast<gtensor<T, N, S>*>(this)->data(),
-                               this->shape(), this->strides());
+  return const_view_type(this->data(), this->shape(), this->strides());
+}
+
+template <typename T, int N, typename S>
+inline auto gtensor<T, N, S>::to_kernel() -> view_type
+{
+  return view_type(this->data(), this->shape(), this->strides());
 }
 
 #if GTENSOR_HAVE_DEVICE
