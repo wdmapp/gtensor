@@ -22,10 +22,10 @@ public:
   using value_type = T;
   using allocator_type = Allocator;
 
-  using pointer = typename std::add_pointer<value_type>::type;
-  using const_pointer = typename std::add_const<pointer>::type;
-  using reference = typename std::add_lvalue_reference<value_type>::type;
-  using const_reference = typename std::add_const<reference>::type;
+  using pointer = std::add_pointer_t<value_type>;
+  using const_pointer = std::add_const_t<pointer>;
+  using reference = std::add_lvalue_reference_t<value_type>;
+  using const_reference = std::add_const_t<reference>;
   using size_type = gt::size_type;
 
   gtensor_storage(size_type count)

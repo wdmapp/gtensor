@@ -45,12 +45,12 @@ class span
 {
 public:
   using element_type = T;
-  using value_type = typename std::remove_cv<T>::type;
+  using value_type = std::remove_cv_t<T>;
 
-  using pointer = typename std::add_pointer<element_type>::type;
-  using const_pointer = typename std::add_const<pointer>::type;
-  using reference = typename std::add_lvalue_reference<element_type>::type;
-  using const_reference = typename std::add_const<reference>::type;
+  using pointer = std::add_pointer_t<element_type>;
+  using const_pointer = std::add_const_t<pointer>;
+  using reference = std::add_lvalue_reference_t<element_type>;
+  using const_reference = std::add_const_t<reference>;
   using size_type = gt::size_type;
 
   span() = default;
@@ -92,12 +92,12 @@ class device_span
 {
 public:
   using element_type = T;
-  using value_type = typename std::remove_cv<T>::type;
+  using value_type = std::remove_cv_t<T>;
 
   using pointer = thrust::device_ptr<T>;
-  using const_pointer = typename std::add_const<pointer>::type;
+  using const_pointer = std::add_const_t<pointer>;
   using reference = thrust::device_reference<T>;
-  using const_reference = typename std::add_const<reference>::type;
+  using const_reference = std::add_const_t<reference>;
   using size_type = gt::size_type;
 
   device_span() = default;
