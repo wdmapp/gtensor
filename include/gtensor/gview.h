@@ -105,7 +105,7 @@ struct gtensor_inner_types<gview<EC, N>>
   using space_type = expr_space_type<EC>;
   constexpr static size_type dimension = N;
 
-  using inner_expression_type = std::decay_t<EC>;
+  using inner_expression_type = std::remove_reference_t<EC>;
   using value_type = typename inner_expression_type::value_type;
   using reference = typename inner_expression_type::reference;
   using const_reference = typename inner_expression_type::const_reference;
@@ -119,11 +119,12 @@ public:
   using base_type = gstrided<self_type>;
   using inner_types = gtensor_inner_types<self_type>;
 
-  using typename base_type::const_reference;
-  using typename base_type::reference;
+  using const_reference = typename inner_types::const_reference;
+  using reference = typename inner_types::reference;
+  using value_type = typename inner_types::value_type;
+
   using typename base_type::shape_type;
   using typename base_type::strides_type;
-  using typename base_type::value_type;
 
   using const_kernel_type = gview<to_kernel_t<std::add_const_t<EC>>, N>;
   using kernel_type = gview<to_kernel_t<EC>, N>;

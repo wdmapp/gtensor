@@ -46,13 +46,14 @@ public:
   using inner_types = gtensor_inner_types<self_type>;
   using storage_type = typename inner_types::storage_type;
 
-  using typename base_type::const_pointer;
-  using typename base_type::const_reference;
-  using typename base_type::pointer;
-  using typename base_type::reference;
+  using value_type = typename inner_types::value_type;
+  using const_reference = typename inner_types::const_reference;
+  using reference = typename inner_types::reference;
+  using const_pointer = typename inner_types::const_pointer;
+  using pointer = typename inner_types::pointer;
+
   using typename base_type::shape_type;
   using typename base_type::strides_type;
-  using typename base_type::value_type;
 
   using kernel_type = gtensor_view<T, N, S>;
   using const_kernel_type = gtensor_view<std::add_const_t<T>, N, S>;
