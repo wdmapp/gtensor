@@ -48,9 +48,10 @@ public:
   using value_type = std::remove_cv_t<T>;
 
   using pointer = std::add_pointer_t<element_type>;
-  using const_pointer = std::add_const_t<pointer>;
+  using const_pointer = std::add_pointer_t<std::add_const_t<element_type>>;
   using reference = std::add_lvalue_reference_t<element_type>;
-  using const_reference = std::add_const_t<reference>;
+  using const_reference =
+    std::add_lvalue_reference_t<std::add_const_t<element_type>>;
   using size_type = gt::size_type;
 
   span() = default;
