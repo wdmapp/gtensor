@@ -9,6 +9,8 @@
 
 #include "test_debug.h"
 
+using namespace gt::placeholders;
+
 TEST(helper, tuple_max)
 {
   std::tuple<> t0;
@@ -124,7 +126,7 @@ TEST(helper, const_gtensor_to_kernel_t)
   EXPECT_TRUE((std::is_same<decltype(k_a), to_kern_type>::value));
 }
 
-TEST(helper, view_to_kernel_t)
+TEST(helper, gview_to_kernel_t)
 {
   gt::gtensor<double, 1> a;
   auto a_view = a.view();
@@ -139,7 +141,7 @@ TEST(helper, view_to_kernel_t)
   EXPECT_TRUE((std::is_same<decltype(k_view), to_kern_view_type>::value));
 }
 
-TEST(helper, view_const_o_kernel_t)
+TEST(helper, gview_const_to_kernel_t)
 {
   gt::gtensor<double, 1> a;
   const auto a_view = a.view();
@@ -154,7 +156,7 @@ TEST(helper, view_const_o_kernel_t)
   EXPECT_TRUE((std::is_same<decltype(k_view), to_kern_view_type>::value));
 }
 
-TEST(helper, view_gtensor_const_to_kernel_t)
+TEST(helper, gview_gtensor_const_to_kernel_t)
 {
   const gt::gtensor<double, 1> a;
   auto a_view = a.view();
@@ -167,4 +169,62 @@ TEST(helper, view_gtensor_const_to_kernel_t)
   GT_DEBUG_TYPE_NAME(to_kern_view_type);
 
   EXPECT_TRUE((std::is_same<decltype(k_view), to_kern_view_type>::value));
+}
+
+TEST(helper, const_gfunction_to_expression_t)
+{
+  gt::gtensor<double, 1> a;
+  auto a_view = a.view();
+  const auto gfn = 2. * a_view;
+  using to_expr_fn_type = gt::to_expression_t<decltype(gfn)>;
+
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(a_view);
+  GT_DEBUG_TYPE(gfn);
+  GT_DEBUG_TYPE_NAME(to_expr_fn_type);
+
+  EXPECT_TRUE((std::is_same<decltype(gfn), to_expr_fn_type>::value));
+}
+
+TEST(helper, const_gfunction_to_kernel_t)
+{
+  gt::gtensor<double, 1> a;
+  auto a_view = a.view();
+  const auto gfn = 2. * a_view;
+  auto k_gfn = gfn.to_kernel();
+  using to_kern_fn_type = gt::to_kernel_t<decltype(gfn)>;
+
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(a_view);
+  GT_DEBUG_TYPE(gfn);
+  GT_DEBUG_TYPE(k_gfn);
+  GT_DEBUG_TYPE_NAME(to_kern_fn_type);
+
+  EXPECT_TRUE((std::is_same<decltype(k_gfn), to_kern_fn_type>::value));
+}
+
+TEST(helper, const_gview_owner_to_kernel_t)
+{
+  const auto a_view = gt::view(gt::gtensor<double, 1>{1., 2., 3.}, _all);
+  auto k_view = a_view.to_kernel();
+  using to_kern_view_type = gt::to_kernel_t<decltype(a_view)>;
+
+  GT_DEBUG_TYPE(a_view);
+  GT_DEBUG_TYPE(k_view);
+  GT_DEBUG_TYPE_NAME(to_kern_view_type);
+
+  EXPECT_TRUE((std::is_same<decltype(k_view), to_kern_view_type>::value));
+}
+
+TEST(helper, const_gfunction_gview_owner_to_kernel_t)
+{
+  const auto gfn = 2. * gt::view(gt::gtensor<double, 1>{1., 2., 3.}, _all);
+  auto k_gfn = gfn.to_kernel();
+  using to_kern_fn_type = gt::to_kernel_t<decltype(gfn)>;
+
+  GT_DEBUG_TYPE(gfn);
+  GT_DEBUG_TYPE(k_gfn);
+  GT_DEBUG_TYPE_NAME(to_kern_fn_type);
+
+  EXPECT_TRUE((std::is_same<decltype(k_gfn), to_kern_fn_type>::value));
 }
