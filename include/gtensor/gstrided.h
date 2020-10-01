@@ -55,10 +55,10 @@ public:
   GT_INLINE const strides_type& strides() const;
   GT_INLINE size_type size() const;
 
+protected:
   template <typename... Args>
   GT_INLINE size_type index(Args&&... args) const;
 
-protected:
   shape_type shape_;
   strides_type strides_;
 };
