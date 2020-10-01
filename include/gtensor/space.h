@@ -140,10 +140,8 @@ struct host
   template <typename T>
 #ifdef GTENSOR_USE_THRUST
   using Vector = thrust::host_vector<T>;
-#elif defined(GTENSOR_HAVE_DEVICE)
-  using Vector = gt::backend::host_storage<T>;
 #else
-  using Vector = std::vector<T>;
+  using Vector = gt::backend::host_storage<T>;
 #endif
   template <typename T>
   using Span = span<T>;
