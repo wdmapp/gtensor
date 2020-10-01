@@ -408,14 +408,12 @@ struct launch<1, space::device>
   static void run(const gt::shape_type<1>& shape, F&& f)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    // SYCL kernel must be const, but passed f may be mutable lambda
-    auto fwrap = [f](int i) { const_cast<decltype(f)>(f)(i); };
     auto range = sycl::range<1>(shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::Launch1<decltype(f)>;
-      cgh.parallel_for<kname>(range, [fwrap](sycl::item<1> item) {
+      cgh.parallel_for<kname>(range, [=](sycl::item<1> item) {
         int i = item.get_id(0);
-        fwrap(i);
+        f(i);
       });
     });
     e.wait();
@@ -429,15 +427,13 @@ struct launch<2, space::device>
   static void run(const gt::shape_type<2>& shape, F&& f)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    // SYCL kernel must be const, but passed f may be mutable lambda
-    auto fwrap = [f](int i, int j) { const_cast<decltype(f)>(f)(i, j); };
     auto range = sycl::range<2>(shape[0], shape[1]);
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::Launch2<decltype(f)>;
-      cgh.parallel_for<kname>(range, [fwrap](sycl::item<2> item) {
+      cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
-        fwrap(i, j);
+        f(i, j);
       });
     });
     e.wait();
@@ -451,18 +447,14 @@ struct launch<3, space::device>
   static void run(const gt::shape_type<3>& shape, F&& f)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    // SYCL kernel must be const, but passed f may be mutable lambda
-    auto fwrap = [f](int i, int j, int k) {
-      const_cast<decltype(f)>(f)(i, j, k);
-    };
     auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::Launch3<decltype(f)>;
-      cgh.parallel_for<kname>(range, [fwrap](sycl::item<3> item) {
+      cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
         int k = item.get_id(2);
-        fwrap(i, j, k);
+        f(i, j, k);
       });
     });
     e.wait();
@@ -484,9 +476,9 @@ struct launch<N, space::device>
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::LaunchN<decltype(f)>;
-      cgh.parallel_for<kname>(range, [strides, f](sycl::nd_item<1> item) {
-        int global_id = item.get_global_id(0);
-        auto idx = unravel(global_id, strides);
+      cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
+        int i = item.get_global_id(0);
+        auto idx = unravel(i, strides);
         index_expression(f, idx);
       });
     });
