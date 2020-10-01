@@ -72,7 +72,8 @@ using has_expression = disjunction<is_expression<Args>...>;
 // to_kernel_t
 
 template <typename EC>
-using to_kernel_t = decltype(std::declval<EC>().to_kernel());
+using to_kernel_t =
+  decltype(std::declval<std::remove_reference_t<EC>>().to_kernel());
 
 // ======================================================================
 // index expression helper
