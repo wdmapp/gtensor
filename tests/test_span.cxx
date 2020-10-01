@@ -28,6 +28,27 @@ TEST(span, convert_const)
   EXPECT_EQ(&sa_mut[N - 1], &sa_const2[N - 1]);
 }
 
+TEST(span, type_aliases)
+{
+  constexpr int N = 1024;
+  double a[N];
+  gt::span<double> h1(&a[0], N);
+
+  GT_DEBUG_TYPE_NAME(decltype(h1)::value_type);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::reference);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::const_reference);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::pointer);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::const_pointer);
+
+  EXPECT_TRUE((std::is_same<decltype(h1)::value_type, double>::value));
+  EXPECT_TRUE((std::is_same<decltype(h1)::reference, double&>::value));
+  EXPECT_TRUE(
+    (std::is_same<decltype(h1)::const_reference, const double&>::value));
+  EXPECT_TRUE((std::is_same<decltype(h1)::pointer, double*>::value));
+  EXPECT_TRUE(
+    (std::is_same<decltype(h1)::const_pointer, const double*>::value));
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(span, device_convert_const)

@@ -3,6 +3,8 @@
 
 #include <gtensor/gtensor.h>
 
+#include "test_debug.h"
+
 TEST(shape_type, ctor_args)
 {
   auto shape = gt::shape(2, 3);
@@ -206,6 +208,25 @@ TEST(gtensor, assign_expression_2d_resize)
   gt::gtensor<double, 2> b; // = a FIXME
   b = a + a;
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
+}
+
+TEST(gtensor, type_aliases)
+{
+  gt::gtensor<double, 1> h1(10);
+
+  GT_DEBUG_TYPE_NAME(decltype(h1)::value_type);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::reference);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::const_reference);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::pointer);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::const_pointer);
+
+  EXPECT_TRUE((std::is_same<decltype(h1)::value_type, double>::value));
+  EXPECT_TRUE((std::is_same<decltype(h1)::reference, double&>::value));
+  EXPECT_TRUE(
+    (std::is_same<decltype(h1)::const_reference, const double&>::value));
+  EXPECT_TRUE((std::is_same<decltype(h1)::pointer, double*>::value));
+  EXPECT_TRUE(
+    (std::is_same<decltype(h1)::const_pointer, const double*>::value));
 }
 
 #if defined GTENSOR_HAVE_DEVICE
