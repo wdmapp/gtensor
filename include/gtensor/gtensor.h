@@ -54,8 +54,8 @@ public:
   using typename base_type::strides_type;
   using typename base_type::value_type;
 
-  using view_type = gtensor_view<T, N, S>;
-  using const_view_type = gtensor_view<typename std::add_const<T>::type, N, S>;
+  using kernel_type = gtensor_view<T, N, S>;
+  using const_kernel_type = gtensor_view<std::add_const_t<T>, N, S>;
 
   using base_type::dimension;
 
@@ -68,8 +68,8 @@ public:
 
   using base_type::operator=;
 
-  const_view_type to_kernel() const;
-  view_type to_kernel();
+  const_kernel_type to_kernel() const;
+  kernel_type to_kernel();
 
 private:
   GT_INLINE const storage_type& storage_impl() const;
@@ -148,15 +148,15 @@ GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::to_kernel() const -> const_view_type
+inline auto gtensor<T, N, S>::to_kernel() const -> const_kernel_type
 {
-  return const_view_type(this->data(), this->shape(), this->strides());
+  return const_kernel_type(this->data(), this->shape(), this->strides());
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor<T, N, S>::to_kernel() -> view_type
+inline auto gtensor<T, N, S>::to_kernel() -> kernel_type
 {
-  return view_type(this->data(), this->shape(), this->strides());
+  return kernel_type(this->data(), this->shape(), this->strides());
 }
 
 #if GTENSOR_HAVE_DEVICE

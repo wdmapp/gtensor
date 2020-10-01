@@ -124,8 +124,7 @@ GT_INLINE auto gtensor_view<T, N, S>::data() const -> pointer
 }
 
 template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data_access(size_t i) const
-  -> reference
+GT_INLINE auto gtensor_view<T, N, S>::data_access(size_t i) const -> reference
 {
   return storage_[i];
 }

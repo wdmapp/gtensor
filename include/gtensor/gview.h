@@ -32,8 +32,8 @@ public:
   shape_type shape() const { return e_.shape(); }
   shape_type strides() const { return strides_; }
 
-  auto to_kernel() const { return e_.to_kernel(); }
-  auto to_kernel() { return e_.to_kernel(); }
+  decltype(auto) to_kernel() const { return e_.to_kernel(); }
+  decltype(auto) to_kernel() { return e_.to_kernel(); }
 
   GT_INLINE const_reference data_access(size_type i) const
   {
@@ -125,8 +125,8 @@ public:
   using typename base_type::strides_type;
   using typename base_type::value_type;
 
-  using view_type = gview<to_kernel_t<EC>, N>;
-  using const_view_type = view_type;
+  using const_kernel_type = gview<to_kernel_t<std::add_const_t<EC>>, N>;
+  using kernel_type = gview<to_kernel_t<EC>, N>;
 
   gview(EC&& e, size_type offset, const shape_type& shape,
         const strides_type& strides);
@@ -139,8 +139,8 @@ public:
   self_type& operator=(const expression<E>& e);
   self_type& operator=(value_type val);
 
-
-  const_view_type to_kernel() const;
+  const_kernel_type to_kernel() const;
+  kernel_type to_kernel();
 
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args) const;
@@ -174,10 +174,16 @@ inline gview<EC, N>::gview(EC&& e, size_type offset, const shape_type& shape,
 {}
 
 template <typename EC, int N>
-inline auto gview<EC, N>::to_kernel() const -> const_view_type
+inline auto gview<EC, N>::to_kernel() const -> const_kernel_type
 {
-  return const_view_type(e_.to_kernel(), offset_, this->shape(),
-                         this->strides());
+  return const_kernel_type(e_.to_kernel(), offset_, this->shape(),
+                           this->strides());
+}
+
+template <typename EC, int N>
+inline auto gview<EC, N>::to_kernel() -> kernel_type
+{
+  return kernel_type(e_.to_kernel(), offset_, this->shape(), this->strides());
 }
 
 template <typename EC, int N>
