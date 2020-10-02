@@ -71,9 +71,12 @@ using has_expression = disjunction<is_expression<Args>...>;
 // ======================================================================
 // to_kernel_t
 
+// Note: we want to preserve const, so don't use decay_t. Required for
+// kernel view constness behavior to work correctly.
 template <typename EC>
 using to_kernel_t =
-  decltype(std::declval<std::remove_reference_t<EC>>().to_kernel());
+  decltype(std::declval<std::remove_pointer_t<std::remove_reference_t<EC>>>()
+             .to_kernel());
 
 // ======================================================================
 // index expression helper

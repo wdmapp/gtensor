@@ -48,13 +48,6 @@ public:
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args);
 
-  template <typename... Args>
-  inline auto view(Args&&... args) &;
-  template <typename... Args>
-  inline auto view(Args&&... args) const&;
-  template <typename... Args>
-  inline auto view(Args&&... args) &&;
-
   GT_INLINE const_reference data_access(size_type i) const;
   GT_INLINE reference data_access(size_type i);
 
@@ -112,27 +105,6 @@ template <typename... Args>
 GT_INLINE auto gcontainer<D>::operator()(Args&&... args) -> reference
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
-}
-
-template <typename D>
-template <typename... Args>
-inline auto gcontainer<D>::view(Args&&... args) const&
-{
-  return gt::view(derived(), std::forward<Args>(args)...);
-}
-
-template <typename D>
-template <typename... Args>
-inline auto gcontainer<D>::view(Args&&... args) &
-{
-  return gt::view(derived(), std::forward<Args>(args)...);
-}
-
-template <typename D>
-template <typename... Args>
-inline auto gcontainer<D>::view(Args&&... args) &&
-{
-  return gt::view(std::move(*this).derived(), std::forward<Args>(args)...);
 }
 
 template <typename D>

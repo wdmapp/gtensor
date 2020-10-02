@@ -60,11 +60,6 @@ public:
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args) const;
 
-  template <typename... Args>
-  inline auto view(Args&&... args) const&;
-  template <typename... Args>
-  inline auto view(Args&&... args) &&;
-
   GT_INLINE reference data_access(size_type i) const;
 
 private:
@@ -135,20 +130,6 @@ GT_INLINE auto gtensor_view<T, N, S>::operator()(Args&&... args) const
   -> reference
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
-}
-
-template <typename T, int N, typename S>
-template <typename... Args>
-inline auto gtensor_view<T, N, S>::view(Args&&... args) const&
-{
-  return gt::view(this, std::forward<Args>(args)...);
-}
-
-template <typename T, int N, typename S>
-template <typename... Args>
-inline auto gtensor_view<T, N, S>::view(Args&&... args) &&
-{
-  return gt::view(std::move(*this), std::forward<Args>(args)...);
 }
 
 // ======================================================================

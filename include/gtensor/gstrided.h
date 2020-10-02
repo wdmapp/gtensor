@@ -55,6 +55,13 @@ public:
   GT_INLINE const strides_type& strides() const;
   GT_INLINE size_type size() const;
 
+  template <typename... Args>
+  inline auto view(Args&&... args) &;
+  template <typename... Args>
+  inline auto view(Args&&... args) const&;
+  template <typename... Args>
+  inline auto view(Args&&... args) &&;
+
 protected:
   template <typename... Args>
   GT_INLINE size_type index(Args&&... args) const;
@@ -94,6 +101,27 @@ template <typename D>
 GT_INLINE size_type gstrided<D>::size() const
 {
   return calc_size(shape());
+}
+
+template <typename D>
+template <typename... Args>
+inline auto gstrided<D>::view(Args&&... args) const&
+{
+  return gt::view(derived(), std::forward<Args>(args)...);
+}
+
+template <typename D>
+template <typename... Args>
+inline auto gstrided<D>::view(Args&&... args) &
+{
+  return gt::view(derived(), std::forward<Args>(args)...);
+}
+
+template <typename D>
+template <typename... Args>
+inline auto gstrided<D>::view(Args&&... args) &&
+{
+  return gt::view(std::move(*this).derived(), std::forward<Args>(args)...);
 }
 
 template <typename D>

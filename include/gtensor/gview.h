@@ -105,7 +105,11 @@ struct gtensor_inner_types<gview<EC, N>>
   using space_type = expr_space_type<EC>;
   constexpr static size_type dimension = N;
 
-  using inner_expression_type = std::remove_reference_t<EC>;
+  // Note: we want to preserve const, so don't use decay_t. While currently
+  // tests pass either way, this is useful for debugging and may become
+  // an issue later.
+  using inner_expression_type =
+    std::remove_pointer_t<std::remove_reference_t<EC>>;
   using value_type = typename inner_expression_type::value_type;
   using reference = typename inner_expression_type::reference;
   using const_reference = typename inner_expression_type::const_reference;
@@ -147,13 +151,6 @@ public:
   GT_INLINE decltype(auto) operator()(Args&&... args) const;
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args);
-
-  template <typename... Args>
-  inline auto view(Args&&... args) &;
-  template <typename... Args>
-  inline auto view(Args&&... args) const&;
-  template <typename... Args>
-  inline auto view(Args&&... args) &&;
 
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
@@ -199,27 +196,6 @@ template <typename... Args>
 GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args)
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
-}
-
-template <typename EC, int N>
-template <typename... Args>
-inline auto gview<EC, N>::view(Args&&... args) const&
-{
-  return gt::view(this, std::forward<Args>(args)...);
-}
-
-template <typename EC, int N>
-template <typename... Args>
-inline auto gview<EC, N>::view(Args&&... args) &
-{
-  return gt::view(this, std::forward<Args>(args)...);
-}
-
-template <typename EC, int N>
-template <typename... Args>
-inline auto gview<EC, N>::view(Args&&... args) &&
-{
-  return gt::view(std::move(*this), std::forward<Args>(args)...);
 }
 
 template <typename EC, int N>
