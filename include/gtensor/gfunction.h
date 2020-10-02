@@ -197,6 +197,7 @@ public:
   using reference = typename inner_types::reference;
   using const_reference = typename inner_types::const_reference;
 
+  // Note: important for const correctness. See gview for explanation.
   using const_kernel_type =
     gfunction<F, to_kernel_t<std::add_const_t<E>>, gt_empty_expr>;
   using kernel_type = gfunction<F, to_kernel_t<E>, gt_empty_expr>;
@@ -233,6 +234,7 @@ public:
   using reference = typename inner_types::reference;
   using const_reference = typename inner_types::const_reference;
 
+  // Note: important for const correctness. See gview for explanation.
   using const_kernel_type = gfunction<F, to_kernel_t<std::add_const_t<E1>>,
                                       to_kernel_t<std::add_const_t<E2>>>;
   using kernel_type = gfunction<F, to_kernel_t<E1>, to_kernel_t<E2>>;

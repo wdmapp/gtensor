@@ -130,6 +130,12 @@ public:
   using typename base_type::shape_type;
   using typename base_type::strides_type;
 
+  // Note: important for const correctness. If the gview is const and owns
+  // a gtensor object, rather than holding a reference, then the const
+  // version of methods of the underlying object will be called. The const
+  // to_kernel method will return kernel const adapted kernel view objects,
+  // even though the data member inside gview is not const (the type system
+  //  and to_kernel_t macro don't see this without some help).
   using const_kernel_type = gview<to_kernel_t<std::add_const_t<EC>>, N>;
   using kernel_type = gview<to_kernel_t<EC>, N>;
 
@@ -147,6 +153,11 @@ public:
   const_kernel_type to_kernel() const;
   kernel_type to_kernel();
 
+  // Note: Returns either const_reference or reference. Uses decltype(auto) to
+  // reflect the const-depth of the underyling expression type. In particular,
+  // if containing a gtensor_view object or reference, the gview should also be
+  // shallow const. If containing a gtensor object or reference, the gview
+  // should be deep const.
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args) const;
   template <typename... Args>
