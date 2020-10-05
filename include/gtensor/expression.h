@@ -75,8 +75,7 @@ using has_expression = disjunction<is_expression<Args>...>;
 // kernel view constness behavior to work correctly.
 template <typename EC>
 using to_kernel_t =
-  decltype(std::declval<std::remove_pointer_t<std::remove_reference_t<EC>>>()
-             .to_kernel());
+  decltype(std::declval<std::remove_reference_t<EC>>().to_kernel());
 
 // ======================================================================
 // index expression helper

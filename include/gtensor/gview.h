@@ -108,8 +108,7 @@ struct gtensor_inner_types<gview<EC, N>>
   // Note: we want to preserve const, so don't use decay_t. While currently
   // tests pass either way, this is useful for debugging and may become
   // an issue later.
-  using inner_expression_type =
-    std::remove_pointer_t<std::remove_reference_t<EC>>;
+  using inner_expression_type = std::remove_reference_t<EC>;
   using value_type = typename inner_expression_type::value_type;
   using reference = typename inner_expression_type::reference;
   using const_reference = typename inner_expression_type::const_reference;
