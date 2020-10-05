@@ -200,7 +200,7 @@ public:
   // Note: important for const correctness. See gview for explanation.
   using const_kernel_type =
     gfunction<F, to_kernel_t<std::add_const_t<E>>, gt_empty_expr>;
-  using kernel_type = gfunction<F, to_kernel_t<E>, gt_empty_expr>;
+  using kernel_type = const_kernel_type;
 
   constexpr static size_type dimension() { return inner_types::dimension; };
 
@@ -215,7 +215,6 @@ public:
   GT_INLINE value_type operator()(Args... args) const;
 
   const_kernel_type to_kernel() const;
-  kernel_type to_kernel();
 
 private:
   F f_;
@@ -237,7 +236,7 @@ public:
   // Note: important for const correctness. See gview for explanation.
   using const_kernel_type = gfunction<F, to_kernel_t<std::add_const_t<E1>>,
                                       to_kernel_t<std::add_const_t<E2>>>;
-  using kernel_type = gfunction<F, to_kernel_t<E1>, to_kernel_t<E2>>;
+  using kernel_type = const_kernel_type;
 
   constexpr static size_type dimension() { return inner_types::dimension; };
 
@@ -256,7 +255,6 @@ public:
   GT_INLINE value_type operator()(Args... args) const;
 
   const_kernel_type to_kernel() const;
-  kernel_type to_kernel();
 
 private:
   F f_;
@@ -332,20 +330,8 @@ inline auto gfunction<F, E, gt_empty_expr>::to_kernel() const
   return function(F(f_), e_.to_kernel());
 }
 
-template <typename F, typename E>
-inline auto gfunction<F, E, gt_empty_expr>::to_kernel() -> kernel_type
-{
-  return function(F(f_), e_.to_kernel());
-}
-
 template <typename F, typename E1, typename E2>
 inline auto gfunction<F, E1, E2>::to_kernel() const -> const_kernel_type
-{
-  return function(F(f_), e1_.to_kernel(), e2_.to_kernel());
-}
-
-template <typename F, typename E1, typename E2>
-inline auto gfunction<F, E1, E2>::to_kernel() -> kernel_type
 {
   return function(F(f_), e1_.to_kernel(), e2_.to_kernel());
 }
