@@ -371,7 +371,7 @@ for HIP with minor modifications.
 gtensor has two types of data objects - those which are containers that own the
 underlying data, like `gtensor`, and those which behave like span objects or
 pointers, like `gtensor_view`. The `gview` objects, which are generally
-custructed via the helper method `gt::view` or the convenience `view` methods
+constructed via the helper method `gt::view` or the convenience `view` methods
 on `gtensor`, implement the slicing, broadcasting, and axis manipulation
 functions, and have hybrid behavior based on the underlying expression. In
 particular, a `gview` wrapping a `gtensor_view` object will have span-like
