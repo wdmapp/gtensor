@@ -3,6 +3,7 @@
 #define GTENSOR_GTENSOR_VIEW_H
 
 #include "device_backend.h"
+#include "span.h"
 
 namespace gt
 {
@@ -49,6 +50,19 @@ public:
   gtensor_view() = default;
   gtensor_view(pointer data, const shape_type& shape,
                const strides_type& strides);
+
+  gtensor_view(const gtensor_view& other) = default;
+
+  // Allow automatic conversion to const element_type
+  template <class OtherT,
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
+  gtensor_view(const gtensor_view<OtherT, N, S>& other)
+    : base_type{other.shape(), other.strides()},
+      storage_{other.data(), other.size()}
+  {}
+
+  gtensor_view& operator=(const gtensor_view& other) = default;
 
   template <typename E>
   self_type& operator=(const expression<E>& e);

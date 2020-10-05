@@ -40,3 +40,29 @@ TEST(gtensor_view, to_kernel_constness)
   EXPECT_EQ(typeid(const_gtensor_view_type).name(),
             typeid(a_const_view_type).name());
 }
+
+TEST(gtensor_view, convert_const)
+{
+  constexpr int N = 10;
+  gt::gtensor<float, 1> a(gt::shape(N));
+  gt::gtensor_view<float, 1> a_view(a.data(), a.shape(), a.strides());
+  gt::gtensor_view<float, 1> a_view_copy(a_view);
+  const gt::gtensor_view<float, 1> a_view_const(a_view);
+  const gt::gtensor_view<float, 1> a_view_const2 = a_view;
+
+  for (int i = 0; i < N; i++) {
+    a(i) = static_cast<float>(i);
+  }
+
+  // won't compile, different storage size so conversion ctor not defined
+  // gt::gtensor_view<double, 1> double_view(a_view);
+
+  EXPECT_EQ(a_view.data(), a_view_copy.data());
+  EXPECT_EQ(&a_view(N - 1), &a_view_copy(N - 1));
+
+  EXPECT_EQ(a_view.data(), a_view_const.data());
+  EXPECT_EQ(&a_view(N - 1), &a_view_const(N - 1));
+
+  EXPECT_EQ(a_view.data(), a_view_const2.data());
+  EXPECT_EQ(&a_view(N - 1), &a_view_const2(N - 1));
+}

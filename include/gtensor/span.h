@@ -22,6 +22,14 @@ namespace gt
 {
 
 // ======================================================================
+// is_allowed_element_type_conversion
+
+template <typename From, typename To>
+struct is_allowed_element_type_conversion
+  : std::is_convertible<From (*)[], To (*)[]>
+{};
+
+// ======================================================================
 // span
 //
 // very minimal, just enough to support making a gtensor_view
@@ -60,8 +68,8 @@ public:
   span(const span& other) = default;
 
   template <class OtherT,
-            std::enable_if_t<std::is_convertible<OtherT (*)[], T (*)[]>::value,
-                             int> = 0>
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
   span(const span<OtherT>& other) : data_{other.data()}, size_{other.size()}
   {}
 
@@ -107,8 +115,8 @@ public:
   device_span(const device_span& other) = default;
 
   template <class OtherT,
-            std::enable_if_t<std::is_convertible<OtherT (*)[], T (*)[]>::value,
-                             int> = 0>
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
   device_span(const device_span<OtherT>& other)
     : data_{other.data()}, size_{other.size()}
   {}

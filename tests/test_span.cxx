@@ -7,16 +7,19 @@
 TEST(span, convert_const)
 {
   constexpr int N = 1024;
-  double a[N];
+  float a[N];
 
   for (int i = 0; i < N; i++) {
-    a[i] = static_cast<double>(i);
+    a[i] = static_cast<float>(i);
   }
-  gt::span<double> sa_mut(&a[0], N);
-  gt::span<double> sa_mut_copy(sa_mut);
-  gt::span<const double> sa_const(sa_mut);
+  gt::span<float> sa_mut(&a[0], N);
+  gt::span<float> sa_mut_copy(sa_mut);
+  gt::span<const float> sa_const(sa_mut);
 
-  gt::span<const double> sa_const2 = sa_mut;
+  // won't compile, different storage size so conversion ctor not defined
+  // gt::span<double> sa_double(sa_mut);
+
+  gt::span<const float> sa_const2 = sa_mut;
 
   EXPECT_EQ(sa_mut.data(), sa_mut_copy.data());
   EXPECT_EQ(&sa_mut[N - 1], &sa_mut_copy[N - 1]);
