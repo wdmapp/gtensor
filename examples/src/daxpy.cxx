@@ -98,7 +98,7 @@ int main(int argc, char** argv)
   auto k_axpy = d_axpy.to_kernel();
 
   gt::launch<1>(
-    d_x.shape(), GT_LAMBDA(int i) mutable { k_axpy(i) = a * k_x(i) + k_y(i); });
+    d_x.shape(), GT_LAMBDA(int i) { k_axpy(i) = a * k_x(i) + k_y(i); });
 #else  // implicit kernel
   // This automatically generates a computation kernel to run on the
   // device.
