@@ -247,8 +247,8 @@ TEST(complex, device_eval)
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 __global__ void kernel_norm(
-  gt::gtensor_view_device<gt::complex<double>, 1> d_in,
-  gt::gtensor_view_device<double, 1> d_out)
+  gt::gtensor_span_device<gt::complex<double>, 1> d_in,
+  gt::gtensor_span_device<double, 1> d_out)
 {
   int i = threadIdx.x;
   if (i < d_in.shape(0)) {
@@ -257,8 +257,8 @@ __global__ void kernel_norm(
 }
 
 __global__ void kernel_conj(
-  gt::gtensor_view_device<gt::complex<double>, 1> d_in,
-  gt::gtensor_view_device<gt::complex<double>, 1> d_out)
+  gt::gtensor_span_device<gt::complex<double>, 1> d_in,
+  gt::gtensor_span_device<gt::complex<double>, 1> d_out)
 {
   int i = threadIdx.x;
   if (i < d_in.shape(0)) {

@@ -447,8 +447,8 @@ TEST(gtensor, synchronize)
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
-__global__ void kernel_test(gt::gtensor_view_device<double, 1> d_a,
-                            gt::gtensor_view_device<double, 1> d_b)
+__global__ void kernel_test(gt::gtensor_span_device<double, 1> d_a,
+                            gt::gtensor_span_device<double, 1> d_b)
 {
   int i = threadIdx.x;
   if (i < d_b.shape(0)) {

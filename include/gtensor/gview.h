@@ -154,7 +154,7 @@ public:
 
   // Note: Returns either const_reference or reference. Uses decltype(auto) to
   // reflect the const-depth of the underyling expression type. In particular,
-  // if containing a gtensor_view object or reference, the gview should also be
+  // if containing a gtensor_span object or reference, the gview should also be
   // shallow const. If containing a gtensor object or reference, the gview
   // should be deep const.
   template <typename... Args>
