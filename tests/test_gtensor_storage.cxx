@@ -3,6 +3,8 @@
 #include "gtensor/gtensor.h"
 #include "gtensor/gtensor_storage.h"
 
+#include "test_debug.h"
+
 TEST(gtensor_storage, host_copy_assign)
 {
   constexpr int N = 16;
@@ -135,6 +137,25 @@ TEST(gtensor_storage, host_resize_shrink)
   for (int i = 0; i < N2; i++) {
     EXPECT_EQ(h1[i], (double)i);
   }
+}
+
+TEST(gtensor_storage, type_aliases)
+{
+  gt::backend::host_storage<double> h1(10);
+
+  GT_DEBUG_TYPE_NAME(decltype(h1)::value_type);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::reference);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::const_reference);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::pointer);
+  GT_DEBUG_TYPE_NAME(decltype(h1)::const_pointer);
+
+  EXPECT_TRUE((std::is_same<decltype(h1)::value_type, double>::value));
+  EXPECT_TRUE((std::is_same<decltype(h1)::reference, double&>::value));
+  EXPECT_TRUE(
+    (std::is_same<decltype(h1)::const_reference, const double&>::value));
+  EXPECT_TRUE((std::is_same<decltype(h1)::pointer, double*>::value));
+  EXPECT_TRUE(
+    (std::is_same<decltype(h1)::const_pointer, const double*>::value));
 }
 
 #ifdef GTENSOR_HAVE_DEVICE

@@ -3,7 +3,7 @@
 #define GTENSOR_GTENSOR_VIEW_H
 
 #include "device_backend.h"
-#include "gcontainer.h"
+#include "span.h"
 
 namespace gt
 {
@@ -51,23 +51,35 @@ public:
   gtensor_view(pointer data, const shape_type& shape,
                const strides_type& strides);
 
+  gtensor_view(const gtensor_view& other) = default;
+
+  // Allow automatic conversion to const element_type
+  template <class OtherT,
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
+  gtensor_view(const gtensor_view<OtherT, N, S>& other)
+    : base_type{other.shape(), other.strides()},
+      storage_{other.data(), other.size()}
+  {}
+
+  gtensor_view& operator=(const gtensor_view& other) = default;
+
   template <typename E>
   self_type& operator=(const expression<E>& e);
 
-  // FIXME, const correctness
   gtensor_view to_kernel() const;
 
-  GT_INLINE const_pointer data() const;
-  GT_INLINE pointer data();
+  GT_INLINE pointer data() const;
+
+  template <typename... Args>
+  GT_INLINE reference operator()(Args&&... args) const;
+
+  GT_INLINE reference data_access(size_type i) const;
 
 private:
-  GT_INLINE const_reference data_access_impl(size_type i) const;
-  GT_INLINE reference data_access_impl(size_type i);
-
   storage_type storage_;
 
   friend class gstrided<self_type>;
-  friend class gcontainer<self_type>;
 };
 
 // ======================================================================
@@ -115,28 +127,23 @@ inline auto gtensor_view<T, N, S>::to_kernel() const -> gtensor_view
 }
 
 template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data() const -> const_pointer
+GT_INLINE auto gtensor_view<T, N, S>::data() const -> pointer
 {
   return storage_.data();
 }
 
 template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data() -> pointer
-{
-  return storage_.data();
-}
-
-template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data_access_impl(size_t i) const
-  -> const_reference
+GT_INLINE auto gtensor_view<T, N, S>::data_access(size_t i) const -> reference
 {
   return storage_[i];
 }
 
 template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data_access_impl(size_t i) -> reference
+template <typename... Args>
+GT_INLINE auto gtensor_view<T, N, S>::operator()(Args&&... args) const
+  -> reference
 {
-  return storage_[i];
+  return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
 // ======================================================================

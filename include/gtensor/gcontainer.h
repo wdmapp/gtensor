@@ -43,6 +43,14 @@ public:
 
   void resize(const shape_type& shape);
 
+  template <typename... Args>
+  GT_INLINE const_reference operator()(Args&&... args) const;
+  template <typename... Args>
+  GT_INLINE reference operator()(Args&&... args);
+
+  GT_INLINE const_reference data_access(size_type i) const;
+  GT_INLINE reference data_access(size_type i);
+
   GT_INLINE const_pointer data() const;
   GT_INLINE pointer data();
 
@@ -82,6 +90,33 @@ template <typename D>
 GT_INLINE auto gcontainer<D>::data() -> pointer
 {
   return storage().data();
+}
+
+template <typename D>
+template <typename... Args>
+GT_INLINE auto gcontainer<D>::operator()(Args&&... args) const
+  -> const_reference
+{
+  return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename D>
+template <typename... Args>
+GT_INLINE auto gcontainer<D>::operator()(Args&&... args) -> reference
+{
+  return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename D>
+GT_INLINE auto gcontainer<D>::data_access(size_type i) const -> const_reference
+{
+  return derived().data_access_impl(i);
+}
+
+template <typename D>
+GT_INLINE auto gcontainer<D>::data_access(size_type i) -> reference
+{
+  return derived().data_access_impl(i);
 }
 
 template <typename D>

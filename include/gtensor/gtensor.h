@@ -8,6 +8,7 @@
 
 #include "complex.h"
 #include "complex_ops.h"
+#include "gcontainer.h"
 #include "gfunction.h"
 #include "gtensor_view.h"
 #include "gview.h"
@@ -45,13 +46,17 @@ public:
   using inner_types = gtensor_inner_types<self_type>;
   using storage_type = typename inner_types::storage_type;
 
-  using typename base_type::const_pointer;
-  using typename base_type::const_reference;
-  using typename base_type::pointer;
-  using typename base_type::reference;
+  using value_type = typename inner_types::value_type;
+  using const_reference = typename inner_types::const_reference;
+  using reference = typename inner_types::reference;
+  using const_pointer = typename inner_types::const_pointer;
+  using pointer = typename inner_types::pointer;
+
   using typename base_type::shape_type;
   using typename base_type::strides_type;
-  using typename base_type::value_type;
+
+  using kernel_type = gtensor_view<T, N, S>;
+  using const_kernel_type = gtensor_view<std::add_const_t<T>, N, S>;
 
   using base_type::dimension;
 
@@ -64,8 +69,8 @@ public:
 
   using base_type::operator=;
 
-  gtensor_view<T, N, S> to_kernel() const; // FIXME, const T
-  gtensor_view<T, N, S> to_kernel();
+  const_kernel_type to_kernel() const;
+  kernel_type to_kernel();
 
 private:
   GT_INLINE const storage_type& storage_impl() const;
@@ -144,16 +149,15 @@ GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
 }
 
 template <typename T, int N, typename S>
-inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel() const
+inline auto gtensor<T, N, S>::to_kernel() const -> const_kernel_type
 {
-  return gtensor_view<T, N, S>(const_cast<gtensor<T, N, S>*>(this)->data(),
-                               this->shape(), this->strides());
+  return const_kernel_type(this->data(), this->shape(), this->strides());
 }
 
 template <typename T, int N, typename S>
-inline gtensor_view<T, N, S> gtensor<T, N, S>::to_kernel()
+inline auto gtensor<T, N, S>::to_kernel() -> kernel_type
 {
-  return gtensor_view<T, N, S>(this->data(), this->shape(), this->strides());
+  return kernel_type(this->data(), this->shape(), this->strides());
 }
 
 #if GTENSOR_HAVE_DEVICE
@@ -404,14 +408,12 @@ struct launch<1, space::device>
   static void run(const gt::shape_type<1>& shape, F&& f)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    // SYCL kernel must be const, but passed f may be mutable lambda
-    auto fwrap = [f](int i) { const_cast<decltype(f)>(f)(i); };
     auto range = sycl::range<1>(shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::Launch1<decltype(f)>;
-      cgh.parallel_for<kname>(range, [fwrap](sycl::item<1> item) {
+      cgh.parallel_for<kname>(range, [=](sycl::item<1> item) {
         int i = item.get_id(0);
-        fwrap(i);
+        f(i);
       });
     });
     e.wait();
@@ -425,15 +427,13 @@ struct launch<2, space::device>
   static void run(const gt::shape_type<2>& shape, F&& f)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    // SYCL kernel must be const, but passed f may be mutable lambda
-    auto fwrap = [f](int i, int j) { const_cast<decltype(f)>(f)(i, j); };
     auto range = sycl::range<2>(shape[0], shape[1]);
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::Launch2<decltype(f)>;
-      cgh.parallel_for<kname>(range, [fwrap](sycl::item<2> item) {
+      cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
-        fwrap(i, j);
+        f(i, j);
       });
     });
     e.wait();
@@ -447,18 +447,14 @@ struct launch<3, space::device>
   static void run(const gt::shape_type<3>& shape, F&& f)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    // SYCL kernel must be const, but passed f may be mutable lambda
-    auto fwrap = [f](int i, int j, int k) {
-      const_cast<decltype(f)>(f)(i, j, k);
-    };
     auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::Launch3<decltype(f)>;
-      cgh.parallel_for<kname>(range, [fwrap](sycl::item<3> item) {
+      cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
         int k = item.get_id(2);
-        fwrap(i, j, k);
+        f(i, j, k);
       });
     });
     e.wait();
@@ -480,9 +476,9 @@ struct launch<N, space::device>
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto e = q.submit([&](sycl::handler& cgh) {
       using kname = gt::backend::sycl::LaunchN<decltype(f)>;
-      cgh.parallel_for<kname>(range, [strides, f](sycl::nd_item<1> item) {
-        int global_id = item.get_global_id(0);
-        auto idx = unravel(global_id, strides);
+      cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
+        int i = item.get_global_id(0);
+        auto idx = unravel(i, strides);
         index_expression(f, idx);
       });
     });

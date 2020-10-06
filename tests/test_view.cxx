@@ -1,5 +1,7 @@
 #include <memory>
 
+#include <type_traits>
+
 #include <gtest/gtest.h>
 
 #include <gtensor/gtensor.h>
@@ -168,10 +170,16 @@ TEST(gview, copy_ctor)
 
 TEST(gview, fn_return_view)
 {
-  auto av = get_linear_index_gtensor<gt::space::host>(gt::shape(3, 2))
-              .view(_s(1, 3), _all);
+  gt::gtensor<double, 2> a(gt::shape(2, 2));
 
-  EXPECT_EQ(av, (gt::gtensor<double, 2>{{1., 2.}, {4., 5.}}));
+  auto av = 2. * (get_linear_index_gtensor<gt::space::host>(gt::shape(3, 2))
+                    .view(_s(1, _), _all));
+
+  GT_DEBUG_TYPE(av);
+
+  a = av;
+
+  EXPECT_EQ(a, (gt::gtensor<double, 2>{{2., 4.}, {8., 10.}}));
 }
 
 TEST(gview, assign_all)
@@ -255,7 +263,7 @@ TEST(gview, rval_view)
   GT_DEBUG_VAR(a);
   GT_DEBUG_TYPE(a);
 
-  auto multiply_view = [](const double m, auto& x) {
+  auto multiply_view = [](const double m, const auto& x) {
     return m * x.view(_all, _all);
   };
 
@@ -276,6 +284,75 @@ TEST(gview, rval_view)
   a = a + e3;
 
   EXPECT_EQ(c, a);
+}
+
+TEST(gview, gview_operator_parens)
+{
+  gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+  auto a_view = a.view(_s(1, 3), _all);
+  using view_op_rtype = std::result_of_t<decltype(a_view)(int, int)>;
+
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(a_view);
+  GT_DEBUG_TYPE_NAME(view_op_rtype);
+
+  EXPECT_TRUE((std::is_same<view_op_rtype, double&>::value));
+}
+
+TEST(gview, gview_const_gtensor_operator_parens)
+{
+  // non-const gview should NOT allow modification if wrapping const gtensor
+  const gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+  auto a_view = a.view(_s(1, 3), _all);
+  using view_op_rtype = std::result_of_t<decltype(a_view)(int, int)>;
+
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(a_view);
+  GT_DEBUG_TYPE_NAME(view_op_rtype);
+
+  EXPECT_TRUE((std::is_same<view_op_rtype, const double&>::value));
+}
+
+TEST(gview, const_gview_operator_parens)
+{
+  // const gview should allow modification if wrapping non-const gtensor
+  gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+  const auto a_view = a.view(_s(1, 3), _all);
+  using view_op_rtype = std::result_of_t<decltype(a_view)(int, int)>;
+
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(a_view);
+  GT_DEBUG_TYPE_NAME(view_op_rtype);
+
+  EXPECT_TRUE((std::is_same<view_op_rtype, double&>::value));
+}
+
+TEST(gview, gview_owner_operator_parens)
+{
+  // for an owning gview, the const-depth of the gview should be the
+  // same as the depth of the owned expression. If it owns a gtensor,
+  // this means it should allow modification if non-const view instance,
+  // not allow if const.
+  const auto const_view_gtensor_owner =
+    gt::view(gt::gtensor<double, 1>{1., 2., 3.}, _all);
+  using const_view_gtensor_owner_op_rtype =
+    std::result_of_t<decltype(const_view_gtensor_owner)(int)>;
+
+  GT_DEBUG_TYPE(const_view_gtensor_owner);
+  GT_DEBUG_TYPE_NAME(const_view_gtensor_owner_op_rtype);
+
+  EXPECT_TRUE(
+    (std::is_same<const_view_gtensor_owner_op_rtype, const double&>::value));
+
+  // non-const copy
+  auto view_gtensor_owner = const_view_gtensor_owner;
+  using view_gtensor_owner_op_rtype =
+    std::result_of_t<decltype(view_gtensor_owner)(int)>;
+
+  GT_DEBUG_TYPE(view_gtensor_owner);
+  GT_DEBUG_TYPE_NAME(view_gtensor_owner_op_rtype);
+
+  EXPECT_TRUE((std::is_same<view_gtensor_owner_op_rtype, double&>::value));
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -312,7 +389,7 @@ TEST(gview, device_fn_return_view)
   auto av = 2. * (get_linear_index_gtensor<gt::space::device>(gt::shape(3, 2))
                     .view(_s(1, 3), _all));
 
-  GT_DEBUG_PRINTLN("av type (fn) " << typeid(av).name() << std::endl);
+  GT_DEBUG_TYPE(av);
 
   a = av;
 

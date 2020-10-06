@@ -19,13 +19,15 @@ template <typename T, typename Allocator>
 class gtensor_storage
 {
 public:
-  using value_type = T;
+  using element_type = T;
+  using value_type = std::remove_cv_t<T>;
   using allocator_type = Allocator;
 
-  using pointer = typename std::add_pointer<value_type>::type;
-  using const_pointer = typename std::add_const<pointer>::type;
-  using reference = typename std::add_lvalue_reference<value_type>::type;
-  using const_reference = typename std::add_const<reference>::type;
+  using pointer = std::add_pointer_t<element_type>;
+  using const_pointer = std::add_pointer_t<std::add_const_t<element_type>>;
+  using reference = std::add_lvalue_reference_t<element_type>;
+  using const_reference =
+    std::add_lvalue_reference_t<std::add_const_t<element_type>>;
   using size_type = gt::size_type;
 
   gtensor_storage(size_type count)
@@ -58,8 +60,8 @@ public:
   }
 
   // operators
-  reference operator[](size_type i);
-  const_reference operator[](size_type i) const;
+  reference operator[](size_type i) { return data_[i]; }
+  const_reference operator[](size_type i) const { return data_[i]; }
 
   gtensor_storage& operator=(const gtensor_storage& dv)
   {
@@ -86,15 +88,16 @@ public:
 
   // functions
   void resize(size_type new_size);
-  size_type size() const;
-  size_type capacity() const;
-  pointer data();
-  const_pointer data() const;
+
+  size_type size() const { return size_; }
+  size_type capacity() const { return capacity_; }
+  pointer data() { return data_; }
+  const_pointer data() const { return data_; }
 
 private:
   void resize(size_type new_size, bool discard);
   void resize_discard(size_type new_size);
-  value_type* data_;
+  pointer data_;
   size_type size_;
   size_type capacity_;
 };
@@ -143,48 +146,6 @@ template <typename T, typename A>
 inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size)
 {
   resize(new_size, false);
-}
-
-template <typename T, typename A>
-inline
-  typename gtensor_storage<T, A>::reference gtensor_storage<T, A>::operator[](
-    gtensor_storage::size_type i)
-{
-  return data_[i];
-}
-
-template <typename T, typename A>
-inline typename gtensor_storage<T, A>::const_reference
-  gtensor_storage<T, A>::operator[](gtensor_storage::size_type i) const
-{
-  return data_[i];
-}
-
-template <typename T, typename A>
-inline typename gtensor_storage<T, A>::size_type gtensor_storage<T, A>::size()
-  const
-{
-  return size_;
-}
-
-template <typename T, typename A>
-inline typename gtensor_storage<T, A>::size_type
-gtensor_storage<T, A>::capacity() const
-{
-  return capacity_;
-}
-
-template <typename T, typename A>
-inline typename gtensor_storage<T, A>::pointer gtensor_storage<T, A>::data()
-{
-  return data_;
-}
-
-template <typename T, typename A>
-inline typename gtensor_storage<T, A>::const_pointer
-gtensor_storage<T, A>::data() const
-{
-  return data_;
 }
 
 // ===================================================================

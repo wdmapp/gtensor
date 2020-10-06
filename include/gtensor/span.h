@@ -4,6 +4,10 @@
 
 #include <cassert>
 
+#if __cplusplus >= 202000L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202000L)
+#include <span>
+#endif
+
 #include "defs.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -18,38 +22,70 @@ namespace gt
 {
 
 // ======================================================================
+// is_allowed_element_type_conversion
+
+template <typename From, typename To>
+struct is_allowed_element_type_conversion
+  : std::is_convertible<From (*)[], To (*)[]>
+{};
+
+// ======================================================================
 // span
 //
 // very minimal, just enough to support making a gtensor_view
+// Note that the span has pointer semantics, in that coyping does
+// not copy the underlying data, just the pointer and size, and
+// requesting access to the underlying data from a const instance
+// via data() and operator[] returns a non-const reference allowing
+// modification. This is consistent with the C++20 standardized
+// span and with gsl::span. To not allow modification, the underlying
+// data type can be const.
+
+#if __cplusplus >= 202000L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202000L)
+
+template <typename T>
+using span = std::span<T>;
+
+#else // not C++ 20, define subset of span we care about
 
 template <typename T>
 class span
 {
 public:
-  using value_type = T;
-  using pointer = T*;
-  using reference = T&;
-  using const_pointer = const T*;
-  using const_reference = const T&;
+  using element_type = T;
+  using value_type = std::remove_cv_t<T>;
+
+  using pointer = std::add_pointer_t<element_type>;
+  using const_pointer = std::add_pointer_t<std::add_const_t<element_type>>;
+  using reference = std::add_lvalue_reference_t<element_type>;
+  using const_reference =
+    std::add_lvalue_reference_t<std::add_const_t<element_type>>;
   using size_type = gt::size_type;
 
   span() = default;
   span(pointer data, size_type size) : data_{data}, size_{size} {}
 
-  GT_INLINE const_pointer data() const { return data_; }
-  GT_INLINE pointer data() { return data_; }
+  span(const span& other) = default;
 
-  GT_INLINE const_reference operator[](size_type i) const
-  {
-    assert(i < size_);
-    return data_[i];
-  }
-  GT_INLINE reference operator[](size_type i) { return data_[i]; }
+  template <class OtherT,
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
+  span(const span<OtherT>& other) : data_{other.data()}, size_{other.size()}
+  {}
+
+  span& operator=(const span& other) = default;
+
+  GT_INLINE pointer data() const { return data_; }
+  GT_INLINE size_type size() const { return size_; }
+
+  GT_INLINE reference operator[](size_type i) const { return data_[i]; }
 
 private:
   pointer data_ = nullptr;
   size_type size_ = 0;
 };
+
+#endif // C++20
 
 #ifdef GTENSOR_HAVE_DEVICE
 
@@ -64,21 +100,33 @@ template <typename T>
 class device_span
 {
 public:
-  using value_type = T;
+  using element_type = T;
+  using value_type = std::remove_cv_t<T>;
+
   using pointer = thrust::device_ptr<T>;
+  using const_pointer = std::add_const_t<pointer>;
   using reference = thrust::device_reference<T>;
-  using const_pointer = const pointer;
-  using const_reference = const reference;
+  using const_reference = std::add_const_t<reference>;
   using size_type = gt::size_type;
 
   device_span() = default;
   device_span(pointer data, size_type size) : data_{data}, size_{size} {}
 
-  GT_INLINE const_pointer data() const { return data_; }
-  GT_INLINE pointer data() { return data_; }
+  device_span(const device_span& other) = default;
 
-  GT_INLINE const_reference operator[](size_type i) const { return data_[i]; }
-  GT_INLINE reference operator[](size_type i) { return data_[i]; }
+  template <class OtherT,
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
+  device_span(const device_span<OtherT>& other)
+    : data_{other.data()}, size_{other.size()}
+  {}
+
+  device_span& operator=(const device_span& other) = default;
+
+  GT_INLINE pointer data() const { return data_; }
+  GT_INLINE size_type size() const { return size_; }
+
+  GT_INLINE reference operator[](size_type i) const { return data_[i]; }
 
 private:
   pointer data_;
@@ -88,30 +136,7 @@ private:
 #else // not GTENSOR_USE_THRUST
 
 template <typename T>
-class device_span
-{
-public:
-  using value_type = T;
-
-  using pointer = typename std::add_pointer<value_type>::type;
-  using const_pointer = typename std::add_const<pointer>::type;
-  using reference = typename std::add_lvalue_reference<value_type>::type;
-  using const_reference = typename std::add_const<reference>::type;
-  using size_type = gt::size_type;
-
-  device_span() = default;
-  device_span(pointer data, size_type size) : data_{data}, size_{size} {}
-
-  GT_INLINE const_pointer data() const { return data_; }
-  GT_INLINE pointer data() { return data_; }
-
-  GT_INLINE const_reference operator[](size_type i) const { return data_[i]; }
-  GT_INLINE reference operator[](size_type i) { return data_[i]; }
-
-private:
-  pointer data_;
-  size_type size_ = 0;
-};
+using device_span = span<T>;
 
 #endif // GTENSOR_USE_THRUST
 
@@ -119,4 +144,4 @@ private:
 
 } // namespace gt
 
-#endif
+#endif // GTENSOR_SPAN_H

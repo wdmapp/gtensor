@@ -32,7 +32,8 @@ public:
   shape_type shape() const { return e_.shape(); }
   shape_type strides() const { return strides_; }
 
-  auto to_kernel() const { return e_.to_kernel(); }
+  decltype(auto) to_kernel() const { return e_.to_kernel(); }
+  decltype(auto) to_kernel() { return e_.to_kernel(); }
 
   GT_INLINE const_reference data_access(size_type i) const
   {
@@ -104,7 +105,10 @@ struct gtensor_inner_types<gview<EC, N>>
   using space_type = expr_space_type<EC>;
   constexpr static size_type dimension = N;
 
-  using inner_expression_type = std::decay_t<EC>;
+  // Note: we want to preserve const, so don't use decay_t. While currently
+  // tests pass either way, this is useful for debugging and may become
+  // an issue later.
+  using inner_expression_type = std::remove_reference_t<EC>;
   using value_type = typename inner_expression_type::value_type;
   using reference = typename inner_expression_type::reference;
   using const_reference = typename inner_expression_type::const_reference;
@@ -118,11 +122,21 @@ public:
   using base_type = gstrided<self_type>;
   using inner_types = gtensor_inner_types<self_type>;
 
-  using typename base_type::const_reference;
-  using typename base_type::reference;
+  using const_reference = typename inner_types::const_reference;
+  using reference = typename inner_types::reference;
+  using value_type = typename inner_types::value_type;
+
   using typename base_type::shape_type;
   using typename base_type::strides_type;
-  using typename base_type::value_type;
+
+  // Note: important for const correctness. If the gview is const and owns
+  // a gtensor object, rather than holding a reference, then the const
+  // version of methods of the underlying object will be called. The const
+  // to_kernel method will return kernel const adapted kernel view objects,
+  // even though the data member inside gview is not const (the type system
+  //  and to_kernel_t macro don't see this without some help).
+  using const_kernel_type = gview<to_kernel_t<std::add_const_t<EC>>, N>;
+  using kernel_type = gview<to_kernel_t<EC>, N>;
 
   gview(EC&& e, size_type offset, const shape_type& shape,
         const strides_type& strides);
@@ -135,12 +149,21 @@ public:
   self_type& operator=(const expression<E>& e);
   self_type& operator=(value_type val);
 
-  // FIXME, const correctness
-  gview<to_kernel_t<EC>, N> to_kernel() const;
+  const_kernel_type to_kernel() const;
+  kernel_type to_kernel();
 
-private:
-  GT_INLINE const_reference data_access_impl(size_type i) const;
-  GT_INLINE reference data_access_impl(size_type i);
+  // Note: Returns either const_reference or reference. Uses decltype(auto) to
+  // reflect the const-depth of the underyling expression type. In particular,
+  // if containing a gtensor_view object or reference, the gview should also be
+  // shallow const. If containing a gtensor object or reference, the gview
+  // should be deep const.
+  template <typename... Args>
+  GT_INLINE decltype(auto) operator()(Args&&... args) const;
+  template <typename... Args>
+  GT_INLINE decltype(auto) operator()(Args&&... args);
+
+  GT_INLINE decltype(auto) data_access(size_type i) const;
+  GT_INLINE decltype(auto) data_access(size_type i);
 
 private:
   EC e_;
@@ -159,20 +182,40 @@ inline gview<EC, N>::gview(EC&& e, size_type offset, const shape_type& shape,
 {}
 
 template <typename EC, int N>
-inline gview<to_kernel_t<EC>, N> gview<EC, N>::to_kernel() const
+inline auto gview<EC, N>::to_kernel() const -> const_kernel_type
 {
-  return gview<to_kernel_t<EC>, N>(e_.to_kernel(), offset_, this->shape(),
-                                   this->strides());
+  return const_kernel_type(e_.to_kernel(), offset_, this->shape(),
+                           this->strides());
 }
 
 template <typename EC, int N>
-GT_INLINE auto gview<EC, N>::data_access_impl(size_t i) const -> const_reference
+inline auto gview<EC, N>::to_kernel() -> kernel_type
+{
+  return kernel_type(e_.to_kernel(), offset_, this->shape(), this->strides());
+}
+
+template <typename EC, int N>
+template <typename... Args>
+GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args) const
+{
+  return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename EC, int N>
+template <typename... Args>
+GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args)
+{
+  return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename EC, int N>
+GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i) const
 {
   return e_.data_access(offset_ + i);
 }
 
 template <typename EC, int N>
-GT_INLINE auto gview<EC, N>::data_access_impl(size_t i) -> reference
+GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 {
   return e_.data_access(offset_ + i);
 }
