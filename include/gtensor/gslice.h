@@ -13,6 +13,8 @@ struct gnewaxis
 struct gnone
 {};
 
+constexpr gnone none;
+
 // ======================================================================
 // gslice
 
@@ -108,7 +110,7 @@ private:
 template <typename T1, typename T2>
 inline gslice slice(T1 start, T2 stop)
 {
-  return gslice(start, stop, gnone{});
+  return gslice(start, stop, gt::none);
 }
 
 template <typename T1, typename T2, typename T3>
@@ -117,15 +119,8 @@ inline gslice slice(T1 start, T2 stop, T3 step)
   return gslice(start, stop, step);
 }
 
-inline gslice all()
-{
-  return gslice(gnone{}, gnone{}, gnone{});
-}
-
-inline gnewaxis newaxis()
-{
-  return gnewaxis{};
-}
+constexpr gslice all{};
+constexpr gnewaxis newaxis{};
 
 inline std::ostream& operator<<(std::ostream& os, const gdesc& desc)
 {

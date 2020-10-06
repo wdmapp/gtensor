@@ -7,7 +7,7 @@ TEST(gview, newaxis)
   gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
   gt::gtensor<double, 1> b = {100., 101., 102.};
 
-  auto bv = gt::view<2>(b, {gt::all(), gt::newaxis()});
+  auto bv = gt::view<2>(b, {gt::all, gt::newaxis});
   auto c = a + bv;
 
   EXPECT_EQ(

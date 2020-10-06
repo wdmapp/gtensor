@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
     }
 
     for (int i=0; i<n; i++) {
-        std::cout << mult_table.view(i, gt::all()) << std::endl;
+        std::cout << mult_table.view(i, gt::all) << std::endl;
     }
 }
 

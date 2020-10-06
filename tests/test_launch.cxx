@@ -29,7 +29,7 @@ void host_double_view_reverse_1d(gt::gtensor<double, 1>& a,
                                  gt::gtensor<double, 1>& out)
 {
   auto k_a = a.to_kernel();
-  auto v_out = out.view(gt::slice(2, gt::gnone(), -1));
+  auto v_out = out.view(gt::slice(2, gt::none, -1));
 
   EXPECT_EQ(v_out.shape(), gt::shape(3));
 

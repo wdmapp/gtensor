@@ -9,6 +9,8 @@
 #ifndef GTENSOR_MACROS_H
 #define GTENSOR_MACROS_H
 
+#include <cstdio>
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 #define GT_INLINE __host__ __device__

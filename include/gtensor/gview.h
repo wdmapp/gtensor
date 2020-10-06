@@ -322,7 +322,7 @@ auto view(E&& _e, const std::vector<gdesc>& descs)
       assert(0);
     }
   }
-  // handle rest as if filled with all()
+  // handle rest as if filled with gt::all
   while (old_i < old_shape.size()) {
     shape[new_i] = old_shape[old_i];
     strides[new_i] = old_strides[old_i];

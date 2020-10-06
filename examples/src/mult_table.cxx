@@ -33,7 +33,7 @@ int main(int argc, char** argv)
   }
 
   for (int i = 0; i < n; i++) {
-    std::cout << mult_table.view(i, gt::all()) << std::endl;
+    std::cout << mult_table.view(i, gt::all) << std::endl;
   }
   std::cout << std::endl;
 
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 
   gt::gtensor<int, 2> ab = a * b;
   for (int i = 0; i < n; i++) {
-    std::cout << ab.view(i, gt::all()) << std::endl;
+    std::cout << ab.view(i, gt::all) << std::endl;
   }
   std::cout << std::endl;
 
@@ -62,14 +62,14 @@ int main(int argc, char** argv)
   gt::gtensor<int, 2> vv =
     gt::reshape(v, gt::shape(1, n)) * gt::reshape(v, gt::shape(n, 1));
   for (int i = 0; i < n; i++) {
-    std::cout << vv.view(i, gt::all()) << std::endl;
+    std::cout << vv.view(i, gt::all) << std::endl;
   }
   std::cout << std::endl;
 
   std::cout << "broadcast with reshape (helper fn)" << std::endl;
   gt::gtensor<int, 2> vv2 = outer_product(v, v);
   for (int i = 0; i < n; i++) {
-    std::cout << vv2.view(i, gt::all()) << std::endl;
+    std::cout << vv2.view(i, gt::all) << std::endl;
   }
   std::cout << std::endl;
 
@@ -77,6 +77,6 @@ int main(int argc, char** argv)
   auto vv_expr = outer_product_expr(v, v);
   auto vv3 = gt::eval(vv_expr);
   for (int i = 0; i < n; i++) {
-    std::cout << vv3.view(i, gt::all()) << std::endl;
+    std::cout << vv3.view(i, gt::all) << std::endl;
   }
 }
