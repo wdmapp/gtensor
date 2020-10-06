@@ -15,7 +15,7 @@ template <typename T, int N, typename S>
 struct gtensor;
 
 template <typename T, int N, typename S>
-struct gtensor_view;
+struct gtensor_span;
 
 // ======================================================================
 // expression

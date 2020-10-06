@@ -32,7 +32,7 @@ struct is_allowed_element_type_conversion
 // ======================================================================
 // span
 //
-// very minimal, just enough to support making a gtensor_view
+// very minimal, just enough to support making a gtensor_span
 // Note that the span has pointer semantics, in that coyping does
 // not copy the underlying data, just the pointer and size, and
 // requesting access to the underlying data from a const instance
@@ -92,7 +92,7 @@ private:
 // ======================================================================
 // device_span
 //
-// for a gtensor_view of device memory
+// for a gtensor_span of device memory
 
 #ifdef GTENSOR_USE_THRUST
 

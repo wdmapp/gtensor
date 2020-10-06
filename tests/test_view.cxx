@@ -56,7 +56,7 @@ TEST(view, slice_all)
 {
   gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
 
-  auto b = gt::view<2>(a, {gt::all(), gt::all()});
+  auto b = gt::view<2>(a, {gt::all, gt::all});
   EXPECT_EQ(b, a);
   auto b2 = a.view(_all, _all);
   EXPECT_EQ(b2, a);

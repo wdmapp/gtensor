@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
     }
 
     for (int i=0; i<n; i++) {
-        std::cout << mult_table.view(i, gt::all()) << std::endl;
+        std::cout << mult_table.view(i, gt::all) << std::endl;
     }
 }
 
@@ -359,7 +359,7 @@ g++ -std=c++14 \
 
 If you have existing code written in CUDA or HIP, you can use the `gt::adapt`
 and `gt::adapt_device` functions to wrap existing allocated host and device
-memory in gtensor view containers. This allows you to use the convenience of
+memory in gtensor span containers. This allows you to use the convenience of
 gtensor for new code without having to do an extensive rewrite.
 
 See [trig.cu](examples/src/trig.cu) and
@@ -370,11 +370,11 @@ for HIP with minor modifications.
 
 gtensor has two types of data objects - those which are containers that own the
 underlying data, like `gtensor`, and those which behave like span objects or
-pointers, like `gtensor_view`. The `gview` objects, which are generally
+pointers, like `gtensor_span`. The `gview` objects, which are generally
 constructed via the helper method `gt::view` or the convenience `view` methods
 on `gtensor`, implement the slicing, broadcasting, and axis manipulation
 functions, and have hybrid behavior based on the underlying expression. In
-particular, a `gview` wrapping a `gtensor_view` object will have span-like
+particular, a `gview` wrapping a `gtensor_span` object will have span-like
 behavior, and in most other cases will have owning container behavior.
 
 Before a data object can be passed to a GPU kernel, it must be converted to a
@@ -382,7 +382,7 @@ span-like object, and must be resident on the device. This generally happens
 automatically when using expression evaluation and `gtensor_device`, but must
 be done manually by calling the `to_kernel()` method when using custom kernels
 with `gt::launch<N>`. What typically happens is that the underlying `gtensor`
-objects get transformed to `gtensor_view` of the appropriate type. This happens
+objects get transformed to `gtensor_span` of the appropriate type. This happens
 even when they are wrapped inside complex `gview` and `gfunction` objects.
 
 The objects with span like behavior also have shallow const behavior. This
@@ -397,7 +397,7 @@ underlying data even when const because they may be contained inside a
 non-mutable lambda and forced to be const.
 
 To ensure const-correctness whenever possible, the `to_kernel()` routine on
-`const gtensor<T, N, S>` is special cased to return a `gtensor_view<const T,
+`const gtensor<T, N, S>` is special cased to return a `gtensor_span<const T,
 N, S>`. This makes it so even though a non-const reference is returned from the
 element accessors (shallow const behavior of span like object), modification is
 still not allowed since the underlying type is const.
@@ -411,10 +411,10 @@ const gtensor_device<int, 1> a_const_copy = a;
 a(0) = 10; // fine
 a_const_copy(0) = 1; // won't compile, because a_const_copy(0) is const int&
 
-const auto k_a = a.to_kernel(); // const gtensor_view<int, 1>
-k_a(0) = -1; // allowed, gtensor_view has shallow const behavior
+const auto k_a = a.to_kernel(); // const gtensor_span<int, 1>
+k_a(0) = -1; // allowed, gtensor_span has shallow const behavior
 
-auto k_a_const_copy = a_const_copy.to_kernel(); // gtensor_view<const int, 1>
+auto k_a_const_copy = a_const_copy.to_kernel(); // gtensor_span<const int, 1>
 k_a_const_copy(0) = 10; // won't compile, type of LHS is const int&
 
 ```

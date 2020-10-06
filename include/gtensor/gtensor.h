@@ -10,7 +10,7 @@
 #include "complex_ops.h"
 #include "gcontainer.h"
 #include "gfunction.h"
-#include "gtensor_view.h"
+#include "gtensor_span.h"
 #include "gview.h"
 #include "operator.h"
 
@@ -55,8 +55,8 @@ public:
   using typename base_type::shape_type;
   using typename base_type::strides_type;
 
-  using kernel_type = gtensor_view<T, N, S>;
-  using const_kernel_type = gtensor_view<std::add_const_t<T>, N, S>;
+  using kernel_type = gtensor_span<T, N, S>;
+  using const_kernel_type = gtensor_span<std::add_const_t<T>, N, S>;
 
   using base_type::dimension;
 
@@ -176,21 +176,21 @@ void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 }
 
 template <typename T, int N, typename S_from, typename S_to>
-void copy(const gtensor_view<T, N, S_from>& from, gtensor<T, N, S_to>& to)
+void copy(const gtensor_span<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
-void copy(const gtensor<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
+void copy(const gtensor<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, int N, typename S_from, typename S_to>
-void copy(const gtensor_view<T, N, S_from>& from, gtensor_view<T, N, S_to>& to)
+void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
@@ -503,13 +503,13 @@ inline void launch(const gt::shape_type<N>& shape, F&& f)
 }
 
 // ======================================================================
-// gtensor_device, gtensor_view_device
+// gtensor_device, gtensor_span_device
 
 template <typename T, int N>
 using gtensor_device = gtensor<T, N, space::device>;
 
 template <typename T, int N>
-using gtensor_view_device = gtensor_view<T, N, space::device>;
+using gtensor_span_device = gtensor_span<T, N, space::device>;
 
 // ======================================================================
 // empty_like

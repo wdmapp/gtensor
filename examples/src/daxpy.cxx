@@ -81,7 +81,7 @@ int main(int argc, char** argv)
   gt::gtensor<double, 1, gt::space::device> d_axpy;
 
   // Explicit copies of input from host to device. Note that this is an
-  // overload of the copy function for gtensor and gtensor_view types, not
+  // overload of the copy function for gtensor and gtensor_span types, not
   // std::copy which has a different signature. The source is the first
   // argument and destination the second argument. Currently thrust::copy is
   // used under the hood in the implementation.
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
   auto k_axpy = d_axpy.to_kernel();
 
   gt::launch<1>(
-    d_x.shape(), GT_LAMBDA(int i) mutable { k_axpy(i) = a * k_x(i) + k_y(i); });
+    d_x.shape(), GT_LAMBDA(int i) { k_axpy(i) = a * k_x(i) + k_y(i); });
 #else  // implicit kernel
   // This automatically generates a computation kernel to run on the
   // device.

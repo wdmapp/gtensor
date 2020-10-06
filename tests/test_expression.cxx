@@ -133,7 +133,7 @@ TEST(expression, gfunction_to_kernel_const_view)
   gt::gtensor<double, 1> t1({1., 2.});
   const gt::gtensor<double, 1> t2({3., 4.});
 
-  auto t2_view = t2.view(gt::all());
+  auto t2_view = t2.view(gt::all);
 
   auto e = t1 + t2_view;
   auto k_e = e.to_kernel();
@@ -148,7 +148,7 @@ TEST(expression, gfunction_to_kernel_const_view_assign)
   const gt::gtensor<double, 1> t2({3., 4.});
   gt::gtensor<double, 1> result(t1.shape());
 
-  auto t2_view = t2.view(gt::all());
+  auto t2_view = t2.view(gt::all);
 
   auto e = t1 + t2_view;
   result = gt::eval(e);

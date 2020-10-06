@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "gtensor/device_backend.h"
 #include "gtensor/gtensor.h"
 
 #include "test_debug.h"

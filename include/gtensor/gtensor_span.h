@@ -9,13 +9,13 @@ namespace gt
 {
 
 // ======================================================================
-// gtensor_view
+// gtensor_span
 
 template <typename T, int N, typename S = space::host>
-class gtensor_view;
+class gtensor_span;
 
 template <typename T, int N, typename S>
-struct gtensor_inner_types<gtensor_view<T, N, S>>
+struct gtensor_inner_types<gtensor_span<T, N, S>>
 {
   using space_type = S;
   constexpr static size_type dimension = N;
@@ -29,10 +29,10 @@ struct gtensor_inner_types<gtensor_view<T, N, S>>
 };
 
 template <typename T, int N, typename S>
-class gtensor_view : public gstrided<gtensor_view<T, N, S>>
+class gtensor_span : public gstrided<gtensor_span<T, N, S>>
 {
 public:
-  using self_type = gtensor_view<T, N, S>;
+  using self_type = gtensor_span<T, N, S>;
   using base_type = gstrided<self_type>;
   using inner_types = gtensor_inner_types<self_type>;
   using storage_type = typename inner_types::storage_type;
@@ -47,27 +47,27 @@ public:
   using typename base_type::shape_type;
   using typename base_type::strides_type;
 
-  gtensor_view() = default;
-  gtensor_view(pointer data, const shape_type& shape,
+  gtensor_span() = default;
+  gtensor_span(pointer data, const shape_type& shape,
                const strides_type& strides);
 
-  gtensor_view(const gtensor_view& other) = default;
+  gtensor_span(const gtensor_span& other) = default;
 
   // Allow automatic conversion to const element_type
   template <class OtherT,
             std::enable_if_t<
               is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  gtensor_view(const gtensor_view<OtherT, N, S>& other)
+  gtensor_span(const gtensor_span<OtherT, N, S>& other)
     : base_type{other.shape(), other.strides()},
       storage_{other.data(), other.size()}
   {}
 
-  gtensor_view& operator=(const gtensor_view& other) = default;
+  gtensor_span& operator=(const gtensor_span& other) = default;
 
   template <typename E>
   self_type& operator=(const expression<E>& e);
 
-  gtensor_view to_kernel() const;
+  gtensor_span to_kernel() const;
 
   GT_INLINE pointer data() const;
 
@@ -83,10 +83,10 @@ private:
 };
 
 // ======================================================================
-// gtensor_view implementation
+// gtensor_span implementation
 
 template <typename T, int N, typename S>
-inline gtensor_view<T, N, S>::gtensor_view(pointer data,
+inline gtensor_span<T, N, S>::gtensor_span(pointer data,
                                            const shape_type& shape,
                                            const strides_type& strides)
   : base_type(shape, strides), storage_(data, calc_size(shape))
@@ -113,7 +113,7 @@ inline gtensor_view<T, N, S>::gtensor_view(pointer data,
 
 template <typename T, int N, typename S>
 template <typename E>
-inline auto gtensor_view<T, N, S>::operator=(const expression<E>& e)
+inline auto gtensor_span<T, N, S>::operator=(const expression<E>& e)
   -> self_type&
 {
   assign(*this, e.derived());
@@ -121,26 +121,26 @@ inline auto gtensor_view<T, N, S>::operator=(const expression<E>& e)
 }
 
 template <typename T, int N, typename S>
-inline auto gtensor_view<T, N, S>::to_kernel() const -> gtensor_view
+inline auto gtensor_span<T, N, S>::to_kernel() const -> gtensor_span
 {
   return *this;
 }
 
 template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data() const -> pointer
+GT_INLINE auto gtensor_span<T, N, S>::data() const -> pointer
 {
   return storage_.data();
 }
 
 template <typename T, int N, typename S>
-GT_INLINE auto gtensor_view<T, N, S>::data_access(size_t i) const -> reference
+GT_INLINE auto gtensor_span<T, N, S>::data_access(size_t i) const -> reference
 {
   return storage_[i];
 }
 
 template <typename T, int N, typename S>
 template <typename... Args>
-GT_INLINE auto gtensor_view<T, N, S>::operator()(Args&&... args) const
+GT_INLINE auto gtensor_span<T, N, S>::operator()(Args&&... args) const
   -> reference
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
@@ -150,28 +150,28 @@ GT_INLINE auto gtensor_view<T, N, S>::operator()(Args&&... args) const
 // adapt
 
 template <size_type N, typename T>
-gtensor_view<T, N> adapt(T* data, const shape_type<N>& shape)
+gtensor_span<T, N> adapt(T* data, const shape_type<N>& shape)
 {
-  return gtensor_view<T, N>(data, shape, calc_strides(shape));
+  return gtensor_span<T, N>(data, shape, calc_strides(shape));
 }
 
 template <size_type N, typename T>
-gtensor_view<T, N> adapt(T* data, const int* shape_data)
+gtensor_span<T, N> adapt(T* data, const int* shape_data)
 {
   return adapt<N, T>(data, {shape_data, N});
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <size_type N, typename T>
-gtensor_view<T, N, space::device> adapt_device(T* data,
+gtensor_span<T, N, space::device> adapt_device(T* data,
                                                const shape_type<N>& shape)
 {
-  return gtensor_view<T, N, space::device>(
+  return gtensor_span<T, N, space::device>(
     gt::backend::device_pointer_cast(data), shape, calc_strides(shape));
 }
 
 template <size_type N, typename T>
-gtensor_view<T, N, space::device> adapt_device(T* data, const int* shape_data)
+gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
 {
   return adapt_device<N, T>(data, {shape_data, N});
 }
