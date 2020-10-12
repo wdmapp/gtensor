@@ -533,6 +533,14 @@ inline Pointer device_pointer_cast(Pointer p)
 
 } // end namespace backend
 
+// ======================================================================
+// synchronize
+
+void inline synchronize()
+{
+  gt::backend::device_synchronize();
+}
+
 } // end namespace gt
 
 #endif // GENSOR_DEVICE_BACKEND_H
