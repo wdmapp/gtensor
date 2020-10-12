@@ -65,6 +65,9 @@ struct caching_allocator : A
 
   void deallocate(pointer p, size_type cnt)
   {
+#ifdef GTENSOR_HAVE_DEVICE
+    cudaCheck(cudaDeviceSynchronize());
+#endif
     auto it = allocated_.find(p);
     assert(it != allocated_.end());
     free_.emplace(std::make_pair(it->second, p));
