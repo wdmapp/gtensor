@@ -1,6 +1,9 @@
 #ifndef GTENSOR_SYCL_BACKEND_H
 #define GTENSOR_SYCL_BACKEND_H
 
+#include <cstdlib>
+#include <iostream>
+
 #include <CL/sycl.hpp>
 
 namespace gt
@@ -9,6 +12,20 @@ namespace backend
 {
 namespace sycl
 {
+
+static inline cl::sycl::device& get_device()
+{
+#ifdef GTENSOR_DEVICE_SYCL_SELECTOR_GPU
+  static cl::sycl::device d{cl::sycl::gpu_selector()};
+#elif defined(GTENSOR_DEVICE_SYCL_SELECTOR_CPU)
+  static cl::sycl::device d{cl::sycl::cpu_selector()};
+#elif defined(GTENSOR_DEVICE_SYCL_SELECTOR_HOST)
+  static cl::sycl::device d{cl::sycl::host_selector()};
+#else
+  static cl::sycl::device d{cl::sycl::default_selector()};
+#endif
+  return d;
+}
 
 /*! Get the global singleton queue object used for all device operations.
  *
@@ -19,7 +36,19 @@ namespace sycl
  */
 static inline cl::sycl::queue& get_queue()
 {
-  static cl::sycl::queue q{};
+  static auto exception_handler = [](cl::sycl::exception_list exceptions) {
+    for (std::exception_ptr const& e : exceptions) {
+      try {
+        std::rethrow_exception(e);
+      } catch (cl::sycl::exception const& e) {
+        std::cerr << "Caught asynchronous SYCL exception:" << std::endl
+                  << e.what() << std::endl;
+        abort();
+      }
+    }
+  };
+
+  static cl::sycl::queue q{get_device(), exception_handler};
   return q;
 }
 
