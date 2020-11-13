@@ -14,7 +14,7 @@ set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 set(GTENSOR_BUILD_CLIB OFF CACHE BOOL "build cgtensor.a")
 
 # SYCL specific configuration
-set(GTENSOR_DEVICE_SYCL_SELECTOR "gpu" CACHE STRING "Use specified sycl device selector ('gpu', 'cpu',  or 'host')")
+set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING "Use specified sycl device selector ('default', 'gpu', 'cpu',  or 'host')")
 set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL "Using Intel OneAPI SYCL implementation")
 set(DPCPP_ROOT "/opt/intel/inteloneapi/compiler/latest/linux" CACHE STRING "Path to DPCPP / Intel OneAPI root")
 set(DPCPP_LIBDIR "${DPCPP_ROOT}/lib" CACHE STRING "Path to DPCPP compiler lib dir")
@@ -118,7 +118,9 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL)
 
-  if (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "gpu")
+  if (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "default")
+    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_DEFAULT)
+  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "gpu")
     target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_GPU)
   elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "cpu")
     target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_CPU)
@@ -132,7 +134,8 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
 
   if (GTENSOR_DEVICE_SYCL_INTEL
       AND NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
-    target_link_options(gtensor_sycl INTERFACE -device-math-lib=fp32,fp64)
+    target_link_options(gtensor_sycl INTERFACE
+                        -fsycl-device-lib=libm-fp32,libm-fp64)
     #target_sources(gtensor_sycl INTERFACE
     #               ${DPCPP_LIBDIR}/libsycl-complex-fp64.o
     #               ${DPCPP_LIBDIR}/libsycl-cmath-fp64.o
