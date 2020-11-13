@@ -11,7 +11,7 @@ jobs:
       CXX: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
       DPCPP_ROOT: /opt/intel/oneapi
       INTEL_LICENSE_FILE: /opt/intel/oneapi/compiler/latest/licensing
-      LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib:/opt/intel/oneapi/ccl/2021.1-beta09/lib/cpu_gpu_dpcpp
+      LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib:/opt/intel/oneapi/ccl/2021.1-beta10/lib/cpu_gpu_dpcpp
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
       SYCL_DEVICE_TYPE: host
@@ -26,7 +26,7 @@ jobs:
         echo 'deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu bionic-devel main' > /etc/apt/sources.list.d/intel-graphics.list
         apt-get update -y
     - name: install dpcpp
-      run: apt-get install -y intel-oneapi-dpcpp-cpp-compiler-2021.1-beta09 clinfo intel-opencl intel-level-zero-gpu level-zero
+      run: apt-get install -y intel-oneapi-dpcpp-cpp-compiler-2021.1-beta10 intel-oneapi-mkl-2021.1-beta10 clinfo intel-opencl intel-level-zero-gpu level-zero
     - uses: actions/checkout@v2
     - name: clinfo
       run: |
@@ -48,7 +48,7 @@ jobs:
       env:
         CXX: clang++-9
     - name: cmake cpu
-      run: cmake -S . -B build-sycl-cpu -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }}
+      run: cmake -S . -B build-sycl-cpu -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake cpu build
       run: cmake --build build-sycl-cpu -v
     - name: cmake cpu run tests
