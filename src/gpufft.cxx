@@ -1,8 +1,8 @@
 #include <gtensor/gtensor.h>
 
 #ifdef GTENSOR_DEVICE_SYCL
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #endif
 
 #include "gtensor/gpufft.h"
@@ -52,7 +52,7 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
   }
 
   // TODO: handle single precision
-  gpufft_double_descriptor_t *h;
+  gpufft_double_descriptor_t* h;
   try {
     if (rank > 1) {
       std::vector<MKL_LONG> dims(rank);
@@ -70,8 +70,8 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
     // we should simplify the interface, and do the same to calculate strides
     // and distance for the other backends.
     // TODO: is this correct column major?
-    std::int64_t rstrides[rank+1];
-    std::int64_t cstrides[rank+1];
+    std::int64_t rstrides[rank + 1];
+    std::int64_t cstrides[rank + 1];
     rstrides[0] = 0;
     cstrides[0] = 0;
     std::int64_t rs = istride;
@@ -79,8 +79,8 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
     for (int i = 1; i <= rank; i++) {
       rstrides[i] = rs;
       cstrides[i] = cs;
-      rs *= n[i-1];
-      cs *= n[i-1];
+      rs *= n[i - 1];
+      cs *= n[i - 1];
     }
 
     h->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
@@ -94,7 +94,7 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
                  DFTI_COMPLEX_COMPLEX);
     h->commit(gt::backend::sycl::get_queue());
     *handle = h;
-  } catch(std::exception const& e) {
+  } catch (std::exception const& e) {
     std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
     abort();
   }
@@ -124,7 +124,7 @@ void gpufft_exec_z2d(gpufft_handle_t handle, gpufft_double_complex_t* indata,
   auto result = hipfftExecZ2D(handle, indata, outdata);
   assert(result == rocfft_success);
 #elif defined(GTENSOR_DEVICE_SYCL)
-  //auto h = static_cast<gpufft_double_descriptor_t*>(handle);
+  // auto h = static_cast<gpufft_double_descriptor_t*>(handle);
   auto indata_double = reinterpret_cast<double*>(indata);
   auto e = oneapi::mkl::dft::compute_backward(*handle, indata_double, outdata);
   e.wait();
@@ -141,7 +141,7 @@ void gpufft_exec_d2z(gpufft_handle_t handle, gpufft_double_real_t* indata,
   auto result = hipfftExecD2Z(handle, indata, outdata);
   assert(result == rocfft_success);
 #elif defined(GTENSOR_DEVICE_SYCL)
-  //auto h = static_cast<gpufft_double_descriptor_t*>(handle);
+  // auto h = static_cast<gpufft_double_descriptor_t*>(handle);
   auto outdata_double = reinterpret_cast<double*>(outdata);
   auto e = oneapi::mkl::dft::compute_forward(*handle, indata, outdata_double);
   e.wait();

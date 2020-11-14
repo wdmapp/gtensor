@@ -36,11 +36,11 @@ typedef hipfftComplex gpufft_complex_t;
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
-#include <vector>
 #include "CL/sycl.hpp"
+#include <vector>
 //#include "oneapi/mkl.hpp"
-#include "oneapi/mkl/dfti.hpp"
 #include "mkl.h"
+#include "oneapi/mkl/dfti.hpp"
 
 typedef enum gpufft_transform_enum
 {

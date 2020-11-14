@@ -144,5 +144,3 @@ TEST(copy, zcopy)
   gt::backend::host_allocator<T>::deallocate(h_y);
   gt::backend::device_allocator<T>::deallocate(d_y);
 }
-
-
