@@ -98,6 +98,11 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
 endif()
 
 if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
+
+  if (${CMAKE_VERSION} VERSION_LESS "3.18.0")
+    message(FATAL_ERROR "gtensor HIP support requires cmake 3.18+")
+  endif()
+
   message(STATUS "${PROJECT_NAME}: adding gtensor_hip target")
   add_gtensor_library(hip)
 
@@ -105,10 +110,15 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     message(FATAL_ERROR "For GTENSOR_BUILD_DEVICES=hip, 'hcc' or 'hipcc' must be used as C++ compiler.")
   endif()
 
-  find_package(HIP REQUIRED CONFIG PATHS "${HIP_PATH}")
-  if(HIP_PLATFORM STREQUAL "nvcc")
-    message(FATAL_ERROR "Error: use GTENSOR_DEVICE=cuda for nVidia GPU support")
-  endif()
+  # The official ROCm/HIP cmake support causes problems on mixed language
+  # executables, where hipcc specific flags leak into the other language
+  # and break the build. In particular GENE with Fortran does not work when
+  # using any ROCm cmake supplied targets, which depend on hip::device which
+  # has these flags.
+  #find_package(HIP REQUIRED CONFIG PATHS "${HIP_PATH}")
+  #if(HIP_PLATFORM STREQUAL "nvcc")
+  #  message(FATAL_ERROR "Error: use GTENSOR_DEVICE=cuda for nVidia GPU support")
+  #endif()
 
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
@@ -116,9 +126,6 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   if (GTENSOR_USE_THRUST)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
 
-    # Manually define ROCm libraries. Using ROCm's cmake support pollutes
-    # flags that appear in Fortran builds, and breaks some mixed language
-    # applications (GENE in particular).
     add_library(rocthrust INTERFACE IMPORTED)
     target_include_directories(rocthrust INTERFACE
                                "${ROCM_PATH}/rocprim/include")
