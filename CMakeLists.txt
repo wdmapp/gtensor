@@ -276,12 +276,17 @@ if (GTENSOR_BUILD_EXAMPLES)
 endif()
 
 if (GTENSOR_ENABLE_CLIB)
+  message(STATUS "${PROJECT_NAME}: CLIB is ENABLED")
   add_library(cgtensor)
   target_gtensor_sources(cgtensor PRIVATE src/cgtensor.cxx)
   target_link_libraries(cgtensor gtensor::gtensor)
+
+  list(APPEND GTENSOR_TARGETS cgtensor)
+  add_library(gtensor::cgtensor ALIAS cgtensor)
 endif()
 
 if (GTENSOR_ENABLE_BLAS)
+  message(STATUS "${PROJECT_NAME}: BLAS is ENABLED")
   add_library(gpublas)
   target_gtensor_sources(gpublas PRIVATE src/gpublas.cxx)
   target_link_libraries(gpublas gtensor::gtensor)
@@ -293,9 +298,13 @@ if (GTENSOR_ENABLE_BLAS)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     target_link_libraries(gpublas oneapi_mkl_sycl)
   endif()
+
+  list(APPEND GTENSOR_TARGETS gpublas)
+  add_library(gtensor::gpublas ALIAS gpublas)
 endif()
 
 if (GTENSOR_ENABLE_FFT)
+  message(STATUS "${PROJECT_NAME}: FFT is ENABLED")
   add_library(gpufft)
   target_gtensor_sources(gpufft PRIVATE src/gpufft.cxx)
   target_link_libraries(gpufft gtensor::gtensor)
@@ -307,6 +316,9 @@ if (GTENSOR_ENABLE_FFT)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     target_link_libraries(gpublas oneapi_mkl_sycl)
   endif()
+
+  list(APPEND GTENSOR_TARGETS gpufft)
+  add_library(gtensor::gpufft ALIAS gpufft)
 endif()
 
 # See https://github.com/pabloariasal/modern-cmake-sample
