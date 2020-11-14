@@ -214,7 +214,7 @@ jobs:
         echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
         apt-get update -y
     - name: install ROCm packages
-      run: apt-get install -y rocm-dev rocthrust rocprim
+      run: apt-get install -y rocm-dev rocthrust rocprim rocfft
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.sh'
