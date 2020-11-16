@@ -194,10 +194,11 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
 
   target_include_directories(gtensor_sycl INTERFACE ${DPCPP_INCDIR})
 
-  if (GTENSOR_DEVICE_SYCL_INTEL
-      AND NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
-    target_link_options(gtensor_sycl INTERFACE
-                        -fsycl-device-lib=libm-fp32,libm-fp64)
+  if (GTENSOR_DEVICE_SYCL_INTEL)
+    if (NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
+        target_link_options(gtensor_sycl INTERFACE
+                            -fsycl-device-lib=libm-fp32,libm-fp64)
+    endif()
 
     add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
     target_include_directories(oneapi_mkl_sycl INTERFACE "${MKL_PATH}/include")
@@ -314,7 +315,7 @@ if (GTENSOR_ENABLE_FFT)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
     target_link_libraries(gpufft rocfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
-    target_link_libraries(gpublas oneapi_mkl_sycl)
+    target_link_libraries(gpufft oneapi_mkl_sycl)
   endif()
 
   list(APPEND GTENSOR_TARGETS gpufft)
