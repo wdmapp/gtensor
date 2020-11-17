@@ -17,6 +17,10 @@ Features:
 - multi-dimensional array slicing similar to numpy
 - GPU support for nVidia via CUDA and AMD via HIP/ROCm,
   and experimental Intel GPU support via SYCL.
+- [Experimental] C library cgtensor with wrappers around common GPU operations
+  (allocate and deallocate, device management, memory copy and set)
+- [Experimental] lightweight wrappers around GPU BLAS, LAPACK, and FFT
+  routines.
 
 ## License
 
@@ -47,6 +51,10 @@ To use the internal data vector implementation instead of thrust, set
 allocations will not be zero initialized, which can improve performance
 significantly for some workloads, particularly when temporary arrays are
 used.
+
+To enable experimental C/C++ library features,`GTENSOR_BUILD_CLIB`,
+`GTENSOR_BUILD_BLAS`, or `GTENSOR_BUILD_FFT` to `ON`. Note that BLAS
+includes some LAPACK routines for LU factorization.
 
 ### nVidia CUDA requirements
 

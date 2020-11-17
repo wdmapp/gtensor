@@ -165,7 +165,7 @@ jobs:
       run: apt-get update && apt-get install -y wget git
     - name: install cmake
       run: |
-        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: install googletest
       run: |
@@ -178,11 +178,11 @@ jobs:
       env:
         CXX: g++-7
     - name: cmake thrust
-      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
+      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake thrust build
       run: cmake --build build-cuda -v
     - name: cmake nothrust
-      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
+      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake nothrust build
       run: cmake --build build-cuda-nothrust -v
     - name: GNU make setup gtensor subdir
@@ -214,10 +214,10 @@ jobs:
         echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
         apt-get update -y
     - name: install ROCm packages
-      run: apt-get install -y rocm-dev rocthrust rocprim
+      run: apt-get install -y rocm-dev rocthrust rocprim rocfft
     - name: install cmake
       run: |
-        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh'
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.sh'
         bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: install googletest
       run: |
@@ -230,11 +230,11 @@ jobs:
       env:
         CXX: clang++-9
     - name: cmake thrust
-      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
+      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake thrust build
       run: cmake --build build-hip -v
     - name: cmake nothrust
-      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON
+      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake nothrust build
       run: cmake --build build-hip-nothrust -v
     - name: GNU make setup gtensor subdir
