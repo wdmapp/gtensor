@@ -50,6 +50,7 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
     fwd_distance = odist;
     bwd_distance = idist;
   }
+  // TODO: handle other types
 
   // TODO: handle single precision
   gpufft_double_descriptor_t* h;
@@ -90,8 +91,10 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
     h->set_value(oneapi::mkl::dft::config_param::FWD_DISTANCE, fwd_distance);
     h->set_value(oneapi::mkl::dft::config_param::BWD_DISTANCE, bwd_distance);
     h->set_value(oneapi::mkl::dft::config_param::PLACEMENT, DFTI_NOT_INPLACE);
-    h->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
-                 DFTI_COMPLEX_COMPLEX);
+    if (type != GPUFFT_Z2Z && type != GPUFFT_C2C) {
+      h->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
+                   DFTI_COMPLEX_COMPLEX);
+    }
     h->commit(gt::backend::sycl::get_queue());
     *handle = h;
   } catch (std::exception const& e) {
@@ -144,6 +147,80 @@ void gpufft_exec_d2z(gpufft_handle_t handle, gpufft_double_real_t* indata,
   // auto h = static_cast<gpufft_double_descriptor_t*>(handle);
   auto outdata_double = reinterpret_cast<double*>(outdata);
   auto e = oneapi::mkl::dft::compute_forward(*handle, indata, outdata_double);
+  e.wait();
+#endif
+}
+
+void gpufft_exec_c2r(gpufft_handle_t handle, gpufft_complex_t* indata,
+                     gpufft_real_t* outdata)
+{
+#ifdef GTENSOR_DEVICE_CUDA
+  auto result = cufftExecC2R(handle, indata, outdata);
+  assert(result == CUFFT_SUCCESS);
+#elif defined(GTENSOR_DEVICE_HIP)
+  auto result = hipfftExecC2R(handle, indata, outdata);
+  assert(result == rocfft_success);
+#elif defined(GTENSOR_DEVICE_SYCL)
+  // auto h = static_cast<gpufft_descriptor_t*>(handle);
+  auto indata_float = reinterpret_cast<float*>(indata);
+  auto e = oneapi::mkl::dft::compute_backward(*handle, indata_float, outdata);
+  e.wait();
+#endif
+}
+
+void gpufft_exec_r2c(gpufft_handle_t handle, gpufft_real_t* indata,
+                     gpufft_complex_t* outdata)
+{
+#ifdef GTENSOR_DEVICE_CUDA
+  auto result = cufftExecR2C(handle, indata, outdata);
+  assert(result == CUFFT_SUCCESS);
+#elif defined(GTENSOR_DEVICE_HIP)
+  auto result = hipfftExecR2C(handle, indata, outdata);
+  assert(result == rocfft_success);
+#elif defined(GTENSOR_DEVICE_SYCL)
+  // auto h = static_cast<gpufft_descriptor_t*>(handle);
+  auto outdata_float = reinterpret_cast<float*>(outdata);
+  auto e = oneapi::mkl::dft::compute_forward(*handle, indata, outdata_float);
+  e.wait();
+#endif
+}
+
+void gpufft_exec_z2z(gpufft_handle_t handle, gpufft_double_complex_t* indata,
+                     gpufft_double_complex_t* outdata, int direction)
+{
+#ifdef GTENSOR_DEVICE_CUDA
+  auto result = cufftExecZ2Z(handle, indata, outdata, direction);
+  assert(result == CUFFT_SUCCESS);
+#elif defined(GTENSOR_DEVICE_HIP)
+  auto result = hipfftExecZ2Z(handle, indata, outdata, direction);
+  assert(result == rocfft_success);
+#elif defined(GTENSOR_DEVICE_SYCL)
+  cl::sycl::event e;
+  if (direction == GPUFFT_FORWARD) {
+    e = oneapi::mkl::dft::compute_forward(*handle, indata, outdata);
+  } else {
+    e = oneapi::mkl::dft::compute_backward(*handle, indata, outdata);
+  }
+  e.wait();
+#endif
+}
+
+void gpufft_exec_c2c(gpufft_handle_t handle, gpufft_complex_t* indata,
+                     gpufft_complex_t* outdata, int direction)
+{
+#ifdef GTENSOR_DEVICE_CUDA
+  auto result = cufftExecC2C(handle, indata, outdata, direction);
+  assert(result == CUFFT_SUCCESS);
+#elif defined(GTENSOR_DEVICE_HIP)
+  auto result = hipfftExecC2C(handle, indata, outdata, direction);
+  assert(result == rocfft_success);
+#elif defined(GTENSOR_DEVICE_SYCL)
+  cl::sycl::event e;
+  if (direction == GPUFFT_FORWARD) {
+    e = oneapi::mkl::dft::compute_forward(*handle, indata, outdata);
+  } else {
+    e = oneapi::mkl::dft::compute_backward(*handle, indata, outdata);
+  }
   e.wait();
 #endif
 }
