@@ -71,12 +71,30 @@ typedef enum gpufft_transform_enum
 
 typedef oneapi::mkl::dft::descriptor<oneapi::mkl::dft::precision::DOUBLE,
                                      oneapi::mkl::dft::domain::REAL>
-  gpufft_double_descriptor_t;
-typedef oneapi::mkl::dft::descriptor<oneapi::mkl::dft::precision::DOUBLE,
+  gpufft_real_double_descriptor_t;
+typedef oneapi::mkl::dft::descriptor<oneapi::mkl::dft::precision::SINGLE,
                                      oneapi::mkl::dft::domain::REAL>
-  gpufft_single_descriptor_t;
+  gpufft_real_single_descriptor_t;
 
-typedef gpufft_double_descriptor_t* gpufft_handle_t;
+typedef oneapi::mkl::dft::descriptor<oneapi::mkl::dft::precision::DOUBLE,
+                                     oneapi::mkl::dft::domain::COMPLEX>
+  gpufft_complex_double_descriptor_t;
+typedef oneapi::mkl::dft::descriptor<oneapi::mkl::dft::precision::SINGLE,
+                                     oneapi::mkl::dft::domain::COMPLEX>
+  gpufft_complex_single_descriptor_t;
+
+// Note: the handle type for SYCL MKL implementation is recoverable type
+// erasure - the transform type can be used to infer the type which is
+// needed inside the destroy routine to delete it. The exec routines imply
+// the transform type, so they don't need to examine the transform type.
+// TODO: is there a more elegant way to implement this?
+typedef struct
+{
+  void* descriptor_p;
+  gpufft_transform_t type;
+} gpufft_mkl_handle_t;
+
+typedef gpufft_mkl_handle_t* gpufft_handle_t;
 
 typedef cl::sycl::queue* gpufft_stream_t;
 

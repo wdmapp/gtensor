@@ -257,15 +257,17 @@ void fft_c2c_1d_backward()
 
   gt::backend::device_copy_dh(d_B, h_B, batch_size * N);
 
-  expect_complex_eq(h_B[0], N * T(2, 0));
-  expect_complex_eq(h_B[1], N * T(3, 0));
-  expect_complex_eq(h_B[2], N * T(-1, 0));
-  expect_complex_eq(h_B[3], N * T(4, 0));
+  // required when using std::complex, int multiply is not defined
+  auto dN = static_cast<E>(N);
+  expect_complex_eq(h_B[0], dN * T(2, 0));
+  expect_complex_eq(h_B[1], dN * T(3, 0));
+  expect_complex_eq(h_B[2], dN * T(-1, 0));
+  expect_complex_eq(h_B[3], dN * T(4, 0));
 
-  expect_complex_eq(h_B[4], N * T(7, 0));
-  expect_complex_eq(h_B[5], N * T(-21, 0));
-  expect_complex_eq(h_B[6], N * T(11, 0));
-  expect_complex_eq(h_B[7], N * T(1, 0));
+  expect_complex_eq(h_B[4], dN * T(7, 0));
+  expect_complex_eq(h_B[5], dN * T(-21, 0));
+  expect_complex_eq(h_B[6], dN * T(11, 0));
+  expect_complex_eq(h_B[7], dN * T(1, 0));
 
   gt::backend::host_allocator<T>::deallocate(h_A);
   gt::backend::device_allocator<T>::deallocate(d_A);
