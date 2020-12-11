@@ -1,0 +1,17 @@
+
+name: Clang Format Checker
+
+on:
+  pull_request:
+
+jobs:
+  clang-format-checking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: germasch/clang-format-lint-action@master
+        with:
+          source: '.'
+          extensions: 'h,c,hxx,cxx,hpp,cpp,cuh,cu'
+          clangFormatVersion: 9
+          inplace: False
