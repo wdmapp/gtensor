@@ -211,22 +211,8 @@ void ij_deriv_gt(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
     coeff(4) * arr.view(_s(4, li0 + 4), _all, _all);
 
   // y-derivative
-  auto arr_shape_nohalo =
-    gt::shape(darr.shape(0), darr.shape(1), darr.shape(3));
-  auto k_arr = arr.to_kernel();
-  auto k_ikj = ikj.to_kernel();
-  auto k_darr = darr.to_kernel();
-  if (std::is_same<Space, gt::space::device>::value) {
-    gt::launch<3>(
-      arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
-        k_darr(i, j, 1, klmn) = k_ikj(j) * k_arr(i + nb, j, klmn);
-      });
-  } else {
-    gt::launch_host<3>(
-      arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
-        k_darr(i, j, 1, klmn) = k_ikj(j) * k_arr(i + nb, j, klmn);
-      });
-  }
+  darr.view(_all, _all, 1, _all) =
+    ikj.view(_newaxis, _all, _newaxis) * arr.view(_s(nb, -nb), _all, _all);
 }
 
 /* Compute the i and j derivative of arr and write it to darr(:,:,1:2,:)
