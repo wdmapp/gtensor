@@ -190,6 +190,45 @@ void ij_deriv_cpu(const int dim1, const int dim2, const int dim3,
   }
 }
 
+template <typename Real, typename Space>
+void ij_deriv_gt(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
+                 const gt::gtensor_span<const Real, 1, gt::space::host>& coeff,
+                 const gt::gtensor_span<const gt::complex<Real>, 1, Space>& ikj,
+                 gt::gtensor_span<gt::complex<Real>, 4, Space>& darr)
+{
+  assert(coeff.shape(0) == 5);
+  assert(arr.shape(0) - darr.shape(0) == 4);
+
+  int nb = (coeff.shape(0) - 1) / 2;
+  int li0 = darr.shape(0);
+
+  // x-derivative
+  darr.view(_all, _all, 0, _all) =
+    coeff(0) * arr.view(_s(0, li0 + 0), _all, _all) +
+    coeff(1) * arr.view(_s(1, li0 + 1), _all, _all) +
+    coeff(2) * arr.view(_s(2, li0 + 2), _all, _all) +
+    coeff(3) * arr.view(_s(3, li0 + 3), _all, _all) +
+    coeff(4) * arr.view(_s(4, li0 + 4), _all, _all);
+
+  // y-derivative
+  auto arr_shape_nohalo =
+    gt::shape(darr.shape(0), darr.shape(1), darr.shape(3));
+  auto k_arr = arr.to_kernel();
+  auto k_ikj = ikj.to_kernel();
+  auto k_darr = darr.to_kernel();
+  if (std::is_same<Space, gt::space::device>::value) {
+    gt::launch<3>(
+      arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
+        k_darr(i, j, 1, klmn) = k_ikj(j) * k_arr(i + nb, j, klmn);
+      });
+  } else {
+    gt::launch_host<3>(
+      arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
+        k_darr(i, j, 1, klmn) = k_ikj(j) * k_arr(i + nb, j, klmn);
+      });
+  }
+}
+
 /* Compute the i and j derivative of arr and write it to darr(:,:,1:2,:)
    arr has nb boundary points in the first dimension which has to match the
    number of coefficients: nb=(ncoeff-1)/2
@@ -200,10 +239,10 @@ void ij_deriv_cpu(const int dim1, const int dim2, const int dim3,
            i-derivative (1) and the j-derivative (2)
  */
 template <typename Real>
-void ij_deriv_gt(const int dim1, const int dim2, const int dim3,
-                 const gt::complex<Real>* arr_, const int ncoeff,
-                 const Real* coeff_, const gt::complex<Real>* ikj_,
-                 gt::complex<Real>* darr_)
+void ij_deriv_gt_device(const int dim1, const int dim2, const int dim3,
+                        const gt::complex<Real>* arr_, const int ncoeff,
+                        const Real* coeff_, const gt::complex<Real>* ikj_,
+                        gt::complex<Real>* darr_)
 {
   int nb = (ncoeff - 1) / 2;
 
@@ -215,25 +254,27 @@ void ij_deriv_gt(const int dim1, const int dim2, const int dim3,
   auto ikj = gt::adapt_device<1>(ikj_, gt::shape(dim2));
   auto darr = gt::adapt_device<4>(darr_, gt::shape(dim1, dim2, 2, dim3));
 
-  // i-derivative
-  assert(nb == 2);
-  darr.view(_all, _all, 0, _all) =
-    coeff(0) * arr.view(_s(0, dim1 + 0), _all, _all) +
-    coeff(1) * arr.view(_s(1, dim1 + 1), _all, _all) +
-    coeff(2) * arr.view(_s(2, dim1 + 2), _all, _all) +
-    coeff(3) * arr.view(_s(3, dim1 + 3), _all, _all) +
-    coeff(4) * arr.view(_s(4, dim1 + 4), _all, _all);
-
-  // j-derivative
-  auto arr_shape_nohalo = gt::shape(dim1, dim2, dim3);
-  auto k_arr = arr.to_kernel();
-  auto k_ikj = ikj.to_kernel();
-  auto k_darr = darr.to_kernel();
-  gt::launch<3>(
-    arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
-      k_darr(i, j, 1, klmn) = k_ikj(j) * k_arr(i + nb, j, klmn);
-    });
+  ij_deriv_gt(arr, coeff, ikj, darr);
   gt::backend::device_synchronize();
+}
+
+template <typename Real>
+void ij_deriv_gt_host(const int dim1, const int dim2, const int dim3,
+                      const gt::complex<Real>* arr_, const int ncoeff,
+                      const Real* coeff_, const gt::complex<Real>* ikj_,
+                      gt::complex<Real>* darr_)
+{
+  int nb = (ncoeff - 1) / 2;
+
+  // Note: use host array for coeffecients, so they will be copied in to
+  // the kernel lambda as constants
+  auto coeff = gt::adapt<1>(coeff_, gt::shape(ncoeff));
+
+  auto arr = gt::adapt<3>(arr_, gt::shape(dim1 + 2 * nb, dim2, dim3));
+  auto ikj = gt::adapt<1>(ikj_, gt::shape(dim2));
+  auto darr = gt::adapt<4>(darr_, gt::shape(dim1, dim2, 2, dim3));
+
+  ij_deriv_gt(arr, coeff, ikj, darr);
 }
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
@@ -292,8 +333,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 {
   using Complex = gt::complex<Real>;
 
-  constexpr int time_warmup_count = 5;
-  constexpr int time_run_count = 10;
+  constexpr int time_warmup_count = 20;
+  constexpr int time_run_count = 20;
   struct timespec start, end;
   double seconds_per_run = 0.0;
 
@@ -386,7 +427,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("cpu seconds/run: %0.6f\n", seconds_per_run);
+  printf("cpu     seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   array_stats(&minNorm, &maxNorm, &minRe, &maxRe, &minIm, &maxIm, h_arr,
@@ -399,29 +440,29 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
          minNorm, maxNorm, minRe, maxRe, minIm, maxIm);
 #endif
 
-  // gtensor
+  // gtensor cpu
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_gt(li0, lj0, lbg0, d_arr, ncoeff, h_coeff, d_ikj, d_darr);
+    ij_deriv_gt_host(li0, lj0, lbg0, h_arr, ncoeff, h_coeff, h_ikj, h_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_gt(li0, lj0, lbg0, d_arr, ncoeff, h_coeff, d_ikj, d_darr);
+    ij_deriv_gt_host(li0, lj0, lbg0, h_arr, ncoeff, h_coeff, h_ikj, h_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gt  seconds/run: %0.6f\n", seconds_per_run);
+  printf("gt host seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   gt::backend::device_copy_dh(d_darr, h_darr, darr_size);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
                 li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
-  printf("gt  diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+  printf("gt host diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
                 li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
-  printf("gt  diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+  printf("gt host diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
 #endif
 
@@ -437,7 +478,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gpu seconds/run: %0.6f\n", seconds_per_run);
+  printf("gpu     seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   gt::backend::device_copy_dh(d_darr, h_darr, darr_size);
@@ -448,6 +489,32 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
                 li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
   printf("gpu diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+         maxError, relError, maxRelError);
+#endif
+
+  // gtensor gpu
+  for (int i = 0; i < time_warmup_count; i++) {
+    ij_deriv_gt_device(li0, lj0, lbg0, d_arr, ncoeff, h_coeff, d_ikj, d_darr);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  for (int i = 0; i < time_run_count; i++) {
+    ij_deriv_gt_device(li0, lj0, lbg0, d_arr, ncoeff, h_coeff, d_ikj, d_darr);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  seconds_per_run =
+    ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
+    time_run_count;
+  printf("gt gpu  seconds/run: %0.6f\n", seconds_per_run);
+
+#ifdef DEBUG_COMPARE
+  gt::backend::device_copy_dh(d_darr, h_darr, darr_size);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
+                li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
+  printf("gt  diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+         maxError, relError, maxRelError);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
+                li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
+  printf("gt  diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
 #endif
 
