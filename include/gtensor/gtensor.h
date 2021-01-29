@@ -13,6 +13,7 @@
 #include "gtensor_span.h"
 #include "gview.h"
 #include "operator.h"
+#include "reductions.h"
 
 namespace gt
 {
