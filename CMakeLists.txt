@@ -276,6 +276,11 @@ if (GTENSOR_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
+if (GTENSOR_BUILD_BENCHMARKS)
+  message(STATUS "${PROJECT_NAME}: build benchmarks is ON")
+  add_subdirectory(benchmarks)
+endif()
+
 if (GTENSOR_ENABLE_CLIB)
   message(STATUS "${PROJECT_NAME}: CLIB is ENABLED")
   add_library(cgtensor)
