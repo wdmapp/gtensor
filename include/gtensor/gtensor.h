@@ -21,8 +21,9 @@ namespace gt
 // ======================================================================
 // gtensor
 
-template <typename T, int N, typename S>
-class gtensor;
+// forward declared in gtensor_span.h
+// template <typename T, int N, typename S>
+// class gtensor;
 
 template <typename T, int N, typename S>
 struct gtensor_inner_types<gtensor<T, N, S>>

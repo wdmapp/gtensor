@@ -3,6 +3,8 @@
 
 #include <gtensor/gtensor.h>
 
+#include "test_debug.h"
+
 TEST(gtensor_span, adapt_ctor_init_2d)
 {
   gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
@@ -10,6 +12,35 @@ TEST(gtensor_span, adapt_ctor_init_2d)
 
   auto b = gt::adapt<2>(a_data, {2, 3});
   EXPECT_EQ(b, (gt::gtensor<double, 2>({{11., 12.}, {13., 21.}, {22., 23.}})));
+}
+
+template <typename T, int N, typename S = gt::space::host>
+inline T first_element(const gt::gtensor_span<T, N, S>& a)
+{
+  return *a.data();
+}
+
+TEST(gtensor_span, gtensor_implicit_conversion_ctor)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  gt::gtensor_span<double, 2> aspan = a;
+  gt::gtensor_span<const double, 2> aspan2 = a;
+
+  const gt::gtensor<double, 2> b({{11., 12., 13.}, {21., 22., 23.}});
+  // compile error
+  // gt::gtensor_span<double, 2> bspan = b;
+  gt::gtensor_span<const double, 2> bspan = b;
+
+  GT_DEBUG_TYPE(aspan);
+  GT_DEBUG_TYPE(aspan2);
+  GT_DEBUG_TYPE(bspan);
+
+  EXPECT_EQ(aspan, a);
+  EXPECT_EQ(aspan2, a);
+  EXPECT_EQ(bspan, b);
+
+  double first = first_element(a);
+  EXPECT_EQ(first, a(0, 0));
 }
 
 TEST(gtensor_span, adapt_vector)

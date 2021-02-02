@@ -11,6 +11,10 @@ namespace gt
 // ======================================================================
 // gtensor_span
 
+// forward declaration for conversion constructor
+template <typename T, int N, typename S>
+class gtensor;
+
 template <typename T, int N, typename S = space::host>
 class gtensor_span;
 
@@ -58,6 +62,24 @@ public:
             std::enable_if_t<
               is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
   gtensor_span(const gtensor_span<OtherT, N, S>& other)
+    : base_type{other.shape(), other.strides()},
+      storage_{other.data(), other.size()}
+  {}
+
+  // Implicit conversion from a gtensor object with the same or compaitible
+  // element type
+  template <class OtherT,
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
+  gtensor_span(gtensor<OtherT, N, S>& other)
+    : base_type{other.shape(), other.strides()},
+      storage_{other.data(), other.size()}
+  {}
+
+  template <class OtherT,
+            std::enable_if_t<
+              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
+  gtensor_span(const gtensor<OtherT, N, S>& other)
     : base_type{other.shape(), other.strides()},
       storage_{other.data(), other.size()}
   {}
