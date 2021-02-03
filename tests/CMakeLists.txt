@@ -33,6 +33,7 @@ add_gtensor_test(test_device_backend)
 add_gtensor_test(test_launch)
 add_gtensor_test(test_span)
 add_gtensor_test(test_reductions)
+add_gtensor_test(test_sarray)
 
 if (GTENSOR_ENABLE_CLIB)
   add_executable(test_clib)

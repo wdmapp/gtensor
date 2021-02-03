@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <gtensor/gtensor.h>
+#include <gtensor/reductions.h>
 
 #include <type_traits>
 
