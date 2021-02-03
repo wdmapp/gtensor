@@ -5,6 +5,7 @@
 #include "assign.h"
 #include "expression.h"
 #include "gslice.h"
+#include "meta.h"
 
 namespace gt
 {
@@ -70,9 +71,6 @@ private:
 // ----------------------------------------------------------------------
 // select_gview_adaptor
 
-template <typename... Ts>
-using void_t = void;
-
 namespace detail
 {
 
@@ -83,7 +81,8 @@ struct select_gview_adaptor
 };
 
 template <typename E>
-struct select_gview_adaptor<E, void_t<decltype(std::declval<E>().strides())>>
+struct select_gview_adaptor<
+  E, gt::meta::void_t<decltype(std::declval<E>().strides())>>
 {
   using type = E;
 };

@@ -228,3 +228,18 @@ TEST(helper, const_gfunction_gview_owner_to_kernel_t)
 
   EXPECT_TRUE((std::is_same<decltype(k_gfn), to_kern_fn_type>::value));
 }
+
+TEST(helper, has_data_method)
+{
+  gt::gtensor<double, 1> a(gt::shape(10));
+  auto aspan = a.to_kernel();
+  auto aview = a.view(gt::slice(3, 6));
+
+  EXPECT_TRUE(gt::has_data_method_v<decltype(a)>);
+  EXPECT_TRUE(gt::has_data_method<decltype(a)>::value);
+
+  EXPECT_TRUE(gt::has_data_method_v<decltype(aspan)>);
+  EXPECT_TRUE(gt::has_data_method<decltype(aspan)>::value);
+
+  EXPECT_FALSE(gt::has_data_method<decltype(aview)>::value);
+}

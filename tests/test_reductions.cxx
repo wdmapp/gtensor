@@ -13,7 +13,7 @@ void test_sum(int n)
 {
   gt::gtensor<double, 1> a(gt::shape(n));
   for (int i = 0; i < n; i++) {
-    a(i) = i+1;
+    a(i) = i + 1;
   }
   double asum = 0.0;
   if (std::is_same<S, gt::space::host>::value) {
@@ -23,7 +23,7 @@ void test_sum(int n)
     gt::copy(a, a2);
     asum = gt::sum(a2);
   }
-  EXPECT_EQ(asum, (double)n*(n+1)/2);
+  EXPECT_EQ(asum, (double)n * (n + 1) / 2);
 }
 
 template <typename S>
@@ -31,7 +31,7 @@ void test_max(int n)
 {
   gt::gtensor<double, 1> a(gt::shape(n));
   for (int i = 0; i < n; i++) {
-    a(i) = i+1;
+    a(i) = i + 1;
   }
   double amax = 0.0;
   if (std::is_same<S, gt::space::host>::value) {
@@ -71,7 +71,6 @@ TEST(gtensor, max_1d)
 {
   test_max<gt::space::host>(2048);
 }
-
 
 TEST(gtensor, min_1d)
 {

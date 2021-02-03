@@ -14,8 +14,9 @@ TEST(gtensor_span, adapt_ctor_init_2d)
   EXPECT_EQ(b, (gt::gtensor<double, 2>({{11., 12.}, {13., 21.}, {22., 23.}})));
 }
 
-template <typename T, int N, typename S = gt::space::host>
-inline T first_element(const gt::gtensor_span<T, N, S>& a)
+// Note: the implicit conversion from gtensor won't work if this
+// is templates on the gtensor_span types.
+inline double first_element(const gt::gtensor_span<double, 2>& a)
 {
   return *a.data();
 }

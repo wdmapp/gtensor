@@ -3,65 +3,44 @@
 
 #include "defs.h"
 #include "device_backend.h"
-#include "device_copy.h"
 
-#include "complex.h"
-#include "complex_ops.h"
-#include "gcontainer.h"
-#include "gfunction.h"
 #include "gtensor_span.h"
-#include "gview.h"
-#include "operator.h"
+
+#include "helper.h"
 
 #ifdef GTENSOR_USE_THRUST
 
 namespace gt
 {
 
-template <typename T, int N, typename S>
-inline T sum(const gtensor_span<const T, N, S>& a)
+template <typename Container,
+          typename = std::enable_if_t<has_data_method_v<Container>>>
+inline auto sum(const Container& a)
 {
-  auto start = a.data();
+  using T = typename Container::value_type;
+  auto begin = a.data();
   auto end = a.data() + a.size();
-  return thrust::reduce(start, end, 0., thrust::plus<T>());
+  return thrust::reduce(begin, end, 0., thrust::plus<T>());
 }
 
-template <typename T, int N, typename S>
-inline T sum(const gtensor<T, N, S>& a)
+template <typename Container,
+          typename = std::enable_if_t<has_data_method_v<Container>>>
+inline auto max(const Container& a)
 {
-  auto aspan = a.to_kernel();
-  return sum(aspan);
-}
-
-template <typename T, int N, typename S>
-inline T max(const gtensor_span<const T, N, S>& a)
-{
-  auto start = a.data();
+  using T = typename Container::value_type;
+  auto begin = a.data();
   auto end = a.data() + a.size();
-  return thrust::reduce(start, end, 0., thrust::maximum<T>());
+  return thrust::reduce(begin, end, 0., thrust::maximum<T>());
 }
 
-template <typename T, int N, typename S>
-inline T max(const gtensor<T, N, S>& a)
+template <typename Container,
+          typename = std::enable_if_t<has_data_method_v<Container>>>
+inline auto min(const Container& a)
 {
-  auto aspan = a.to_kernel();
-  return max(aspan);
-}
-
-template <typename T, int N, typename S>
-inline T min(const gtensor_span<const T, N, S>& a)
-{
-  auto start = a.data();
+  auto begin = a.data();
   auto end = a.data() + a.size();
-  auto min_element = thrust::min_element(start, end);
+  auto min_element = thrust::min_element(begin, end);
   return *min_element;
-}
-
-template <typename T, int N, typename S>
-inline T min(const gtensor<T, N, S>& a)
-{
-  auto aspan = a.to_kernel();
-  return min(aspan);
 }
 
 } // namespace gt
