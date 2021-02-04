@@ -274,6 +274,25 @@ void test_index_expression()
   gt::copy(a, h_a);
   EXPECT_EQ(h_a,
             (gt::gtensor<double, 2>{{-11., -12., -13.}, {-21., -22., -23.}}));
+
+  auto aview = a.view(gt::all, 0);
+  auto bview = a.view(gt::all, 1);
+  auto h_aview = h_a.view(gt::all, 0);
+  auto k_aview = aview.to_kernel();
+  auto k_bview = bview.to_kernel();
+
+  auto linear_shape2 = gt::shape(aview.size());
+  auto strides2 = calc_strides(aview.shape());
+
+  gt::launch<1, S>(
+    linear_shape2, GT_LAMBDA(int i) {
+      auto idx = unravel(i, strides2);
+      index_expression(k_aview, idx) =
+        index_expression(k_aview, idx) + index_expression(k_bview, idx);
+    });
+
+  gt::copy(a, h_a);
+  EXPECT_EQ(h_aview, (gt::gtensor<double, 1>{-32., -34., -36.}));
 }
 
 TEST(expression, host_index_expression)
