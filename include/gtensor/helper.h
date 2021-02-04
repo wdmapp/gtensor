@@ -71,6 +71,21 @@ struct has_data_method<T, gt::meta::void_t<decltype(std::declval<T>().data())>>
 template <typename T>
 constexpr bool has_data_method_v = has_data_method<T>::value;
 
+// ======================================================================
+// has_strides_method
+
+template <typename T, typename = void>
+struct has_strides_method : std::false_type
+{};
+
+template <typename T>
+struct has_strides_method<
+  T, gt::meta::void_t<decltype(std::declval<T>().strides())>> : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_strides_method_v = has_strides_method<T>::value;
+
 namespace helper
 {
 

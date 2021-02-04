@@ -1,17 +1,17 @@
 #ifndef GTENSOR_REDUCTIONS_H
 #define GTENSOR_REDUCTIONS_H
 
-#include "defs.h"
-#include "device_backend.h"
+#include "gtensor.h"
 
-#include "gtensor_span.h"
+#include <assert.h>
+#include <type_traits>
 
-#include "helper.h"
-
-#ifdef GTENSOR_USE_THRUST
+//#include <iostream>
 
 namespace gt
 {
+
+#ifdef GTENSOR_USE_THRUST
 
 template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>
@@ -43,8 +43,73 @@ inline auto min(const Container& a)
   return *min_element;
 }
 
-} // namespace gt
-
 #endif // GTENSOR_USE_THRUST
+
+template <typename Eout, typename Ein,
+          typename = std::enable_if_t<is_expression<Eout>::value &&
+                                      is_expression<Ein>::value>>
+inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
+{
+  using Sout = expr_space_type<Eout>;
+  using Tout = expr_value_type<Eout>;
+  using Sin = expr_space_type<Ein>;
+  using Tin = expr_value_type<Ein>;
+  using shape_type = expr_shape_type<Eout>;
+
+  static_assert(std::is_same<Sout, Sin>::value,
+                "out and in expressions must be in the same space");
+  static_assert(std::is_same<Tout, Tin>::value,
+                "out and in expressions must have the same value type");
+
+  constexpr auto dims_out = expr_dimension<Eout>();
+  constexpr auto dims_in = expr_dimension<Ein>();
+
+  static_assert(
+    dims_out == dims_in - 1,
+    "out expression must have one less dimension than in expression");
+
+  auto shape_in = in.shape();
+  auto shape_out = out.shape();
+  auto shape_out_expected = shape_in.remove(axis);
+
+  assert(shape_out == shape_out_expected);
+
+  auto k_out = out.to_kernel();
+  auto k_in = in.to_kernel();
+
+  // Note: use logical indexing strides, not internal strides which may be
+  // for addressing the underlying data for gview
+  auto strides_out = calc_strides(shape_out);
+  auto strides_in = calc_strides(shape_in);
+
+  /*
+  std::cout << "out shape   " << shape_out << std::endl;
+  std::cout << "out strides " << strides_out << std::endl;
+  std::cout << "out size    " << out.size() << std::endl;
+  std::cout << "in shape    " << shape_in << std::endl;
+  std::cout << "in strides  " << strides_in << std::endl;
+  std::cout << "in size     " << in.size() << std::endl;
+  */
+
+  auto flat_out_shape = gt::shape(out.size());
+  auto reduction_length = in.shape(axis);
+
+  gt::launch<1, Sout>(
+    flat_out_shape, GT_LAMBDA(int i) {
+      auto idx_out = unravel(i, strides_out);
+      auto idx_in = idx_out.insert(axis, 0);
+      //std::cout << i << " idx out " << idx_out << std::endl;
+      //std::cout << i << " idx in  " << idx_in  << std::endl;
+      auto tmp = index_expression(k_in, idx_in);
+      idx_in[axis]++;
+      for (int j = 1; j < reduction_length; j++) {
+        tmp = tmp + index_expression(k_in, idx_in);
+        idx_in[axis]++;
+      }
+      index_expression(k_out, idx_out) = tmp;
+    });
+}
+
+} // namespace gt
 
 #endif // GTENSOR_REDUCTIONS_H
