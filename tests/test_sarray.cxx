@@ -1,0 +1,118 @@
+#include <gtest/gtest.h>
+
+#include <gtensor/gtensor.h>
+#include <gtensor/sarray.h>
+
+#include "test_debug.h"
+
+template <typename S>
+void test_launch_insert()
+{
+  gt::sarray<int, 5> a(0, 1, 2, 3, 4);
+
+  gt::gtensor<int, 1, S> g2(gt::shape(6));
+  gt::gtensor<int, 1, S> g3(gt::shape(7));
+  gt::gtensor<int, 1> h2(gt::shape(6));
+  gt::gtensor<int, 1> h3(gt::shape(7));
+
+  auto k2 = g2.to_kernel();
+  auto k3 = g3.to_kernel();
+
+  gt::launch<1, S>(
+    g3.shape(), GT_LAMBDA(int i) {
+      auto a2 = a.insert(0, -1);
+      auto a3 = a2.insert(6, 5);
+      if (i < g2.shape(0))
+        k2(i) = a2[i];
+      k3(i) = a3[i];
+    });
+
+  gt::copy(g2, h2);
+  EXPECT_EQ(h2, (gt::gtensor<int, 1>{-1, 0, 1, 2, 3, 4}));
+  gt::copy(g3, h3);
+  EXPECT_EQ(h3, (gt::gtensor<int, 1>{-1, 0, 1, 2, 3, 4, 5}));
+}
+
+template <typename S>
+void test_launch_remove()
+{
+  gt::sarray<int, 5> a(0, 1, 2, 3, 4);
+  gt::gtensor<int, 1, S> g2(gt::shape(4));
+  gt::gtensor<int, 1, S> g3(gt::shape(3));
+  gt::gtensor<int, 1> h2(gt::shape(4));
+  gt::gtensor<int, 1> h3(gt::shape(3));
+
+  auto k2 = g2.to_kernel();
+  auto k3 = g3.to_kernel();
+
+  gt::launch<1, S>(
+    g2.shape(), GT_LAMBDA(int i) {
+      auto a2 = a.remove(0);
+      auto a3 = a2.remove(3);
+      k2(i) = a2[i];
+      if (i < g3.shape(0))
+        k3(i) = a3[i];
+    });
+
+  gt::copy(g2, h2);
+  EXPECT_EQ(h2, (gt::gtensor<int, 1>{1, 2, 3, 4}));
+  gt::copy(g3, h3);
+  EXPECT_EQ(h3, (gt::gtensor<int, 1>{1, 2, 3}));
+}
+
+TEST(sarray, insert)
+{
+  gt::sarray<int, 5> a(0, 1, 2, 3, 4);
+
+  auto a2 = a.insert(0, -1);
+  GT_DEBUG_TYPE(a2);
+  EXPECT_EQ(a2[0], -1);
+  EXPECT_EQ(a2[1], 0);
+
+  auto a3 = a2.insert(6, 5);
+  GT_DEBUG_TYPE(a3);
+  EXPECT_EQ(a3[0], -1);
+  EXPECT_EQ(a3[1], 0);
+  EXPECT_EQ(a3[5], 4);
+  EXPECT_EQ(a3[6], 5);
+}
+
+TEST(sarray, remove)
+{
+  gt::sarray<int, 5> a(0, 1, 2, 3, 4);
+
+  auto a2 = a.remove(0);
+  GT_DEBUG_TYPE(a2);
+  EXPECT_EQ(a2[0], 1);
+  EXPECT_EQ(a2[1], 2);
+
+  auto a3 = a2.remove(3);
+  GT_DEBUG_TYPE(a3);
+  EXPECT_EQ(a3[0], 1);
+  EXPECT_EQ(a3[1], 2);
+  EXPECT_EQ(a3[2], 3);
+}
+
+TEST(sarray, host_launch_insert)
+{
+  test_launch_insert<gt::space::host>();
+}
+
+TEST(sarray, host_launch_remove)
+{
+  test_launch_remove<gt::space::host>();
+}
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(sarray, device_launch_insert)
+{
+  test_launch_insert<gt::space::device>();
+}
+
+TEST(sarray, device_launch_remove)
+{
+  test_launch_remove<gt::space::device>();
+}
+
+#endif

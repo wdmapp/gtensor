@@ -13,7 +13,6 @@
 #include "gtensor_span.h"
 #include "gview.h"
 #include "operator.h"
-#include "reductions.h"
 
 namespace gt
 {
@@ -502,6 +501,12 @@ template <int N, typename F>
 inline void launch(const gt::shape_type<N>& shape, F&& f)
 {
   detail::launch<N, space::device>::run(shape, std::forward<F>(f));
+}
+
+template <int N, typename S, typename F>
+inline void launch(const gt::shape_type<N>& shape, F&& f)
+{
+  detail::launch<N, S>::run(shape, std::forward<F>(f));
 }
 
 // ======================================================================

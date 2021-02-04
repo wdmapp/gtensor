@@ -81,37 +81,37 @@ using to_kernel_t =
 // index expression helper
 
 template <typename E>
-auto index_expression(E expr, shape_type<1> idx)
+GT_INLINE decltype(auto) index_expression(E expr, shape_type<1> idx)
 {
   return expr(idx[0]);
 }
 
 template <typename E>
-auto index_expression(E expr, shape_type<2> idx)
+GT_INLINE decltype(auto) index_expression(E expr, shape_type<2> idx)
 {
   return expr(idx[0], idx[1]);
 }
 
 template <typename E>
-auto index_expression(E expr, shape_type<3> idx)
+GT_INLINE decltype(auto) index_expression(E expr, shape_type<3> idx)
 {
   return expr(idx[0], idx[1], idx[2]);
 }
 
 template <typename E>
-auto index_expression(E expr, shape_type<4> idx)
+GT_INLINE decltype(auto) index_expression(E expr, shape_type<4> idx)
 {
   return expr(idx[0], idx[1], idx[2], idx[3]);
 }
 
 template <typename E>
-auto index_expression(E expr, shape_type<5> idx)
+GT_INLINE decltype(auto) index_expression(E expr, shape_type<5> idx)
 {
   return expr(idx[0], idx[1], idx[2], idx[3], idx[4]);
 }
 
 template <typename E>
-auto index_expression(E expr, shape_type<6> idx)
+GT_INLINE decltype(auto) index_expression(E expr, shape_type<6> idx)
 {
   return expr(idx[0], idx[1], idx[2], idx[3], idx[4], idx[5]);
 }
