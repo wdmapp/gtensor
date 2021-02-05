@@ -161,8 +161,6 @@ inline auto gtensor<T, N, S>::to_kernel() -> kernel_type
   return kernel_type(this->data(), this->shape(), this->strides());
 }
 
-#if GTENSOR_HAVE_DEVICE
-
 // ======================================================================
 // copies
 //
@@ -196,8 +194,6 @@ void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
-
-#endif // GTENSOR_HAVE_DEVICE
 
 // ======================================================================
 // launch
