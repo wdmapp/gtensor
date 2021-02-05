@@ -82,25 +82,14 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
   auto strides_out = calc_strides(shape_out);
   auto strides_in = calc_strides(shape_in);
 
-  /*
-  std::cout << "out shape   " << shape_out << std::endl;
-  std::cout << "out strides " << strides_out << std::endl;
-  std::cout << "out size    " << out.size() << std::endl;
-  std::cout << "in shape    " << shape_in << std::endl;
-  std::cout << "in strides  " << strides_in << std::endl;
-  std::cout << "in size     " << in.size() << std::endl;
-  */
-
-  auto flat_out_shape = gt::shape(out.size());
-  auto reduction_length = in.shape(axis);
+  auto flat_out_shape = gt::shape(static_cast<int>(out.size()));
+  int reduction_length = in.shape(axis);
 
   gt::launch<1, Sout>(
     flat_out_shape, GT_LAMBDA(int i) {
       auto idx_out = unravel(i, strides_out);
       auto idx_in = idx_out.insert(axis, 0);
-      //std::cout << i << " idx out " << idx_out << std::endl;
-      //std::cout << i << " idx in  " << idx_in  << std::endl;
-      auto tmp = index_expression(k_in, idx_in);
+      Tin tmp = index_expression(k_in, idx_in);
       idx_in[axis]++;
       for (int j = 1; j < reduction_length; j++) {
         tmp = tmp + index_expression(k_in, idx_in);
