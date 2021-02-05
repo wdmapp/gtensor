@@ -45,9 +45,7 @@ inline auto min(const Container& a)
 
 #endif // GTENSOR_USE_THRUST
 
-template <typename Eout, typename Ein,
-          typename = std::enable_if_t<is_expression<Eout>::value &&
-                                      is_expression<Ein>::value>>
+template <typename Eout, typename Ein>
 inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
 {
   using Sout = expr_space_type<Eout>;
