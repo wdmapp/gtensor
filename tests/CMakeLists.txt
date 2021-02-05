@@ -13,6 +13,7 @@ macro(add_gtensor_test name)
 
   if (GTENSOR_TEST_DEBUG)
     target_compile_definitions(${name} PRIVATE GTENSOR_TEST_DEBUG)
+    target_compile_options(${name} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: --keep>)
   endif()
 endmacro()
 
