@@ -3,6 +3,10 @@
 
 #include "gtensor.h"
 
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+#include <thrust/reduce.h>
+#endif
+
 #include <assert.h>
 #include <type_traits>
 
@@ -11,7 +15,7 @@
 namespace gt
 {
 
-#ifdef GTENSOR_USE_THRUST
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>

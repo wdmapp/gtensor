@@ -110,8 +110,6 @@ TEST(reductions, device_sum_axis_to_3d_view_2d)
 
 #endif // GTENSOR_HAVE_DEVICE
 
-#ifdef GTENSOR_USE_THRUST
-
 template <typename S>
 void test_sum(int n)
 {
@@ -199,5 +197,3 @@ TEST(redutions, device_min_1d)
 }
 
 #endif // GTENSOR_HAVE_DEVICE
-
-#endif // GTENSOR_USE_THRUST
