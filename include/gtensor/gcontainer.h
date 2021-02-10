@@ -48,6 +48,9 @@ public:
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args);
 
+  GT_INLINE const_reference operator[](const shape_type& idx) const;
+  GT_INLINE reference operator[](const shape_type& idx);
+
   GT_INLINE const_reference data_access(size_type i) const;
   GT_INLINE reference data_access(size_type i);
 
@@ -56,6 +59,20 @@ public:
 
   GT_INLINE const storage_type& storage() const;
   GT_INLINE storage_type& storage();
+
+private:
+  template <typename S, size_type... I>
+  GT_INLINE const_reference access(std::index_sequence<I...>,
+                                   const S& idx) const
+  {
+    return (*this)(idx[I]...);
+  }
+
+  template <typename S, size_type... I>
+  GT_INLINE reference access(std::index_sequence<I...>, const S& idx)
+  {
+    return (*this)(idx[I]...);
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -105,6 +122,19 @@ template <typename... Args>
 GT_INLINE auto gcontainer<D>::operator()(Args&&... args) -> reference
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename D>
+GT_INLINE auto gcontainer<D>::operator[](const shape_type& idx) const
+  -> const_reference
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename D>
+GT_INLINE auto gcontainer<D>::operator[](const shape_type& idx) -> reference
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
 }
 
 template <typename D>

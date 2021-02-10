@@ -229,6 +229,18 @@ TEST(gtensor, type_aliases)
     (std::is_same<decltype(h1)::const_pointer, const double*>::value));
 }
 
+TEST(gtensor, index_by_shape)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+
+  EXPECT_EQ(a[gt::shape(0, 0)], 11.);
+  EXPECT_EQ(a[gt::shape(1, 0)], 21.);
+  EXPECT_EQ(a[gt::shape(2, 0)], 31.);
+  EXPECT_EQ(a[gt::shape(0, 1)], 12.);
+  EXPECT_EQ(a[gt::shape(1, 1)], 22.);
+  EXPECT_EQ(a[gt::shape(2, 1)], 32.);
+}
+
 #if defined GTENSOR_HAVE_DEVICE
 
 TEST(gtensor, device_assign_gtensor)

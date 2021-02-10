@@ -98,3 +98,16 @@ TEST(gtensor_span, convert_const)
   EXPECT_EQ(a_view.data(), a_view_const2.data());
   EXPECT_EQ(&a_view(N - 1), &a_view_const2(N - 1));
 }
+
+TEST(gtensor_span, index_by_shape)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aspan = a.to_kernel();
+
+  EXPECT_EQ(aspan[gt::shape(0, 0)], 11.);
+  EXPECT_EQ(aspan[gt::shape(1, 0)], 21.);
+  EXPECT_EQ(aspan[gt::shape(2, 0)], 31.);
+  EXPECT_EQ(aspan[gt::shape(0, 1)], 12.);
+  EXPECT_EQ(aspan[gt::shape(1, 1)], 22.);
+  EXPECT_EQ(aspan[gt::shape(2, 1)], 32.);
+}

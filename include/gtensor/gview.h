@@ -161,6 +161,9 @@ public:
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args);
 
+  GT_INLINE decltype(auto) operator[](const shape_type& idx) const;
+  GT_INLINE decltype(auto) operator[](const shape_type& idx);
+
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
 
@@ -169,6 +172,18 @@ private:
   size_type offset_;
 
   friend class gstrided<self_type>;
+
+  template <typename S, size_type... I>
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>, const S& idx) const
+  {
+    return (*this)(idx[I]...);
+  }
+
+  template <typename S, size_type... I>
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>, const S& idx)
+  {
+    return (*this)(idx[I]...);
+  }
 };
 
 // ======================================================================
@@ -205,6 +220,18 @@ template <typename... Args>
 GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args)
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
+}
+
+template <typename EC, int N>
+GT_INLINE decltype(auto) gview<EC, N>::operator[](const shape_type& idx) const
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename EC, int N>
+GT_INLINE decltype(auto) gview<EC, N>::operator[](const shape_type& idx)
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
 }
 
 template <typename EC, int N>

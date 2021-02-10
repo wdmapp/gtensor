@@ -29,6 +29,8 @@ template <typename T, std::size_t N>
 class sarray
 {
 public:
+  constexpr static std::size_t dimension = N;
+
   sarray() = default;
 
   // construct from exactly N elements provided

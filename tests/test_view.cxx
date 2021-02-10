@@ -371,6 +371,19 @@ TEST(gview, dimension_arg_count)
   // auto a_view_bad = a.view(_s(1, 3), _all, _all);
 }
 
+TEST(gview, index_by_shape)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aview = a.view(_all, _all);
+
+  EXPECT_EQ(aview[gt::shape(0, 0)], 11.);
+  EXPECT_EQ(aview[gt::shape(1, 0)], 21.);
+  EXPECT_EQ(aview[gt::shape(2, 0)], 31.);
+  EXPECT_EQ(aview[gt::shape(0, 1)], 12.);
+  EXPECT_EQ(aview[gt::shape(1, 1)], 22.);
+  EXPECT_EQ(aview[gt::shape(2, 1)], 32.);
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_copy_ctor)
