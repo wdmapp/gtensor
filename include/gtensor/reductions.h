@@ -239,7 +239,7 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
 
   auto shape_in = in.shape();
   auto shape_out = out.shape();
-  auto shape_out_expected = shape_in.remove(axis);
+  auto shape_out_expected = remove(shape_in, axis);
 
   assert(shape_out == shape_out_expected);
 
@@ -257,7 +257,7 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
   gt::launch<1, Sout>(
     flat_out_shape, GT_LAMBDA(int i) {
       auto idx_out = unravel(i, strides_out);
-      auto idx_in = idx_out.insert(axis, 0);
+      auto idx_in = insert(idx_out, axis, 0);
       Tin tmp = index_expression(k_in, idx_in);
       idx_in[axis]++;
       for (int j = 1; j < reduction_length; j++) {

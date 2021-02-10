@@ -20,8 +20,8 @@ void test_launch_insert()
 
   gt::launch<1, S>(
     g3.shape(), GT_LAMBDA(int i) {
-      auto a2 = a.insert(0, -1);
-      auto a3 = a2.insert(6, 5);
+      auto a2 = insert(a, 0, -1);
+      auto a3 = insert(a2, 6, 5);
       if (i < k2.shape(0))
         k2(i) = a2[i];
       k3(i) = a3[i];
@@ -47,8 +47,8 @@ void test_launch_remove()
 
   gt::launch<1, S>(
     g2.shape(), GT_LAMBDA(int i) {
-      auto a2 = a.remove(0);
-      auto a3 = a2.remove(3);
+      auto a2 = remove(a, 0);
+      auto a3 = remove(a2, 3);
       k2(i) = a2[i];
       if (i < k3.shape(0))
         k3(i) = a3[i];
@@ -86,12 +86,12 @@ TEST(sarray, insert)
 {
   gt::sarray<int, 5> a(0, 1, 2, 3, 4);
 
-  auto a2 = a.insert(0, -1);
+  auto a2 = insert(a, 0, -1);
   GT_DEBUG_TYPE(a2);
   EXPECT_EQ(a2[0], -1);
   EXPECT_EQ(a2[1], 0);
 
-  auto a3 = a2.insert(6, 5);
+  auto a3 = insert(a2, 6, 5);
   GT_DEBUG_TYPE(a3);
   EXPECT_EQ(a3[0], -1);
   EXPECT_EQ(a3[1], 0);
@@ -103,12 +103,12 @@ TEST(sarray, remove)
 {
   gt::sarray<int, 5> a(0, 1, 2, 3, 4);
 
-  auto a2 = a.remove(0);
+  auto a2 = remove(a, 0);
   GT_DEBUG_TYPE(a2);
   EXPECT_EQ(a2[0], 1);
   EXPECT_EQ(a2[1], 2);
 
-  auto a3 = a2.remove(3);
+  auto a3 = remove(a2, 3);
   GT_DEBUG_TYPE(a3);
   EXPECT_EQ(a3[0], 1);
   EXPECT_EQ(a3[1], 2);

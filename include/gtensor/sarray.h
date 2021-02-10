@@ -54,9 +54,6 @@ public:
   GT_INLINE T* begin();
   GT_INLINE T* end();
 
-  GT_INLINE sarray<T, N + 1> insert(std::size_t i, T value) const;
-  GT_INLINE sarray<T, N - 1> remove(std::size_t i) const;
-
 private:
   T data_[N] = {};
 };
@@ -138,28 +135,29 @@ GT_INLINE T* sarray<T, N>::end()
 }
 
 template <typename T, std::size_t N>
-GT_INLINE sarray<T, N + 1> sarray<T, N>::insert(std::size_t i, T value) const
+GT_INLINE sarray<T, N + 1> insert(const sarray<T, N>& in, std::size_t i,
+                                  T value)
 {
   sarray<T, N + 1> out;
   for (int j = 0; j < i; j++) {
-    out[j] = data_[j];
+    out[j] = in[j];
   }
   out[i] = value;
   for (int j = i; j < N; j++) {
-    out[j + 1] = data_[j];
+    out[j + 1] = in[j];
   }
   return out;
 }
 
 template <typename T, std::size_t N>
-GT_INLINE sarray<T, N - 1> sarray<T, N>::remove(std::size_t i) const
+GT_INLINE sarray<T, N - 1> remove(const sarray<T, N>& in, std::size_t i)
 {
   sarray<T, N - 1> out;
   for (int j = 0; j < i; j++) {
-    out[j] = data_[j];
+    out[j] = in[j];
   }
   for (int j = i; j < N - 1; j++) {
-    out[j] = data_[j + 1];
+    out[j] = in[j + 1];
   }
   return out;
 }
