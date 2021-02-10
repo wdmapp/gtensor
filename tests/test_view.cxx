@@ -355,6 +355,22 @@ TEST(gview, gview_owner_operator_parens)
   EXPECT_TRUE((std::is_same<view_gtensor_owner_op_rtype, double&>::value));
 }
 
+TEST(gview, dimension_arg_count)
+{
+  gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+
+  // less args then dimension - ok, assume others are _all
+  auto a_view = a.view(_s(1, 3));
+  EXPECT_EQ(a_view, (gt::gtensor<double, 2>{{12., 13.}, {22., 23.}}));
+
+  // more args using _newaxis - ok
+  auto a_newaxis = a.view(_s(1, 3), _all, _newaxis);
+  EXPECT_EQ(a_newaxis, (gt::gtensor<double, 3>{{{12., 13.}, {22., 23.}}}));
+
+  // too many args, not new axis - compile error
+  // auto a_view_bad = a.view(_s(1, 3), _all, _all);
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_copy_ctor)
