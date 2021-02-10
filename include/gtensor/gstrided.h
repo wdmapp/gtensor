@@ -15,7 +15,10 @@ constexpr int view_dimension()
 {
   constexpr std::size_t N_new = detail::count_convertible<gnewaxis, Args...>();
   constexpr std::size_t N_value = detail::count_convertible<int, Args...>();
-  return expr_dimension<E>() - N_value + N_new;
+  constexpr std::size_t N_expr = expr_dimension<E>();
+  constexpr std::size_t N_args = sizeof...(Args);
+  static_assert(N_args <= N_expr + N_new, "too many view args for expression");
+  return N_expr - N_value + N_new;
 }
 
 template <typename E, typename... Args>
