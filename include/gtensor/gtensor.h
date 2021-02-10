@@ -20,8 +20,9 @@ namespace gt
 // ======================================================================
 // gtensor
 
-template <typename T, int N, typename S>
-class gtensor;
+// forward declared in gtensor_span.h
+// template <typename T, int N, typename S>
+// class gtensor;
 
 template <typename T, int N, typename S>
 struct gtensor_inner_types<gtensor<T, N, S>>
@@ -160,8 +161,6 @@ inline auto gtensor<T, N, S>::to_kernel() -> kernel_type
   return kernel_type(this->data(), this->shape(), this->strides());
 }
 
-#if GTENSOR_HAVE_DEVICE
-
 // ======================================================================
 // copies
 //
@@ -195,8 +194,6 @@ void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
-
-#endif // GTENSOR_HAVE_DEVICE
 
 // ======================================================================
 // launch
@@ -500,6 +497,12 @@ template <int N, typename F>
 inline void launch(const gt::shape_type<N>& shape, F&& f)
 {
   detail::launch<N, space::device>::run(shape, std::forward<F>(f));
+}
+
+template <int N, typename S, typename F>
+inline void launch(const gt::shape_type<N>& shape, F&& f)
+{
+  detail::launch<N, S>::run(shape, std::forward<F>(f));
 }
 
 // ======================================================================

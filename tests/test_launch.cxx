@@ -4,6 +4,19 @@
 
 #include "test_debug.h"
 
+template <typename S>
+void generic_double_add_1d(gt::gtensor<double, 1, S>& a,
+                           gt::gtensor<double, 1, S>& out)
+{
+  EXPECT_EQ(a, (gt::gtensor<double, 1, S>{11., 12., 13.}));
+
+  auto k_a = a.to_kernel();
+  auto k_out = out.to_kernel();
+
+  gt::launch<1, S>(
+    a.shape(), GT_LAMBDA(int i) { k_out(i) = k_a(i) + k_a(i); });
+}
+
 void host_double_add_1d(gt::gtensor<double, 1>& a, gt::gtensor<double, 1>& out)
 {
   EXPECT_EQ(a, (gt::gtensor<double, 1>{11., 12., 13.}));
@@ -21,6 +34,16 @@ TEST(gtensor, launch_1d)
   gt::gtensor<double, 1> b(a.shape());
 
   host_double_add_1d(a, b);
+
+  EXPECT_EQ(b, (gt::gtensor<double, 1>{22., 24., 26.}));
+}
+
+TEST(gtensor, launch_1d_templated)
+{
+  gt::gtensor<double, 1> a{11., 12., 13.};
+  gt::gtensor<double, 1> b(a.shape());
+
+  generic_double_add_1d<gt::space::host>(a, b);
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{22., 24., 26.}));
 }
@@ -67,9 +90,18 @@ void device_double_add_1d(gt::gtensor_device<double, 1>& a,
 TEST(gtensor, device_launch_1d)
 {
   gt::gtensor_device<double, 1> a{11., 12., 13.};
+  gt::gtensor_device<double, 1> b(a.shape());
   gt::gtensor<double, 1> h_b(a.shape());
 
   device_double_add_1d(a, h_b);
+
+  EXPECT_EQ(h_b, (gt::gtensor<double, 1>{22., 24., 26.}));
+
+  h_b(0) = 0;
+  h_b(1) = 0;
+  h_b(2) = 0;
+  generic_double_add_1d<gt::space::device>(a, b);
+  gt::copy(b, h_b);
 
   EXPECT_EQ(h_b, (gt::gtensor<double, 1>{22., 24., 26.}));
 }

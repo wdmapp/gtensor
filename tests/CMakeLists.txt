@@ -13,6 +13,7 @@ macro(add_gtensor_test name)
 
   if (GTENSOR_TEST_DEBUG)
     target_compile_definitions(${name} PRIVATE GTENSOR_TEST_DEBUG)
+    target_compile_options(${name} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: --keep>)
   endif()
 endmacro()
 
@@ -32,6 +33,8 @@ add_gtensor_test(test_complex)
 add_gtensor_test(test_device_backend)
 add_gtensor_test(test_launch)
 add_gtensor_test(test_span)
+add_gtensor_test(test_reductions)
+add_gtensor_test(test_sarray)
 
 if (GTENSOR_ENABLE_CLIB)
   add_executable(test_clib)

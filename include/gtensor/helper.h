@@ -3,6 +3,7 @@
 #define GTENSOR_HELPER_H
 
 #include "defs.h"
+#include "meta.h"
 #include "sarray.h"
 
 #include <tuple>
@@ -54,6 +55,36 @@ constexpr size_type expr_dimension()
 {
   return std::decay_t<E>::dimension();
 }
+
+// ======================================================================
+// has_data_method
+
+template <typename T, typename = void>
+struct has_data_method : std::false_type
+{};
+
+template <typename T>
+struct has_data_method<T, gt::meta::void_t<decltype(std::declval<T>().data())>>
+  : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_data_method_v = has_data_method<T>::value;
+
+// ======================================================================
+// has_strides_method
+
+template <typename T, typename = void>
+struct has_strides_method : std::false_type
+{};
+
+template <typename T>
+struct has_strides_method<
+  T, gt::meta::void_t<decltype(std::declval<T>().strides())>> : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_strides_method_v = has_strides_method<T>::value;
 
 namespace helper
 {
@@ -265,6 +296,7 @@ size_type max(F&& f, const std::tuple<E...>& tpl)
 }
 
 } // namespace helper
+
 } // namespace gt
 
 #endif

@@ -135,6 +135,34 @@ GT_INLINE T* sarray<T, N>::end()
 }
 
 template <typename T, std::size_t N>
+GT_INLINE sarray<T, N + 1> insert(const sarray<T, N>& in, std::size_t i,
+                                  T value)
+{
+  sarray<T, N + 1> out;
+  for (int j = 0; j < i; j++) {
+    out[j] = in[j];
+  }
+  out[i] = value;
+  for (int j = i; j < N; j++) {
+    out[j + 1] = in[j];
+  }
+  return out;
+}
+
+template <typename T, std::size_t N>
+GT_INLINE sarray<T, N - 1> remove(const sarray<T, N>& in, std::size_t i)
+{
+  sarray<T, N - 1> out;
+  for (int j = 0; j < i; j++) {
+    out[j] = in[j];
+  }
+  for (int j = i; j < N - 1; j++) {
+    out[j] = in[j + 1];
+  }
+  return out;
+}
+
+template <typename T, std::size_t N>
 inline std::string to_string(const sarray<T, N>& arr)
 {
   std::string s = "{";

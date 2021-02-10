@@ -70,6 +70,13 @@ class Launch3;
 template <typename F>
 class LaunchN;
 
+template <typename E>
+class Sum;
+template <typename E>
+class Max;
+template <typename E>
+class Min;
+
 } // namespace sycl
 } // namespace backend
 } // namespace gt

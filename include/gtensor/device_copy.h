@@ -114,7 +114,7 @@ namespace backend
 {
 
 template <typename T, typename S_from, typename S_to>
-inline void copy(T* src, const T* dest, std::size_t count)
+inline void copy(const T* src, T* dest, std::size_t count)
 {
   std::memcpy((void*)dest, (void*)src, count * sizeof(T));
 }

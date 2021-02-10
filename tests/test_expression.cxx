@@ -251,6 +251,55 @@ TEST(expression, shape_second)
   EXPECT_EQ(e.shape(), (S3{2, 3, 4}));
 }
 
+template <typename S>
+void test_index_expression()
+{
+  gt::gtensor<double, 2, S> a = {{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor<double, 2, S> b = {{-11., -12., -13.}, {-21., -22., -23.}};
+  gt::gtensor<double, 2> h_a(a.shape());
+
+  auto linear_shape = gt::shape(a.size());
+  auto strides = a.strides();
+
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  gt::launch<1, S>(
+    linear_shape, GT_LAMBDA(int i) {
+      auto idx = unravel(i, strides);
+      index_expression(k_a, idx) =
+        index_expression(k_a, idx) + 2 * index_expression(k_b, idx);
+    });
+
+  gt::copy(a, h_a);
+  EXPECT_EQ(h_a,
+            (gt::gtensor<double, 2>{{-11., -12., -13.}, {-21., -22., -23.}}));
+
+  auto aview = a.view(gt::all, 0);
+  auto bview = a.view(gt::all, 1);
+  auto h_aview = h_a.view(gt::all, 0);
+  auto k_aview = aview.to_kernel();
+  auto k_bview = bview.to_kernel();
+
+  auto linear_shape2 = gt::shape(aview.size());
+  auto strides2 = calc_strides(aview.shape());
+
+  gt::launch<1, S>(
+    linear_shape2, GT_LAMBDA(int i) {
+      auto idx = unravel(i, strides2);
+      index_expression(k_aview, idx) =
+        index_expression(k_aview, idx) + index_expression(k_bview, idx);
+    });
+
+  gt::copy(a, h_a);
+  EXPECT_EQ(h_aview, (gt::gtensor<double, 1>{-32., -34., -36.}));
+}
+
+TEST(expression, host_index_expression)
+{
+  test_index_expression<gt::space::host>();
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(expression, device_eval)
@@ -275,6 +324,11 @@ TEST(expression, device_eval)
   gt::copy(c, h_c);
 
   EXPECT_EQ(h_c, h_a);
+}
+
+TEST(expression, device_index_expression)
+{
+  test_index_expression<gt::space::device>();
 }
 
 #endif
