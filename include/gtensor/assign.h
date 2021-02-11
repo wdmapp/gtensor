@@ -24,6 +24,19 @@ struct assigner
 };
 
 template <>
+struct assigner<0, space::host>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs)
+  {
+    // printf("assigner<0, host>\n");
+    for (int i = 0; i < lhs.shape(0); i++) {
+      lhs(i) = rhs;
+    }
+  }
+};
+
+template <>
 struct assigner<1, space::host>
 {
   template <typename E1, typename E2>
@@ -134,6 +147,16 @@ struct assigner<6, space::host>
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 template <typename Elhs, typename Erhs>
+__global__ void kernel_assign_0(Elhs lhs, Erhs rhs)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (i < lhs.shape(0)) {
+    lhs(i) = rhs;
+  }
+}
+
+template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
 {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -213,6 +236,24 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
     lhs(i, j, k, l, m, n) = rhs(i, j, k, l, m, n);
   }
 }
+
+template <>
+struct assigner<0, space::device>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs)
+  {
+    // printf("assigner<1, device>\n");
+    const int BS_1D = 256;
+    dim3 numThreads(BS_1D);
+    dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
+
+    gpuSyncIfEnabled();
+    gtLaunchKernel(kernel_assign_0, numBlocks, numThreads, 0, 0,
+                   lhs.to_kernel(), rhs.to_kernel());
+    gpuSyncIfEnabled();
+  }
+};
 
 template <>
 struct assigner<1, space::device>
