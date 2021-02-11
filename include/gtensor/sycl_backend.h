@@ -52,13 +52,13 @@ static inline cl::sycl::queue& get_queue()
   return q;
 }
 
-template <typename E1, typename E2>
+template <typename E1, typename E2, typename K1, typename K2>
 class Assign1;
-template <typename E1, typename E2>
+template <typename E1, typename E2, typename K1, typename K2>
 class Assign2;
-template <typename E1, typename E2>
+template <typename E1, typename E2, typename K1, typename K2>
 class Assign3;
-template <typename E1, typename E2>
+template <typename E1, typename E2, typename K1, typename K2>
 class AssignN;
 
 template <typename F>
