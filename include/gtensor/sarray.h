@@ -37,6 +37,7 @@ public:
   template <typename... U, std::enable_if_t<sizeof...(U) == N, int> = 0>
   sarray(U... args);
   sarray(const T* p, std::size_t n);
+  sarray(const T data[N]);
 
   template <typename O>
   bool operator==(const O& o) const;
@@ -76,6 +77,12 @@ inline sarray<T, N>::sarray(const T* p, std::size_t n)
 {
   assert(n == N);
   std::copy(p, p + n, data_);
+}
+
+template <typename T, std::size_t N>
+inline sarray<T, N>::sarray(const T data[N])
+{
+  std::copy(data, data + N, data_);
 }
 
 template <typename T, std::size_t N>
