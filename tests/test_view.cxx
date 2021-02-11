@@ -432,6 +432,25 @@ TEST(gview, reshape_reshape)
   EXPECT_EQ(aview2, (gt::gtensor<double, 2>{{11., 21., 31., 12., 22., 32.}}));
 }
 
+TEST(gview, flatten_gtensor)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aflat = gt::flatten(a);
+
+  EXPECT_EQ(aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+}
+
+TEST(gview, flatten_view)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+
+  auto aview = a.view(_s(1, 3), _all);
+  EXPECT_EQ(aview, (gt::gtensor<double, 2>{{21., 31.}, {22., 32.}}));
+
+  auto aflat = gt::flatten(aview);
+  EXPECT_EQ(aflat, (gt::gtensor<double, 1>{21., 31., 22., 32.}));
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_copy_ctor)

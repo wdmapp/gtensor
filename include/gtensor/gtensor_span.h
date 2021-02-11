@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GTENSOR_VIEW_H
 #define GTENSOR_GTENSOR_VIEW_H
 
+#include <type_traits>
+
 #include "device_backend.h"
 #include "span.h"
 
@@ -213,6 +215,17 @@ gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
   return adapt_device<N, T>(data, {shape_data, N});
 }
 #endif
+
+// ======================================================================
+// is_gtensor_span
+
+template <typename E>
+struct is_gtensor_span : std::false_type
+{};
+
+template <typename T, int N, typename S>
+struct is_gtensor_span<gtensor_span<T, N, S>> : std::true_type
+{};
 
 } // namespace gt
 

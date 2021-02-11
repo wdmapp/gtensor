@@ -36,13 +36,15 @@ public:
   decltype(auto) to_kernel() const { return e_.to_kernel(); }
   decltype(auto) to_kernel() { return e_.to_kernel(); }
 
-  GT_INLINE const_reference data_access(size_type i) const
+  GT_INLINE size_type size() const { return e_.size(); };
+
+  GT_INLINE decltype(auto) data_access(size_type i) const
   {
     shape_type idx = unravel(i, strides_);
     return access(std::make_index_sequence<idx.size()>(), idx);
   }
 
-  GT_INLINE reference data_access(size_type i)
+  GT_INLINE decltype(auto) data_access(size_type i)
   {
     shape_type idx = unravel(i, strides_);
     return access(std::make_index_sequence<idx.size()>(), idx);
@@ -50,14 +52,15 @@ public:
 
 private:
   template <size_type... I>
-  GT_INLINE const_reference access(std::index_sequence<I...>,
-                                   const shape_type& idx) const
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>,
+                                  const shape_type& idx) const
   {
     return e_(idx[I]...);
   }
 
   template <size_type... I>
-  GT_INLINE reference access(std::index_sequence<I...>, const shape_type& idx)
+  GT_INLINE decltype(auto) access(std::index_sequence<I...>,
+                                  const shape_type& idx)
   {
     return e_(idx[I]...);
   }
@@ -87,10 +90,32 @@ struct select_gview_adaptor<
   using type = E;
 };
 
+// special requirements for reshape, which replaces strides rather than
+// adapting them
+template <typename E, typename Enable = void>
+struct select_reshape_gview_adaptor
+{
+  using type = detail::gview_adaptor<E>;
+};
+
+// gcontainers and gtensor_spans have the default stride and layout, so they
+// are safe to override without layering via an adaptor
+template <typename E>
+struct select_reshape_gview_adaptor<
+  E, gt::meta::void_t<
+       std::enable_if_t<is_gcontainer<E>::value || is_gtensor_span<E>::value>>>
+{
+  using type = E;
+};
+
 } // namespace detail
 
 template <typename E>
 using select_gview_adaptor_t = typename detail::select_gview_adaptor<E>::type;
+
+template <typename E>
+using select_reshape_gview_adaptor_t =
+  typename detail::select_reshape_gview_adaptor<E>::type;
 
 // ======================================================================
 // gview
@@ -379,7 +404,11 @@ auto view(E&& e, Args&&... args)
 template <size_type N, typename E>
 inline auto reshape(E&& _e, gt::shape_type<N> shape)
 {
-  using EC = select_gview_adaptor_t<E>;
+  // Note: use gview adapter more broadly, in particular for nested views,
+  // since this routine simply replaces strides. The adapter is not needed
+  // for containers and spans, because their data layout implicitly encodes
+  // their striding. gviews on the other hand, do require an adapter.
+  using EC = select_reshape_gview_adaptor_t<E>;
 
   EC e(std::forward<E>(_e));
 
@@ -401,7 +430,16 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
     shape[dim_adjust] = e.size() / size;
   }
   assert(calc_size(shape) == calc_size(e.shape()));
-  return gview<E, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
+  return gview<EC, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
+}
+
+// ======================================================================
+// flatten
+
+template <typename E>
+inline auto flatten(E&& e)
+{
+  return reshape<1, E>(std::forward<E>(e), shape(e.size()));
 }
 
 // ======================================================================

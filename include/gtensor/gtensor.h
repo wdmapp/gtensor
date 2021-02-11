@@ -539,17 +539,14 @@ inline auto zeros_like(const expression<E>& _e)
 // eval
 
 template <typename E>
-using is_gcontainer = std::is_base_of<gcontainer<E>, E>;
-
-template <typename E>
-inline std::enable_if_t<is_gcontainer<std::decay_t<E>>::value, E> eval(E&& e)
+inline std::enable_if_t<is_gcontainer<E>::value, E> eval(E&& e)
 {
   return std::forward<E>(e);
 }
 
 template <typename E>
 inline std::enable_if_t<
-  !is_gcontainer<std::decay_t<E>>::value,
+  !is_gcontainer<E>::value,
   gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>
 eval(E&& e)
 {

@@ -161,6 +161,13 @@ GT_INLINE auto gcontainer<D>::storage() -> storage_type&
   return derived().storage_impl();
 }
 
+// ======================================================================
+// is_gcontainer
+
+template <typename E>
+using is_gcontainer =
+  std::is_base_of<gcontainer<std::decay_t<E>>, std::decay_t<E>>;
+
 } // namespace gt
 
 #endif

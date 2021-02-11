@@ -241,6 +241,25 @@ TEST(gtensor, index_by_shape)
   EXPECT_EQ(a[gt::shape(2, 1)], 32.);
 }
 
+TEST(gtensor, is_expression_types)
+{
+  gt::gtensor<double, 1> a({3, 4});
+
+  EXPECT_TRUE(gt::is_gcontainer<decltype(a)>::value);
+  EXPECT_TRUE(gt::is_expression<decltype(a)>::value);
+  EXPECT_FALSE(gt::is_gtensor_span<decltype(a)>::value);
+
+  auto aview = a.view(gt::all);
+  EXPECT_FALSE(gt::is_gcontainer<decltype(aview)>::value);
+  EXPECT_TRUE(gt::is_expression<decltype(aview)>::value);
+  EXPECT_FALSE(gt::is_gtensor_span<decltype(aview)>::value);
+
+  auto aspan = a.to_kernel();
+  EXPECT_FALSE(gt::is_gcontainer<decltype(aspan)>::value);
+  EXPECT_TRUE(gt::is_expression<decltype(aspan)>::value);
+  EXPECT_TRUE(gt::is_gtensor_span<decltype(aspan)>::value);
+}
+
 #if defined GTENSOR_HAVE_DEVICE
 
 TEST(gtensor, device_assign_gtensor)
