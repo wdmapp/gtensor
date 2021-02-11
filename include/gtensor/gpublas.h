@@ -57,6 +57,12 @@ void gpublas_dgemv(int m, int n, const double* alpha, const double* A, int lda,
                    const double* x, int incx, const double* beta, double* y,
                    int incy);
 
+void gpublas_zgemv(int m, int n, const gpublas_complex_double_t* alpha,
+		   const gpublas_complex_double_t* A, int lda,
+		   const gpublas_complex_double_t* x, int incx,
+		   const gpublas_complex_double_t* beta,
+		   gpublas_complex_double_t* y, int incy);
+
 void gpublas_dgetrf_batched(int n, double* d_Aarray[], int lda,
                             gpublas_index_t* d_PivotArray, int* d_infoArray,
                             int batchSize);

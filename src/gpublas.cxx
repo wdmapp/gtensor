@@ -7,6 +7,8 @@ static gpublas_handle_t handle;
 
 void gpublas_create()
 {
+  if (handle==0) {
+    //std::cout<<"Create gpublas handle."<<std::endl;
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck((cudaError_t)cublasCreate(&handle));
 #elif defined(GTENSOR_DEVICE_HIP)
@@ -15,14 +17,19 @@ void gpublas_create()
   handle = &gt::backend::sycl::get_queue();
 #endif
 }
+}
 
 void gpublas_destroy()
 {
+  if (handle != 0 ) {
+    //std::cout<<"Destroy gpublas handle."<<std::endl;
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck((cudaError_t)cublasDestroy(handle));
 #elif defined(GTENSOR_DEVICE_HIP)
   gtGpuCheck((hipError_t)rocblas_destroy_handle(handle));
 #endif
+    handle=0;
+  }
 }
 
 void gpublas_set_stream(gpublas_stream_t stream_id)
@@ -130,6 +137,26 @@ void gpublas_dgemv(int m, int n, const double* alpha, const double* A, int lda,
 {
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck((cudaError_t)cublasDgemv(handle, CUBLAS_OP_N, m, n, alpha, A, lda,
+                                      x, incx, beta, y, incy));
+#elif defined(GTENSOR_DEVICE_HIP)
+  gtGpuCheck((hipError_t)rocblas_dgemv(handle, rocblas_operation_none, m, n,
+                                       alpha, A, lda, x, incx, beta, y, incy));
+#elif defined(GTENSOR_DEVICE_SYCL)
+  // TODO: exception handling
+  auto e = oneapi::mkl::blas::gemv(*handle, oneapi::mkl::transpose::nontrans, m,
+                                   n, *alpha, A, lda, x, incx, *beta, y, incy);
+  e.wait();
+#endif
+}
+
+void gpublas_zgemv(int m, int n, const gpublas_complex_double_t* alpha,
+		   const gpublas_complex_double_t* A, int lda,
+                   const gpublas_complex_double_t* x, int incx,
+		   const gpublas_complex_double_t* beta,
+		   gpublas_complex_double_t* y, int incy)
+{
+#ifdef GTENSOR_DEVICE_CUDA
+  gtGpuCheck((cudaError_t)cublasZgemv(handle, CUBLAS_OP_N, m, n, alpha, A, lda,
                                       x, incx, beta, y, incy));
 #elif defined(GTENSOR_DEVICE_HIP)
   gtGpuCheck((hipError_t)rocblas_dgemv(handle, rocblas_operation_none, m, n,
