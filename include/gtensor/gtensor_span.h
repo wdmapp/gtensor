@@ -88,6 +88,7 @@ public:
 
   template <typename E>
   self_type& operator=(const expression<E>& e);
+  self_type& operator=(const value_type v);
 
   gtensor_span to_kernel() const;
 
@@ -139,6 +140,13 @@ inline auto gtensor_span<T, N, S>::operator=(const expression<E>& e)
   -> self_type&
 {
   assign(*this, e.derived());
+  return *this;
+}
+
+template <typename T, int N, typename S>
+inline auto gtensor_span<T, N, S>::operator=(const value_type v) -> self_type&
+{
+  assign(*this, scalar(v));
   return *this;
 }
 

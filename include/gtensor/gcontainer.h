@@ -4,6 +4,7 @@
 
 #include "defs.h"
 #include "expression.h"
+#include "gscalar.h"
 #include "gstrided.h"
 #include "helper.h"
 
@@ -40,6 +41,9 @@ public:
 
   template <typename E>
   D& operator=(const expression<E>& e);
+  template <typename T>
+  D& operator=(const gscalar<T>& s);
+  D& operator=(const value_type v);
 
   void resize(const shape_type& shape);
 
@@ -67,6 +71,21 @@ inline D& gcontainer<D>::operator=(const expression<E>& e)
 {
   resize(e.derived().shape());
   assign(derived(), e.derived());
+  return derived();
+}
+
+template <typename D>
+template <typename T>
+inline D& gcontainer<D>::operator=(const gscalar<T>& v)
+{
+  assign(derived(), v);
+  return derived();
+}
+
+template <typename D>
+inline D& gcontainer<D>::operator=(const value_type v)
+{
+  assign(derived(), scalar(v));
   return derived();
 }
 
