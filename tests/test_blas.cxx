@@ -210,7 +210,7 @@ TEST(axpy, dgemv)
     row_sum = ((i + 1) * N * ((i + 1) * N - 1) - i * N * (i * N - 1)) / 2.0;
 
     // b*y is just i, so total is (row_sum + i)
-    EXPECT_EQ(h_y[i], static_cast<T>(row_sum + i));
+    EXPECT_EQ(h_y[i], T(row_sum + i));
   }
 
   gt::backend::host_allocator<T>::deallocate(h_A);
