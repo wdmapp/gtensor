@@ -159,7 +159,7 @@ void gpublas_zgemv(int m, int n, const gpublas_complex_double_t* alpha,
   gtGpuCheck((cudaError_t)cublasZgemv(handle, CUBLAS_OP_N, m, n, alpha, A, lda,
                                       x, incx, beta, y, incy));
 #elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocblas_dgemv(handle, rocblas_operation_none, m, n,
+  gtGpuCheck((hipError_t)rocblas_zgemv(handle, rocblas_operation_none, m, n,
                                        alpha, A, lda, x, incx, beta, y, incy));
 #elif defined(GTENSOR_DEVICE_SYCL)
   // TODO: exception handling
