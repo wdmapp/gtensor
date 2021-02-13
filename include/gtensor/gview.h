@@ -439,7 +439,7 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
 template <typename E>
 inline auto flatten(E&& e)
 {
-  return reshape<1, E>(std::forward<E>(e), shape(e.size()));
+  return reshape(std::forward<E>(e), shape(e.size()));
 }
 
 // ======================================================================
