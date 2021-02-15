@@ -56,7 +56,7 @@ jobs:
     - name: cmake host build
       run: cmake --build build-sycl-host -v
     - name: cmake host run tests
-      run: cmake --build build-sycl-host -v -t test
+      run: ./run-gtests.sh build-sycl-host
     - name: cmake host run daxpy
       run: ./daxpy
       working-directory: ${{ github.workspace }}/build-sycl-host/examples
