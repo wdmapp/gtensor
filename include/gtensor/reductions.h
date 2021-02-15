@@ -264,13 +264,13 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
     flat_out_shape, GT_LAMBDA(int i) {
       auto idx_out = unravel(i, strides_out);
       auto idx_in = insert(idx_out, axis, 0);
-      Tin tmp = index_expression(k_in, idx_in);
+      Tin tmp = k_in[idx_in];
       idx_in[axis]++;
       for (int j = 1; j < reduction_length; j++) {
-        tmp = tmp + index_expression(k_in, idx_in);
+        tmp = tmp + k_in[idx_in];
         idx_in[axis]++;
       }
-      index_expression(k_out, idx_out) = tmp;
+      k_out[idx_out] = tmp;
     });
 }
 

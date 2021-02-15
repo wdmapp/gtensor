@@ -371,6 +371,86 @@ TEST(gview, dimension_arg_count)
   // auto a_view_bad = a.view(_s(1, 3), _all, _all);
 }
 
+TEST(gview, index_by_shape)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aview = a.view(_all, _all);
+
+  EXPECT_EQ(aview[gt::shape(0, 0)], 11.);
+  EXPECT_EQ(aview[gt::shape(1, 0)], 21.);
+  EXPECT_EQ(aview[gt::shape(2, 0)], 31.);
+  EXPECT_EQ(aview[gt::shape(0, 1)], 12.);
+  EXPECT_EQ(aview[gt::shape(1, 1)], 22.);
+  EXPECT_EQ(aview[gt::shape(2, 1)], 32.);
+}
+
+TEST(gview, view_of_view)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+
+  auto aview = a.view(_s(1, 3), _all);
+  EXPECT_EQ(aview, (gt::gtensor<double, 2>{{21., 31.}, {22., 32.}}));
+
+  auto aview2 = gt::view(aview, _all, _s(1, 2));
+  EXPECT_EQ(aview2, (gt::gtensor<double, 2>{{22., 32.}}));
+
+  auto aview3 = gt::view(aview, _s(1, 2), _all);
+  EXPECT_EQ(aview3, (gt::gtensor<double, 2>{{31.}, {32.}}));
+}
+
+TEST(gview, transpose_view)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aview = a.view(_s(1, 2), _all);
+  EXPECT_EQ(aview.shape(), gt::shape(1, 2));
+  EXPECT_EQ(aview, (gt::gtensor<double, 2>{{21.}, {22.}}));
+
+  auto avtranspose = gt::transpose(aview, gt::shape(1, 0));
+  EXPECT_EQ(avtranspose, (gt::gtensor<double, 2>{{21., 22.}}));
+}
+
+TEST(gview, reshape_view)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aview = a.view(_s(1, 2), _all);
+  EXPECT_EQ(aview.shape(), gt::shape(1, 2));
+  EXPECT_EQ(aview, (gt::gtensor<double, 2>{{21.}, {22.}}));
+
+  auto aview2 = gt::reshape(aview, gt::shape(2, 1));
+  EXPECT_EQ(aview2, (gt::gtensor<double, 2>{{21., 22.}}));
+}
+
+TEST(gview, reshape_reshape)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+
+  auto aview = gt::reshape(a, gt::shape(2, 3));
+  EXPECT_EQ(aview,
+            (gt::gtensor<double, 2>{{11., 21.}, {31., 12.}, {22., 32.}}));
+
+  auto aview2 = gt::reshape(aview, gt::shape(6, 1));
+  EXPECT_EQ(aview2, (gt::gtensor<double, 2>{{11., 21., 31., 12., 22., 32.}}));
+}
+
+TEST(gview, flatten_gtensor)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aflat = gt::flatten(a);
+
+  EXPECT_EQ(aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+}
+
+TEST(gview, flatten_view)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+
+  auto aview = a.view(_s(1, 3), _all);
+  EXPECT_EQ(aview, (gt::gtensor<double, 2>{{21., 31.}, {22., 32.}}));
+
+  auto aflat = gt::flatten(aview);
+  EXPECT_EQ(aflat, (gt::gtensor<double, 1>{21., 31., 22., 32.}));
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_copy_ctor)

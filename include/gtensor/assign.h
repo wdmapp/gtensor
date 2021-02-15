@@ -412,12 +412,11 @@ struct assigner<N, space::device>
   static void run(E1& lhs, const E2& rhs)
   {
     sycl::queue& q = gt::backend::sycl::get_queue();
-    auto size = calc_size(lhs.shape());
-    auto k_lhs = lhs.to_kernel();
-    auto k_rhs = rhs.to_kernel();
     // use linear indexing for simplicity
+    auto size = calc_size(lhs.shape());
+    auto k_lhs = flatten(lhs).to_kernel();
+    auto k_rhs = flatten(rhs).to_kernel();
     auto block_size = std::min(size, BS_LINEAR);
-    auto strides = calc_strides(lhs.shape());
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto e = q.submit([&](sycl::handler& cgh) {
@@ -426,8 +425,7 @@ struct assigner<N, space::device>
       using kname = gt::backend::sycl::AssignN<ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
         int i = item.get_global_id(0);
-        auto idx = unravel(i, strides);
-        index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
+        k_lhs(i) = k_rhs(i);
       });
     });
     e.wait();

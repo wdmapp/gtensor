@@ -35,6 +35,7 @@ add_gtensor_test(test_launch)
 add_gtensor_test(test_span)
 add_gtensor_test(test_reductions)
 add_gtensor_test(test_sarray)
+add_gtensor_test(test_assign)
 
 if (GTENSOR_ENABLE_CLIB)
   add_executable(test_clib)

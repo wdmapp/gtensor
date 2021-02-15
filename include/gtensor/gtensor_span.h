@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GTENSOR_VIEW_H
 #define GTENSOR_GTENSOR_VIEW_H
 
+#include <type_traits>
+
 #include "device_backend.h"
 #include "span.h"
 
@@ -96,12 +98,20 @@ public:
   template <typename... Args>
   GT_INLINE reference operator()(Args&&... args) const;
 
+  GT_INLINE reference operator[](const shape_type& idx) const;
+
   GT_INLINE reference data_access(size_type i) const;
 
 private:
   storage_type storage_;
 
   friend class gstrided<self_type>;
+
+  template <typename Idx, size_type... I>
+  GT_INLINE reference access(std::index_sequence<I...>, const Idx& idx) const
+  {
+    return (*this)(idx[I]...);
+  }
 };
 
 // ======================================================================
@@ -168,6 +178,13 @@ GT_INLINE auto gtensor_span<T, N, S>::operator()(Args&&... args) const
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
+template <typename T, int N, typename S>
+GT_INLINE auto gtensor_span<T, N, S>::operator[](const shape_type& idx) const
+  -> reference
+{
+  return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
 // ======================================================================
 // adapt
 
@@ -198,6 +215,17 @@ gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
   return adapt_device<N, T>(data, {shape_data, N});
 }
 #endif
+
+// ======================================================================
+// is_gtensor_span
+
+template <typename E>
+struct is_gtensor_span : std::false_type
+{};
+
+template <typename T, int N, typename S>
+struct is_gtensor_span<gtensor_span<T, N, S>> : std::true_type
+{};
 
 } // namespace gt
 

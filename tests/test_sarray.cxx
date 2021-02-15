@@ -5,6 +5,17 @@
 
 #include "test_debug.h"
 
+TEST(sarray, construct)
+{
+  gt::sarray<int, 4> a(1, 2, 3, 4);
+  gt::sarray<int, 4> b({1, 2, 3, 4});
+  int data[4] = {1, 2, 3, 4};
+  gt::sarray<int, 4> c(&data[0], 4);
+
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a, c);
+}
+
 template <typename S>
 void test_launch_insert()
 {
