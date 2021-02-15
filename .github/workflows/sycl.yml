@@ -5,16 +5,16 @@ on: workflow_dispatch
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    #container: intel/oneapi-basekit:devel-ubuntu18.04
-    container: ubuntu:18.04
+    container: ubuntu:20.04
     env:
       CXX: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
       DPCPP_ROOT: /opt/intel/oneapi
       INTEL_LICENSE_FILE: /opt/intel/oneapi/compiler/latest/licensing
-      LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib:/opt/intel/oneapi/ccl/2021.1-beta10/lib/cpu_gpu_dpcpp
+      LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
       SYCL_DEVICE_TYPE: host
+      DEBIAN_FRONTEND: noninteractive
 
     steps:
     - name: install core packages
@@ -26,13 +26,17 @@ jobs:
         echo 'deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu bionic-devel main' > /etc/apt/sources.list.d/intel-graphics.list
         apt-get update -y
     - name: install dpcpp
-      run: apt-get install -y intel-oneapi-dpcpp-cpp-compiler-2021.1-beta10 intel-oneapi-mkl-2021.1-beta10 clinfo intel-opencl intel-level-zero-gpu level-zero
+      run: apt-get install -y intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl clinfo intel-opencl-icd intel-level-zero-gpu level-zero
     - uses: actions/checkout@v2
     - name: clinfo
       run: |
         mkdir -p /etc/OpenCL/vendors
         echo "libintelocl.so" > /etc/OpenCL/vendors/intel-cpu.icd
         clinfo
+    - name: sycl-ls
+      run: |
+        /opt/intel/oneapi/compiler/latest/linux/bin/sycl-ls
+        /opt/intel/oneapi/compiler/latest/linux/bin/sycl-ls --verbose
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.sh'
@@ -47,26 +51,26 @@ jobs:
         cmake --build build -t install
       env:
         CXX: clang++-9
-    - name: cmake cpu
-      run: cmake -S . -B build-sycl-cpu -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
-    - name: cmake cpu build
-      run: cmake --build build-sycl-cpu -v
-    - name: cmake cpu run tests
-      run: cmake --build build-sycl-cpu -v -t test
-    - name: cmake cpu run daxpy
+    - name: cmake host
+      run: cmake -S . -B build-sycl-host -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=OFF -DGTENSOR_ENABLE_FFT=OFF -DGTENSOR_TEST_DEBUG=ON
+    - name: cmake host build
+      run: cmake --build build-sycl-host -v
+    - name: cmake host run tests
+      run: ./run-gtests.sh build-sycl-host
+    - name: cmake host run daxpy
       run: ./daxpy
-      working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
-    - name: cmake cpu run stencil1d
+      working-directory: ${{ github.workspace }}/build-sycl-host/examples
+    - name: cmake host run stencil1d
       run: ./stencil1d
-      working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
-    - name: cmake cpu run mult_table
+      working-directory: ${{ github.workspace }}/build-sycl-host/examples
+    - name: cmake host run mult_table
       run: ./mult_table
-      working-directory: ${{ github.workspace }}/build-sycl-cpu/examples
+      working-directory: ${{ github.workspace }}/build-sycl-host/examples
     - name: GNU make setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples
     - name: GNU make build
-      run: make GTENSOR_DEVICE=sycl GTENSOR_DEVICE_SYCL_SELECTOR=cpu
+      run: make GTENSOR_DEVICE=sycl GTENSOR_DEVICE_SYCL_SELECTOR=host
       working-directory: ${{ github.workspace }}/examples
     - name: GNU make run daxpy
       run: ./daxpy

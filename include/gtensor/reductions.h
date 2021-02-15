@@ -49,6 +49,12 @@ inline auto min(const Container& a)
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
+#ifdef GTENSOR_DEVICE_SYCL_HOST
+#define SYCL_REDUCTION_WORK_GROUP_SIZE 16
+#else
+#define SYCL_REDUCTION_WORK_GROUP_SIZE 128
+#endif
+
 template <typename Container,
           typename = std::enable_if_t<
             has_data_method_v<Container> &&
@@ -61,8 +67,8 @@ inline auto sum(const Container& a)
   T sum_result = 0;
   sycl::buffer<T> sum_buf{&sum_result, 1};
   {
-    sycl::nd_range<1> range(a.size(), 128);
-    if (a.size() <= 128) {
+    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
+    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
       range = sycl::nd_range<1>(a.size(), a.size());
     }
     auto data = a.data();
@@ -94,8 +100,8 @@ inline auto max(const Container& a)
   T max_result = 0;
   sycl::buffer<T> max_buf{&max_result, 1};
   {
-    sycl::nd_range<1> range(a.size(), 128);
-    if (a.size() <= 128) {
+    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
+    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
       range = sycl::nd_range<1>(a.size(), a.size());
     }
     auto data = a.data();
@@ -127,8 +133,8 @@ inline auto min(const Container& a)
   T min_result;
   sycl::buffer<T> min_buf{&min_result, 1};
   {
-    sycl::nd_range<1> range(a.size(), 128);
-    if (a.size() <= 128) {
+    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
+    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
       range = sycl::nd_range<1>(a.size(), a.size());
     }
     auto data = a.data();
