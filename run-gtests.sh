@@ -2,6 +2,8 @@
 
 build_dir=${1:-.}
 
+exit_code=0
+
 for f in "$build_dir"/tests/test_*; do
     if [ -x "$f" ]; then
         test_dir=$(dirname "$f")
@@ -12,6 +14,9 @@ for f in "$build_dir"/tests/test_*; do
         echo $test_name $result
         if [ $result -ne 0 ]; then
           cat $test_log
+          exit_code=$result
         fi
     fi
 done
+
+exit $exit_code
