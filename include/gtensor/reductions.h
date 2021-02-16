@@ -18,7 +18,27 @@ namespace gt
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 template <typename Container,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
+inline auto sum(const Container& a)
+{
+  using T = typename Container::value_type;
+  // Note: wrapping in device_ptr before passing to reduce is necessary
+  // when using the non-thrust storage backend, for HIP and CUDA 10.2.
+  // Not necessary in CUDA 11.2. For thrust backend and newer CUDA,
+  // this only entails an extra device_ptr copy construct, so performance
+  // impact will be minimal.
+  thrust::device_ptr<const T> begin(a.data());
+  thrust::device_ptr<const T> end(a.data() + a.size());
+  return thrust::reduce(begin, end, 0., thrust::plus<T>());
+}
+
+template <typename Container,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::host>::value>,
+          typename = int>
 inline auto sum(const Container& a)
 {
   using T = typename Container::value_type;
@@ -28,7 +48,22 @@ inline auto sum(const Container& a)
 }
 
 template <typename Container,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
+inline auto max(const Container& a)
+{
+  using T = typename Container::value_type;
+  thrust::device_ptr<const T> begin(a.data());
+  thrust::device_ptr<const T> end(a.data() + a.size());
+  return thrust::reduce(begin, end, 0., thrust::maximum<T>());
+}
+
+template <typename Container,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::host>::value>,
+          typename = int>
 inline auto max(const Container& a)
 {
   using T = typename Container::value_type;
@@ -38,9 +73,26 @@ inline auto max(const Container& a)
 }
 
 template <typename Container,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
 inline auto min(const Container& a)
 {
+  using T = typename Container::value_type;
+  thrust::device_ptr<const T> begin(a.data());
+  thrust::device_ptr<const T> end(a.data() + a.size());
+  auto min_element = thrust::min_element(begin, end);
+  return *min_element;
+}
+
+template <typename Container,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::host>::value>,
+          typename = int>
+inline auto min(const Container& a)
+{
+  using T = typename Container::value_type;
   auto begin = a.data();
   auto end = a.data() + a.size();
   auto min_element = thrust::min_element(begin, end);
