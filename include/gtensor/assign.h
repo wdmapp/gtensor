@@ -221,7 +221,10 @@ struct assigner<1, space::device>
   static void run(E1& lhs, const E2& rhs)
   {
     // printf("assigner<1, device>\n");
-    const int BS_1D = 256;
+    int BS_1D = 256;
+    if (lhs.shape(0) < BS_1D) {
+      BS_1D = 32;
+    }
     dim3 numThreads(BS_1D);
     dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
 

@@ -320,7 +320,10 @@ struct launch<1, space::device>
   template <typename F>
   static void run(const gt::shape_type<1>& shape, F&& f)
   {
-    const int BS_1D = 256;
+    int BS_1D = 256;
+    if (shape[0] < BS_1D) {
+      BS_1D = 32;
+    }
     dim3 numThreads(BS_1D);
     dim3 numBlocks((shape[0] + BS_1D - 1) / BS_1D);
 
