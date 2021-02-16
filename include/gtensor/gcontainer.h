@@ -4,6 +4,7 @@
 
 #include "defs.h"
 #include "expression.h"
+#include "gscalar.h"
 #include "gstrided.h"
 #include "helper.h"
 
@@ -60,6 +61,8 @@ public:
   GT_INLINE const storage_type& storage() const;
   GT_INLINE storage_type& storage();
 
+  inline void fill(const value_type v);
+
 private:
   template <typename S, size_type... I>
   GT_INLINE const_reference access(std::index_sequence<I...>,
@@ -85,6 +88,12 @@ inline D& gcontainer<D>::operator=(const expression<E>& e)
   resize(e.derived().shape());
   assign(derived(), e.derived());
   return derived();
+}
+
+template <typename D>
+inline void gcontainer<D>::fill(const value_type v)
+{
+  assign(derived(), scalar(v));
 }
 
 template <typename D>

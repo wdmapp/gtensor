@@ -173,6 +173,8 @@ public:
   self_type& operator=(const expression<E>& e);
   self_type& operator=(value_type val);
 
+  void fill(const value_type v);
+
   const_kernel_type to_kernel() const;
   kernel_type to_kernel();
 
@@ -291,6 +293,12 @@ inline auto gview<EC, N>::operator=(value_type val) -> gview&
 {
   assign(*this, scalar(val));
   return *this;
+}
+
+template <typename EC, int N>
+inline void gview<EC, N>::fill(const value_type v)
+{
+  assign(*this, scalar(v));
 }
 
 // ======================================================================
