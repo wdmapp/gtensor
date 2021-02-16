@@ -164,7 +164,7 @@ TEST(blas, zgemv)
     h_x[i] = T(i, 0.0);
     h_y[i] = T(0.0, i);
     for (int j = 0; j < N; ++j) {
-      h_mat[j*N+i] = T(i, j);
+      h_mat[j * N + i] = T(i, j);
     }
   }
 
@@ -181,19 +181,20 @@ TEST(blas, zgemv)
                    gpublas_complex_double_t* y, int incy)
   */
 
-  gpublas_zgemv(N, N, (gpublas_complex_double_t*)(&a), (gpublas_complex_double_t*)(d_mat), N,
-                (gpublas_complex_double_t*)(d_x), 1, (gpublas_complex_double_t*)(&b),
-		(gpublas_complex_double_t*)(d_y), 1);
+  gpublas_zgemv(
+    N, N, (gpublas_complex_double_t*)(&a), (gpublas_complex_double_t*)(d_mat),
+    N, (gpublas_complex_double_t*)(d_x), 1, (gpublas_complex_double_t*)(&b),
+    (gpublas_complex_double_t*)(d_y), 1);
 
   gpublas_destroy();
 
   gt::backend::device_copy_dh(d_y, h_y, N);
 
   for (int p = 0; p < N; p++) {
-    auto r=p*(N*(N+1)/2-N);
-    auto s=(N * (N + 1) * (2*N + 1) - 6 * N * N) / 6;
-    EXPECT_EQ(h_y[p], T(a.real()*r-a.imag()*s-b.imag()*p,
-                        a.imag()*r+a.real()*s+b.real()*p));
+    auto r = p * (N * (N + 1) / 2 - N);
+    auto s = (N * (N + 1) * (2 * N + 1) - 6 * N * N) / 6;
+    EXPECT_EQ(h_y[p], T(a.real() * r - a.imag() * s - b.imag() * p,
+                        a.imag() * r + a.real() * s + b.real() * p));
   }
 
   gt::backend::host_allocator<T>::deallocate(h_x);
