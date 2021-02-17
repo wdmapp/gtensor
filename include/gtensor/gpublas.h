@@ -31,9 +31,9 @@ typedef gt::complex<float> gpublas_complex_float_t;
 typedef std::int64_t gpublas_index_t;
 #endif
 
-//#ifdef __cplusplus
-// extern "C" {
-//#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void gpublas_create();
 void gpublas_destroy();
@@ -78,6 +78,6 @@ void gpublas_zgetrs_batched(int n, int nrhs,
                             gpublas_complex_double_t** d_Barray, int ldb,
                             int batchSize);
 
-//#ifdef __cplusplus
-//}
-//#endif
+#ifdef __cplusplus
+}
+#endif
