@@ -17,13 +17,39 @@ namespace gt
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
+namespace detail
+{
+
+template <typename Container, typename Enable = void>
+struct thrust_const_pointer
+{
+  using type = typename Container::const_pointer;
+};
+
+template <typename Container>
+struct thrust_const_pointer<
+  Container, gt::meta::void_t<std::enable_if_t<std::is_same<
+               typename Container::space_type, gt::space::device>::value>>>
+{
+  using type =
+    thrust::device_ptr<std::add_const_t<typename Container::value_type>>;
+};
+
+} // namespace detail
+
 template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>
 inline auto sum(const Container& a)
 {
   using T = typename Container::value_type;
-  auto begin = a.data();
-  auto end = a.data() + a.size();
+  using P = typename detail::thrust_const_pointer<Container>::type;
+  // Note: wrapping in device_ptr before passing to reduce is necessary
+  // when using the non-thrust storage backend, for HIP and CUDA 10.2.
+  // Not necessary in CUDA 11.2. For thrust backend and newer CUDA,
+  // this only entails an extra device_ptr copy construct, so performance
+  // impact will be minimal.
+  P begin(a.data());
+  P end(a.data() + a.size());
   return thrust::reduce(begin, end, 0., thrust::plus<T>());
 }
 
@@ -32,8 +58,9 @@ template <typename Container,
 inline auto max(const Container& a)
 {
   using T = typename Container::value_type;
-  auto begin = a.data();
-  auto end = a.data() + a.size();
+  using P = typename detail::thrust_const_pointer<Container>::type;
+  P begin(a.data());
+  P end(a.data() + a.size());
   return thrust::reduce(begin, end, 0., thrust::maximum<T>());
 }
 
@@ -41,8 +68,10 @@ template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>
 inline auto min(const Container& a)
 {
-  auto begin = a.data();
-  auto end = a.data() + a.size();
+  using T = typename Container::value_type;
+  using P = typename detail::thrust_const_pointer<Container>::type;
+  P begin(a.data());
+  P end(a.data() + a.size());
   auto min_element = thrust::min_element(begin, end);
   return *min_element;
 }
