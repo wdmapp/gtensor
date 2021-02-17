@@ -2,10 +2,146 @@
 
 #include "gtensor/gtensor.h"
 
+#include "gtensor/blas.h"
+
+/*
 #define DOUBLE_PREC
 #include "gtensor/gpublas.h"
+*/
 
 #include "test_debug.h"
+
+template <typename T>
+void test_axpy_real()
+{
+  constexpr int N = 1024;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
+  T a = 0.5;
+
+  for (int i = 0; i < N; i++) {
+    h_x(i) = 2.0 * static_cast<double>(i);
+    h_y(i) = static_cast<double>(i);
+  }
+
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
+
+  gt::blas::handle_t h;
+
+  gt::blas::create(&h);
+
+  // gt::blas::axpy(h, N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
+  //               gt::backend::raw_pointer_cast(d_y.data()), 1);
+  gt::blas::axpy(h, a, d_x, d_y);
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_y, h_y);
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_y(i), static_cast<T>(i * 2.0));
+  }
+}
+
+TEST(blas, saxpy)
+{
+  test_axpy_real<float>();
+}
+
+TEST(blas, daxpy)
+{
+  test_axpy_real<double>();
+}
+
+template <typename R>
+void test_axpy_complex()
+{
+  constexpr int N = 1024;
+  using T = gt::complex<R>;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
+  T a = T(0.5, 0);
+
+  for (int i = 0; i < N; i++) {
+    h_x(i) = T(2.0 * i, -2.0 * i);
+    h_y(i) = T(1.0 * i, -1.0 * i);
+  }
+
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
+
+  gt::blas::handle_t h;
+
+  gt::blas::create(&h);
+
+  gt::blas::axpy(h, N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
+                 gt::backend::raw_pointer_cast(d_y.data()), 1);
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_y, h_y);
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_y(i), T(i * 2.0, i * -2.0));
+  }
+}
+
+TEST(blas, caxpy)
+{
+  test_axpy_complex<float>();
+}
+
+TEST(blas, zaxpy)
+{
+  test_axpy_complex<double>();
+}
+
+template <typename R>
+void test_scal_complex()
+{
+  constexpr int N = 1024;
+  using T = gt::complex<R>;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  T a = T(0.5, 0);
+
+  for (int i = 0; i < N; i++) {
+    h_x(i) = T(2.0 * i, -2.0 * i);
+  }
+
+  gt::copy(h_x, d_x);
+
+  gt::blas::handle_t h;
+
+  gt::blas::create(&h);
+
+  gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_x, h_x);
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(h_x(i), T(i * 1.0, i * -1.0));
+  }
+}
+
+TEST(blas, cscal)
+{
+  test_scal_complex<float>();
+}
+
+TEST(blas, zscal)
+{
+  test_scal_complex<double>();
+}
+
+#if 0
 
 TEST(blas, daxpy)
 {
@@ -278,3 +414,5 @@ TEST(blas, zgemv)
   gt::backend::host_allocator<T>::deallocate(h_mat);
   gt::backend::device_allocator<T>::deallocate(d_mat);
 }
+
+#endif

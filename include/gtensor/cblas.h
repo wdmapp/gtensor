@@ -1,5 +1,37 @@
-#include "gtensor/gtensor.h"
+#include "gtensor/blas.h"
 
+typedef gt::blas::handle_t gtblas_handle_t;
+typedef gt::blas::stream_t gtblas_stream_t;
+typedef gt::complex<double> gtblas_complex_double_t;
+typedef gt::complex<float> gtblas_complex_float_t;
+typedef int gtblas_index_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void gtblas_create();
+void gtblas_destroy();
+
+void gtblas_set_stream(gtblas_stream_t stream_id);
+void gtblas_get_stream(gtblas_stream_t* stream_id);
+
+void gtblas_saxpy(int n, const float* a, const float* x, int incx, float* y,
+                  int incy);
+void gtblas_daxpy(int n, const double* a, const double* x, int incx, double* y,
+                  int incy);
+void gtblas_caxpy(int n, const gtblas_complex_float_t* a,
+                  const gtblas_complex_float_t* x, int incx,
+                  gtblas_complex_float_t* y, int incy);
+void gtblas_zaxpy(int n, const gtblas_complex_double_t* a,
+                  const gtblas_complex_double_t* x, int incx,
+                  gtblas_complex_double_t* y, int incy);
+
+#ifdef __cplusplus
+}
+#endif
+
+#if 0
 #ifdef GTENSOR_DEVICE_CUDA
 
 #include "cublas_v2.h"
@@ -80,4 +112,42 @@ void gpublas_zgetrs_batched(int n, int nrhs,
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+
+namespace gt
+{
+
+namespace blas
+{
+
+
+template <typename T>
+void axpy(int n, const T* a, const T* x, int incx, T* y, int incy);
+
+template <typename T>
+void scal(int n, const double fac, T* arr, const int incx);
+
+template <typename T>
+void copy(int n, const T* x, int incx, T* y, int incy);
+
+template <typename T>
+void gemv(int m, int n, const T* alpha, const double* A, int lda,
+                 const T* x, int incx, const T* beta, T* y, int incy);
+
+template <typename T>
+void getrf_batched(int n, T* d_Aarray[], int lda,
+                           gpublas_index_t* d_PivotArray, int* d_infoArray,
+                           int batchSize);
+
+template <typename T>
+void getrs_batched(int n, int nrhs, T* const* d_Aarray, int lda,
+                           gpublas_index_t* devIpiv, T** d_Barray,
+                           int ldb, int batchSize);
+
+}
+}
+#endif
+
 #endif
