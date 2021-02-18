@@ -7,6 +7,20 @@
 #include "gtensor/macros.h"
 #include "gtensor/space.h"
 
+namespace gt
+{
+
+namespace blas
+{
+
+struct _handle_wrapper;
+
+using handle_t = struct _handle_wrapper*;
+
+} // namespace blas
+
+} // namespace gt
+
 #if defined(GTENSOR_DEVICE_CUDA)
 #include "gtensor/blas/cuda.h"
 #elif defined(GTENSOR_DEVICE_HIP)
@@ -21,18 +35,49 @@ namespace gt
 namespace blas
 {
 
-template <typename T, typename C,
-          typename = std::enable_if_t<
-            has_data_method_v<C> && has_size_method_v<C> &&
-            std::is_same<expr_space_type<C>, gt::space::device>::value>>
-inline void axpy(handle_t h, const T a, const C& x, C& y)
+template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
+                                                  has_space_type_device_v<C>>>
+inline void axpy(handle_t h, typename C::value_type a, const C& x, C& y)
 {
-  static_assert(std::is_same<T, typename C::value_type>::value,
-                "scalar 'a' must have same type as container value_type");
-
   assert(x.size() == y.size());
+  axpy(h, x.size(), a, gt::backend::raw_pointer_cast(x.data()), 1,
+       gt::backend::raw_pointer_cast(y.data()), 1);
+}
 
-  axpy(h, x.size(), &a, gt::backend::raw_pointer_cast(x.data()), 1,
+template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
+                                                  has_space_type_device_v<C>>>
+inline void scal(handle_t h, typename C::value_type fac, C& arr)
+{
+  scal(h, arr.size(), fac, gt::backend::raw_pointer_cast(arr.data()), 1);
+}
+
+template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
+                                                  has_space_type_device_v<C>>>
+inline void copy(handle_t h, C& src, C& dest)
+{
+  copy(h, src.size(), gt::backend::raw_pointer_cast(src.data()), 1,
+       gt::backend::raw_pointer_cast(dest.data()), 1);
+}
+
+template <typename M, typename V,
+          typename = std::enable_if_t<
+            has_container_methods_v<M> && has_space_type_device_v<M> &&
+            has_container_methods_v<V> && has_space_type_device_v<V>>>
+inline void gemv(handle_t h, typename M::value_type alpha, M& A, V& x,
+                 typename M::value_type beta, V& y)
+{
+  static_assert(expr_dimension<M>() == 2,
+                "matrix arg 'A' must have dimension 2");
+  static_assert(expr_dimension<V>() == 1,
+                "vector args 'x' and 'y' must have dimension 1");
+  static_assert(
+    std::is_same<typename M::value_type, typename V::value_type>::value,
+    "matrix and vectors must have same value type");
+  assert(A.size(1) == V.size(0));
+
+  gemv(h, A.shape(0), A.shape(1), alpha,
+       gt::backend::raw_pointer_cast(A.data()), A.shape(0),
+       gt::backend::raw_pointer_cast(x.data()), 1, beta,
        gt::backend::raw_pointer_cast(y.data()), 1);
 }
 

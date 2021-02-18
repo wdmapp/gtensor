@@ -79,7 +79,7 @@ void test_axpy_complex()
 
   gt::blas::create(&h);
 
-  gt::blas::axpy(h, N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
+  gt::blas::axpy(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1,
                  gt::backend::raw_pointer_cast(d_y.data()), 1);
 
   gt::blas::destroy(h);
@@ -108,7 +108,7 @@ void test_scal_complex()
   using T = gt::complex<R>;
   gt::gtensor<T, 1> h_x(N);
   gt::gtensor_device<T, 1> d_x(N);
-  T a = T(0.5, 0);
+  T a = T(0.5, 1);
 
   for (int i = 0; i < N; i++) {
     h_x(i) = T(2.0 * i, -2.0 * i);
@@ -120,14 +120,15 @@ void test_scal_complex()
 
   gt::blas::create(&h);
 
-  gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+  // gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+  gt::blas::scal(h, a, d_x);
 
   gt::blas::destroy(h);
 
   gt::copy(d_x, h_x);
 
   for (int i = 0; i < N; i++) {
-    EXPECT_EQ(h_x(i), T(i * 1.0, i * -1.0));
+    EXPECT_EQ(h_x(i), T(i * 3.0, i * 1.0));
   }
 }
 
@@ -141,166 +142,107 @@ TEST(blas, zscal)
   test_scal_complex<double>();
 }
 
-#if 0
-
-TEST(blas, daxpy)
+template <typename T>
+void test_scal_real()
 {
   constexpr int N = 1024;
-  using T = double;
-  T* h_x = gt::backend::host_allocator<T>::allocate(N);
-  T* d_x = gt::backend::device_allocator<T>::allocate(N);
-  T* h_y = gt::backend::host_allocator<T>::allocate(N);
-  T* d_y = gt::backend::device_allocator<T>::allocate(N);
-  T a = 0.5;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  T a = T(0.5);
 
   for (int i = 0; i < N; i++) {
-    h_x[i] = 2.0 * static_cast<double>(i);
-    h_y[i] = static_cast<double>(i);
+    h_x(i) = T(2.0 * i);
   }
 
-  gt::backend::device_copy_hd(h_x, d_x, N);
-  gt::backend::device_copy_hd(h_y, d_y, N);
+  gt::copy(h_x, d_x);
 
-  gpublas_create();
+  gt::blas::handle_t h;
 
-  gpublas_daxpy(N, &a, d_x, 1, d_y, 1);
+  gt::blas::create(&h);
 
-  gpublas_destroy();
+  // gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+  gt::blas::scal(h, a, d_x);
 
-  gt::backend::device_copy_dh(d_y, h_y, N);
+  gt::blas::destroy(h);
+
+  gt::copy(d_x, h_x);
 
   for (int i = 0; i < N; i++) {
-    EXPECT_EQ(h_y[i], static_cast<T>(i * 2.0));
+    EXPECT_EQ(h_x(i), T(i * 1.0));
   }
-
-  gt::backend::host_allocator<T>::deallocate(h_x);
-  gt::backend::device_allocator<T>::deallocate(d_x);
-  gt::backend::host_allocator<T>::deallocate(h_y);
-  gt::backend::device_allocator<T>::deallocate(d_y);
 }
 
-TEST(blas, zaxpy)
+TEST(blas, sscal)
 {
-  constexpr int N = 1024;
-  using T = gt::complex<double>;
-  T* h_x = gt::backend::host_allocator<T>::allocate(N);
-  T* d_x = gt::backend::device_allocator<T>::allocate(N);
-  T* h_y = gt::backend::host_allocator<T>::allocate(N);
-  T* d_y = gt::backend::device_allocator<T>::allocate(N);
-  T a = T(0.5, 0);
-
-  for (int i = 0; i < N; i++) {
-    h_x[i] = T(2.0 * i, -2.0 * i);
-    h_y[i] = T(1.0 * i, -1.0 * i);
-  }
-
-  gt::backend::device_copy_hd(h_x, d_x, N);
-  gt::backend::device_copy_hd(h_y, d_y, N);
-
-  gpublas_create();
-
-  gpublas_zaxpy(N, (gpublas_complex_double_t*)&a,
-                (gpublas_complex_double_t*)(d_x), 1,
-                (gpublas_complex_double_t*)(d_y), 1);
-
-  gpublas_destroy();
-
-  gt::backend::device_copy_dh(d_y, h_y, N);
-
-  for (int i = 0; i < N; i++) {
-    EXPECT_EQ(h_y[i], T(i * 2.0, i * -2.0));
-  }
-
-  gt::backend::host_allocator<T>::deallocate(h_x);
-  gt::backend::device_allocator<T>::deallocate(d_x);
-  gt::backend::host_allocator<T>::deallocate(h_y);
-  gt::backend::device_allocator<T>::deallocate(d_y);
+  test_scal_real<float>();
 }
 
-TEST(blas, zdscal)
+TEST(blas, dscal)
+{
+  test_scal_real<double>();
+}
+
+template <typename R>
+void test_copy_complex()
 {
   constexpr int N = 1024;
-  using T = gt::complex<double>;
-  T* h_x = gt::backend::host_allocator<T>::allocate(N);
-  T* d_x = gt::backend::device_allocator<T>::allocate(N);
-  double a = 0.5;
+  using T = gt::complex<R>;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
 
   for (int i = 0; i < N; i++) {
-    h_x[i] = T(2.0 * i, -2.0 * i);
+    h_x(i) = T(2.0 * i, -2.0 * i);
+    h_y(i) = 0.0;
   }
 
-  gt::backend::device_copy_hd(h_x, d_x, N);
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
 
-  gpublas_create();
+  gt::blas::handle_t h;
 
-  gpublas_zdscal(N, a, (gpublas_complex_double_t*)(d_x), 1);
+  gt::blas::create(&h);
 
-  gpublas_destroy();
+  gt::blas::copy(h, d_x, d_y);
 
-  gt::backend::device_copy_dh(d_x, h_x, N);
+  gt::blas::destroy(h);
+
+  gt::copy(d_y, h_y);
 
   for (int i = 0; i < N; i++) {
-    EXPECT_EQ(h_x[i], T(i * 1.0, i * -1.0));
+    EXPECT_EQ(h_y(i), T(i * 2.0, i * -2.0));
   }
+}
 
-  gt::backend::host_allocator<T>::deallocate(h_x);
-  gt::backend::device_allocator<T>::deallocate(d_x);
+TEST(blas, ccopy)
+{
+  test_copy_complex<float>();
 }
 
 TEST(blas, zcopy)
 {
-  constexpr int N = 1024;
-  using T = gt::complex<double>;
-  T* h_x = gt::backend::host_allocator<T>::allocate(N);
-  T* d_x = gt::backend::device_allocator<T>::allocate(N);
-  T* h_y = gt::backend::host_allocator<T>::allocate(N);
-  T* d_y = gt::backend::device_allocator<T>::allocate(N);
-
-  for (int i = 0; i < N; i++) {
-    h_x[i] = T(2.0 * i, -2.0 * i);
-    h_y[i] = 0.0;
-  }
-
-  gt::backend::device_copy_hd(h_x, d_x, N);
-  gt::backend::device_copy_hd(h_y, d_y, N);
-
-  gpublas_create();
-
-  gpublas_zcopy(N, (gpublas_complex_double_t*)(d_x), 1,
-                (gpublas_complex_double_t*)(d_y), 1);
-
-  gpublas_destroy();
-
-  gt::backend::device_copy_dh(d_y, h_y, N);
-
-  for (int i = 0; i < N; i++) {
-    EXPECT_EQ(h_y[i], T(i * 2.0, i * -2.0));
-  }
-
-  gt::backend::host_allocator<T>::deallocate(h_x);
-  gt::backend::device_allocator<T>::deallocate(d_x);
-  gt::backend::host_allocator<T>::deallocate(h_y);
-  gt::backend::device_allocator<T>::deallocate(d_y);
+  test_copy_complex<double>();
 }
 
-TEST(blas, dgemv)
+template <typename T>
+void test_gemv_real()
 {
   constexpr int N = 16;
-  using T = double;
-  T* h_A = gt::backend::host_allocator<T>::allocate(N * N);
-  T* d_A = gt::backend::device_allocator<T>::allocate(N * N);
-  T* h_x = gt::backend::host_allocator<T>::allocate(N);
-  T* d_x = gt::backend::device_allocator<T>::allocate(N);
-  T* h_y = gt::backend::host_allocator<T>::allocate(N);
-  T* d_y = gt::backend::device_allocator<T>::allocate(N);
+  gt::gtensor<T, 2> h_A(gt::shape(N, N));
+  gt::gtensor_device<T, 2> d_A(gt::shape(N, N));
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
   T a = 0.5;
   T b = 2.0;
 
   for (int i = 0; i < N; i++) {
-    h_x[i] = 2.0;
-    h_y[i] = i / 2.0;
+    h_x(i) = 2.0;
+    h_y(i) = i / 2.0;
     for (int j = 0; j < N; j++) {
-      h_A[j + i * N] = static_cast<double>(i + j * N);
+      h_A(j, i) = static_cast<double>(i + j * N);
     }
   }
 
@@ -324,17 +266,22 @@ TEST(blas, dgemv)
    * y = a * M * x + b * y
    */
 
-  gt::backend::device_copy_hd(h_A, d_A, N * N);
-  gt::backend::device_copy_hd(h_x, d_x, N);
-  gt::backend::device_copy_hd(h_y, d_y, N);
+  gt::copy(h_A, d_A);
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
 
-  gpublas_create();
+  gt::blas::handle_t h;
 
-  gpublas_dgemv(N, N, &a, d_A, N, d_x, 1, &b, d_y, 1);
+  gt::blas::create(&h);
 
-  gpublas_destroy();
+  // gt::blas::gemv(h, N, N, a, gt::backend::raw_pointer_cast(d_A.data()), N,
+  //                gt::backend::raw_pointer_cast(d_x.data()), 1, b,
+  //                gt::backend::raw_pointer_cast(d_y.data()), 1);
+  gt::blas::gemv(h, a, d_A, d_x, b, d_y);
 
-  gt::backend::device_copy_dh(d_y, h_y, N);
+  gt::blas::destroy(h);
+
+  gt::copy(d_y, h_y);
 
   double row_sum = 0.0;
   for (int i = 0; i < N; i++) {
@@ -346,73 +293,73 @@ TEST(blas, dgemv)
     row_sum = ((i + 1) * N * ((i + 1) * N - 1) - i * N * (i * N - 1)) / 2.0;
 
     // b*y is just i, so total is (row_sum + i)
-    EXPECT_EQ(h_y[i], T(row_sum + i));
+    EXPECT_EQ(h_y(i), T(row_sum + i));
   }
-
-  gt::backend::host_allocator<T>::deallocate(h_A);
-  gt::backend::device_allocator<T>::deallocate(d_A);
-  gt::backend::host_allocator<T>::deallocate(h_x);
-  gt::backend::device_allocator<T>::deallocate(d_x);
-  gt::backend::host_allocator<T>::deallocate(h_y);
-  gt::backend::device_allocator<T>::deallocate(d_y);
 }
 
-TEST(blas, zgemv)
+TEST(blas, sgemv)
+{
+  test_gemv_real<float>();
+}
+
+TEST(blas, dgemv)
+{
+  test_gemv_real<double>();
+}
+
+template <typename R>
+void test_gemv_complex()
 {
   constexpr int N = 32;
-  using T = gt::complex<double>;
-  T* h_x = gt::backend::host_allocator<T>::allocate(N);
-  T* d_x = gt::backend::device_allocator<T>::allocate(N);
-  T* h_y = gt::backend::host_allocator<T>::allocate(N);
-  T* d_y = gt::backend::device_allocator<T>::allocate(N);
-  T* h_mat = gt::backend::host_allocator<T>::allocate(N * N);
-  T* d_mat = gt::backend::device_allocator<T>::allocate(N * N);
+  using T = gt::complex<R>;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
+  gt::gtensor<T, 2> h_mat(gt::shape(N, N));
+  gt::gtensor_device<T, 2> d_mat(gt::shape(N, N));
   T a = T(0.5, 1.0);
   T b = T(-1.0, 2.0);
 
   for (int i = 0; i < N; i++) {
-    h_x[i] = T(i, 0.0);
-    h_y[i] = T(0.0, i);
+    h_x(i) = T(i, 0.0);
+    h_y(i) = T(0.0, i);
     for (int j = 0; j < N; ++j) {
-      h_mat[j * N + i] = T(i, j);
+      h_mat(i, j) = T(i, j);
     }
   }
 
-  gt::backend::device_copy_hd(h_x, d_x, N);
-  gt::backend::device_copy_hd(h_y, d_y, N);
-  gt::backend::device_copy_hd(h_mat, d_mat, N * N);
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
+  gt::copy(h_mat, d_mat);
 
-  gpublas_create();
+  gt::blas::handle_t h;
 
-  /*  void gpublas_zgemv(int m, int n, const gpublas_complex_double_t* alpha,
-                   const gpublas_complex_double_t* A, int lda,
-                   const gpublas_complex_double_t* x, int incx,
-                   const gpublas_complex_double_t* beta,
-                   gpublas_complex_double_t* y, int incy)
-  */
+  gt::blas::create(&h);
 
-  gpublas_zgemv(
-    N, N, (gpublas_complex_double_t*)(&a), (gpublas_complex_double_t*)(d_mat),
-    N, (gpublas_complex_double_t*)(d_x), 1, (gpublas_complex_double_t*)(&b),
-    (gpublas_complex_double_t*)(d_y), 1);
+  // gt::blas::gemv(h, N, N, a, gt::backend::raw_pointer_cast(d_mat.data()), N,
+  //                gt::backend::raw_pointer_cast(d_x.data()), 1, b,
+  //                gt::backend::raw_pointer_cast(d_y.data()), 1);
+  gt::blas::gemv(h, a, d_mat, d_x, b, d_y);
 
-  gpublas_destroy();
+  gt::blas::destroy(h);
 
-  gt::backend::device_copy_dh(d_y, h_y, N);
+  gt::copy(d_y, h_y);
 
   for (int p = 0; p < N; p++) {
     auto r = p * (N * (N + 1) / 2 - N);
     auto s = (N * (N + 1) * (2 * N + 1) - 6 * N * N) / 6;
-    EXPECT_EQ(h_y[p], T(a.real() * r - a.imag() * s - b.imag() * p,
+    EXPECT_EQ(h_y(p), T(a.real() * r - a.imag() * s - b.imag() * p,
                         a.imag() * r + a.real() * s + b.real() * p));
   }
-
-  gt::backend::host_allocator<T>::deallocate(h_x);
-  gt::backend::device_allocator<T>::deallocate(d_x);
-  gt::backend::host_allocator<T>::deallocate(h_y);
-  gt::backend::device_allocator<T>::deallocate(d_y);
-  gt::backend::host_allocator<T>::deallocate(h_mat);
-  gt::backend::device_allocator<T>::deallocate(d_mat);
 }
 
-#endif
+TEST(blas, cgemv)
+{
+  test_gemv_complex<float>();
+}
+
+TEST(blas, zgemv)
+{
+  test_gemv_complex<double>();
+}

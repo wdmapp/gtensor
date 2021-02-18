@@ -1,45 +1,39 @@
 #include "gtensor/blas.h"
 #include "gtensor/cblas.h"
 
-static gt::blas::handle_t handle = 0;
-
-void gtblas_create()
+void gtblas_create(gt::blas::handle_t* h)
 {
-  if (handle == 0) {
-    gt::blas::create(&handle);
-  }
+  gt::blas::create(h);
 }
 
-void gtblas_destroy()
+void gtblas_destroy(gt::blas::handle_t h)
 {
-  if (handle != 0) {
-    gt::blas::destroy(handle);
-    handle = 0;
-  }
+  gt::blas::destroy(h);
 }
 
-void gtblas_set_stream(gtblas_stream_t stream_id)
+void gtblas_set_stream(gt::blas::handle_t h, gt::blas::stream_t stream_id)
 {
-  gt::blas::set_stream(handle, stream_id);
+  gt::blas::set_stream(h, stream_id);
 }
 
-void gtblas_get_stream(gtblas_stream_t* stream_id)
+void gtblas_get_stream(gt::blas::handle_t h, gt::blas::stream_t* stream_id)
 {
-  gt::blas::get_stream(handle, stream_id);
+  gt::blas::get_stream(h, stream_id);
 }
 
-#define CREATE_C_AXPY(CNAME, CTYPE, CPPTYPE)                                   \
-  void CNAME(int n, const CTYPE* a, const CTYPE* x, int incx, CTYPE* y,        \
-             int incy)                                                         \
+#define CREATE_C_AXPY(CNAME, CPPTYPE)                                          \
+  void CNAME(gt::blas::handle_t h, int n, CPPTYPE a, const CPPTYPE* x,         \
+             int incx, CPPTYPE* y, int incy)                                   \
   {                                                                            \
-    gt::blas::axpy(handle, n, (CPPTYPE*)a, (CPPTYPE*)x, incx, (CPPTYPE*)y,     \
-                   incy);                                                      \
+    gt::blas::axpy(h, n, a, x, incx, y, incy);                                 \
   }
 
-CREATE_C_AXPY(gtblas_saxpy, float, float)
-CREATE_C_AXPY(gtblas_daxpy, double, double)
-CREATE_C_AXPY(gtblas_caxpy, gtblas_complex_float_t, gt::complex<float>)
-CREATE_C_AXPY(gtblas_zaxpy, gtblas_complex_double_t, gt::complex<double>)
+CREATE_C_AXPY(gtblas_saxpy, float)
+CREATE_C_AXPY(gtblas_daxpy, double)
+CREATE_C_AXPY(gtblas_caxpy, gt::complex<float>)
+CREATE_C_AXPY(gtblas_zaxpy, gt::complex<double>)
+
+#undef CREATE_C_AXPY
 
 #if 0
 

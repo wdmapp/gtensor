@@ -1,31 +1,33 @@
 #include "gtensor/blas.h"
 
+/*
 typedef gt::blas::handle_t gtblas_handle_t;
 typedef gt::blas::stream_t gtblas_stream_t;
 typedef gt::complex<double> gtblas_complex_double_t;
 typedef gt::complex<float> gtblas_complex_float_t;
+*/
 typedef int gtblas_index_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void gtblas_create();
-void gtblas_destroy();
+void gtblas_create(gt::blas::handle_t* h);
+void gtblas_destroy(gt::blas::handle_t h);
 
-void gtblas_set_stream(gtblas_stream_t stream_id);
-void gtblas_get_stream(gtblas_stream_t* stream_id);
+void gtblas_set_stream(gt::blas::stream_t stream_id);
+void gtblas_get_stream(gt::blas::stream_t* stream_id);
 
-void gtblas_saxpy(int n, const float* a, const float* x, int incx, float* y,
+void gtblas_saxpy(gt::blas::handle_t h, int n, float a, const float* x,
+                  int incx, float* y, int incy);
+void gtblas_daxpy(gt::blas::handle_t h, int n, double a, const double* x,
+                  int incx, double* y, int incy);
+void gtblas_caxpy(gt::blas::handle_t h, int n, gt::complex<float> a,
+                  const gt::complex<float>* x, int incx, gt::complex<float>* y,
                   int incy);
-void gtblas_daxpy(int n, const double* a, const double* x, int incx, double* y,
-                  int incy);
-void gtblas_caxpy(int n, const gtblas_complex_float_t* a,
-                  const gtblas_complex_float_t* x, int incx,
-                  gtblas_complex_float_t* y, int incy);
-void gtblas_zaxpy(int n, const gtblas_complex_double_t* a,
-                  const gtblas_complex_double_t* x, int incx,
-                  gtblas_complex_double_t* y, int incy);
+void gtblas_zaxpy(gt::blas::handle_t h, int n, gt::complex<double> a,
+                  const gt::complex<double>* x, int incx,
+                  gt::complex<double>* y, int incy);
 
 #ifdef __cplusplus
 }

@@ -22,12 +22,14 @@ void test_real_axpy(F&& f)
   gt::copy(h_x, d_x);
   gt::copy(h_y, d_y);
 
-  gtblas_create();
+  gt::blas::handle_t h;
 
-  f(N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
+  gtblas_create(&h);
+
+  f(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1,
     gt::backend::raw_pointer_cast(d_y.data()), 1);
 
-  gtblas_destroy();
+  gtblas_destroy(h);
 
   gt::copy(d_y, h_y);
 
