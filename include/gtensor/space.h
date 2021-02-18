@@ -4,6 +4,8 @@
 
 #include "defs.h"
 #include "gtensor_storage.h"
+#include "helper.h"
+#include "meta.h"
 #include "span.h"
 
 #include <map>
@@ -188,6 +190,43 @@ using device = host;
 #endif
 
 } // namespace space
+
+// ======================================================================
+// has_space_type
+
+template <typename E, typename S, typename = void>
+struct has_space_type : std::false_type
+{};
+
+template <typename T, typename S>
+struct has_space_type<T, S,
+                      gt::meta::void_t<std::enable_if_t<
+                        std::is_same<expr_space_type<T>, S>::value>>>
+  : std::true_type
+{};
+
+template <typename T, typename S>
+constexpr bool has_space_type_v = has_space_type<T, S>::value;
+
+// ======================================================================
+// has_space_type_device
+
+template <typename E, typename = void>
+struct has_space_type_device : has_space_type<E, gt::space::device>
+{};
+
+template <typename T>
+constexpr bool has_space_type_device_v = has_space_type_device<T>::value;
+
+// ======================================================================
+// has_space_type_host
+
+template <typename E, typename = void>
+struct has_space_type_host : has_space_type<E, gt::space::host>
+{};
+
+template <typename T>
+constexpr bool has_space_type_host_v = has_space_type_host<T>::value;
 
 } // namespace gt
 
