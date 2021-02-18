@@ -241,5 +241,22 @@ TEST(helper, has_data_method)
   EXPECT_TRUE(gt::has_data_method_v<decltype(aspan)>);
   EXPECT_TRUE(gt::has_data_method<decltype(aspan)>::value);
 
+  EXPECT_FALSE(gt::has_data_method_v<decltype(aview)>);
   EXPECT_FALSE(gt::has_data_method<decltype(aview)>::value);
+}
+
+TEST(helper, has_size_method)
+{
+  gt::gtensor<double, 1> a(gt::shape(10));
+  auto aspan = a.to_kernel();
+  auto aview = a.view(gt::slice(3, 6));
+
+  EXPECT_TRUE(gt::has_size_method_v<decltype(a)>);
+  EXPECT_TRUE(gt::has_size_method<decltype(a)>::value);
+
+  EXPECT_TRUE(gt::has_size_method_v<decltype(aspan)>);
+  EXPECT_TRUE(gt::has_size_method<decltype(aspan)>::value);
+
+  EXPECT_TRUE(gt::has_size_method_v<decltype(aview)>);
+  EXPECT_TRUE(gt::has_size_method<decltype(aview)>::value);
 }
