@@ -101,6 +101,23 @@ struct has_size_method<T, gt::meta::void_t<decltype(std::declval<T>().size())>>
 template <typename T>
 constexpr bool has_size_method_v = has_size_method<T>::value;
 
+// ======================================================================
+// has_container_methods
+
+template <typename T, typename = void>
+struct has_container_methods : std::false_type
+{};
+
+template <typename T>
+struct has_container_methods<
+  T, gt::meta::void_t<
+       std::enable_if_t<has_data_method_v<T> && has_size_method_v<T>>>>
+  : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_container_methods_v = has_container_methods<T>::value;
+
 namespace helper
 {
 

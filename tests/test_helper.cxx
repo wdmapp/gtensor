@@ -260,3 +260,19 @@ TEST(helper, has_size_method)
   EXPECT_TRUE(gt::has_size_method_v<decltype(aview)>);
   EXPECT_TRUE(gt::has_size_method<decltype(aview)>::value);
 }
+
+TEST(helper, has_container_methods)
+{
+  gt::gtensor<double, 1> a(gt::shape(10));
+  auto aspan = a.to_kernel();
+  auto aview = a.view(gt::slice(3, 6));
+
+  EXPECT_TRUE(gt::has_container_methods_v<decltype(a)>);
+  EXPECT_TRUE(gt::has_container_methods<decltype(a)>::value);
+
+  EXPECT_TRUE(gt::has_container_methods_v<decltype(aspan)>);
+  EXPECT_TRUE(gt::has_container_methods<decltype(aspan)>::value);
+
+  EXPECT_FALSE(gt::has_container_methods_v<decltype(aview)>);
+  EXPECT_FALSE(gt::has_container_methods<decltype(aview)>::value);
+}
