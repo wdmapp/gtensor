@@ -226,6 +226,89 @@ TEST(blas, zcopy)
 }
 
 template <typename T>
+void test_dot_real()
+{
+  constexpr int N = 16;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
+
+  for (int i = 0; i < N; i++) {
+    h_x(i) = T(2.0 * i);
+    h_y(i) = T(1.0);
+  }
+
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
+
+  gt::blas::handle_t h;
+
+  gt::blas::create(&h);
+
+  T result = gt::blas::dot(h, d_x, d_y);
+
+  gt::blas::destroy(h);
+
+  // sum of first (N-1) integers * 2
+  EXPECT_EQ(result, (N - 1) * N);
+}
+
+TEST(blas, sdot)
+{
+  test_dot_real<float>();
+}
+
+TEST(blas, ddot)
+{
+  test_dot_real<double>();
+}
+
+template <typename R>
+void test_dot_complex()
+{
+  constexpr int N = 16;
+  using T = gt::complex<R>;
+  gt::gtensor<T, 1> h_x(N);
+  gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor<T, 1> h_y(N);
+  gt::gtensor_device<T, 1> d_y(N);
+
+  for (int i = 0; i < N; i++) {
+    h_x(i) = T(2.0 * i, -2.0 * i);
+    h_y(i) = T(1.0, 0.0);
+  }
+
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
+
+  gt::blas::handle_t h;
+
+  gt::blas::create(&h);
+
+  T result = gt::blas::dot(h, d_x, d_y);
+  T resultc = gt::blas::dotc(h, d_x, d_y);
+
+  gt::blas::destroy(h);
+
+  // sum of first (N-1) integers * 2, which is the sum of real values
+  // of x
+  R sum = (N - 1) * N;
+  EXPECT_EQ(result, T(sum, -1.0 * sum));
+  EXPECT_EQ(resultc, T(sum, sum));
+}
+
+TEST(blas, cdot)
+{
+  test_dot_complex<float>();
+}
+
+TEST(blas, zdot)
+{
+  test_dot_complex<double>();
+}
+
+template <typename T>
 void test_gemv_real()
 {
   constexpr int N = 16;
