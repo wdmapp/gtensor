@@ -21,6 +21,9 @@ void gtblas_get_stream(gt::blas::handle_t h, gt::blas::stream_t* stream_id)
   gt::blas::get_stream(h, stream_id);
 }
 
+// ======================================================================
+// gtblas_Xaxpy
+
 #define CREATE_C_AXPY(CNAME, CPPTYPE)                                          \
   void CNAME(gt::blas::handle_t h, int n, CPPTYPE a, const CPPTYPE* x,         \
              int incx, CPPTYPE* y, int incy)                                   \
@@ -35,245 +38,133 @@ CREATE_C_AXPY(gtblas_zaxpy, gt::complex<double>)
 
 #undef CREATE_C_AXPY
 
-#if 0
+// ======================================================================
+// gtblas_Xscal
 
-void gtblas_zdscal(int n, const double fac, gtblas_complex_double_t* arr,
-                    const int incx)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck((cudaError_t)cublasZdscal(handle, n, &fac, arr, incx));
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocblas_zdscal(handle, n, &fac, arr, incx));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto e = oneapi::mkl::blas::scal(*handle, n, fac, arr, incx);
-  e.wait();
-#endif
-}
-
-/* ------------ copy --------------- */
-void gtblas_zcopy(int n, const gtblas_complex_double_t* x, int incx,
-                   gtblas_complex_double_t* y, int incy)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck((cudaError_t)cublasZcopy(handle, n, x, incx, y, incy));
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocblas_zcopy(handle, n, x, incx, y, incy));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto e = oneapi::mkl::blas::copy(*handle, n, x, incx, y, incy);
-  e.wait();
-#endif
-}
-
-/* ------------ gemv --------------- */
-void gtblas_dgemv(int m, int n, const double* alpha, const double* A, int lda,
-                   const double* x, int incx, const double* beta, double* y,
-                   int incy)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck((cudaError_t)cublasDgemv(handle, CUBLAS_OP_N, m, n, alpha, A, lda,
-                                      x, incx, beta, y, incy));
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocblas_dgemv(handle, rocblas_operation_none, m, n,
-                                       alpha, A, lda, x, incx, beta, y, incy));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto e = oneapi::mkl::blas::gemv(*handle, oneapi::mkl::transpose::nontrans, m,
-                                   n, *alpha, A, lda, x, incx, *beta, y, incy);
-  e.wait();
-#endif
-}
-
-void gtblas_zgemv(int m, int n, const gtblas_complex_double_t* alpha,
-                   const gtblas_complex_double_t* A, int lda,
-                   const gtblas_complex_double_t* x, int incx,
-                   const gtblas_complex_double_t* beta,
-                   gtblas_complex_double_t* y, int incy)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck((cudaError_t)cublasZgemv(handle, CUBLAS_OP_N, m, n, alpha, A, lda,
-                                      x, incx, beta, y, incy));
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocblas_zgemv(handle, rocblas_operation_none, m, n,
-                                       alpha, A, lda, x, incx, beta, y, incy));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto e = oneapi::mkl::blas::gemv(*handle, oneapi::mkl::transpose::nontrans, m,
-                                   n, *alpha, A, lda, x, incx, *beta, y, incy);
-  e.wait();
-#endif
-}
-
-void gtblas_zgetrf_batched(int n, gtblas_complex_double_t** d_Aarray, int lda,
-                            gtblas_index_t* d_PivotArray, int* d_infoArray,
-                            int batchSize)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck((cudaError_t)cublasZgetrfBatched(
-    handle, n, d_Aarray, lda, d_PivotArray, d_infoArray, batchSize));
-#elif defined(GTENSOR_DEVICE_HIP)
-  // Note: extra args are for general n x m size, and strideP for the
-  // pivot array stride (we use n).
-  gtGpuCheck((hipError_t)rocsolver_zgetrf_batched(
-    handle, n, n, d_Aarray, lda, d_PivotArray, n, d_infoArray, batchSize));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto scratch_count =
-    oneapi::mkl::lapack::getrf_batch_scratchpad_size<gtblas_complex_double_t>(
-      *handle, n, n, lda, n * n, n, batchSize);
-  auto scratch =
-    sycl::malloc_device<gtblas_complex_double_t>(scratch_count, *handle);
-
-  // NB: MKL expects a single contiguous array for the batch, as a host
-  // pointer to device memory. Assume linear starting with the first
-  // pointer, and copy it back to the host.
-  gtblas_complex_double_t* d_Aptr;
-  auto memcpy_e =
-    handle->memcpy(&d_Aptr, d_Aarray, sizeof(gtblas_complex_double_t*));
-  memcpy_e.wait();
-
-  auto e = oneapi::mkl::lapack::getrf_batch(*handle, n, n, d_Aptr, lda, n * n,
-                                            d_PivotArray, n, batchSize, scratch,
-                                            scratch_count);
-  e.wait();
-
-  sycl::free(scratch, *handle);
-#endif
-}
-
-void gtblas_zgetrs_batched(int n, int nrhs,
-                            gtblas_complex_double_t* const* d_Aarray, int lda,
-                            gtblas_index_t* devIpiv,
-                            gtblas_complex_double_t** d_Barray, int ldb,
-                            int batchSize)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  int info;
-  gtGpuCheck((cudaError_t)cublasZgetrsBatched(handle, CUBLAS_OP_N, n, nrhs,
-                                              d_Aarray, lda, devIpiv, d_Barray,
-                                              ldb, &info, batchSize));
-  if (info != 0) {
-    fprintf(stderr, "cublasDgetrsBatched failed, info=%d at %s %d\n", info,
-            __FILE__, __LINE__);
-    abort();
-  }
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocsolver_zgetrs_batched(
-    handle, rocblas_operation_none, n, nrhs, d_Aarray, lda, devIpiv, n,
-    d_Barray, ldb, batchSize));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto scratch_count =
-    oneapi::mkl::lapack::getrs_batch_scratchpad_size<gtblas_complex_double_t>(
-      *handle, oneapi::mkl::transpose::nontrans, n, nrhs, lda, n * n, n, ldb,
-      n * nrhs, batchSize);
-  auto scratch =
-    sycl::malloc_device<gtblas_complex_double_t>(scratch_count, *handle);
-
-  // NB: MKL expects a single contiguous array for the batch, as a host
-  // pointer to device memory. Assume linear starting with the first
-  // pointer, and copy it back to the host.
-  gtblas_complex_double_t* d_Aptr;
-  gtblas_complex_double_t* d_Bptr;
-  auto memcpy_A =
-    handle->memcpy(&d_Aptr, d_Aarray, sizeof(gtblas_complex_double_t*));
-  memcpy_A.wait();
-  auto memcpy_B =
-    handle->memcpy(&d_Bptr, d_Barray, sizeof(gtblas_complex_double_t*));
-  memcpy_B.wait();
-
-  auto e = oneapi::mkl::lapack::getrs_batch(
-    *handle, oneapi::mkl::transpose::nontrans, n, nrhs, d_Aptr, lda, n * n,
-    devIpiv, n, d_Bptr, ldb, n * nrhs, batchSize, scratch, scratch_count);
-  e.wait();
-
-  sycl::free(scratch, *handle);
-#endif
-}
-
-void gtblas_dgetrf_batched(int n, double** d_Aarray, int lda,
-                            gtblas_index_t* d_PivotArray, int* d_infoArray,
-                            int batchSize)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck((cudaError_t)cublasDgetrfBatched(
-    handle, n, d_Aarray, lda, d_PivotArray, d_infoArray, batchSize));
-#elif defined(GTENSOR_DEVICE_HIP)
-  // Note: extra args are for general n x m size, and strideP for the
-  // pivot array stride (we use n).
-  gtGpuCheck((hipError_t)rocsolver_dgetrf_batched(
-    handle, n, n, d_Aarray, lda, d_PivotArray, n, d_infoArray, batchSize));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  // TODO: exception handling
-  auto scratch_count = oneapi::mkl::lapack::getrf_batch_scratchpad_size<double>(
-    *handle, n, n, lda, n * n, n, batchSize);
-
-  auto scratch = sycl::malloc_device<double>(scratch_count, *handle);
-
-  // NB: MKL expects a single contiguous array for the batch, as a host
-  // pointer to device memory. Assume linear starting with the first
-  // pointer, and copy it back to the host.
-  double* d_Aptr;
-  auto memcpy_e = handle->memcpy(&d_Aptr, d_Aarray, sizeof(double*));
-  memcpy_e.wait();
-
-  auto e = oneapi::mkl::lapack::getrf_batch(*handle, n, n, d_Aptr, lda, n * n,
-                                            d_PivotArray, n, batchSize, scratch,
-                                            scratch_count);
-  e.wait();
-
-  sycl::free(scratch, *handle);
-#endif
-}
-
-void gtblas_dgetrs_batched(int n, int nrhs, double* const* d_Aarray, int lda,
-                            gtblas_index_t* devIpiv, double** d_Barray,
-                            int ldb, int batchSize)
-{
-#ifdef GTENSOR_DEVICE_CUDA
-  int info;
-  gtGpuCheck((cudaError_t)cublasDgetrsBatched(handle, CUBLAS_OP_N, n, nrhs,
-                                              d_Aarray, lda, devIpiv, d_Barray,
-                                              ldb, &info, batchSize));
-  if (info != 0) {
-    fprintf(stderr, "cublasDgetrsBatched failed, info=%d at %s %d\n", info,
-            __FILE__, __LINE__);
-    abort();
-  }
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck((hipError_t)rocsolver_dgetrs_batched(
-    handle, rocblas_operation_none, n, nrhs, d_Aarray, lda, devIpiv, n,
-    d_Barray, ldb, batchSize));
-#elif defined(GTENSOR_DEVICE_SYCL)
-  oneapi::mkl::transpose t = oneapi::mkl::transpose::nontrans;
-  auto scratch_count = oneapi::mkl::lapack::getrs_batch_scratchpad_size<double>(
-    *handle, t, n, nrhs, lda, n * n, n, ldb, n, batchSize);
-  auto scratch = sycl::malloc_device<double>(scratch_count, *handle);
-
-  // NB: MKL expects a single contiguous array for the batch, as a host
-  // pointer to device memory. Assume linear starting with the first
-  // pointer, and copy it back to the host.
-  double* d_Aptr;
-  double* d_Bptr;
-  auto memcpy_A = handle->memcpy(&d_Aptr, d_Aarray, sizeof(double*));
-  memcpy_A.wait();
-  auto memcpy_B = handle->memcpy(&d_Bptr, d_Barray, sizeof(double*));
-  memcpy_B.wait();
-
-  try {
-    auto e = oneapi::mkl::lapack::getrs_batch(
-      *handle, t, n, nrhs, d_Aptr, lda, n * n, devIpiv, n, d_Bptr, ldb,
-      n * nrhs, batchSize, scratch, scratch_count);
-    e.wait();
-  } catch (sycl::exception& e) {
-    fprintf(stderr, "getrs_batch failed: %s (%s:%d)\n", e.what(), __FILE__,
-            __LINE__);
-    abort();
+#define CREATE_C_SCAL(CNAME, CPPTYPE)                                          \
+  void CNAME(gt::blas::handle_t h, int n, CPPTYPE fac, CPPTYPE* arr, int incx) \
+  {                                                                            \
+    gt::blas::scal(h, n, fac, arr, incx);                                      \
   }
 
-  sycl::free(scratch, *handle);
-#endif
-}
+CREATE_C_SCAL(gtblas_sscal, float)
+CREATE_C_SCAL(gtblas_dscal, double)
+CREATE_C_SCAL(gtblas_cscal, gt::complex<float>)
+CREATE_C_SCAL(gtblas_zscal, gt::complex<double>)
 
-#endif
+#undef CREATE_C_SCAL
+
+// ======================================================================
+// gtblas_Xcopy
+
+#define CREATE_C_COPY(CNAME, CPPTYPE)                                          \
+  void CNAME(gt::blas::handle_t h, int n, const CPPTYPE* x, int incx,          \
+             CPPTYPE* y, int incy)                                             \
+  {                                                                            \
+    gt::blas::copy(h, n, x, incx, y, incy);                                    \
+  }
+
+CREATE_C_COPY(gtblas_scopy, float)
+CREATE_C_COPY(gtblas_dcopy, double)
+CREATE_C_COPY(gtblas_ccopy, gt::complex<float>)
+CREATE_C_COPY(gtblas_zcopy, gt::complex<double>)
+
+// ======================================================================
+// gtblas_Xdot
+
+#define CREATE_C_DOT(CNAME, CPPTYPE)                                           \
+  void CNAME(gt::blas::handle_t h, int n, const CPPTYPE* x, int incx,          \
+             CPPTYPE* y, int incy)                                             \
+  {                                                                            \
+    gt::blas::dot(h, n, x, incx, y, incy);                                     \
+  }
+
+CREATE_C_DOT(gtblas_sdot, float)
+CREATE_C_DOT(gtblas_ddot, double)
+
+#undef CREATE_C_DOT
+
+// ======================================================================
+// gtblas_Xdotu
+
+#define CREATE_C_DOTU(CNAME, CPPTYPE)                                          \
+  void CNAME(gt::blas::handle_t h, int n, const CPPTYPE* x, int incx,          \
+             CPPTYPE* y, int incy)                                             \
+  {                                                                            \
+    gt::blas::dotu(h, n, x, incx, y, incy);                                    \
+  }
+
+CREATE_C_DOTU(gtblas_cdotu, gt::complex<float>)
+CREATE_C_DOTU(gtblas_zdotu, gt::complex<double>)
+
+#undef CREATE_C_DOTU
+
+// ======================================================================
+// gtblas_Xdotc
+
+#define CREATE_C_DOTC(CNAME, CPPTYPE)                                          \
+  void CNAME(gt::blas::handle_t h, int n, const CPPTYPE* x, int incx,          \
+             CPPTYPE* y, int incy)                                             \
+  {                                                                            \
+    gt::blas::dotu(h, n, x, incx, y, incy);                                    \
+  }
+
+CREATE_C_DOTC(gtblas_cdotc, gt::complex<float>)
+CREATE_C_DOTC(gtblas_zdotc, gt::complex<double>)
+
+#undef CREATE_C_DOTC
+
+// ======================================================================
+// gtblas_Xgemv
+
+#define CREATE_C_GEMV(CNAME, CPPTYPE)                                          \
+  void CNAME(gt::blas::handle_t h, int m, int n, CPPTYPE alpha,                \
+             const CPPTYPE* A, int lda, const CPPTYPE* x, int incx,            \
+             CPPTYPE beta, CPPTYPE* y, int incy)                               \
+  {                                                                            \
+    gt::blas::gemv(h, m, n, alpha, A, lda, x, incx, beta, y, incy);            \
+  }
+
+CREATE_C_GEMV(gtblas_sgemv, float)
+CREATE_C_GEMV(gtblas_dgemv, double)
+CREATE_C_GEMV(gtblas_cgemv, gt::complex<float>)
+CREATE_C_GEMV(gtblas_zgemv, gt::complex<double>)
+
+#undef CREATE_C_GEMV
+
+// ======================================================================
+// gtblas_Xgetrf_batched
+
+#define CREATE_C_GETRF_BATCHED(CNAME, CPPTYPE)                                 \
+  void CNAME(gt::blas::handle_t h, int n, CPPTYPE** d_Aarray, int lda,         \
+             gt::blas::index_t* d_PivotArray, int* d_infoArray, int batchSize) \
+  {                                                                            \
+    gt::blas::getrf_batched(h, n, d_Aarray, lda, d_PivotArray, d_infoArray,    \
+                            batchSize);                                        \
+  }
+
+CREATE_C_GETRF_BATCHED(gtblas_sgetrf_batched, float)
+CREATE_C_GETRF_BATCHED(gtblas_dgetrf_batched, double)
+CREATE_C_GETRF_BATCHED(gtblas_cgetrf_batched, gt::complex<float>)
+CREATE_C_GETRF_BATCHED(gtblas_zgetrf_batched, gt::complex<double>)
+
+#undef CREATE_C_GETRF_BATCHED
+
+// ======================================================================
+// gtblas_Xgetrs_batched
+
+#define CREATE_C_GETRS_BATCHED(CNAME, CPPTYPE)                                 \
+  void CNAME(gt::blas::handle_t h, int n, int nrhs, CPPTYPE** d_Aarray,        \
+             int lda, gt::blas::index_t* d_PivotArray, CPPTYPE** d_Barray,     \
+             int ldb, int batchSize)                                           \
+  {                                                                            \
+    gt::blas::getrs_batched(h, n, nrhs, d_Aarray, lda, d_PivotArray, d_Barray, \
+                            ldb, batchSize);                                   \
+  }
+
+CREATE_C_GETRS_BATCHED(gtblas_sgetrs_batched, float)
+CREATE_C_GETRS_BATCHED(gtblas_dgetrs_batched, double)
+CREATE_C_GETRS_BATCHED(gtblas_cgetrs_batched, gt::complex<float>)
+CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, gt::complex<double>)
+
+#undef CREATE_C_GETRS_BATCHED
