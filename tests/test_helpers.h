@@ -1,16 +1,46 @@
+#include <gtensor/complex.h>
 
-#define Z_MAX_ERR 1e-14
-
-template <typename T>
-inline void expect_complex_eq(T x, T y)
+namespace gt
 {
-  EXPECT_NEAR(x.real(), y.real(), Z_MAX_ERR);
-  EXPECT_NEAR(x.imag(), y.imag(), Z_MAX_ERR);
+
+namespace test
+{
+
+namespace detail
+{
+template <typename Real>
+struct max_err;
+
+template <>
+struct max_err<double>
+{
+  static constexpr double value = 1e-14;
+};
+
+template <>
+struct max_err<float>
+{
+  static constexpr double value = 1e-5;
+};
+
+} // namespace detail
+
+} // namespace test
+
+} // namespace gt
+
+template <typename Real>
+inline void expect_complex_eq(gt::complex<Real> x, gt::complex<Real> y)
+{
+  double max_err = gt::test::detail::max_err<Real>::value;
+  EXPECT_NEAR(x.real(), y.real(), max_err);
+  EXPECT_NEAR(x.imag(), y.imag(), max_err);
 }
 
-template <typename T1>
-inline void expect_complex_eq(T1 x, double y)
+template <typename Real>
+inline void expect_complex_eq(gt::complex<Real> x, double y)
 {
-  EXPECT_NEAR(x.real(), y, Z_MAX_ERR);
-  EXPECT_NEAR(x.imag(), 0.0, Z_MAX_ERR);
+  double max_err = gt::test::detail::max_err<Real>::value;
+  EXPECT_NEAR(x.real(), y, max_err);
+  EXPECT_NEAR(x.imag(), 0.0, max_err);
 }
