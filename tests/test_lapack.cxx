@@ -111,8 +111,8 @@ void test_getrf_batch_real()
   gt::gtensor_device<T*, 1> d_Aptr(batch_size);
   gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
   gt::gtensor_device<T, 3> d_A(gt::shape(N, N, batch_size));
-  gt::gtensor<gtblas_index_t, 2> h_p(gt::shape(N, batch_size));
-  gt::gtensor_device<gtblas_index_t, 2> d_p(gt::shape(N, batch_size));
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
   gt::gtensor<int, 1> h_info(batch_size);
   gt::gtensor_device<int, 1> d_info(batch_size);
 
@@ -192,8 +192,8 @@ void test_getrs_batch_real()
   gt::gtensor<T, 3> h_B(gt::shape(N, NRHS, batch_size));
   gt::gtensor_device<T, 3> d_B(gt::shape(N, NRHS, batch_size));
 
-  gt::gtensor<gtblas_index_t, 2> h_p(gt::shape(N, batch_size));
-  gt::gtensor_device<gtblas_index_t, 2> d_p(gt::shape(N, batch_size));
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
 
   // set up first (and only) batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
@@ -261,8 +261,8 @@ void test_getrf_batch_complex()
   gt::gtensor_device<T*, 1> d_Aptr(batch_size);
   gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
   gt::gtensor_device<T, 3> d_A(gt::shape(N, N, batch_size));
-  gt::gtensor<gtblas_index_t, 2> h_p(gt::shape(N, batch_size));
-  gt::gtensor_device<gtblas_index_t, 2> d_p(gt::shape(N, batch_size));
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
   gt::gtensor<int, 1> h_info(batch_size);
   gt::gtensor_device<int, 1> d_info(batch_size);
 
@@ -296,17 +296,17 @@ void test_getrf_batch_complex()
 
   // first batch matrix result
   // first column factored
-  EXPECT_EQ(h_A(0, 0, 0), 4.0);
-  EXPECT_EQ(h_A(1, 0, 0), 1.0);
-  EXPECT_EQ(h_A(2, 0, 0), 0.25);
+  expect_complex_eq(h_A(0, 0, 0), 4.0);
+  expect_complex_eq(h_A(1, 0, 0), 1.0);
+  expect_complex_eq(h_A(2, 0, 0), 0.25);
   // second column factored
-  EXPECT_EQ(h_A(0, 1, 0), 4.0);
-  EXPECT_EQ(h_A(1, 1, 0), 2.0);
-  EXPECT_EQ(h_A(2, 1, 0), 0.5);
+  expect_complex_eq(h_A(0, 1, 0), 4.0);
+  expect_complex_eq(h_A(1, 1, 0), 2.0);
+  expect_complex_eq(h_A(2, 1, 0), 0.5);
   // third column factored
-  EXPECT_EQ(h_A(0, 2, 0), 2.0);
-  EXPECT_EQ(h_A(1, 2, 0), 2.0);
-  EXPECT_EQ(h_A(2, 2, 0), 0.5);
+  expect_complex_eq(h_A(0, 2, 0), 2.0);
+  expect_complex_eq(h_A(1, 2, 0), 2.0);
+  expect_complex_eq(h_A(2, 2, 0), 0.5);
 
   // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
   // on the thirst step no swap is done so one-based index of third row
@@ -317,17 +317,17 @@ void test_getrf_batch_complex()
 
   // second batch matrix result
   // first column factored
-  EXPECT_EQ(h_A(0, 0, 1), T(0, 4));
-  EXPECT_EQ(h_A(1, 0, 1), T(0, -1));
-  EXPECT_EQ(h_A(2, 0, 1), T(0.25, -0.25));
+  expect_complex_eq(h_A(0, 0, 1), T(0, 4));
+  expect_complex_eq(h_A(1, 0, 1), T(0, -1));
+  expect_complex_eq(h_A(2, 0, 1), T(0.25, -0.25));
   // second column factored
-  EXPECT_EQ(h_A(0, 1, 1), T(4, 0));
-  EXPECT_EQ(h_A(1, 1, 1), T(0, 10));
-  EXPECT_EQ(h_A(2, 1, 1), T(0, -0.1));
+  expect_complex_eq(h_A(0, 1, 1), T(4, 0));
+  expect_complex_eq(h_A(1, 1, 1), T(0, 10));
+  expect_complex_eq(h_A(2, 1, 1), T(0, -0.1));
   // third column factored
-  EXPECT_EQ(h_A(0, 2, 1), T(2, 0));
-  EXPECT_EQ(h_A(1, 2, 1), T(4, 2));
-  EXPECT_EQ(h_A(2, 2, 1), T(1.3, 0.9));
+  expect_complex_eq(h_A(0, 2, 1), T(2, 0));
+  expect_complex_eq(h_A(1, 2, 1), T(4, 2));
+  expect_complex_eq(h_A(2, 2, 1), T(1.3, 0.9));
 
   // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
   // on the thirst step no swap is done so one-based index of third row
@@ -370,8 +370,8 @@ void test_getrs_batch_complex()
   gt::gtensor<T, 3> h_B(gt::shape(N, NRHS, batch_size));
   gt::gtensor_device<T, 3> d_B(gt::shape(N, NRHS, batch_size));
 
-  gt::gtensor<gtblas_index_t, 2> h_p(gt::shape(N, batch_size));
-  gt::gtensor_device<gtblas_index_t, 2> d_p(gt::shape(N, batch_size));
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
 
   // setup input for first batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
