@@ -3,11 +3,6 @@
 
 #include "cublas_v2.h"
 
-// typedef cudaStream_t gtblas_stream_t;
-// typedef cuDoubleComplex gtblas_complex_double_t;
-// typedef cuComplex gtblas_complex_float_t;
-typedef int gtblas_index_t;
-
 namespace gt
 {
 
@@ -201,13 +196,13 @@ CREATE_GEMV(cublasSgemv, float, float)
 
 template <typename T>
 inline void getrf_batched(handle_t h, int n, T** d_Aarray, int lda,
-                          gtblas_index_t* d_PivotArray, int* d_infoArray,
+                          gt::blas::index_t* d_PivotArray, int* d_infoArray,
                           int batchSize);
 
 #define CREATE_GETRF_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getrf_batched<GTTYPE>(handle_t h, int n, GTTYPE** d_Aarray,      \
-                                    int lda, gtblas_index_t* d_PivotArray,     \
+                                    int lda, gt::blas::index_t* d_PivotArray,  \
                                     int* d_infoArray, int batchSize)           \
   {                                                                            \
     gtGpuCheck((cudaError_t)METHOD(                                            \
@@ -224,14 +219,14 @@ CREATE_GETRF_BATCHED(cublasSgetrfBatched, float, float)
 
 template <typename T>
 inline void getrs_batched(handle_t h, int n, int nrhs, T* const* d_Aarray,
-                          int lda, gtblas_index_t* devIpiv, T** d_Barray,
+                          int lda, gt::blas::index_t* devIpiv, T** d_Barray,
                           int ldb, int batchSize);
 
 #define CREATE_GETRS_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getrs_batched<GTTYPE>(                                           \
     handle_t h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,             \
-    gtblas_index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)        \
+    gt::blas::index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)     \
   {                                                                            \
     int info;                                                                  \
     gtGpuCheck((cudaError_t)METHOD(                                            \

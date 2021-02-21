@@ -4,8 +4,6 @@
 #include "rocblas.h"
 #include "rocsolver.h"
 
-typedef int gtblas_index_t;
-
 namespace gt
 {
 
@@ -198,13 +196,13 @@ CREATE_GEMV(rocblas_sgemv, float, float)
 
 template <typename T>
 inline void getrf_batched(handle_t h, int n, T** d_Aarray, int lda,
-                          gtblas_index_t* d_PivotArray, int* d_infoArray,
+                          gt::blas::index_t* d_PivotArray, int* d_infoArray,
                           int batchSize);
 
 #define CREATE_GETRF_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getrf_batched<GTTYPE>(handle_t h, int n, GTTYPE** d_Aarray,      \
-                                    int lda, gtblas_index_t* d_PivotArray,     \
+                                    int lda, gt::blas::index_t* d_PivotArray,  \
                                     int* d_infoArray, int batchSize)           \
   {                                                                            \
     gtGpuCheck((hipError_t)METHOD(h->handle, n, n,                             \
@@ -223,14 +221,14 @@ CREATE_GETRF_BATCHED(rocsolver_sgetrf_batched, float, float)
 
 template <typename T>
 inline void getrs_batched(handle_t h, int n, int nrhs, T* const* d_Aarray,
-                          int lda, gtblas_index_t* devIpiv, T** d_Barray,
+                          int lda, gt::blas::index_t* devIpiv, T** d_Barray,
                           int ldb, int batchSize);
 
 #define CREATE_GETRS_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getrs_batched<GTTYPE>(                                           \
     handle_t h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,             \
-    gtblas_index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)        \
+    gt::blas::index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)     \
   {                                                                            \
     gtGpuCheck((hipError_t)METHOD(                                             \
       h->handle, rocblas_operation_none, n, nrhs,                              \
