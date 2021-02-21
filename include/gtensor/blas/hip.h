@@ -135,12 +135,31 @@ inline T dot(handle_t h, int n, const T* x, int incx, const T* y, int incy);
     return result;                                                             \
   }
 
-CREATE_DOT(rocblas_zdotu, gt::complex<double>, rocblas_double_complex)
-CREATE_DOT(rocblas_cdotu, gt::complex<float>, rocblas_float_complex)
 CREATE_DOT(rocblas_ddot, double, double)
 CREATE_DOT(rocblas_sdot, float, float)
 
 #undef CREATE_DOT
+
+template <typename T>
+inline T dotu(handle_t h, int n, const T* x, int incx, const T* y, int incy);
+
+#define CREATE_DOTU(METHOD, GTTYPE, BLASTYPE)                                  \
+  template <>                                                                  \
+  inline GTTYPE dotu<GTTYPE>(handle_t h, int n, const GTTYPE* x, int incx,     \
+                             const GTTYPE* y, int incy)                        \
+  {                                                                            \
+    GTTYPE result;                                                             \
+    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
+                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
+                                  reinterpret_cast<const BLASTYPE*>(y), incy,  \
+                                  reinterpret_cast<BLASTYPE*>(&result)));      \
+    return result;                                                             \
+  }
+
+CREATE_DOTU(rocblas_zdotu, gt::complex<double>, rocblas_double_complex)
+CREATE_DOTU(rocblas_cdotu, gt::complex<float>, rocblas_float_complex)
+
+#undef CREATE_DOTU
 
 template <typename T>
 inline T dotc(handle_t h, int n, const T* x, int incx, const T* y, int incy);

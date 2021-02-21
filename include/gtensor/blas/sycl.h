@@ -89,8 +89,8 @@ inline T dot(handle_t h, int n, const T* x, int incx, const T* y, int incy)
 }
 
 template <typename R>
-inline gt::complex<R> dot(handle_t h, int n, const gt::complex<R>* x, int incx,
-                          const gt::complex<R>* y, int incy)
+inline gt::complex<R> dotu(handle_t h, int n, const gt::complex<R>* x, int incx,
+                           const gt::complex<R>* y, int incy)
 {
   gt::complex<R> result;
   auto e = oneapi::mkl::blas::dotu(*(h->handle), n, x, incx, y, incy, &result);

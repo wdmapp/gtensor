@@ -286,7 +286,7 @@ void test_dot_complex()
 
   gt::blas::create(&h);
 
-  T result = gt::blas::dot(h, d_x, d_y);
+  T resultu = gt::blas::dotu(h, d_x, d_y);
   T resultc = gt::blas::dotc(h, d_x, d_y);
 
   gt::blas::destroy(h);
@@ -294,7 +294,7 @@ void test_dot_complex()
   // sum of first (N-1) integers * 2, which is the sum of real values
   // of x
   R sum = (N - 1) * N;
-  EXPECT_EQ(result, T(sum, -1.0 * sum));
+  EXPECT_EQ(resultu, T(sum, -1.0 * sum));
   EXPECT_EQ(resultc, T(sum, sum));
 }
 

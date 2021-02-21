@@ -69,6 +69,14 @@ inline typename C::value_type dot(handle_t h, const C& x, const C& y)
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
+inline typename C::value_type dotu(handle_t h, const C& x, const C& y)
+{
+  return dotu(h, x.size(), gt::backend::raw_pointer_cast(x.data()), 1,
+              gt::backend::raw_pointer_cast(y.data()), 1);
+}
+
+template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
+                                                  has_space_type_device_v<C>>>
 inline typename C::value_type dotc(handle_t h, const C& x, const C& y)
 {
   return dotc(h, x.size(), gt::backend::raw_pointer_cast(x.data()), 1,
