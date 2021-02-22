@@ -22,9 +22,7 @@ void test_real_axpy(F&& f)
   gt::copy(h_x, d_x);
   gt::copy(h_y, d_y);
 
-  gt::blas::handle_t h;
-
-  gtblas_create(&h);
+  gt::blas::handle_t* h = gtblas_create();
 
   f(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1,
     gt::backend::raw_pointer_cast(d_y.data()), 1);
@@ -67,9 +65,7 @@ void test_complex_axpy(F&& f)
   gt::copy(h_x, d_x);
   gt::copy(h_y, d_y);
 
-  gt::blas::handle_t h;
-
-  gtblas_create(&h);
+  gt::blas::handle_t* h = gtblas_create();
 
   f(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1,
     gt::backend::raw_pointer_cast(d_y.data()), 1);

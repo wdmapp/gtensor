@@ -10,7 +10,7 @@ namespace gt
 namespace blas
 {
 
-struct _handle_wrapper
+struct handle_t
 {
   rocblas_handle handle;
 };
@@ -24,24 +24,25 @@ using index_t = int;
 // ======================================================================
 // handle and stream management
 
-inline void create(handle_t* h)
+inline handle_t* create()
 {
-  *h = new _handle_wrapper();
-  gtGpuCheck((hipError_t)rocblas_create_handle(&((*h)->handle)));
+  handle_t* h = new handle_t();
+  gtGpuCheck((hipError_t)rocblas_create_handle(&(h->handle)));
+  return h;
 }
 
-inline void destroy(handle_t h)
+inline void destroy(handle_t* h)
 {
   gtGpuCheck((hipError_t)rocblas_destroy_handle(h->handle));
   delete h;
 }
 
-inline void set_stream(handle_t h, stream_t stream_id)
+inline void set_stream(handle_t* h, stream_t stream_id)
 {
   gtGpuCheck((hipError_t)rocblas_set_stream(h->handle, stream_id));
 }
 
-inline void get_stream(handle_t h, stream_t* stream_id)
+inline void get_stream(handle_t* h, stream_t* stream_id)
 {
   gtGpuCheck((hipError_t)rocblas_get_stream(h->handle, stream_id));
 }
@@ -50,11 +51,11 @@ inline void get_stream(handle_t h, stream_t* stream_id)
 // axpy
 
 template <typename T>
-inline void axpy(handle_t h, int n, T a, const T* x, int incx, T* y, int incy);
+inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy);
 
 #define CREATE_AXPY(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void axpy<GTTYPE>(handle_t h, int n, GTTYPE a, const GTTYPE* x,       \
+  inline void axpy<GTTYPE>(handle_t * h, int n, GTTYPE a, const GTTYPE* x,     \
                            int incx, GTTYPE* y, int incy)                      \
   {                                                                            \
     gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
@@ -74,11 +75,11 @@ CREATE_AXPY(rocblas_saxpy, float, float)
 // scal
 
 template <typename T>
-inline void scal(handle_t h, int n, T fac, T* arr, const int incx);
+inline void scal(handle_t* h, int n, T fac, T* arr, const int incx);
 
 #define CREATE_SCAL(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void scal<GTTYPE>(handle_t h, int n, GTTYPE fac, GTTYPE* arr,         \
+  inline void scal<GTTYPE>(handle_t * h, int n, GTTYPE fac, GTTYPE* arr,       \
                            const int incx)                                     \
   {                                                                            \
     gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
@@ -97,11 +98,11 @@ CREATE_SCAL(rocblas_sscal, float, float)
 // copy
 
 template <typename T>
-inline void copy(handle_t h, int n, const T* x, int incx, T* y, int incy);
+inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy);
 
 #define CREATE_COPY(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void copy<GTTYPE>(handle_t h, int n, const GTTYPE* x, int incx,       \
+  inline void copy<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,     \
                            GTTYPE* y, int incy)                                \
   {                                                                            \
     gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
@@ -120,11 +121,11 @@ CREATE_COPY(rocblas_scopy, float, float)
 // dot, dotc (conjugate)
 
 template <typename T>
-inline T dot(handle_t h, int n, const T* x, int incx, const T* y, int incy);
+inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
 
 #define CREATE_DOT(METHOD, GTTYPE, BLASTYPE)                                   \
   template <>                                                                  \
-  inline GTTYPE dot<GTTYPE>(handle_t h, int n, const GTTYPE* x, int incx,      \
+  inline GTTYPE dot<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,    \
                             const GTTYPE* y, int incy)                         \
   {                                                                            \
     GTTYPE result;                                                             \
@@ -141,11 +142,11 @@ CREATE_DOT(rocblas_sdot, float, float)
 #undef CREATE_DOT
 
 template <typename T>
-inline T dotu(handle_t h, int n, const T* x, int incx, const T* y, int incy);
+inline T dotu(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
 
 #define CREATE_DOTU(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline GTTYPE dotu<GTTYPE>(handle_t h, int n, const GTTYPE* x, int incx,     \
+  inline GTTYPE dotu<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,   \
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     GTTYPE result;                                                             \
@@ -162,11 +163,11 @@ CREATE_DOTU(rocblas_cdotu, gt::complex<float>, rocblas_float_complex)
 #undef CREATE_DOTU
 
 template <typename T>
-inline T dotc(handle_t h, int n, const T* x, int incx, const T* y, int incy);
+inline T dotc(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
 
 #define CREATE_DOTC(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline GTTYPE dotc<GTTYPE>(handle_t h, int n, const GTTYPE* x, int incx,     \
+  inline GTTYPE dotc<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,   \
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     GTTYPE result;                                                             \
@@ -186,12 +187,12 @@ CREATE_DOTC(rocblas_cdotc, gt::complex<float>, rocblas_float_complex)
 // gemv
 
 template <typename T>
-inline void gemv(handle_t h, int m, int n, T alpha, const T* A, int lda,
+inline void gemv(handle_t* h, int m, int n, T alpha, const T* A, int lda,
                  const T* x, int incx, T beta, T* y, int incy);
 
 #define CREATE_GEMV(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void gemv<GTTYPE>(handle_t h, int m, int n, GTTYPE alpha,             \
+  inline void gemv<GTTYPE>(handle_t * h, int m, int n, GTTYPE alpha,           \
                            const GTTYPE* A, int lda, const GTTYPE* x,          \
                            int incx, GTTYPE beta, GTTYPE* y, int incy)         \
   {                                                                            \
@@ -214,13 +215,13 @@ CREATE_GEMV(rocblas_sgemv, float, float)
 // getrf/getrs batched
 
 template <typename T>
-inline void getrf_batched(handle_t h, int n, T** d_Aarray, int lda,
+inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
                           gt::blas::index_t* d_PivotArray, int* d_infoArray,
                           int batchSize);
 
 #define CREATE_GETRF_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
-  inline void getrf_batched<GTTYPE>(handle_t h, int n, GTTYPE** d_Aarray,      \
+  inline void getrf_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray,    \
                                     int lda, gt::blas::index_t* d_PivotArray,  \
                                     int* d_infoArray, int batchSize)           \
   {                                                                            \
@@ -239,14 +240,14 @@ CREATE_GETRF_BATCHED(rocsolver_sgetrf_batched, float, float)
 #undef CREATE_GETRF_BATCHED
 
 template <typename T>
-inline void getrs_batched(handle_t h, int n, int nrhs, T* const* d_Aarray,
+inline void getrs_batched(handle_t* h, int n, int nrhs, T* const* d_Aarray,
                           int lda, gt::blas::index_t* devIpiv, T** d_Barray,
                           int ldb, int batchSize);
 
 #define CREATE_GETRS_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getrs_batched<GTTYPE>(                                           \
-    handle_t h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,             \
+    handle_t * h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,           \
     gt::blas::index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)     \
   {                                                                            \
     gtGpuCheck((hipError_t)METHOD(                                             \

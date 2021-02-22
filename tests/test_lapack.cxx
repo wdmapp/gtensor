@@ -124,9 +124,7 @@ void test_getrf_batch_real()
   gt::copy(h_A, d_A);
   gt::copy(h_Aptr, d_Aptr);
 
-  gt::blas::handle_t h;
-
-  gt::blas::create(&h);
+  gt::blas::handle_t* h = gt::blas::create();
 
   gt::blas::getrf_batched(h, N, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
                           gt::backend::raw_pointer_cast(d_p.data()),
@@ -217,9 +215,7 @@ void test_getrs_batch_real()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::blas::handle_t h;
-
-  gt::blas::create(&h);
+  gt::blas::handle_t* h = gt::blas::create();
 
   gt::blas::getrs_batched(
     h, N, NRHS, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
@@ -279,9 +275,7 @@ void test_getrf_batch_complex()
   gt::copy(h_A, d_A);
   gt::copy(h_Aptr, d_Aptr);
 
-  gt::blas::handle_t h;
-
-  gt::blas::create(&h);
+  gt::blas::handle_t* h = gt::blas::create();
 
   gt::blas::getrf_batched(h, N, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
                           gt::backend::raw_pointer_cast(d_p.data()),
@@ -410,9 +404,7 @@ void test_getrs_batch_complex()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::blas::handle_t h;
-
-  gt::blas::create(&h);
+  gt::blas::handle_t* h = gt::blas::create();
 
   gt::blas::getrs_batched(
     h, N, NRHS, gt::backend::raw_pointer_cast(d_Aptr.data()), N,

@@ -10,7 +10,7 @@ namespace gt
 namespace blas
 {
 
-struct _handle_wrapper
+struct handle_t
 {
   cl::sycl::queue* handle;
 };
@@ -24,24 +24,25 @@ using index_t = std::int64_t;
 // ======================================================================
 // handle and stream management
 
-inline void create(handle_t* h)
+inline handle_t* create()
 {
-  *h = new _handle_wrapper();
-  (*h)->handle = &gt::backend::sycl::get_queue();
+  handle_t* h = new handle_t();
+  h->handle = &gt::backend::sycl::get_queue();
+  return h;
 }
 
-inline void destroy(handle_t h)
+inline void destroy(handle_t* h)
 {
   h->handle = nullptr;
   delete h;
 }
 
-inline void set_stream(handle_t h, stream_t stream_id)
+inline void set_stream(handle_t* h, stream_t stream_id)
 {
   h->handle = stream_id;
 }
 
-inline void get_stream(handle_t h, stream_t* stream_id)
+inline void get_stream(handle_t* h, stream_t* stream_id)
 {
   *stream_id = h->handle;
 }
@@ -50,7 +51,7 @@ inline void get_stream(handle_t h, stream_t* stream_id)
 // axpy
 
 template <typename T>
-inline void axpy(handle_t h, int n, T a, const T* x, int incx, T* y, int incy)
+inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy)
 {
   auto e = oneapi::mkl::blas::axpy(*(h->handle), n, a, x, incx, y, incy);
   e.wait();
@@ -60,7 +61,7 @@ inline void axpy(handle_t h, int n, T a, const T* x, int incx, T* y, int incy)
 // scal
 
 template <typename T>
-inline void scal(handle_t h, int n, T a, T* x, const int incx)
+inline void scal(handle_t* h, int n, T a, T* x, const int incx)
 {
   auto e = oneapi::mkl::blas::scal(*(h->handle), n, a, x, incx);
   e.wait();
@@ -70,7 +71,7 @@ inline void scal(handle_t h, int n, T a, T* x, const int incx)
 // copy
 
 template <typename T>
-inline void copy(handle_t h, int n, const T* x, int incx, T* y, int incy)
+inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy)
 {
   auto e = oneapi::mkl::blas::copy(*(h->handle), n, x, incx, y, incy);
   e.wait();
@@ -80,7 +81,7 @@ inline void copy(handle_t h, int n, const T* x, int incx, T* y, int incy)
 // dot, dotc (conjugate)
 
 template <typename T>
-inline T dot(handle_t h, int n, const T* x, int incx, const T* y, int incy)
+inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy)
 {
   T result;
   auto e = oneapi::mkl::blas::dot(*(h->handle), n, x, incx, y, incy, &result);
@@ -89,8 +90,8 @@ inline T dot(handle_t h, int n, const T* x, int incx, const T* y, int incy)
 }
 
 template <typename R>
-inline gt::complex<R> dotu(handle_t h, int n, const gt::complex<R>* x, int incx,
-                           const gt::complex<R>* y, int incy)
+inline gt::complex<R> dotu(handle_t* h, int n, const gt::complex<R>* x,
+                           int incx, const gt::complex<R>* y, int incy)
 {
   gt::complex<R> result;
   auto e = oneapi::mkl::blas::dotu(*(h->handle), n, x, incx, y, incy, &result);
@@ -99,8 +100,8 @@ inline gt::complex<R> dotu(handle_t h, int n, const gt::complex<R>* x, int incx,
 }
 
 template <typename R>
-inline gt::complex<R> dotc(handle_t h, int n, const gt::complex<R>* x, int incx,
-                           const gt::complex<R>* y, int incy)
+inline gt::complex<R> dotc(handle_t* h, int n, const gt::complex<R>* x,
+                           int incx, const gt::complex<R>* y, int incy)
 {
   gt::complex<R> result;
   auto e = oneapi::mkl::blas::dotc(*(h->handle), n, x, incx, y, incy, &result);
@@ -112,7 +113,7 @@ inline gt::complex<R> dotc(handle_t h, int n, const gt::complex<R>* x, int incx,
 // gemv
 
 template <typename T>
-inline void gemv(handle_t h, int m, int n, T alpha, const T* A, int lda,
+inline void gemv(handle_t* h, int m, int n, T alpha, const T* A, int lda,
                  const T* x, int incx, T beta, T* y, int incy)
 {
   auto e =
@@ -125,7 +126,7 @@ inline void gemv(handle_t h, int m, int n, T alpha, const T* A, int lda,
 // getrf/getrs batched
 
 template <typename T>
-inline void getrf_batched(handle_t h, int n, T** d_Aarray, int lda,
+inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
                           gt::blas::index_t* d_PivotArray, int* d_infoArray,
                           int batchSize)
 {
@@ -151,7 +152,7 @@ inline void getrf_batched(handle_t h, int n, T** d_Aarray, int lda,
 }
 
 template <typename T>
-inline void getrs_batched(handle_t h, int n, int nrhs, T* const* d_Aarray,
+inline void getrs_batched(handle_t* h, int n, int nrhs, T* const* d_Aarray,
                           int lda, gt::blas::index_t* devIpiv, T** d_Barray,
                           int ldb, int batchSize)
 {
