@@ -58,31 +58,30 @@ void gtblas_zgemv(int m, int n, gt::complex<double> alpha,
                   const gt::complex<double>* x, int incx,
                   gt::complex<double> beta, gt::complex<double>* y, int incy);
 
-void gtblas_sgetrf_batched(int n, float* d_Aarray[], int lda,
+void gtblas_sgetrf_batched(int n, float** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
-void gtblas_sgetrs_batched(int n, int nrhs, float* const* d_Aarray, int lda,
+void gtblas_sgetrs_batched(int n, int nrhs, float** d_Aarray, int lda,
                            gt::blas::index_t* devIpiv, float** d_Barray,
                            int ldb, int batchSize);
-void gtblas_dgetrf_batched(int n, double* d_Aarray[], int lda,
+void gtblas_dgetrf_batched(int n, double** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
-void gtblas_dgetrs_batched(int n, int nrhs, double* const* d_Aarray, int lda,
+void gtblas_dgetrs_batched(int n, int nrhs, double** d_Aarray, int lda,
                            gt::blas::index_t* devIpiv, double** d_Barray,
                            int ldb, int batchSize);
 void gtblas_cgetrf_batched(int n, gt::complex<float>** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
-void gtblas_cgetrs_batched(int n, int nrhs, gt::complex<float>* const* d_Aarray,
+void gtblas_cgetrs_batched(int n, int nrhs, gt::complex<float>** d_Aarray,
                            int lda, gt::blas::index_t* devIpiv,
                            gt::complex<float>** d_Barray, int ldb,
                            int batchSize);
 void gtblas_zgetrf_batched(int n, gt::complex<double>** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
-void gtblas_zgetrs_batched(int n, int nrhs,
-                           gt::complex<double>* const* d_Aarray, int lda,
-                           gt::blas::index_t* devIpiv,
+void gtblas_zgetrs_batched(int n, int nrhs, gt::complex<double>** d_Aarray,
+                           int lda, gt::blas::index_t* devIpiv,
                            gt::complex<double>** d_Barray, int ldb,
                            int batchSize);
 
