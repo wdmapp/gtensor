@@ -60,8 +60,8 @@ inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy)
 // ======================================================================
 // scal
 
-template <typename T>
-inline void scal(handle_t* h, int n, T a, T* x, const int incx)
+template <typename S, typename T>
+inline void scal(handle_t* h, int n, S a, T* x, const int incx)
 {
   auto e = oneapi::mkl::blas::scal(*(h->handle), n, a, x, incx);
   e.wait();

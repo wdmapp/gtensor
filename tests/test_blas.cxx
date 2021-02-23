@@ -103,26 +103,33 @@ void test_scal_complex()
   constexpr int N = 1024;
   using T = gt::complex<R>;
   gt::gtensor<T, 1> h_x(N);
+  gt::gtensor<T, 1> h_y(N);
   gt::gtensor_device<T, 1> d_x(N);
+  gt::gtensor_device<T, 1> d_y(N);
   T a = T(0.5, 1);
+  R b = 0.5;
 
   for (int i = 0; i < N; i++) {
     h_x(i) = T(2.0 * i, -2.0 * i);
   }
 
   gt::copy(h_x, d_x);
+  gt::copy(h_x, d_y);
 
   gt::blas::handle_t* h = gt::blas::create();
 
   // gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
   gt::blas::scal(h, a, d_x);
+  gt::blas::scal(h, b, d_y);
 
   gt::blas::destroy(h);
 
   gt::copy(d_x, h_x);
+  gt::copy(d_y, h_y);
 
   for (int i = 0; i < N; i++) {
     EXPECT_EQ(h_x(i), T(i * 3.0, i * 1.0));
+    EXPECT_EQ(h_y(i), T(i, -1.0 * i));
   }
 }
 

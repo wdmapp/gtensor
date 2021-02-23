@@ -74,13 +74,13 @@ CREATE_AXPY(cublasSaxpy, float, float)
 // ======================================================================
 // scal
 
-template <typename T>
-inline void scal(handle_t* h, int n, T fac, T* arr, const int incx);
+template <typename S, typename T>
+inline void scal(handle_t* h, int n, S fac, T* arr, const int incx);
 
 #define CREATE_SCAL(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void scal<GTTYPE>(handle_t * h, int n, GTTYPE fac, GTTYPE* arr,       \
-                           const int incx)                                     \
+  inline void scal<GTTYPE, GTTYPE>(handle_t * h, int n, GTTYPE fac,            \
+                                   GTTYPE* arr, const int incx)                \
   {                                                                            \
     gtGpuCheck((cudaError_t)METHOD(h->handle, n,                               \
                                    reinterpret_cast<BLASTYPE*>(&fac),          \
@@ -93,6 +93,27 @@ CREATE_SCAL(cublasDscal, double, double)
 CREATE_SCAL(cublasSscal, float, float)
 
 #undef CREATE_SCAL
+
+// ======================================================================
+// (zd|cs)scal
+
+template <>
+inline void scal<double, gt::complex<double>>(handle_t* h, int n, double fac,
+                                              gt::complex<double>* arr,
+                                              const int incx)
+{
+  gtGpuCheck((cudaError_t)cublasZdscal(
+    h->handle, n, &fac, reinterpret_cast<cuDoubleComplex*>(arr), incx));
+}
+
+template <>
+inline void scal<float, gt::complex<float>>(handle_t* h, int n, float fac,
+                                            gt::complex<float>* arr,
+                                            const int incx)
+{
+  gtGpuCheck((cudaError_t)cublasCsscal(
+    h->handle, n, &fac, reinterpret_cast<cuComplex*>(arr), incx));
+}
 
 // ======================================================================
 // copy

@@ -8,6 +8,8 @@
 #include <complex>
 #endif
 
+#include "gtensor/meta.h"
+
 namespace gt
 {
 
@@ -26,6 +28,9 @@ using complex = std::complex<T>;
 
 #endif
 
+// ======================================================================
+// is_complex
+
 template <typename T>
 struct is_complex : public std::false_type
 {};
@@ -33,6 +38,55 @@ struct is_complex : public std::false_type
 template <typename T>
 struct is_complex<complex<T>> : public std::true_type
 {};
+
+template <typename T>
+constexpr bool is_complex_v = is_complex<T>::value;
+
+// ======================================================================
+// has_complex_value_type
+
+template <typename C, typename = void>
+struct has_complex_value_type : std::false_type
+{};
+
+template <typename C>
+struct has_complex_value_type<
+  C, gt::meta::void_t<std::enable_if_t<is_complex_v<typename C::value_type>>>>
+  : std::true_type
+{};
+
+template <typename T>
+constexpr bool has_complex_value_type_v = has_complex_value_type<T>::value;
+
+// ======================================================================
+// complex_subtype
+
+template <typename T>
+struct complex_subtype
+{
+  using type = T;
+};
+
+template <typename R>
+struct complex_subtype<gt::complex<R>>
+{
+  using type = R;
+};
+
+template <typename T>
+using complex_subtype_t = typename complex_subtype<T>::type;
+
+// ======================================================================
+// container_complex_subtype
+
+template <typename C>
+struct container_complex_subtype
+{
+  using type = complex_subtype_t<typename C::value_type>;
+};
+
+template <typename T>
+using container_complex_subtype_t = typename container_complex_subtype<T>::type;
 
 } // namespace gt
 

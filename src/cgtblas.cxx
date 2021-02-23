@@ -49,15 +49,17 @@ CREATE_C_AXPY(gtblas_zaxpy, gt::complex<double>)
 // gtblas_Xscal
 
 #define CREATE_C_SCAL(CNAME, STYPE, ATYPE)                                     \
-  void CNAME(int n, STYPE a, ATYPE* x, int incx)                           \
+  void CNAME(int n, STYPE a, ATYPE* x, int incx)                               \
   {                                                                            \
-    gt::blas::scal(g_handle, n, a, x, incx);                               \
+    gt::blas::scal(g_handle, n, a, x, incx);                                   \
   }
 
 CREATE_C_SCAL(gtblas_sscal, float, float)
 CREATE_C_SCAL(gtblas_dscal, double, double)
 CREATE_C_SCAL(gtblas_cscal, gt::complex<float>, gt::complex<float>)
 CREATE_C_SCAL(gtblas_zscal, gt::complex<double>, gt::complex<double>)
+CREATE_C_SCAL(gtblas_csscal, float, gt::complex<float>)
+CREATE_C_SCAL(gtblas_zdscal, double, gt::complex<double>)
 
 #undef CREATE_C_SCAL
 

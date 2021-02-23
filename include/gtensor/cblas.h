@@ -31,6 +31,8 @@ void gtblas_ccopy(int n, const gt::complex<float>* x, int incx,
                   gt::complex<float>* y, int incy);
 void gtblas_zcopy(int n, const gt::complex<double>* x, int incx,
                   gt::complex<double>* y, int incy);
+void gtblas_zdscal(int n, double fac, gt::complex<double>* arr, int incx);
+void gtblas_csscal(int n, float fac, gt::complex<float>* arr, int incx);
 
 void gtblas_sdot(int n, const float* x, int incx, float* y, int incy);
 void gtblas_ddot(int n, const double* x, int incx, double* y, int incy);

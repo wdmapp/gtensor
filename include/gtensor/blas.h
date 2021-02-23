@@ -51,6 +51,14 @@ inline void scal(handle_t* h, typename C::value_type fac, C& arr)
 }
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
+                                                  has_space_type_device_v<C> &&
+                                                  has_complex_value_type_v<C>>>
+inline void scal(handle_t* h, container_complex_subtype_t<C> fac, C& arr)
+{
+  scal(h, arr.size(), fac, gt::backend::raw_pointer_cast(arr.data()), 1);
+}
+
+template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
 inline void copy(handle_t* h, C& src, C& dest)
 {
