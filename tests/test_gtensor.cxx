@@ -51,6 +51,24 @@ TEST(gtensor, ctor_init_2d)
   EXPECT_EQ(a, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
 }
 
+TEST(gtensor, indexing_2d)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto adata = a.data();
+  EXPECT_EQ(a(0, 0), 11.);
+  EXPECT_EQ(a(0, 0), adata[0]);
+  EXPECT_EQ(a(1, 0), 21.);
+  EXPECT_EQ(a(1, 0), adata[1]);
+  EXPECT_EQ(a(2, 0), 31.);
+  EXPECT_EQ(a(2, 0), adata[2]);
+  EXPECT_EQ(a(0, 1), 12.);
+  EXPECT_EQ(a(0, 1), adata[3]);
+  EXPECT_EQ(a(1, 1), 22.);
+  EXPECT_EQ(a(1, 1), adata[4]);
+  EXPECT_EQ(a(2, 1), 32.);
+  EXPECT_EQ(a(2, 1), adata[5]);
+}
+
 TEST(gtensor, op_equal)
 {
   gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
