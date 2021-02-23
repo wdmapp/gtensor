@@ -18,12 +18,12 @@ void gtblas_caxpy(int n, gt::complex<float> a, const gt::complex<float>* x,
 void gtblas_zaxpy(int n, gt::complex<double> a, const gt::complex<double>* x,
                   int incx, gt::complex<double>* y, int incy);
 
-void gtblas_sdscal(int n, const float fac, float* arr, const int incx);
-void gtblas_ddscal(int n, const double fac, double* arr, const int incx);
-void gtblas_cdscal(int n, const float fac, gt::complex<float>* arr,
-                   const int incx);
-void gtblas_zdscal(int n, const double fac, gt::complex<double>* arr,
-                   const int incx);
+void gtblas_sscal(int n, float fac, float* arr, int incx);
+void gtblas_dscal(int n, double fac, double* arr, int incx);
+void gtblas_cscal(int n, const gt::complex<float> fac, gt::complex<float>* arr,
+                  int incx);
+void gtblas_zscal(int n, gt::complex<double> fac, gt::complex<double>* arr,
+                  int incx);
 
 void gtblas_scopy(int n, const float* x, int incx, float* y, int incy);
 void gtblas_dcopy(int n, const double* x, int incx, double* y, int incy);
