@@ -104,7 +104,7 @@ inline void gemv(handle_t* h, typename M::value_type alpha, M& A, V& x,
   static_assert(
     std::is_same<typename M::value_type, typename V::value_type>::value,
     "matrix and vectors must have same value type");
-  assert(A.size(1) == V.size(0));
+  assert(A.shape(1) == x.shape(0));
 
   gemv(h, A.shape(0), A.shape(1), alpha,
        gt::backend::raw_pointer_cast(A.data()), A.shape(0),
