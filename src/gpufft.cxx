@@ -106,7 +106,7 @@ void gpufft_plan_many(gpufft_handle_t* handle, int rank, int* n, int istride,
         odist); // ouptut batch distance
   auto result = rocfft_plan_create(handle, rocfft_placment_inline, type,
                                    rocfft_precision_double, rank, n, batchSize,
-  desc); assert(result == rocfft_success);
+  desc); assert(result == HIPFFT_SUCCESS);
   */
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = new gpufft_mkl_handle_t();
@@ -143,7 +143,7 @@ void gpufft_plan_destroy(gpufft_handle_t handle)
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftDestroy(handle);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* h = static_cast<gpufft_mkl_handle_t*>(handle);
   gpufft_transform_t type = h->type;
@@ -180,7 +180,7 @@ void gpufft_exec_z2d(gpufft_handle_t handle, gpufft_double_complex_t* indata,
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftExecZ2D(handle, indata, outdata);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = static_cast<gpufft_mkl_handle_t*>(handle);
   auto h = reinterpret_cast<gpufft_real_double_descriptor_t*>(hp->descriptor_p);
@@ -198,7 +198,7 @@ void gpufft_exec_d2z(gpufft_handle_t handle, gpufft_double_real_t* indata,
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftExecD2Z(handle, indata, outdata);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = static_cast<gpufft_mkl_handle_t*>(handle);
   auto h = reinterpret_cast<gpufft_real_double_descriptor_t*>(hp->descriptor_p);
@@ -216,7 +216,7 @@ void gpufft_exec_c2r(gpufft_handle_t handle, gpufft_complex_t* indata,
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftExecC2R(handle, indata, outdata);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = static_cast<gpufft_mkl_handle_t*>(handle);
   auto h = reinterpret_cast<gpufft_real_single_descriptor_t*>(hp->descriptor_p);
@@ -234,7 +234,7 @@ void gpufft_exec_r2c(gpufft_handle_t handle, gpufft_real_t* indata,
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftExecR2C(handle, indata, outdata);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = static_cast<gpufft_mkl_handle_t*>(handle);
   auto h = reinterpret_cast<gpufft_real_single_descriptor_t*>(hp->descriptor_p);
@@ -252,7 +252,7 @@ void gpufft_exec_z2z(gpufft_handle_t handle, gpufft_double_complex_t* indata,
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftExecZ2Z(handle, indata, outdata, direction);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = static_cast<gpufft_mkl_handle_t*>(handle);
   auto h =
@@ -275,7 +275,7 @@ void gpufft_exec_c2c(gpufft_handle_t handle, gpufft_complex_t* indata,
   assert(result == CUFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_HIP)
   auto result = hipfftExecC2C(handle, indata, outdata, direction);
-  assert(result == rocfft_success);
+  assert(result == HIPFFT_SUCCESS);
 #elif defined(GTENSOR_DEVICE_SYCL)
   gpufft_mkl_handle_t* hp = static_cast<gpufft_mkl_handle_t*>(handle);
   auto h =
