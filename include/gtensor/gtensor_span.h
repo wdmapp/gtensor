@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "device_backend.h"
+#include "macros.h"
 #include "span.h"
 
 namespace gt
@@ -137,7 +138,7 @@ inline gtensor_span<T, N, S>::gtensor_span(pointer data,
 #elif defined(GTENSOR_DEVICE_HIP)
   if (std::is_same<S, space::device>::value) {
     hipPointerAttribute_t attr;
-    hipCheck(
+    gtGpuCheck(
       hipPointerGetAttributes(&attr, gt::backend::raw_pointer_cast(data)));
     assert(attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
   }

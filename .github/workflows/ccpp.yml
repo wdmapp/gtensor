@@ -181,6 +181,10 @@ jobs:
       run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake thrust build
       run: cmake --build build-cuda -v
+    - name: cmake thrust debug
+      run: cmake -S . -B build-cuda-debug -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+    - name: cmake thrust debug build
+      run: cmake --build build-cuda-debug -v
     - name: cmake nothrust
       run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake nothrust build
@@ -233,6 +237,10 @@ jobs:
       run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake thrust build
       run: cmake --build build-hip -v
+    - name: cmake thrust debug
+      run: cmake -S . -B build-hip-debug -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+    - name: cmake thrust debug build
+      run: cmake --build build-hip-debug -v
     - name: cmake nothrust
       run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
     - name: cmake nothrust build
