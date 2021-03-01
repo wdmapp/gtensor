@@ -83,9 +83,15 @@ inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy)
 template <typename T>
 inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy)
 {
+  sycl::queue& q = *(h->handle);
+
+  T* d_rp = sycl::malloc_device<T>(1, q);
   T result;
-  auto e = oneapi::mkl::blas::dot(*(h->handle), n, x, incx, y, incy, &result);
+  auto e = oneapi::mkl::blas::dot(*(h->handle), n, x, incx, y, incy, d_rp);
   e.wait();
+  auto e2 = q.memcpy(&result, d_rp, sizeof(T));
+  e2.wait();
+  sycl::free(d_rp, q);
   return result;
 }
 
@@ -93,9 +99,16 @@ template <typename R>
 inline gt::complex<R> dotu(handle_t* h, int n, const gt::complex<R>* x,
                            int incx, const gt::complex<R>* y, int incy)
 {
-  gt::complex<R> result;
-  auto e = oneapi::mkl::blas::dotu(*(h->handle), n, x, incx, y, incy, &result);
+  sycl::queue& q = *(h->handle);
+  using T = gt::complex<R>;
+
+  T* d_rp = sycl::malloc_device<T>(1, q);
+  T result;
+  auto e = oneapi::mkl::blas::dotu(*(h->handle), n, x, incx, y, incy, d_rp);
   e.wait();
+  auto e2 = q.memcpy(&result, d_rp, sizeof(T));
+  e2.wait();
+  sycl::free(d_rp, q);
   return result;
 }
 
@@ -103,9 +116,16 @@ template <typename R>
 inline gt::complex<R> dotc(handle_t* h, int n, const gt::complex<R>* x,
                            int incx, const gt::complex<R>* y, int incy)
 {
-  gt::complex<R> result;
-  auto e = oneapi::mkl::blas::dotc(*(h->handle), n, x, incx, y, incy, &result);
+  sycl::queue& q = *(h->handle);
+  using T = gt::complex<R>;
+
+  T* d_rp = sycl::malloc_device<T>(1, q);
+  T result;
+  auto e = oneapi::mkl::blas::dotc(*(h->handle), n, x, incx, y, incy, d_rp);
   e.wait();
+  auto e2 = q.memcpy(&result, d_rp, sizeof(T));
+  e2.wait();
+  sycl::free(d_rp, q);
   return result;
 }
 
