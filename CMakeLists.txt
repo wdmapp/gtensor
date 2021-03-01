@@ -201,13 +201,14 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
     endif()
 
     add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
+    target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
     target_include_directories(oneapi_mkl_sycl INTERFACE "${MKL_PATH}/include")
     target_link_libraries(oneapi_mkl_sycl INTERFACE
                           "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sycl.so")
     # NOTE: we could support gnu here to, but when using DPCPP it must be intel,
     # and that is the expected case here.
     target_link_libraries(oneapi_mkl_sycl INTERFACE
-                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_lp64.so")
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
     target_link_libraries(oneapi_mkl_sycl INTERFACE
                           "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sequential.so")
     target_link_libraries(oneapi_mkl_sycl INTERFACE
