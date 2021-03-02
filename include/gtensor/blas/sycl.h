@@ -152,53 +152,68 @@ inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
 {
   sycl::queue& q = *(h->handle);
 
+  index_t n64 = n;
+  index_t lda64 = lda;
+  index_t batchSize64 = batchSize;
+
+  // unlike cuBLAS/rocBLAS, the pivot array to getrf is expected to be
+  // an array of pointer, just like d_Aarray.
+  auto d_PivotPtr = sycl::malloc_shared<index_t*>(batchSize, q);
+  for (int i = 0; i < batchSize; i++) {
+    d_PivotPtr[i] = d_PivotArray + (i * n);
+  }
+
   auto scratch_count = oneapi::mkl::lapack::getrf_batch_scratchpad_size<T>(
-    q, n, n, lda, n * n, n, batchSize);
+    q, &n64, &n64, &lda64, 1, &batchSize64);
+
   auto scratch = sycl::malloc_device<T>(scratch_count, q);
 
-  // NB: MKL expects a single contiguous array for the batch, as a host
-  // pointer to device memory. Assume linear starting with the first
-  // pointer, and copy it back to the host.
-  T* d_Aptr;
-  auto memcpy_e = q.memcpy(&d_Aptr, d_Aarray, sizeof(T*));
-  memcpy_e.wait();
-
-  auto e =
-    oneapi::mkl::lapack::getrf_batch(q, n, n, d_Aptr, lda, n * n, d_PivotArray,
-                                     n, batchSize, scratch, scratch_count);
+  auto e = oneapi::mkl::lapack::getrf_batch(q, &n64, &n64, d_Aarray, &lda64,
+                                            d_PivotPtr, 1, &batchSize64,
+                                            scratch, scratch_count);
+  // set zero to indicate no errors, which is true if we get here without
+  // an exception being thrown
+  // TODO: translate exceptions to info error codes?
+  auto e2 = q.memset(d_infoArray, 0, sizeof(int) * batchSize);
   e.wait();
+  e2.wait();
 
   sycl::free(scratch, q);
+  sycl::free(d_PivotPtr, q);
 }
 
 template <typename T>
-inline void getrs_batched(handle_t* h, int n, int nrhs, T* const* d_Aarray,
-                          int lda, gt::blas::index_t* devIpiv, T** d_Barray,
+inline void getrs_batched(handle_t* h, int n, int nrhs, T** d_Aarray, int lda,
+                          gt::blas::index_t* d_PivotArray, T** d_Barray,
                           int ldb, int batchSize)
 {
   sycl::queue& q = *(h->handle);
 
+  index_t n64 = n;
+  index_t nrhs64 = nrhs;
+  index_t lda64 = lda;
+  index_t ldb64 = ldb;
+  index_t batchSize64 = batchSize;
+
+  // unlike cuBLAS/rocBLAS, the pivot array to getrf is expected to be
+  // an array of pointer, just like d_Aarray.
+  auto d_PivotPtr = sycl::malloc_shared<index_t*>(batchSize, q);
+  for (int i = 0; i < batchSize; i++) {
+    d_PivotPtr[i] = d_PivotArray + (i * n);
+  }
+
+  auto trans_op = oneapi::mkl::transpose::nontrans;
   auto scratch_count = oneapi::mkl::lapack::getrs_batch_scratchpad_size<T>(
-    q, oneapi::mkl::transpose::nontrans, n, nrhs, lda, n * n, n, ldb, n * nrhs,
-    batchSize);
+    q, &trans_op, &n64, &nrhs64, &lda64, &ldb64, 1, &batchSize64);
   auto scratch = sycl::malloc_device<T>(scratch_count, q);
 
-  // NB: MKL expects a single contiguous array for the batch, as a host
-  // pointer to device memory. Assume linear starting with the first
-  // pointer, and copy it back to the host.
-  T* d_Aptr;
-  T* d_Bptr;
-  auto memcpy_A = q.memcpy(&d_Aptr, d_Aarray, sizeof(T*));
-  memcpy_A.wait();
-  auto memcpy_B = q.memcpy(&d_Bptr, d_Barray, sizeof(T*));
-  memcpy_B.wait();
-
   auto e = oneapi::mkl::lapack::getrs_batch(
-    q, oneapi::mkl::transpose::nontrans, n, nrhs, d_Aptr, lda, n * n, devIpiv,
-    n, d_Bptr, ldb, n * nrhs, batchSize, scratch, scratch_count);
+    q, &trans_op, &n64, &nrhs64, d_Aarray, &lda64, d_PivotPtr, d_Barray, &ldb64,
+    1, &batchSize64, scratch, scratch_count);
   e.wait();
 
   sycl::free(scratch, q);
+  sycl::free(d_PivotPtr, q);
 }
 
 } // namespace blas
