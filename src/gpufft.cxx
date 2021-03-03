@@ -8,13 +8,16 @@
 #include "gtensor/gpufft.h"
 
 #ifdef GTENSOR_DEVICE_SYCL
+// Shouldn't be necessary with MKL_ILP64 set, but for some reason it's not
+// compiling without it.
+#define MKL_LONG std::int64_t
 template <typename T>
 T* gpufft_mkl_init_descriptor(int rank, int* n, int istride, int idist,
                               int ostride, int odist, gpufft_transform_t type,
                               int batchSize)
 {
   T* h;
-  std::int64_t fwd_distance, bwd_distance;
+  MKL_LONG fwd_distance, bwd_distance;
 
   if (type == GPUFFT_C2R || type == GPUFFT_Z2D) {
     fwd_distance = odist;
