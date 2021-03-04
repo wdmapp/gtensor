@@ -1,6 +1,11 @@
 name: SYCL CI
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master, 'pr/*' ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   test-sycl:
@@ -26,7 +31,7 @@ jobs:
         echo 'deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu bionic-devel main' > /etc/apt/sources.list.d/intel-graphics.list
         apt-get update -y
     - name: install dpcpp
-      run: apt-get install -y intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl clinfo intel-opencl-icd intel-level-zero-gpu level-zero
+      run: apt-get install -y intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl intel-oneapi-mkl-devel clinfo intel-opencl-icd intel-level-zero-gpu level-zero
     - uses: actions/checkout@v2
     - name: clinfo
       run: |
