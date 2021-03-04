@@ -13,7 +13,7 @@ namespace backend
 namespace sycl
 {
 
-static inline cl::sycl::device& get_device()
+inline cl::sycl::device& get_device()
 {
 #ifdef GTENSOR_DEVICE_SYCL_SELECTOR_GPU
   static cl::sycl::device d{cl::sycl::gpu_selector()};
@@ -34,7 +34,7 @@ static inline cl::sycl::device& get_device()
  * The idea is to support one device per MPI process use cases, and
  * not worry about more complex cases.
  */
-static inline cl::sycl::queue& get_queue()
+inline cl::sycl::queue& get_queue()
 {
   static auto exception_handler = [](cl::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
