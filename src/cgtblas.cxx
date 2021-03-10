@@ -32,10 +32,10 @@ void gtblas_get_stream(gt::blas::stream_t* stream_id)
 // gtblas_Xaxpy
 
 #define CREATE_C_AXPY(CNAME, CPPTYPE)                                          \
-  void CNAME(int n, CPPTYPE a, const CPPTYPE* x, int incx, CPPTYPE* y,         \
+  void CNAME(int n, const CPPTYPE* a, const CPPTYPE* x, int incx, CPPTYPE* y,  \
              int incy)                                                         \
   {                                                                            \
-    gt::blas::axpy(g_handle, n, a, x, incx, y, incy);                          \
+    gt::blas::axpy(g_handle, n, *a, x, incx, y, incy);                         \
   }
 
 CREATE_C_AXPY(gtblas_saxpy, float)
@@ -49,9 +49,9 @@ CREATE_C_AXPY(gtblas_zaxpy, gt::complex<double>)
 // gtblas_Xscal
 
 #define CREATE_C_SCAL(CNAME, STYPE, ATYPE)                                     \
-  void CNAME(int n, STYPE a, ATYPE* x, int incx)                               \
+  void CNAME(int n, const STYPE* a, ATYPE* x, int incx)                        \
   {                                                                            \
-    gt::blas::scal(g_handle, n, a, x, incx);                                   \
+    gt::blas::scal(g_handle, n, *a, x, incx);                                  \
   }
 
 CREATE_C_SCAL(gtblas_sscal, float, float)
@@ -123,10 +123,11 @@ CREATE_C_DOTC(gtblas_zdotc, gt::complex<double>)
 // gtblas_Xgemv
 
 #define CREATE_C_GEMV(CNAME, CPPTYPE)                                          \
-  void CNAME(int m, int n, CPPTYPE alpha, const CPPTYPE* A, int lda,           \
-             const CPPTYPE* x, int incx, CPPTYPE beta, CPPTYPE* y, int incy)   \
+  void CNAME(int m, int n, const CPPTYPE* alpha, const CPPTYPE* A, int lda,    \
+             const CPPTYPE* x, int incx, const CPPTYPE* beta, CPPTYPE* y,      \
+             int incy)                                                         \
   {                                                                            \
-    gt::blas::gemv(g_handle, m, n, alpha, A, lda, x, incx, beta, y, incy);     \
+    gt::blas::gemv(g_handle, m, n, *alpha, A, lda, x, incx, *beta, y, incy);   \
   }
 
 CREATE_C_GEMV(gtblas_sgemv, float)
