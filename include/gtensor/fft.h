@@ -24,8 +24,10 @@ enum class Domain
 } // namespace gt
 
 #if defined(GTENSOR_DEVICE_CUDA)
+#include <cufft.h>
 #include "gtensor/fft/cuda.h"
 #elif defined(GTENSOR_DEVICE_HIP)
+#include <hipfft.h>
 #include "gtensor/fft/hip.h"
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include "gtensor/fft/sycl.h"

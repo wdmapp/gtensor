@@ -1,8 +1,6 @@
 #ifndef GTENSOR_FFT_CUDA_H
 #define GTENSOR_FFT_CUDA_H
 
-#include <cufft.h>
-
 namespace gt
 {
 
