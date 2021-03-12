@@ -107,6 +107,7 @@ public:
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
     auto result = fn(plan_forward_, bin, bout);
+    assert(result == CUFFT_SUCCESS);
   }
 
   void inverse(const typename detail::fft_config<D, R>::Tout* indata,
@@ -119,6 +120,7 @@ public:
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
     auto result = fn(plan_inverse_, bin, bout);
+    assert(result == CUFFT_SUCCESS);
   }
 
 private:
@@ -139,6 +141,7 @@ public:
     auto result =
       cufftPlanMany(&plan_, rank, n, nullptr, istride, idist, nullptr, ostride,
                     odist, type_forward, batch_size);
+    assert(result == CUFFT_SUCCESS);
   }
 
   virtual ~FFTPlanManyCUDA() { cufftDestroy(plan_); }
@@ -153,6 +156,7 @@ public:
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
     auto result = fn(plan_, bin, bout, CUFFT_FORWARD);
+    assert(result == CUFFT_SUCCESS);
   }
 
   void inverse(const typename detail::fft_config<D, R>::Tout* indata,
@@ -165,6 +169,7 @@ public:
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
     auto result = fn(plan_, bin, bout, CUFFT_INVERSE);
+    assert(result == CUFFT_SUCCESS);
   }
 
 private:
