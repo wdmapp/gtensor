@@ -24,8 +24,8 @@ struct fft_config<gt::fft::Domain::COMPLEX, double>
   constexpr static auto exec_fn_inverse = &cufftExecZ2Z;
   using Tin = gt::complex<double>;
   using Tout = gt::complex<double>;
-  using Bin = cufftDoubleComplex*;
-  using Bout = cufftDoubleComplex*;
+  using Bin = cufftDoubleComplex;
+  using Bout = cufftDoubleComplex;
 };
 
 template <>
@@ -37,8 +37,8 @@ struct fft_config<gt::fft::Domain::COMPLEX, float>
   constexpr static auto exec_fn_inverse = &cufftExecC2C;
   using Tin = gt::complex<float>;
   using Tout = gt::complex<float>;
-  using Bin = cufftComplex*;
-  using Bout = cufftComplex*;
+  using Bin = cufftComplex;
+  using Bout = cufftComplex;
 };
 
 template <>
@@ -50,8 +50,8 @@ struct fft_config<gt::fft::Domain::REAL, double>
   constexpr static auto exec_fn_inverse = &cufftExecZ2D;
   using Tin = double;
   using Tout = gt::complex<double>;
-  using Bin = double*;
-  using Bout = cufftDoubleComplex*;
+  using Bin = cufftDoubleReal;
+  using Bout = cufftDoubleComplex;
 };
 
 template <>
@@ -63,8 +63,8 @@ struct fft_config<gt::fft::Domain::REAL, float>
   constexpr static auto exec_fn_inverse = &cufftExecC2R;
   using Tin = float;
   using Tout = gt::complex<float>;
-  using Bin = float*;
-  using Bout = cufftComplex*;
+  using Bin = cufftReal;
+  using Bout = cufftComplex;
 };
 
 } // namespace detail
@@ -97,23 +97,26 @@ public:
     cufftDestroy(plan_inverse_);
   }
 
-  void operator()(typename detail::fft_config<D, R>::Tin* indata,
+  void operator()(const typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata)
   {
-    auto bin = reinterpret_cast<typename detail::fft_config<D, R>::Bin>(indata);
-    auto bout =
-      reinterpret_cast<typename detail::fft_config<D, R>::Bout>(outdata);
+    using Bin = typename detail::fft_config<D, R>::Bin;
+    using Bout = typename detail::fft_config<D, R>::Bout;
+    auto bin =
+      const_cast<Bin*>(reinterpret_cast<std::add_const_t<Bin>*>(indata));
+    auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
     auto result = fn(plan_forward_, bin, bout);
   }
 
-  void inverse(typename detail::fft_config<D, R>::Tout* indata,
+  void inverse(const typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata)
   {
+    using Bin = typename detail::fft_config<D, R>::Bin;
+    using Bout = typename detail::fft_config<D, R>::Bout;
     auto bin =
-      reinterpret_cast<typename detail::fft_config<D, R>::Bout>(indata);
-    auto bout =
-      reinterpret_cast<typename detail::fft_config<D, R>::Bin>(outdata);
+      const_cast<Bout*>(reinterpret_cast<std::add_const_t<Bout>*>(indata));
+    auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
     auto result = fn(plan_inverse_, bin, bout);
   }
@@ -140,23 +143,26 @@ public:
 
   virtual ~FFTPlanManyCUDA() { cufftDestroy(plan_); }
 
-  void operator()(typename detail::fft_config<D, R>::Tin* indata,
+  void operator()(const typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata)
   {
-    auto bin = reinterpret_cast<typename detail::fft_config<D, R>::Bin>(indata);
-    auto bout =
-      reinterpret_cast<typename detail::fft_config<D, R>::Bout>(outdata);
+    using Bin = typename detail::fft_config<D, R>::Bin;
+    using Bout = typename detail::fft_config<D, R>::Bout;
+    auto bin =
+      const_cast<Bin*>(reinterpret_cast<std::add_const_t<Bin>*>(indata));
+    auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
     auto result = fn(plan_, bin, bout, CUFFT_FORWARD);
   }
 
-  void inverse(typename detail::fft_config<D, R>::Tout* indata,
+  void inverse(const typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata)
   {
+    using Bin = typename detail::fft_config<D, R>::Bin;
+    using Bout = typename detail::fft_config<D, R>::Bout;
     auto bin =
-      reinterpret_cast<typename detail::fft_config<D, R>::Bout>(indata);
-    auto bout =
-      reinterpret_cast<typename detail::fft_config<D, R>::Bin>(outdata);
+      const_cast<Bout*>(reinterpret_cast<std::add_const_t<Bout>*>(indata));
+    auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
     auto result = fn(plan_, bin, bout, CUFFT_INVERSE);
   }

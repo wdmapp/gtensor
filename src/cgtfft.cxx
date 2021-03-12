@@ -57,51 +57,51 @@ void gtfft_delete_real_double(
 }
 
 void gtfft_zz(gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, double>* plan,
-              gt::complex<double>* indata, gt::complex<double>* outdata)
+              const gt::complex<double>* indata, gt::complex<double>* outdata)
 {
   plan->operator()(indata, outdata);
 }
 
 void gtfft_inverse_zz(
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, double>* plan,
-  gt::complex<double>* indata, gt::complex<double>* outdata)
+  const gt::complex<double>* indata, gt::complex<double>* outdata)
 {
   plan->inverse(indata, outdata);
 }
 
 void gtfft_cc(gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, float>* plan,
-              gt::complex<float>* indata, gt::complex<float>* outdata)
+              const gt::complex<float>* indata, gt::complex<float>* outdata)
 {
   plan->operator()(indata, outdata);
 }
 
 void gtfft_inverse_cc(
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, float>* plan,
-  gt::complex<float>* indata, gt::complex<float>* outdata)
+  const gt::complex<float>* indata, gt::complex<float>* outdata)
 {
   plan->inverse(indata, outdata);
 }
 
 void gtfft_dz(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, double>* plan,
-              double* indata, gt::complex<double>* outdata)
+              const double* indata, gt::complex<double>* outdata)
 {
   plan->operator()(indata, outdata);
 }
 
 void gtfft_inverse_zd(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, double>* plan,
-                      gt::complex<double>* indata, double* outdata)
+                      const gt::complex<double>* indata, double* outdata)
 {
   plan->inverse(indata, outdata);
 }
 
 void gtfft_rc(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, float>* plan,
-              float* indata, gt::complex<float>* outdata)
+              const float* indata, gt::complex<float>* outdata)
 {
   plan->operator()(indata, outdata);
 }
 
 void gtfft_inverse_cr(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, float>* plan,
-                      gt::complex<float>* indata, float* outdata)
+                      const gt::complex<float>* indata, float* outdata)
 {
   plan->inverse(indata, outdata);
 }
