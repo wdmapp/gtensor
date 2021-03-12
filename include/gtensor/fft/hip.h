@@ -1,6 +1,8 @@
 #ifndef GTENSOR_FFT_HIP_H
 #define GTENSOR_FFT_HIP_H
 
+#include <hipfft.h>
+
 #define CUFFT_SUCCESS HIPFFT_SUCCESS
 
 #define CUFFT_Z2Z HIPFFT_Z2Z

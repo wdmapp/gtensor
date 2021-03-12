@@ -1,6 +1,12 @@
 #ifndef GTENSOR_FFT_CUDA_H
 #define GTENSOR_FFT_CUDA_H
 
+// Note: this file is included by fft/hip.h after redef/type aliasing
+// all the necessary types and functions.
+#ifdef GTENSOR_DEVICE_CUDA
+#include <cufft.h>
+#endif
+
 namespace gt
 {
 
