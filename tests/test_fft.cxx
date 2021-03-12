@@ -52,13 +52,13 @@ void fft_r2c_1d()
 
   gt::copy(d_B, h_B);
 
-  expect_complex_eq(h_B(0, 0), T(8, 0));
-  expect_complex_eq(h_B(1, 0), T(3, 1));
-  expect_complex_eq(h_B(2, 0), T(-6, 0));
+  expect_complex_near(h_B(0, 0), T(8, 0));
+  expect_complex_near(h_B(1, 0), T(3, 1));
+  expect_complex_near(h_B(2, 0), T(-6, 0));
 
-  expect_complex_eq(h_B(0, 1), T(-2, 0));
-  expect_complex_eq(h_B(1, 1), T(-4, 22));
-  expect_complex_eq(h_B(2, 1), T(38, 0));
+  expect_complex_near(h_B(0, 1), T(-2, 0));
+  expect_complex_near(h_B(1, 1), T(-4, 22));
+  expect_complex_near(h_B(2, 1), T(38, 0));
 }
 
 TEST(fft, d2z_1d)
@@ -165,15 +165,15 @@ void fft_c2c_1d_forward()
 
   gt::copy(d_B, h_B);
 
-  expect_complex_eq(h_B(0, 0), T(8, 0));
-  expect_complex_eq(h_B(1, 0), T(3, 1));
-  expect_complex_eq(h_B(2, 0), T(-6, 0));
-  expect_complex_eq(h_B(3, 0), T(3, -1));
+  expect_complex_near(h_B(0, 0), T(8, 0));
+  expect_complex_near(h_B(1, 0), T(3, 1));
+  expect_complex_near(h_B(2, 0), T(-6, 0));
+  expect_complex_near(h_B(3, 0), T(3, -1));
 
-  expect_complex_eq(h_B(0, 1), T(-2, 0));
-  expect_complex_eq(h_B(1, 1), T(-4, 22));
-  expect_complex_eq(h_B(2, 1), T(38, 0));
-  expect_complex_eq(h_B(3, 1), T(-4, -22));
+  expect_complex_near(h_B(0, 1), T(-2, 0));
+  expect_complex_near(h_B(1, 1), T(-4, 22));
+  expect_complex_near(h_B(2, 1), T(38, 0));
+  expect_complex_near(h_B(3, 1), T(-4, -22));
 }
 
 TEST(fft, z2z_1d_forward)
@@ -225,15 +225,15 @@ void fft_c2c_1d_inverse()
 
   // required when using std::complex, int multiply is not defined
   auto dN = static_cast<E>(N);
-  expect_complex_eq(h_B(0, 0), dN * T(2, 0));
-  expect_complex_eq(h_B(1, 0), dN * T(3, 0));
-  expect_complex_eq(h_B(2, 0), dN * T(-1, 0));
-  expect_complex_eq(h_B(3, 0), dN * T(4, 0));
+  expect_complex_near(h_B(0, 0), dN * T(2, 0));
+  expect_complex_near(h_B(1, 0), dN * T(3, 0));
+  expect_complex_near(h_B(2, 0), dN * T(-1, 0));
+  expect_complex_near(h_B(3, 0), dN * T(4, 0));
 
-  expect_complex_eq(h_B(0, 1), dN * T(7, 0));
-  expect_complex_eq(h_B(1, 1), dN * T(-21, 0));
-  expect_complex_eq(h_B(2, 1), dN * T(11, 0));
-  expect_complex_eq(h_B(3, 1), dN * T(1, 0));
+  expect_complex_near(h_B(0, 1), dN * T(7, 0));
+  expect_complex_near(h_B(1, 1), dN * T(-21, 0));
+  expect_complex_near(h_B(2, 1), dN * T(11, 0));
+  expect_complex_near(h_B(3, 1), dN * T(1, 0));
 }
 
 TEST(fft, z2z_1d_inverse)

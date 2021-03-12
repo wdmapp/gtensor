@@ -30,7 +30,7 @@ struct max_err<float>
 } // namespace gt
 
 template <typename Real>
-inline void expect_complex_eq(gt::complex<Real> x, gt::complex<Real> y)
+inline void expect_complex_near(gt::complex<Real> x, gt::complex<Real> y)
 {
   double max_err = gt::test::detail::max_err<Real>::value;
   EXPECT_NEAR(x.real(), y.real(), max_err);
@@ -38,7 +38,7 @@ inline void expect_complex_eq(gt::complex<Real> x, gt::complex<Real> y)
 }
 
 template <typename Real>
-inline void expect_complex_eq(gt::complex<Real> x, double y)
+inline void expect_complex_near(gt::complex<Real> x, double y)
 {
   double max_err = gt::test::detail::max_err<Real>::value;
   EXPECT_NEAR(x.real(), y, max_err);
