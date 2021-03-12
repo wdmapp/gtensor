@@ -325,7 +325,7 @@ if (GTENSOR_ENABLE_FFT)
   target_link_libraries(gtfft INTERFACE gtensor::gtensor)
 
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
-    target_link_libraries(gtfft INTERFACE "cufft")
+    target_link_libraries(gtfft INTERFACE cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
     target_link_libraries(gtfft INTERFACE rocfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")

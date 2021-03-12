@@ -19,12 +19,6 @@ enum class Domain
   COMPLEX
 };
 
-enum class Direction
-{
-  FORWARD,
-  INVERSE
-};
-
 } // namespace fft
 
 } // namespace gt
