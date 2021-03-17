@@ -59,7 +59,7 @@ void gtfft_delete_real_double(
 void gtfft_zz(gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, double>* plan,
               const gt::complex<double>* indata, gt::complex<double>* outdata)
 {
-  plan->operator()(indata, outdata);
+  (*plan)(indata, outdata);
 }
 
 void gtfft_inverse_zz(
@@ -72,7 +72,7 @@ void gtfft_inverse_zz(
 void gtfft_cc(gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, float>* plan,
               const gt::complex<float>* indata, gt::complex<float>* outdata)
 {
-  plan->operator()(indata, outdata);
+  (*plan)(indata, outdata);
 }
 
 void gtfft_inverse_cc(
@@ -85,7 +85,7 @@ void gtfft_inverse_cc(
 void gtfft_dz(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, double>* plan,
               const double* indata, gt::complex<double>* outdata)
 {
-  plan->operator()(indata, outdata);
+  (*plan)(indata, outdata);
 }
 
 void gtfft_inverse_zd(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, double>* plan,
@@ -97,7 +97,7 @@ void gtfft_inverse_zd(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, double>* plan,
 void gtfft_rc(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, float>* plan,
               const float* indata, gt::complex<float>* outdata)
 {
-  plan->operator()(indata, outdata);
+  (*plan)(indata, outdata);
 }
 
 void gtfft_inverse_cr(gt::fft::FFTPlanMany<gt::fft::Domain::REAL, float>* plan,
