@@ -132,7 +132,7 @@ public:
   virtual ~FFTPlanManySYCL() { delete plan_; }
 
   void operator()(const typename detail::fft_config<D, R>::Tin* indata,
-                  typename detail::fft_config<D, R>::Tout* outdata)
+                  typename detail::fft_config<D, R>::Tout* outdata) const
   {
     using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
@@ -144,7 +144,7 @@ public:
   }
 
   void inverse(const typename detail::fft_config<D, R>::Tout* indata,
-               typename detail::fft_config<D, R>::Tin* outdata)
+               typename detail::fft_config<D, R>::Tin* outdata) const
   {
     using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
