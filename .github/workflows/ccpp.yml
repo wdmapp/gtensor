@@ -199,8 +199,8 @@ jobs:
 
   build-hip:
     runs-on: ubuntu-latest
-    #container: rocm/dev-ubuntu-18.04:3.5
-    container: ubuntu:18.04
+    container: rocm/dev-ubuntu-20.04:4.1
+    #container: ubuntu:18.04
     env:
       CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
       CXX: /opt/rocm/bin/hipcc
@@ -212,13 +212,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: install core packages
       run: apt-get update -y && apt-get install -y wget git build-essential gnupg clang-9 sudo libnuma-dev
-    - name: setup ROCm repo
-      run: |
-        wget -q -O - 'https://repo.radeon.com/rocm/rocm.gpg.key' | apt-key add -
-        echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
-        apt-get update -y
-    - name: install ROCm packages
-      run: apt-get install -y rocm-dev rocthrust rocprim rocfft
+    - name: install extra ROCm packages
+      run: apt-get install -y rocthrust rocprim rocfft
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.sh'
