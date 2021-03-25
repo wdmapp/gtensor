@@ -1,4 +1,4 @@
-#include "gtensor/fft.h"
+#include "fft.h"
 
 #ifdef __cplusplus
 extern "C" {

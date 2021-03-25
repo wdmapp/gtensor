@@ -2,7 +2,7 @@
 
 #include "gtensor/gtensor.h"
 
-#include "gtensor/cfft.h"
+#include "gt-fft/cfft.h"
 
 #include "test_helpers.h"
 

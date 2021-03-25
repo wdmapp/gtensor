@@ -1,11 +1,11 @@
 #ifndef GTENSOR_FFT_H
 #define GTENSOR_FFT_H
 
-#include "complex.h"
-#include "device_backend.h"
-#include "helper.h"
-#include "macros.h"
-#include "space.h"
+#include "gtensor/complex.h"
+#include "gtensor/device_backend.h"
+#include "gtensor/helper.h"
+#include "gtensor/macros.h"
+#include "gtensor/space.h"
 
 namespace gt
 {
@@ -24,11 +24,11 @@ enum class Domain
 } // namespace gt
 
 #if defined(GTENSOR_DEVICE_CUDA)
-#include "fft/cuda.h"
+#include "backend/cuda.h"
 #elif defined(GTENSOR_DEVICE_HIP)
-#include "fft/hip.h"
+#include "backend/hip.h"
 #elif defined(GTENSOR_DEVICE_SYCL)
-#include "fft/sycl.h"
+#include "backend/sycl.h"
 #endif
 
 namespace gt

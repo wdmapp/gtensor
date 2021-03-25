@@ -1,4 +1,4 @@
-#include <gtensor/cfft.h>
+#include <gt-fft/cfft.h>
 
 gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, float>* gtfft_new_complex_float(
   int rank, int* n, int istride, int idist, int ostride, int odist,
