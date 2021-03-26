@@ -334,16 +334,6 @@ if (GTENSOR_ENABLE_FFT)
 
   list(APPEND GTENSOR_TARGETS gtfft)
   add_library(gtensor::gtfft ALIAS gtfft)
-
-  if (GTENSOR_ENABLE_CLIB)
-    message(STATUS "${PROJECT_NAME}: CFFT is ENABLED")
-    add_library(cgtfft)
-    target_gtensor_sources(cgtfft PRIVATE src/cgtfft.cxx)
-    target_link_libraries(cgtfft gtfft)
-    list(APPEND GTENSOR_TARGETS cgtfft)
-    add_library(gtensor::cgtfft ALIAS cgtfft)
-  endif()
-
 endif()
 
 # See https://github.com/pabloariasal/modern-cmake-sample
