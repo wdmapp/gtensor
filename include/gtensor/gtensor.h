@@ -515,24 +515,108 @@ template <typename T, int N>
 using gtensor_span_device = gtensor_span<T, N, space::device>;
 
 // ======================================================================
+// empty
+
+template <typename T, int N, typename S = gt::space::host>
+inline auto empty(const gt::shape_type<N> shape)
+{
+  return gtensor<T, N, S>(shape);
+}
+
+template <typename T, int N>
+inline auto empty_device(const gt::shape_type<N> shape)
+{
+  return gtensor<T, N, gt::space::device>(shape);
+}
+
+// ======================================================================
+// full
+
+template <typename T, int N, typename S = gt::space::host>
+inline auto full(const gt::shape_type<N> shape, T fill_value)
+{
+  auto x = gtensor<T, N, S>(shape);
+  x.fill(fill_value);
+  return x;
+}
+
+template <typename T, int N>
+inline auto full_device(const gt::shape_type<N> shape, T fill_value)
+{
+  return full<T, N, gt::space::device>(shape, fill_value);
+}
+
+// ======================================================================
+// zeros
+
+template <typename T, int N, typename S = gt::space::host>
+inline auto zeros(const gt::shape_type<N> shape)
+{
+  return full<T, N, S>(shape, 0);
+}
+
+template <typename T, int N>
+inline auto zeros_device(const gt::shape_type<N> shape)
+{
+  return full<T, N, gt::space::device>(shape, 0);
+}
+
+// ======================================================================
 // empty_like
 
-template <typename E>
+template <typename E, typename S = gt::space::host>
 inline auto empty_like(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>(
+  return empty<expr_value_type<E>, expr_dimension<E>(), S>(e.shape());
+}
+
+template <typename E>
+inline auto empty_like_device(const expression<E>& _e)
+{
+  const auto& e = _e.derived();
+  return empty<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
     e.shape());
+}
+
+// ======================================================================
+// full_like
+
+template <typename E, typename T, typename S = gt::space::host,
+          typename =
+            std::enable_if_t<std::is_convertible<T, expr_value_type<E>>::value>>
+inline auto full_like(const expression<E>& _e, T v)
+{
+  const auto& e = _e.derived();
+  return full<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), v);
+}
+
+template <typename E, typename T,
+          typename =
+            std::enable_if_t<std::is_convertible<T, expr_value_type<E>>::value>>
+inline auto full_like_device(const expression<E>& _e, T v)
+{
+  const auto& e = _e.derived();
+  return full<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+    e.shape(), v);
 }
 
 // ======================================================================
 // zeros_like
 
-template <typename E>
+template <typename E, typename S = gt::space::host>
 inline auto zeros_like(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>()>(e.shape());
+  return full<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), 0);
+}
+
+template <typename E>
+inline auto zeros_like_device(const expression<E>& _e)
+{
+  const auto& e = _e.derived();
+  return full<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+    e.shape(), 0);
 }
 
 // ======================================================================

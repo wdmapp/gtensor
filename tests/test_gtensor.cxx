@@ -278,6 +278,54 @@ TEST(gtensor, is_expression_types)
   EXPECT_TRUE(gt::is_gtensor_span<decltype(aspan)>::value);
 }
 
+template <typename T, typename S, typename T2,
+          typename = std::enable_if_t<std::is_convertible<T2, T>::value>>
+void expect_all_eq(gt::gtensor<T, 1, S>& a, T2 value)
+{
+  for (int i = 0; i < a.shape(0); i++) {
+    EXPECT_EQ(a(i), T(value));
+  }
+}
+
+template <typename T, typename S>
+void test_init_helpers()
+{
+  constexpr int N = 1;
+  auto shape = gt::shape(4);
+  gt::gtensor<T, N> h(shape);
+  gt::gtensor<T, N, S> d(shape);
+  auto e = gt::empty<T, N, S>(shape);
+  auto z = gt::zeros<T, N, S>(shape);
+  auto o = gt::full<T, N, S>(shape, 1);
+  auto el = gt::empty_like<decltype(e), S>(d);
+  auto zl = gt::zeros_like<decltype(e), S>(d);
+  auto ol = gt::full_like<decltype(e), int, S>(d, 1);
+
+  EXPECT_EQ(e.shape(), shape);
+  EXPECT_EQ(el.shape(), shape);
+
+  EXPECT_EQ(z.shape(), shape);
+  gt::copy(z, h);
+  expect_all_eq(h, 0);
+  gt::copy(zl, h);
+  expect_all_eq(h, 0);
+
+  EXPECT_EQ(o.shape(), shape);
+  gt::copy(o, h);
+  expect_all_eq(h, 1);
+  gt::copy(ol, h);
+  expect_all_eq(h, 1);
+}
+
+TEST(gtensor, init_helpers)
+{
+  test_init_helpers<int, gt::space::host>();
+  test_init_helpers<float, gt::space::host>();
+  test_init_helpers<double, gt::space::host>();
+  test_init_helpers<gt::complex<float>, gt::space::host>();
+  test_init_helpers<gt::complex<double>, gt::space::host>();
+}
+
 #if defined GTENSOR_HAVE_DEVICE
 
 TEST(gtensor, device_assign_gtensor)
@@ -421,7 +469,7 @@ TEST(gtensor, device_assign_to_view)
 TEST(gtensor, device_assign_expression)
 {
   gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::empty_like(a);
+  auto b = gt::empty_like_device(a);
 
   b = a + a;
 
@@ -490,6 +538,15 @@ TEST(gtensor, synchronize)
 
   EXPECT_EQ(c,
             (gt::gtensor_device<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
+TEST(gtensor, device_init_helpers)
+{
+  test_init_helpers<int, gt::space::device>();
+  test_init_helpers<float, gt::space::device>();
+  test_init_helpers<double, gt::space::device>();
+  test_init_helpers<gt::complex<float>, gt::space::device>();
+  test_init_helpers<gt::complex<double>, gt::space::device>();
 }
 
 #endif // GTENSOR_HAVE_DEVICE
