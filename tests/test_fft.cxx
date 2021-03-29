@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <stdexcept>
+
 #include "gtensor/gtensor.h"
 
 #include "gt-fft/fft.h"
@@ -244,4 +246,58 @@ TEST(fft, z2z_1d_inverse)
 TEST(fft, c2c_1d_inverse)
 {
   fft_c2c_1d_inverse<float>();
+}
+
+TEST(fft, move_only)
+{
+  constexpr int N = 4;
+  constexpr int Nout = N / 2 + 1;
+  constexpr int RANK = 1;
+  constexpr int batch_size = 1;
+  using E = double;
+  using T = gt::complex<E>;
+  int lengths[RANK] = {N};
+
+  gt::gtensor<E, 2> h_A(gt::shape(N, batch_size));
+  gt::gtensor_device<E, 2> d_A(gt::shape(N, batch_size));
+
+  gt::gtensor<T, 2> h_B(gt::shape(Nout, batch_size));
+  gt::gtensor_device<T, 2> d_B(gt::shape(Nout, batch_size));
+
+  // x = [2 3 -1 4];
+  h_A(0, 0) = 2;
+  h_A(1, 0) = 3;
+  h_A(2, 0) = -1;
+  h_A(3, 0) = 4;
+
+  // zero output array, rocfft at least does not zero padding elements
+  // for real to complex transform
+  gt::backend::device_memset(gt::backend::raw_pointer_cast(d_B.data()), 0,
+                             batch_size * Nout * sizeof(T*));
+
+  gt::copy(h_A, d_A);
+
+  // fft(x) -> [8+0i 3+1i -6+0i 3-1i]
+  // but with fftw convention for real transforms, the last term is
+  // conjugate of second and set to 0 to save storage / computation
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(1, lengths, 1, N, 1, Nout,
+                                                      batch_size);
+
+  // Should not compile
+  //  auto plan_copy = plan;
+  //  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan_copy2(plan);
+
+  // do a move, then try to execute
+  auto plan_moved = std::move(plan);
+
+  // original plan is not valid, should throw error
+  EXPECT_THROW(plan(d_A, d_B), std::runtime_error);
+
+  plan_moved(d_A, d_B);
+
+  gt::copy(d_B, h_B);
+
+  expect_complex_near(h_B(0, 0), T(8, 0));
+  expect_complex_near(h_B(1, 0), T(3, 1));
+  expect_complex_near(h_B(2, 0), T(-6, 0));
 }

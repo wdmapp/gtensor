@@ -1,6 +1,9 @@
 #ifndef GTENSOR_FFT_SYCL_H
 #define GTENSOR_FFT_SYCL_H
 
+#include <memory>
+#include <stdexcept>
+
 #include <CL/sycl.hpp>
 #include <oneapi/mkl.hpp>
 
@@ -89,9 +92,9 @@ public:
           dims[i] = n[i];
         }
         assert(dims.size() == rank);
-        plan_ = new Desc(dims);
+        plan_ = std::make_unique<Desc>(dims);
       } else {
-        plan_ = new Desc(n[0]);
+        plan_ = std::make_unique<Desc>(n[0]);
       }
 
       // set up strides arrays
@@ -129,11 +132,21 @@ public:
     }
   }
 
-  virtual ~FFTPlanManySYCL() { delete plan_; }
+  // move only
+  // delete copy ctor/assign
+  FFTPlanManySYCL(const FFTPlanManySYCL& other) = delete;
+  FFTPlanManySYCL& operator=(const FFTPlanManySYCL& other) = delete;
+
+  // default move ctor/assign
+  FFTPlanManySYCL(FFTPlanManySYCL&& other) = default;
+  FFTPlanManySYCL& operator=(FFTPlanManySYCL&& other) = default;
 
   void operator()(const typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
+    if (plan_ == nullptr) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
@@ -146,6 +159,9 @@ public:
   void inverse(const typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
+    if (plan_ == nullptr) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
@@ -156,7 +172,7 @@ public:
   }
 
 private:
-  Desc* plan_;
+  std::unique_ptr<Desc> plan_;
 };
 
 template <gt::fft::Domain D, typename R>

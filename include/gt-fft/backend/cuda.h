@@ -1,6 +1,8 @@
 #ifndef GTENSOR_FFT_CUDA_H
 #define GTENSOR_FFT_CUDA_H
 
+#include <stdexcept>
+
 // Note: this file is included by fft/hip.h after redef/type aliasing
 // all the necessary types and functions.
 #ifdef GTENSOR_DEVICE_CUDA
@@ -84,6 +86,7 @@ class FFTPlanManyCUDA<gt::fft::Domain::REAL, R>
 public:
   FFTPlanManyCUDA(int rank, int* n, int istride, int idist, int ostride,
                   int odist, int batch_size)
+    : is_valid_(true)
   {
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto type_inverse = detail::fft_config<D, R>::type_inverse;
@@ -95,15 +98,40 @@ public:
                     istride, idist, type_inverse, batch_size);
   }
 
+  // move only
+  // delete copy ctor/assign
+  FFTPlanManyCUDA(const FFTPlanManyCUDA& other) = delete;
+  FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
+
+  // custom move to avoid double destroy in moved-from object
+  FFTPlanManyCUDA(FFTPlanManyCUDA&& other)
+  {
+    plan_forward_ = other.plan_forward_;
+    plan_inverse_ = other.plan_inverse_;
+    other.is_valid_ = false;
+  }
+
+  FFTPlanManyCUDA& operator=(FFTPlanManyCUDA&& other)
+  {
+    plan_forward_ = other.plan_forward_;
+    plan_inverse_ = other.plan_inverse_;
+    other.is_valid_ = false;
+  }
+
   virtual ~FFTPlanManyCUDA()
   {
-    cufftDestroy(plan_forward_);
-    cufftDestroy(plan_inverse_);
+    if (is_valid_) {
+      cufftDestroy(plan_forward_);
+      cufftDestroy(plan_inverse_);
+    }
   }
 
   void operator()(const typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
+    if (!is_valid_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
@@ -117,6 +145,9 @@ public:
   void inverse(const typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
+    if (!is_valid_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
@@ -130,6 +161,7 @@ public:
 private:
   cufftHandle plan_forward_;
   cufftHandle plan_inverse_;
+  bool is_valid_;
 };
 
 template <typename R>
@@ -140,6 +172,7 @@ class FFTPlanManyCUDA<gt::fft::Domain::COMPLEX, R>
 public:
   FFTPlanManyCUDA(int rank, int* n, int istride, int idist, int ostride,
                   int odist, int batch_size)
+    : is_valid_(true)
   {
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto result =
@@ -148,11 +181,37 @@ public:
     assert(result == CUFFT_SUCCESS);
   }
 
-  virtual ~FFTPlanManyCUDA() { cufftDestroy(plan_); }
+  // move only
+  // delete copy ctor/assign
+  FFTPlanManyCUDA(const FFTPlanManyCUDA& other) = delete;
+  FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
+
+  // custom move to avoid double destroy in moved-from object
+  FFTPlanManyCUDA(FFTPlanManyCUDA&& other)
+  {
+    plan_ = other.plan_;
+    other.is_valid_ = false;
+  }
+
+  FFTPlanManyCUDA& operator=(FFTPlanManyCUDA&& other)
+  {
+    plan_ = other.plan_;
+    other.is_valid_ = false;
+  }
+
+  virtual ~FFTPlanManyCUDA()
+  {
+    if (is_valid_) {
+      cufftDestroy(plan_);
+    }
+  }
 
   void operator()(const typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
+    if (!is_valid_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
@@ -166,6 +225,9 @@ public:
   void inverse(const typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
+    if (!is_valid_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
@@ -178,6 +240,7 @@ public:
 
 private:
   cufftHandle plan_;
+  bool is_valid_;
 };
 
 template <gt::fft::Domain D, typename R>
