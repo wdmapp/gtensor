@@ -67,6 +67,9 @@ public:
   gtensor(helper::nd_initializer_list_t<T, N> il);
   template <typename E>
   gtensor(const expression<E>& e);
+  template <typename E,
+            typename = std::enable_if_t<std::is_convertible<E, T>::value>>
+  gtensor(const shape_type& shape, E fill_value);
 
   using base_type::operator=;
 
@@ -92,6 +95,14 @@ template <typename T, int N, typename S>
 inline gtensor<T, N, S>::gtensor(const shape_type& shape)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
 {}
+
+template <typename T, int N, typename S>
+template <typename E, typename Enabled>
+inline gtensor<T, N, S>::gtensor(const shape_type& shape, E fill_value)
+  : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
+{
+  this->fill(fill_value);
+}
 
 template <typename T, int N, typename S>
 inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
@@ -535,15 +546,13 @@ inline auto empty_device(const gt::shape_type<N> shape)
 template <typename T, int N, typename S = gt::space::host>
 inline auto full(const gt::shape_type<N> shape, T fill_value)
 {
-  auto x = gtensor<T, N, S>(shape);
-  x.fill(fill_value);
-  return x;
+  return gtensor<T, N, S>(shape, fill_value);
 }
 
 template <typename T, int N>
 inline auto full_device(const gt::shape_type<N> shape, T fill_value)
 {
-  return full<T, N, gt::space::device>(shape, fill_value);
+  return gtensor<T, N, gt::space::device>(shape, fill_value);
 }
 
 // ======================================================================
@@ -552,13 +561,13 @@ inline auto full_device(const gt::shape_type<N> shape, T fill_value)
 template <typename T, int N, typename S = gt::space::host>
 inline auto zeros(const gt::shape_type<N> shape)
 {
-  return full<T, N, S>(shape, 0);
+  return gtensor<T, N, S>(shape, 0);
 }
 
 template <typename T, int N>
 inline auto zeros_device(const gt::shape_type<N> shape)
 {
-  return full<T, N, gt::space::device>(shape, 0);
+  return gtensor<T, N, gt::space::device>(shape, 0);
 }
 
 // ======================================================================
@@ -568,14 +577,14 @@ template <typename E, typename S = gt::space::host>
 inline auto empty_like(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return empty<expr_value_type<E>, expr_dimension<E>(), S>(e.shape());
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), S>(e.shape());
 }
 
 template <typename E>
 inline auto empty_like_device(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return empty<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
     e.shape());
 }
 
@@ -588,7 +597,7 @@ template <typename E, typename T, typename S = gt::space::host,
 inline auto full_like(const expression<E>& _e, T v)
 {
   const auto& e = _e.derived();
-  return full<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), v);
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), v);
 }
 
 template <typename E, typename T,
@@ -597,7 +606,7 @@ template <typename E, typename T,
 inline auto full_like_device(const expression<E>& _e, T v)
 {
   const auto& e = _e.derived();
-  return full<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
     e.shape(), v);
 }
 
@@ -608,14 +617,14 @@ template <typename E, typename S = gt::space::host>
 inline auto zeros_like(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return full<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), 0);
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), 0);
 }
 
 template <typename E>
 inline auto zeros_like_device(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return full<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
     e.shape(), 0);
 }
 

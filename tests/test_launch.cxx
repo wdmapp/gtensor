@@ -77,7 +77,7 @@ TEST(gtensor, launch_view_reverse_1d)
 void device_double_add_1d(gt::gtensor_device<double, 1>& a,
                           gt::gtensor<double, 1>& out)
 {
-  auto b = gt::empty_like(a);
+  auto b = gt::empty_like_device(a);
 
   auto k_a = a.to_kernel();
   auto k_b = b.to_kernel();
@@ -109,7 +109,7 @@ TEST(gtensor, device_launch_1d)
 void device_double_view_reverse_1d(gt::gtensor_device<double, 1>& a,
                                    gt::gtensor<double, 1>& out)
 {
-  auto b = gt::empty_like(a);
+  auto b = gt::empty_like_device(a);
 
   auto k_a = a.to_kernel();
   auto v_b = b.view(gt::slice(2, 0, -1));
@@ -134,7 +134,7 @@ TEST(gtensor, device_launch_view_reverse_1d)
 void device_double_add_2d(gt::gtensor_device<double, 2>& a,
                           gt::gtensor<double, 2>& out)
 {
-  auto b = gt::empty_like(a);
+  auto b = gt::empty_like_device(a);
 
   auto k_a = a.to_kernel();
   auto k_b = b.to_kernel();
@@ -157,7 +157,7 @@ TEST(gtensor, device_launch_2d)
 void device_double_add_5d(gt::gtensor_device<double, 5>& a,
                           gt::gtensor<double, 5>& out)
 {
-  auto b = gt::empty_like(a);
+  auto b = gt::empty_like_device(a);
 
   auto k_a = a.to_kernel();
   auto k_b = b.to_kernel();
