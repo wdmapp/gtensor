@@ -14,8 +14,8 @@ set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
 
 # Experimental library features
 set(GTENSOR_ENABLE_CLIB OFF CACHE BOOL "Enable libcgtensor")
-set(GTENSOR_ENABLE_BLAS OFF CACHE BOOL "Enable libgpublas")
-set(GTENSOR_ENABLE_FFT  OFF CACHE BOOL "Enable libgpufft")
+set(GTENSOR_ENABLE_BLAS OFF CACHE BOOL "Enable gtblas")
+set(GTENSOR_ENABLE_FFT  OFF CACHE BOOL "Enable gtfft")
 
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
@@ -321,20 +321,19 @@ endif()
 
 if (GTENSOR_ENABLE_FFT)
   message(STATUS "${PROJECT_NAME}: FFT is ENABLED")
-  add_library(gpufft)
-  target_gtensor_sources(gpufft PRIVATE src/gpufft.cxx)
-  target_link_libraries(gpufft gtensor::gtensor)
+  add_library(gtfft INTERFACE)
+  target_link_libraries(gtfft INTERFACE gtensor::gtensor)
 
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
-    target_link_libraries(gpufft "cufft")
+    target_link_libraries(gtfft INTERFACE cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gpufft rocfft)
+    target_link_libraries(gtfft INTERFACE rocfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
-    target_link_libraries(gpufft oneapi_mkl_sycl)
+    target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
   endif()
 
-  list(APPEND GTENSOR_TARGETS gpufft)
-  add_library(gtensor::gpufft ALIAS gpufft)
+  list(APPEND GTENSOR_TARGETS gtfft)
+  add_library(gtensor::gtfft ALIAS gtfft)
 endif()
 
 # See https://github.com/pabloariasal/modern-cmake-sample

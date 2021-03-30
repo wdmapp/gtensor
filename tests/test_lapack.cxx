@@ -290,17 +290,17 @@ void test_getrf_batch_complex()
 
   // first batch matrix result
   // first column factored
-  expect_complex_eq(h_A(0, 0, 0), 4.0);
-  expect_complex_eq(h_A(1, 0, 0), 1.0);
-  expect_complex_eq(h_A(2, 0, 0), 0.25);
+  expect_complex_near(h_A(0, 0, 0), 4.0);
+  expect_complex_near(h_A(1, 0, 0), 1.0);
+  expect_complex_near(h_A(2, 0, 0), 0.25);
   // second column factored
-  expect_complex_eq(h_A(0, 1, 0), 4.0);
-  expect_complex_eq(h_A(1, 1, 0), 2.0);
-  expect_complex_eq(h_A(2, 1, 0), 0.5);
+  expect_complex_near(h_A(0, 1, 0), 4.0);
+  expect_complex_near(h_A(1, 1, 0), 2.0);
+  expect_complex_near(h_A(2, 1, 0), 0.5);
   // third column factored
-  expect_complex_eq(h_A(0, 2, 0), 2.0);
-  expect_complex_eq(h_A(1, 2, 0), 2.0);
-  expect_complex_eq(h_A(2, 2, 0), 0.5);
+  expect_complex_near(h_A(0, 2, 0), 2.0);
+  expect_complex_near(h_A(1, 2, 0), 2.0);
+  expect_complex_near(h_A(2, 2, 0), 0.5);
 
   // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
   // on the thirst step no swap is done so one-based index of third row
@@ -311,17 +311,17 @@ void test_getrf_batch_complex()
 
   // second batch matrix result
   // first column factored
-  expect_complex_eq(h_A(0, 0, 1), T(0, 4));
-  expect_complex_eq(h_A(1, 0, 1), T(0, -1));
-  expect_complex_eq(h_A(2, 0, 1), T(0.25, -0.25));
+  expect_complex_near(h_A(0, 0, 1), T(0, 4));
+  expect_complex_near(h_A(1, 0, 1), T(0, -1));
+  expect_complex_near(h_A(2, 0, 1), T(0.25, -0.25));
   // second column factored
-  expect_complex_eq(h_A(0, 1, 1), T(4, 0));
-  expect_complex_eq(h_A(1, 1, 1), T(0, 10));
-  expect_complex_eq(h_A(2, 1, 1), T(0, -0.1));
+  expect_complex_near(h_A(0, 1, 1), T(4, 0));
+  expect_complex_near(h_A(1, 1, 1), T(0, 10));
+  expect_complex_near(h_A(2, 1, 1), T(0, -0.1));
   // third column factored
-  expect_complex_eq(h_A(0, 2, 1), T(2, 0));
-  expect_complex_eq(h_A(1, 2, 1), T(4, 2));
-  expect_complex_eq(h_A(2, 2, 1), T(1.3, 0.9));
+  expect_complex_near(h_A(0, 2, 1), T(2, 0));
+  expect_complex_near(h_A(1, 2, 1), T(4, 2));
+  expect_complex_near(h_A(2, 2, 1), T(1.3, 0.9));
 
   // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
   // on the thirst step no swap is done so one-based index of third row
@@ -416,21 +416,21 @@ void test_getrs_batch_complex()
   gt::copy(d_B, h_B);
 
   // first batch, first solution vector [1; 2; 3]
-  expect_complex_eq(h_B(0, 0, 0), 1.0);
-  expect_complex_eq(h_B(1, 0, 0), 2.0);
-  expect_complex_eq(h_B(2, 0, 0), 3.0);
+  expect_complex_near(h_B(0, 0, 0), 1.0);
+  expect_complex_near(h_B(1, 0, 0), 2.0);
+  expect_complex_near(h_B(2, 0, 0), 3.0);
   // first batch, second solution vector [-3; 7; 31]
-  expect_complex_eq(h_B(0, 1, 0), -3.0);
-  expect_complex_eq(h_B(1, 1, 0), 7.0);
-  expect_complex_eq(h_B(2, 1, 0), 31.0);
+  expect_complex_near(h_B(0, 1, 0), -3.0);
+  expect_complex_near(h_B(1, 1, 0), 7.0);
+  expect_complex_near(h_B(2, 1, 0), 31.0);
   // second batch, first solution vector [1; 2; 3]
-  expect_complex_eq(h_B(0, 0, 1), 1.0);
-  expect_complex_eq(h_B(1, 0, 1), 2.0);
-  expect_complex_eq(h_B(2, 0, 1), 3.0);
+  expect_complex_near(h_B(0, 0, 1), 1.0);
+  expect_complex_near(h_B(1, 0, 1), 2.0);
+  expect_complex_near(h_B(2, 0, 1), 3.0);
   // second batch, second solution vector [-3; 7; 31]
-  expect_complex_eq(h_B(0, 1, 1), -3.0);
-  expect_complex_eq(h_B(1, 1, 1), 7.0);
-  expect_complex_eq(h_B(2, 1, 1), 31.0);
+  expect_complex_near(h_B(0, 1, 1), -3.0);
+  expect_complex_near(h_B(1, 1, 1), 7.0);
+  expect_complex_near(h_B(2, 1, 1), 31.0);
 }
 
 TEST(lapack, cgetrs_batch)
