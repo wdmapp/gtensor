@@ -6,6 +6,8 @@
 
 #include "device_backend.h"
 #include "macros.h"
+#include "memset.h"
+#include "space.h"
 #include "span.h"
 
 namespace gt
@@ -158,7 +160,12 @@ inline auto gtensor_span<T, N, S>::operator=(const expression<E>& e)
 template <typename T, int N, typename S>
 inline void gtensor_span<T, N, S>::fill(const value_type v)
 {
-  assign(*this, scalar(v));
+  if (v == T(0)) {
+    auto data = gt::backend::raw_pointer_cast(this->data());
+    backend::memset<S>(data, 0, sizeof(T) * this->size());
+  } else {
+    assign(*this, scalar(v));
+  }
 }
 
 template <typename T, int N, typename S>
