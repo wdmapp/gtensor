@@ -354,9 +354,9 @@ void test_init_like_helpers()
   auto shape = gt::shape(4);
   gt::gtensor<T, N> h(shape);
   gt::gtensor<T, N, S> d(shape);
-  auto el = gt::empty_like<decltype(d), S>(d);
-  auto zl = gt::zeros_like<decltype(d), S>(d);
-  auto ol = gt::full_like<decltype(d), int, S>(d, 1);
+  auto el = gt::empty_like(d);
+  auto zl = gt::zeros_like(d);
+  auto ol = gt::full_like(d, 1);
 
   EXPECT_EQ(el.shape(), shape);
 
@@ -519,7 +519,7 @@ TEST(gtensor, device_assign_to_view)
 TEST(gtensor, device_assign_expression)
 {
   gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::empty_like_device(a);
+  auto b = gt::empty_like(a);
 
   b = a + a;
 

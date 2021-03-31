@@ -77,7 +77,7 @@ int main(int argc, char** argv)
   // Define and allocate device versions of h_x and h_y, and declare
   // a varaible for the result on gpu.
   gt::gtensor<double, 1, gt::space::device> d_x(gt::shape(n));
-  gt::gtensor<double, 1, gt::space::device> d_y = gt::empty_like_device(d_x);
+  gt::gtensor<double, 1, gt::space::device> d_y = gt::empty_like(d_x);
   gt::gtensor<double, 1, gt::space::device> d_axpy;
 
   // Explicit copies of input from host to device. Note that this is an
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   // Alternate, more explicit definition of GPU kernel. Note that the
   // arguments used inside the launch function must be converted using
   // the to_kernel method.
-  d_axpy = gt::empty_like_device(d_x);
+  d_axpy = gt::empty_like(d_x);
   auto k_x = d_x.to_kernel();
   auto k_y = d_y.to_kernel();
   auto k_axpy = d_axpy.to_kernel();

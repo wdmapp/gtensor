@@ -573,58 +573,35 @@ inline auto zeros_device(const gt::shape_type<N> shape)
 // ======================================================================
 // empty_like
 
-template <typename E, typename S = gt::space::host>
+template <typename E>
 inline auto empty_like(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), S>(e.shape());
-}
-
-template <typename E>
-inline auto empty_like_device(const expression<E>& _e)
-{
-  const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>(
     e.shape());
 }
 
 // ======================================================================
 // full_like
 
-template <typename E, typename T, typename S = gt::space::host,
+template <typename E, typename T,
           typename =
             std::enable_if_t<std::is_convertible<T, expr_value_type<E>>::value>>
 inline auto full_like(const expression<E>& _e, T v)
 {
   const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), v);
-}
-
-template <typename E, typename T,
-          typename =
-            std::enable_if_t<std::is_convertible<T, expr_value_type<E>>::value>>
-inline auto full_like_device(const expression<E>& _e, T v)
-{
-  const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>(
     e.shape(), v);
 }
 
 // ======================================================================
 // zeros_like
 
-template <typename E, typename S = gt::space::host>
+template <typename E>
 inline auto zeros_like(const expression<E>& _e)
 {
   const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), S>(e.shape(), 0);
-}
-
-template <typename E>
-inline auto zeros_like_device(const expression<E>& _e)
-{
-  const auto& e = _e.derived();
-  return gtensor<expr_value_type<E>, expr_dimension<E>(), gt::space::device>(
+  return gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>(
     e.shape(), 0);
 }
 

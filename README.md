@@ -294,7 +294,7 @@ int main(int argc, char **argv)
     // Define and allocate device versions of h_x and h_y, and declare
     // a varaible for the result on gpu.
     gt::gtensor<double, 1, gt::space::device> d_x(gt::shape(n));
-    gt::gtensor<double, 1, gt::space::device> d_y = gt::empty_like_device(d_x);
+    gt::gtensor<double, 1, gt::space::device> d_y = gt::empty_like(d_x);
     gt::gtensor<double, 1, gt::space::device> d_axpy;
  
     // Explicit copies of input from host to device.
