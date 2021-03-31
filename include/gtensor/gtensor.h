@@ -21,10 +21,10 @@ namespace gt
 // gtensor
 
 // forward declared in gtensor_span.h
-// template <typename T, int N, typename S>
+// template <typename T, size_type N, typename S>
 // class gtensor;
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 struct gtensor_inner_types<gtensor<T, N, S>>
 {
   using space_type = S;
@@ -38,7 +38,7 @@ struct gtensor_inner_types<gtensor<T, N, S>>
   using const_reference = typename storage_type::const_reference;
 };
 
-template <typename T, int N, typename S = space::host>
+template <typename T, size_type N, typename S = space::host>
 class gtensor : public gcontainer<gtensor<T, N, S>>
 {
 public:
@@ -91,12 +91,12 @@ private:
 // ======================================================================
 // gtensor implementation
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline gtensor<T, N, S>::gtensor(const shape_type& shape)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
 {}
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 template <typename E, typename Enabled>
 inline gtensor<T, N, S>::gtensor(const shape_type& shape, E fill_value)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
@@ -104,7 +104,7 @@ inline gtensor<T, N, S>::gtensor(const shape_type& shape, E fill_value)
   this->fill(fill_value);
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   : base_type({}, {})
 {
@@ -125,7 +125,7 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
 #endif
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 template <typename E>
 inline gtensor<T, N, S>::gtensor(const expression<E>& e)
 {
@@ -133,20 +133,20 @@ inline gtensor<T, N, S>::gtensor(const expression<E>& e)
   *this = e.derived();
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor<T, N, S>::storage_impl() const -> const storage_type&
 {
   return storage_;
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor<T, N, S>::storage_impl() -> storage_type&
 {
   return storage_;
 }
 
 #pragma nv_exec_check_disable
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) const
   -> const_reference
 {
@@ -154,19 +154,19 @@ GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) const
 }
 
 #pragma nv_exec_check_disable
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor<T, N, S>::data_access_impl(size_t i) -> reference
 {
   return storage_[i];
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline auto gtensor<T, N, S>::to_kernel() const -> const_kernel_type
 {
   return const_kernel_type(this->data(), this->shape(), this->strides());
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline auto gtensor<T, N, S>::to_kernel() -> kernel_type
 {
   return kernel_type(this->data(), this->shape(), this->strides());
@@ -178,28 +178,28 @@ inline auto gtensor<T, N, S>::to_kernel() -> kernel_type
 // FIXME, there should be only one, more general version,
 // and maybe this should be .assign or operator=
 
-template <typename T, int N, typename S_from, typename S_to>
+template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
-template <typename T, int N, typename S_from, typename S_to>
+template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor_span<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
-template <typename T, int N, typename S_from, typename S_to>
+template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
   gt::backend::copy<T, S_from, S_to>(from.data(), to.data(), to.size());
 }
 
-template <typename T, int N, typename S_from, typename S_to>
+template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
@@ -519,22 +519,22 @@ inline void launch(const gt::shape_type<N>& shape, F&& f)
 // ======================================================================
 // gtensor_device, gtensor_span_device
 
-template <typename T, int N>
+template <typename T, size_type N>
 using gtensor_device = gtensor<T, N, space::device>;
 
-template <typename T, int N>
+template <typename T, size_type N>
 using gtensor_span_device = gtensor_span<T, N, space::device>;
 
 // ======================================================================
 // empty
 
-template <typename T, int N, typename S = gt::space::host>
+template <typename T, size_type N, typename S = gt::space::host>
 inline auto empty(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, S>(shape);
 }
 
-template <typename T, int N>
+template <typename T, size_type N>
 inline auto empty_device(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, gt::space::device>(shape);
@@ -543,13 +543,13 @@ inline auto empty_device(const gt::shape_type<N> shape)
 // ======================================================================
 // full
 
-template <typename T, int N, typename S = gt::space::host>
+template <typename T, size_type N, typename S = gt::space::host>
 inline auto full(const gt::shape_type<N> shape, T fill_value)
 {
   return gtensor<T, N, S>(shape, fill_value);
 }
 
-template <typename T, int N>
+template <typename T, size_type N>
 inline auto full_device(const gt::shape_type<N> shape, T fill_value)
 {
   return gtensor<T, N, gt::space::device>(shape, fill_value);
@@ -558,13 +558,13 @@ inline auto full_device(const gt::shape_type<N> shape, T fill_value)
 // ======================================================================
 // zeros
 
-template <typename T, int N, typename S = gt::space::host>
+template <typename T, size_type N, typename S = gt::space::host>
 inline auto zeros(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, S>(shape, 0);
 }
 
-template <typename T, int N>
+template <typename T, size_type N>
 inline auto zeros_device(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, gt::space::device>(shape, 0);

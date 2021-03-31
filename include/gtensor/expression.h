@@ -11,10 +11,10 @@ namespace gt
 {
 
 // fwd decl FIXME?
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 struct gtensor;
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 struct gtensor_span;
 
 // ======================================================================

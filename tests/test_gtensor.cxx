@@ -322,7 +322,8 @@ void test_init_helpers()
 {
   constexpr int N = 1;
   auto shape = gt::shape(4);
-  gt::gtensor<T, N> h(shape);
+  // Note: dimension inferred from shape dimension
+  auto h = gt::empty<T>(shape);
   auto e = gt::empty<T, N, S>(shape);
   auto z = gt::zeros<T, N, S>(shape);
   auto o = gt::full<T, N, S>(shape, 1);
