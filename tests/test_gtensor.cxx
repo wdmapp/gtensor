@@ -320,13 +320,12 @@ TEST(gtensor, fill_ctors)
 template <typename T, typename S>
 void test_init_helpers()
 {
-  constexpr int N = 1;
   auto shape = gt::shape(4);
   // Note: dimension inferred from shape dimension
   auto h = gt::empty<T>(shape);
-  auto e = gt::empty<T, N, S>(shape);
-  auto z = gt::zeros<T, N, S>(shape);
-  auto o = gt::full<T, N, S>(shape, 1);
+  auto e = gt::empty<T, S>(shape);
+  auto z = gt::zeros<T, S>(shape);
+  auto o = gt::full<T, S>(shape, 1);
 
   EXPECT_EQ(e.shape(), shape);
 
@@ -351,10 +350,9 @@ TEST(gtensor, init_helpers)
 template <typename T, typename S>
 void test_init_like_helpers()
 {
-  constexpr int N = 1;
   auto shape = gt::shape(4);
-  gt::gtensor<T, N> h(shape);
-  gt::gtensor<T, N, S> d(shape);
+  auto h = gt::empty<T>(shape);
+  auto d = gt::empty<T, S>(shape);
   auto el = gt::empty_like(d);
   auto zl = gt::zeros_like(d);
   auto ol = gt::full_like(d, 1);

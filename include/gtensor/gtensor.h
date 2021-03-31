@@ -528,7 +528,7 @@ using gtensor_span_device = gtensor_span<T, N, space::device>;
 // ======================================================================
 // empty
 
-template <typename T, size_type N, typename S = gt::space::host>
+template <typename T, typename S = gt::space::host, size_type N>
 inline auto empty(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, S>(shape);
@@ -543,7 +543,7 @@ inline auto empty_device(const gt::shape_type<N> shape)
 // ======================================================================
 // full
 
-template <typename T, size_type N, typename S = gt::space::host>
+template <typename T, typename S = gt::space::host, size_type N>
 inline auto full(const gt::shape_type<N> shape, T fill_value)
 {
   return gtensor<T, N, S>(shape, fill_value);
@@ -558,7 +558,7 @@ inline auto full_device(const gt::shape_type<N> shape, T fill_value)
 // ======================================================================
 // zeros
 
-template <typename T, size_type N, typename S = gt::space::host>
+template <typename T, typename S = gt::space::host, size_type N>
 inline auto zeros(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, S>(shape, 0);
