@@ -6,6 +6,8 @@
 
 #include "device_backend.h"
 #include "macros.h"
+#include "memset.h"
+#include "space.h"
 #include "span.h"
 
 namespace gt
@@ -15,13 +17,13 @@ namespace gt
 // gtensor_span
 
 // forward declaration for conversion constructor
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 class gtensor;
 
-template <typename T, int N, typename S = space::host>
+template <typename T, size_type N, typename S = space::host>
 class gtensor_span;
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 struct gtensor_inner_types<gtensor_span<T, N, S>>
 {
   using space_type = S;
@@ -35,7 +37,7 @@ struct gtensor_inner_types<gtensor_span<T, N, S>>
   using const_reference = typename storage_type::const_reference;
 };
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 class gtensor_span : public gstrided<gtensor_span<T, N, S>>
 {
 public:
@@ -120,7 +122,7 @@ private:
 // ======================================================================
 // gtensor_span implementation
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline gtensor_span<T, N, S>::gtensor_span(pointer data,
                                            const shape_type& shape,
                                            const strides_type& strides)
@@ -146,7 +148,7 @@ inline gtensor_span<T, N, S>::gtensor_span(pointer data,
 #endif
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 template <typename E>
 inline auto gtensor_span<T, N, S>::operator=(const expression<E>& e)
   -> self_type&
@@ -155,31 +157,36 @@ inline auto gtensor_span<T, N, S>::operator=(const expression<E>& e)
   return *this;
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline void gtensor_span<T, N, S>::fill(const value_type v)
 {
-  assign(*this, scalar(v));
+  if (v == T(0)) {
+    auto data = gt::backend::raw_pointer_cast(this->data());
+    backend::memset<S>(data, 0, sizeof(T) * this->size());
+  } else {
+    assign(*this, scalar(v));
+  }
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 inline auto gtensor_span<T, N, S>::to_kernel() const -> gtensor_span
 {
   return *this;
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor_span<T, N, S>::data() const -> pointer
 {
   return storage_.data();
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor_span<T, N, S>::data_access(size_t i) const -> reference
 {
   return storage_[i];
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 template <typename... Args>
 GT_INLINE auto gtensor_span<T, N, S>::operator()(Args&&... args) const
   -> reference
@@ -187,7 +194,7 @@ GT_INLINE auto gtensor_span<T, N, S>::operator()(Args&&... args) const
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 GT_INLINE auto gtensor_span<T, N, S>::operator[](const shape_type& idx) const
   -> reference
 {
@@ -232,7 +239,7 @@ template <typename E>
 struct is_gtensor_span : std::false_type
 {};
 
-template <typename T, int N, typename S>
+template <typename T, size_type N, typename S>
 struct is_gtensor_span<gtensor_span<T, N, S>> : std::true_type
 {};
 

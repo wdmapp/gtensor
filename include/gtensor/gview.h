@@ -120,10 +120,10 @@ using select_reshape_gview_adaptor_t =
 // ======================================================================
 // gview
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 class gview;
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 struct gtensor_inner_types<gview<EC, N>>
 {
   using space_type = expr_space_type<EC>;
@@ -138,7 +138,7 @@ struct gtensor_inner_types<gview<EC, N>>
   using const_reference = typename inner_expression_type::const_reference;
 };
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 class gview : public gstrided<gview<EC, N>>
 {
 public:
@@ -216,71 +216,71 @@ private:
 // ======================================================================
 // gview implementation
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline gview<EC, N>::gview(EC&& e, size_type offset, const shape_type& shape,
                            const strides_type& strides)
   : base_type(shape, strides), e_(std::forward<EC>(e)), offset_(offset)
 {}
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::to_kernel() const -> const_kernel_type
 {
   return const_kernel_type(e_.to_kernel(), offset_, this->shape(),
                            this->strides());
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::to_kernel() -> kernel_type
 {
   return kernel_type(e_.to_kernel(), offset_, this->shape(), this->strides());
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 template <typename... Args>
 GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args) const
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 template <typename... Args>
 GT_INLINE decltype(auto) gview<EC, N>::operator()(Args&&... args)
 {
   return data_access(base_type::index(std::forward<Args>(args)...));
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::operator[](const shape_type& idx) const
 {
   return access(std::make_index_sequence<shape_type::dimension>(), idx);
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::operator[](const shape_type& idx)
 {
   return access(std::make_index_sequence<shape_type::dimension>(), idx);
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i) const
 {
   return e_.data_access(offset_ + i);
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 {
   return e_.data_access(offset_ + i);
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::operator=(const gview<EC, N>& o) -> gview&
 {
   assign(*this, o);
   return *this;
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 template <typename E>
 inline auto gview<EC, N>::operator=(const expression<E>& e) -> gview&
 {
@@ -288,14 +288,14 @@ inline auto gview<EC, N>::operator=(const expression<E>& e) -> gview&
   return *this;
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline auto gview<EC, N>::operator=(value_type val) -> gview&
 {
   assign(*this, scalar(val));
   return *this;
 }
 
-template <typename EC, int N>
+template <typename EC, size_type N>
 inline void gview<EC, N>::fill(const value_type v)
 {
   assign(*this, scalar(v));

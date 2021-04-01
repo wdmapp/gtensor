@@ -278,6 +278,143 @@ TEST(gtensor, is_expression_types)
   EXPECT_TRUE(gt::is_gtensor_span<decltype(aspan)>::value);
 }
 
+template <typename T, gt::size_type N, typename S, typename T2,
+          typename = std::enable_if_t<std::is_convertible<T2, T>::value>>
+void expect_all_eq(gt::gtensor<T, N, S>& a, T2 value)
+{
+  auto aflat = gt::flatten(a);
+  for (int i = 0; i < aflat.shape(0); i++) {
+    EXPECT_EQ(aflat(i), T(value));
+  }
+}
+
+template <typename T, typename S>
+void test_fill_ctors()
+{
+  constexpr int N = 1;
+  auto shape = gt::shape(4);
+  gt::gtensor<T, N> h(shape);
+  auto e = gt::gtensor<T, N, S>(shape);
+  auto z = gt::gtensor<T, N, S>(shape, T(0));
+  auto o = gt::gtensor<T, N, S>(shape, T(1));
+
+  EXPECT_EQ(e.shape(), shape);
+
+  EXPECT_EQ(z.shape(), shape);
+  gt::copy(z, h);
+  expect_all_eq(h, 0);
+
+  EXPECT_EQ(o.shape(), shape);
+  gt::copy(o, h);
+  expect_all_eq(h, 1);
+}
+
+TEST(gtensor, fill_ctors)
+{
+  test_fill_ctors<int, gt::space::host>();
+  test_fill_ctors<float, gt::space::host>();
+  test_fill_ctors<double, gt::space::host>();
+  test_fill_ctors<gt::complex<float>, gt::space::host>();
+  test_fill_ctors<gt::complex<double>, gt::space::host>();
+}
+
+template <typename T, typename S>
+void test_init_helpers()
+{
+  auto shape = gt::shape(4);
+  // Note: dimension inferred from shape dimension
+  auto h = gt::empty<T>(shape);
+  auto e = gt::empty<T, S>(shape);
+  auto z = gt::zeros<T, S>(shape);
+  auto o = gt::full<T, S>(shape, 1);
+
+  EXPECT_EQ(e.shape(), shape);
+
+  EXPECT_EQ(z.shape(), shape);
+  gt::copy(z, h);
+  expect_all_eq(h, 0);
+
+  EXPECT_EQ(o.shape(), shape);
+  gt::copy(o, h);
+  expect_all_eq(h, 1);
+}
+
+TEST(gtensor, init_helpers)
+{
+  test_init_helpers<int, gt::space::host>();
+  test_init_helpers<float, gt::space::host>();
+  test_init_helpers<double, gt::space::host>();
+  test_init_helpers<gt::complex<float>, gt::space::host>();
+  test_init_helpers<gt::complex<double>, gt::space::host>();
+}
+
+template <typename T, typename S>
+void test_init_helpers_literal_shape()
+{
+  auto h1d = gt::empty<T>({4});
+  auto h2d = gt::empty<T>({4, 5});
+
+  auto e1d = gt::empty<T, S>({4});
+  auto e2d = gt::empty<T, S>({4, 5});
+  EXPECT_EQ(e1d.shape(), gt::shape(4));
+  EXPECT_EQ(e2d.shape(), gt::shape(4, 5));
+
+  auto z1d = gt::zeros<T, S>({4});
+  auto z2d = gt::zeros<T, S>({4, 5});
+  EXPECT_EQ(z1d.shape(), gt::shape(4));
+  EXPECT_EQ(z2d.shape(), gt::shape(4, 5));
+  gt::copy(z1d, h1d);
+  expect_all_eq(h1d, 0);
+  gt::copy(z2d, h2d);
+  expect_all_eq(h2d, 0);
+
+  auto o1d = gt::full<T, S>({4}, 1);
+  auto o2d = gt::full<T, S>({4, 5}, 1);
+  EXPECT_EQ(o1d.shape(), gt::shape(4));
+  EXPECT_EQ(o2d.shape(), gt::shape(4, 5));
+  gt::copy(o1d, h1d);
+  expect_all_eq(h1d, 1);
+  gt::copy(o2d, h2d);
+  expect_all_eq(h2d, 1);
+}
+
+TEST(gtensor, init_helpers_literal_shape)
+{
+  test_init_helpers_literal_shape<int, gt::space::host>();
+  test_init_helpers_literal_shape<float, gt::space::host>();
+  test_init_helpers_literal_shape<double, gt::space::host>();
+  test_init_helpers_literal_shape<gt::complex<float>, gt::space::host>();
+  test_init_helpers_literal_shape<gt::complex<double>, gt::space::host>();
+}
+
+template <typename T, typename S>
+void test_init_like_helpers()
+{
+  auto shape = gt::shape(4);
+  auto h = gt::empty<T>(shape);
+  auto d = gt::empty<T, S>(shape);
+  auto el = gt::empty_like(d);
+  auto zl = gt::zeros_like(d);
+  auto ol = gt::full_like(d, 1);
+
+  EXPECT_EQ(el.shape(), shape);
+
+  gt::copy(zl, h);
+  expect_all_eq(h, 0);
+
+  gt::copy(ol, h);
+  expect_all_eq(h, 1);
+}
+
+TEST(gtensor, init_like_helpers)
+{
+  test_init_like_helpers<int, gt::space::host>();
+  test_init_like_helpers<float, gt::space::host>();
+  test_init_like_helpers<double, gt::space::host>();
+  test_init_like_helpers<gt::complex<float>, gt::space::host>();
+  test_init_like_helpers<gt::complex<double>, gt::space::host>();
+}
+
 #if defined GTENSOR_HAVE_DEVICE
 
 TEST(gtensor, device_assign_gtensor)
@@ -490,6 +627,42 @@ TEST(gtensor, synchronize)
 
   EXPECT_EQ(c,
             (gt::gtensor_device<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
+TEST(gtensor, device_fill_ctors)
+{
+  test_fill_ctors<int, gt::space::device>();
+  test_fill_ctors<float, gt::space::device>();
+  test_fill_ctors<double, gt::space::device>();
+  test_fill_ctors<gt::complex<float>, gt::space::device>();
+  test_fill_ctors<gt::complex<double>, gt::space::device>();
+}
+
+TEST(gtensor, device_init_helpers)
+{
+  test_init_helpers<int, gt::space::device>();
+  test_init_helpers<float, gt::space::device>();
+  test_init_helpers<double, gt::space::device>();
+  test_init_helpers<gt::complex<float>, gt::space::device>();
+  test_init_helpers<gt::complex<double>, gt::space::device>();
+}
+
+TEST(gtensor, device_init_like_helpers)
+{
+  test_init_like_helpers<int, gt::space::device>();
+  test_init_like_helpers<float, gt::space::device>();
+  test_init_like_helpers<double, gt::space::device>();
+  test_init_like_helpers<gt::complex<float>, gt::space::device>();
+  test_init_like_helpers<gt::complex<double>, gt::space::device>();
+}
+
+TEST(gtensor, device_init_helpers_literal_shape)
+{
+  test_init_helpers_literal_shape<int, gt::space::device>();
+  test_init_helpers_literal_shape<float, gt::space::device>();
+  test_init_helpers_literal_shape<double, gt::space::device>();
+  test_init_helpers_literal_shape<gt::complex<float>, gt::space::device>();
+  test_init_helpers_literal_shape<gt::complex<double>, gt::space::device>();
 }
 
 #endif // GTENSOR_HAVE_DEVICE

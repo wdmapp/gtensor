@@ -7,6 +7,7 @@
 #include "gscalar.h"
 #include "gstrided.h"
 #include "helper.h"
+#include "memset.h"
 
 namespace gt
 {
@@ -93,7 +94,13 @@ inline D& gcontainer<D>::operator=(const expression<E>& e)
 template <typename D>
 inline void gcontainer<D>::fill(const value_type v)
 {
-  assign(derived(), scalar(v));
+  if (v == value_type(0)) {
+    auto data = gt::backend::raw_pointer_cast(this->data());
+    backend::memset<expr_space_type<D>>(data, 0,
+                                        sizeof(value_type) * this->size());
+  } else {
+    assign(derived(), scalar(v));
+  }
 }
 
 template <typename D>
