@@ -534,10 +534,22 @@ inline auto empty(const gt::shape_type<N> shape)
   return gtensor<T, N, S>(shape);
 }
 
+template <typename T, typename S = gt::space::host, size_type N>
+inline auto empty(const int (&shape)[N])
+{
+  return gtensor<T, N, S>(gt::shape_type<N>(shape));
+}
+
 template <typename T, size_type N>
 inline auto empty_device(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, gt::space::device>(shape);
+}
+
+template <typename T, size_type N>
+inline auto empty_device(const int (&shape)[N])
+{
+  return gtensor<T, N, gt::space::device>(gt::shape_type<N>(shape));
 }
 
 // ======================================================================
@@ -549,10 +561,22 @@ inline auto full(const gt::shape_type<N> shape, T fill_value)
   return gtensor<T, N, S>(shape, fill_value);
 }
 
+template <typename T, typename S = gt::space::host, size_type N>
+inline auto full(const int (&shape)[N], T fill_value)
+{
+  return gtensor<T, N, S>(gt::shape_type<N>(shape), fill_value);
+}
+
 template <typename T, size_type N>
 inline auto full_device(const gt::shape_type<N> shape, T fill_value)
 {
   return gtensor<T, N, gt::space::device>(shape, fill_value);
+}
+
+template <typename T, size_type N>
+inline auto full_device(const int (&shape)[N], T fill_value)
+{
+  return gtensor<T, N, gt::space::device>(gt::shape_type<N>(shape), fill_value);
 }
 
 // ======================================================================
@@ -564,10 +588,22 @@ inline auto zeros(const gt::shape_type<N> shape)
   return gtensor<T, N, S>(shape, 0);
 }
 
+template <typename T, typename S = gt::space::host, size_type N>
+inline auto zeros(const int (&shape)[N])
+{
+  return gtensor<T, N, S>(gt::shape_type<N>(shape), 0);
+}
+
 template <typename T, size_type N>
 inline auto zeros_device(const gt::shape_type<N> shape)
 {
   return gtensor<T, N, gt::space::device>(shape, 0);
+}
+
+template <typename T, size_type N>
+inline auto zeros_device(const int (&shape)[N])
+{
+  return gtensor<T, N, gt::space::device>(gt::shape_type<N>(shape), 0);
 }
 
 // ======================================================================
