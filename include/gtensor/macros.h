@@ -13,7 +13,7 @@
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
-#define GT_INLINE __host__ __device__
+#define GT_INLINE inline __host__ __device__
 #define GT_LAMBDA [=] __host__ __device__
 
 #elif defined(GTENSOR_DEVICE_SYCL)
