@@ -63,14 +63,15 @@ public:
   using size_type = gt::size_type;
 
   span() = default;
-  span(pointer data, size_type size) : data_{data}, size_{size} {}
+  GT_INLINE span(pointer data, size_type size) : data_{data}, size_{size} {}
 
   span(const span& other) = default;
 
   template <class OtherT,
             std::enable_if_t<
               is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  span(const span<OtherT>& other) : data_{other.data()}, size_{other.size()}
+  GT_INLINE span(const span<OtherT>& other)
+    : data_{other.data()}, size_{other.size()}
   {}
 
   span& operator=(const span& other) = default;
@@ -110,14 +111,15 @@ public:
   using size_type = gt::size_type;
 
   device_span() = default;
-  device_span(pointer data, size_type size) : data_{data}, size_{size} {}
+  GT_INLINE device_span(pointer data, size_type size) : data_{data}, size_{size}
+  {}
 
   device_span(const device_span& other) = default;
 
   template <class OtherT,
             std::enable_if_t<
               is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  device_span(const device_span<OtherT>& other)
+  GT_INLINE device_span(const device_span<OtherT>& other)
     : data_{other.data()}, size_{other.size()}
   {}
 
