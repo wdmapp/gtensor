@@ -40,9 +40,9 @@ public:
   sarray(const T data[N]);
 
   template <typename O>
-  GT_INLINE bool operator==(const O& o) const;
+  bool operator==(const O& o) const;
   template <typename O>
-  GT_INLINE bool operator!=(const O& o) const;
+  bool operator!=(const O& o) const;
 
   GT_INLINE constexpr static std::size_t size();
 
@@ -87,7 +87,7 @@ sarray<T, N>::sarray(const T data[N])
 
 template <typename T, std::size_t N>
 template <typename O>
-GT_INLINE bool sarray<T, N>::operator==(const O& o) const
+inline bool sarray<T, N>::operator==(const O& o) const
 {
   if (size() != o.size()) {
     return false;
@@ -97,7 +97,7 @@ GT_INLINE bool sarray<T, N>::operator==(const O& o) const
 
 template <typename T, std::size_t N>
 template <typename O>
-GT_INLINE bool sarray<T, N>::operator!=(const O& o) const
+inline bool sarray<T, N>::operator!=(const O& o) const
 {
   return !(*this == o);
 }
