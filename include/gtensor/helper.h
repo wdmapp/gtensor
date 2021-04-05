@@ -12,7 +12,7 @@ namespace gt
 {
 
 template <typename... Args>
-auto shape(Args... args)
+GT_INLINE auto shape(Args... args)
 {
   return shape_type<sizeof...(args)>(std::forward<Args>(args)...);
 }

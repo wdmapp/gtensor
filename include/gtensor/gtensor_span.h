@@ -57,8 +57,8 @@ public:
   using typename base_type::strides_type;
 
   gtensor_span() = default;
-  gtensor_span(pointer data, const shape_type& shape,
-               const strides_type& strides);
+  GT_INLINE gtensor_span(pointer data, const shape_type& shape,
+                         const strides_type& strides);
 
   gtensor_span(const gtensor_span& other) = default;
 
@@ -123,13 +123,13 @@ private:
 // gtensor_span implementation
 
 template <typename T, size_type N, typename S>
-inline gtensor_span<T, N, S>::gtensor_span(pointer data,
-                                           const shape_type& shape,
-                                           const strides_type& strides)
+GT_INLINE gtensor_span<T, N, S>::gtensor_span(pointer data,
+                                              const shape_type& shape,
+                                              const strides_type& strides)
   : base_type(shape, strides), storage_(data, calc_size(shape))
 {
 #ifndef NDEBUG
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) && !defined(__CUDACC__)
   if (std::is_same<S, space::device>::value) {
     cudaPointerAttributes attr;
     gtGpuCheck(

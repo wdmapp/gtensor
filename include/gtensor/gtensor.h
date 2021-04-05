@@ -324,6 +324,66 @@ struct launch<3, space::host>
   }
 };
 
+template <>
+struct launch<4, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<4>& shape, F&& f)
+  {
+    for (int l = 0; l < shape[3]; l++) {
+      for (int k = 0; k < shape[2]; k++) {
+        for (int j = 0; j < shape[1]; j++) {
+          for (int i = 0; i < shape[0]; i++) {
+            std::forward<F>(f)(i, j, k, l);
+          }
+        }
+      }
+    }
+  }
+};
+
+template <>
+struct launch<5, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<5>& shape, F&& f)
+  {
+    for (int m = 0; m < shape[4]; m++) {
+      for (int l = 0; l < shape[3]; l++) {
+        for (int k = 0; k < shape[2]; k++) {
+          for (int j = 0; j < shape[1]; j++) {
+            for (int i = 0; i < shape[0]; i++) {
+              std::forward<F>(f)(i, j, k, l, m);
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+template <>
+struct launch<6, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<6>& shape, F&& f)
+  {
+    for (int n = 0; n < shape[5]; n++) {
+      for (int m = 0; m < shape[4]; m++) {
+        for (int l = 0; l < shape[3]; l++) {
+          for (int k = 0; k < shape[2]; k++) {
+            for (int j = 0; j < shape[1]; j++) {
+              for (int i = 0; i < shape[0]; i++) {
+                std::forward<F>(f)(i, j, k, l, m, n);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 template <>
 struct launch<1, space::device>

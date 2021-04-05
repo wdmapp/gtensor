@@ -35,7 +35,7 @@ public:
 
   // construct from exactly N elements provided
   template <typename... U, std::enable_if_t<sizeof...(U) == N, int> = 0>
-  sarray(U... args);
+  GT_INLINE sarray(U... args);
   sarray(const T* p, std::size_t n);
   sarray(const T data[N]);
 
@@ -69,18 +69,18 @@ inline std::ostream& operator<<(std::ostream& os, const sarray<T, N>& arr);
 
 template <typename T, std::size_t N>
 template <typename... U, std::enable_if_t<sizeof...(U) == N, int>>
-sarray<T, N>::sarray(U... args) : data_{T(args)...}
+GT_INLINE sarray<T, N>::sarray(U... args) : data_{T(args)...}
 {}
 
 template <typename T, std::size_t N>
-inline sarray<T, N>::sarray(const T* p, std::size_t n)
+sarray<T, N>::sarray(const T* p, std::size_t n)
 {
   assert(n == N);
   std::copy(p, p + n, data_);
 }
 
 template <typename T, std::size_t N>
-inline sarray<T, N>::sarray(const T data[N])
+sarray<T, N>::sarray(const T data[N])
 {
   std::copy(data, data + N, data_);
 }
