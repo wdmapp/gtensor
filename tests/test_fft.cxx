@@ -21,6 +21,9 @@ void fft_r2c_1d()
   gt::gtensor<E, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<E, 2> d_A(gt::shape(N, batch_size));
 
+  gt::gtensor<E, 2> h_A2(gt::shape(N, batch_size));
+  gt::gtensor_device<E, 2> d_A2(gt::shape(N, batch_size));
+
   gt::gtensor<T, 2> h_B(gt::shape(Nout, batch_size));
   gt::gtensor_device<T, 2> d_B(gt::shape(Nout, batch_size));
 
@@ -52,7 +55,13 @@ void fft_r2c_1d()
   //                  gt::backend::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
 
+  // test roundtripping data
+  plan.inverse(d_B, d_A2);
+
   gt::copy(d_B, h_B);
+  gt::copy(d_A2, h_A2);
+
+  EXPECT_EQ(h_A, h_A2 / N);
 
   expect_complex_near(h_B(0, 0), T(8, 0));
   expect_complex_near(h_B(1, 0), T(3, 1));
