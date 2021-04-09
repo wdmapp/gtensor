@@ -13,10 +13,8 @@ void fft_r2c_1d()
 {
   constexpr int N = 4;
   constexpr int Nout = N / 2 + 1;
-  constexpr int RANK = 1;
   constexpr int batch_size = 2;
   using T = gt::complex<E>;
-  int lengths[RANK] = {N};
 
   gt::gtensor<E, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<E, 2> d_A(gt::shape(N, batch_size));
@@ -49,8 +47,7 @@ void fft_r2c_1d()
   // fft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // but with fftw convention for real transforms, the last term is
   // conjugate of second and set to 0 to save storage / computation
-  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(1, lengths, 1, N, 1, Nout,
-                                                      batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
   // plan.exec_forward(gt::backend::raw_pointer_cast(d_A.data()),
   //                  gt::backend::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
@@ -87,10 +84,8 @@ void fft_c2r_1d()
 {
   constexpr int N = 4;
   constexpr int Ncomplex = N / 2 + 1;
-  constexpr int RANK = 1;
   constexpr int batch_size = 2;
   using T = gt::complex<E>;
-  int lengths[RANK] = {N};
 
   gt::gtensor<E, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<E, 2> d_A(gt::shape(N, batch_size));
@@ -109,8 +104,7 @@ void fft_c2r_1d()
   gt::copy(h_B, d_B);
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
-  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(1, lengths, 1, N, 1,
-                                                      Ncomplex, batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
   // plan.exec_inverse(gt::backend::raw_pointer_cast(d_B.data()),
   //                  gt::backend::raw_pointer_cast(d_A.data()));
   plan.inverse(d_B, d_A);
@@ -141,10 +135,8 @@ template <typename E>
 void fft_c2c_1d_forward()
 {
   constexpr int N = 4;
-  constexpr int RANK = 1;
   constexpr int batch_size = 2;
   using T = gt::complex<E>;
-  int lengths[RANK] = {N};
 
   gt::gtensor<T, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<T, 2> d_A(gt::shape(N, batch_size));
@@ -166,8 +158,7 @@ void fft_c2c_1d_forward()
 
   gt::copy(h_A, d_A);
 
-  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(1, lengths, 1, N, 1, N,
-                                                         batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N}, batch_size);
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // plan.exec_forward(gt::backend::raw_pointer_cast(d_A.data()),
@@ -201,10 +192,8 @@ template <typename E>
 void fft_c2c_1d_inverse()
 {
   constexpr int N = 4;
-  constexpr int RANK = 1;
   constexpr int batch_size = 2;
   using T = gt::complex<E>;
-  int lengths[RANK] = {N};
 
   gt::gtensor<T, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<T, 2> d_A(gt::shape(N, batch_size));
@@ -224,8 +213,7 @@ void fft_c2c_1d_inverse()
 
   gt::copy(h_A, d_A);
 
-  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(1, lengths, 1, N, 1, N,
-                                                         batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N}, batch_size);
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // plan.exec_inverse(gt::backend::raw_pointer_cast(d_A.data()),
@@ -261,11 +249,9 @@ TEST(fft, move_only)
 {
   constexpr int N = 4;
   constexpr int Nout = N / 2 + 1;
-  constexpr int RANK = 1;
   constexpr int batch_size = 1;
   using E = double;
   using T = gt::complex<E>;
-  int lengths[RANK] = {N};
 
   gt::gtensor<E, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<E, 2> d_A(gt::shape(N, batch_size));
@@ -289,8 +275,7 @@ TEST(fft, move_only)
   // fft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // but with fftw convention for real transforms, the last term is
   // conjugate of second and set to 0 to save storage / computation
-  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(1, lengths, 1, N, 1, Nout,
-                                                      batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
 
   // Should not compile
   //  auto plan_copy = plan;
