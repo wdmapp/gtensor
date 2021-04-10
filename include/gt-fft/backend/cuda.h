@@ -112,7 +112,7 @@ public:
   FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
 
   // custom move to avoid double destroy in moved-from object
-  FFTPlanManyCUDA(FFTPlanManyCUDA&& other)
+  FFTPlanManyCUDA(FFTPlanManyCUDA&& other) : is_valid_(true)
   {
     plan_forward_ = other.plan_forward_;
     plan_inverse_ = other.plan_inverse_;
@@ -124,6 +124,7 @@ public:
     plan_forward_ = other.plan_forward_;
     plan_inverse_ = other.plan_inverse_;
     other.is_valid_ = false;
+    return *this;
   }
 
   virtual ~FFTPlanManyCUDA()
@@ -196,7 +197,7 @@ public:
   FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
 
   // custom move to avoid double destroy in moved-from object
-  FFTPlanManyCUDA(FFTPlanManyCUDA&& other)
+  FFTPlanManyCUDA(FFTPlanManyCUDA&& other) : is_valid_(true)
   {
     plan_ = other.plan_;
     other.is_valid_ = false;
@@ -206,6 +207,7 @@ public:
   {
     plan_ = other.plan_;
     other.is_valid_ = false;
+    return *this;
   }
 
   virtual ~FFTPlanManyCUDA()
