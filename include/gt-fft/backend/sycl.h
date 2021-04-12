@@ -113,11 +113,6 @@ public:
         cs *= lengths[i - 1];
       }
 
-      if (D == gt::fft::Domain::REAL) {
-        cstrides[rank] =
-          cstrides[rank] / lengths[rank - 1] * (lengths[rank - 1] / 2 + 1);
-      }
-
       plan_->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
                        batch_size);
       plan_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, rstrides);
@@ -131,6 +126,8 @@ public:
                        DFTI_NOT_INPLACE);
       plan_->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
                        DFTI_COMPLEX_COMPLEX);
+      plan_->set_value(oneapi::mkl::dft::config_param::FORWARD_SCALE, R(1));
+      plan_->set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, R(1));
       plan_->commit(gt::backend::sycl::get_queue());
     } catch (std::exception const& e) {
       std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
