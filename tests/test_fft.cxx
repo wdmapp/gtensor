@@ -142,6 +142,9 @@ void fft_c2c_1d_forward()
   gt::gtensor<T, 2> h_A(gt::shape(N, batch_size));
   gt::gtensor_device<T, 2> d_A(gt::shape(N, batch_size));
 
+  gt::gtensor<T, 2> h_A2(h_A.shape());
+  gt::gtensor_device<T, 2> d_A2(h_A.shape());
+
   gt::gtensor<T, 2> h_B(gt::shape(N, batch_size));
   gt::gtensor_device<T, 2> d_B(gt::shape(N, batch_size));
 
@@ -177,6 +180,16 @@ void fft_c2c_1d_forward()
   expect_complex_near(h_B(1, 1), T(-4, 22));
   expect_complex_near(h_B(2, 1), T(38, 0));
   expect_complex_near(h_B(3, 1), T(-4, -22));
+
+  // test round trip
+  plan.inverse(d_B, d_A2);
+  gt::copy(d_A2, h_A2);
+
+  for (int i = 0; i < h_A.shape(1); i++) {
+    for (int j = 0; j < h_A.shape(0); j++) {
+      expect_complex_near(h_A(j, i), h_A2(j, i) / T(N, 0));
+    }
+  }
 }
 
 TEST(fft, z2z_1d_forward)
@@ -307,7 +320,7 @@ void fft_r2c_2d()
   auto h_A = gt::zeros<E>({N, N, batch_size});
   auto d_A = gt::empty_device<E>(h_A.shape());
 
-  auto h_A2 = gt::empty<E>(h_A.shape());
+  auto h_A2 = gt::zeros<E>(h_A.shape());
   auto d_A2 = gt::empty_device<E>(h_A.shape());
 
   auto h_B = gt::empty<T>({N, N / 2 + 1, batch_size});
@@ -322,10 +335,12 @@ void fft_r2c_2d()
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
+  /*
   std::cout << "h_A.shape() = " << h_A.shape() << std::endl;
   std::cout << "h_B.shape() = " << h_B.shape() << std::endl;
   std::cout << "h_A = " << h_A << std::endl;
   std::cout << "h_B = " << h_B << std::endl;
+  */
 
   // FFT of delta function is all ones in magnitude
   auto h_B_flat = gt::flatten(h_B);
