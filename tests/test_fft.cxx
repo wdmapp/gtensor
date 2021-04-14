@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
@@ -8,6 +9,8 @@
 #include "gt-fft/fft.h"
 
 #include "test_helpers.h"
+
+constexpr double PI = 3.141592653589793;
 
 template <typename E>
 void fft_r2c_1d()
@@ -313,8 +316,9 @@ TEST(fft, move_only)
 template <typename E>
 void fft_r2c_2d()
 {
-  constexpr int Nx = 7;
-  constexpr int Ny = 17;
+  // sin(2*pi*x + 4*pi*y) x=-2:1/16:2-1/16, y=0:1/16:1-1/16
+  constexpr int Nx = 64;
+  constexpr int Ny = 16;
   constexpr int batch_size = 1;
   using T = gt::complex<E>;
 
@@ -328,7 +332,14 @@ void fft_r2c_2d()
   auto d_B = gt::empty_device<T>(h_B.shape());
 
   // origin at center of domain has value 1, to model delta function
-  h_A(Nx / 2 + 1, Ny / 2 + 1, 0) = 1.0;
+  double x, y;
+  for (int j = 0; j < Ny; j++) {
+    for (int i = 0; i < Nx; i++) {
+      x = -2.0 + i / 16.0;
+      y = j / 16.0;
+      h_A(i, j, 0) = sin(2 * PI * x + 4 * PI * y);
+    }
+  }
 
   gt::copy(h_A, d_A);
 
@@ -343,11 +354,17 @@ void fft_r2c_2d()
   std::cout << "h_B = " << h_B << std::endl;
   */
 
-  // FFT of delta function is all ones in magnitude
-  auto h_B_flat = gt::flatten(h_B);
-  double max_err = gt::test::detail::max_err<E>::value;
-  for (int i = 0; i < h_B_flat.shape(0); i++) {
-    ASSERT_NEAR(gt::abs(h_B_flat(i)), 1.0, max_err);
+  // sin over our domain has frequency 4 in x and 2 in y
+  // NB: allow greater error than for other tests
+  double max_err = 20.0 * gt::test::detail::max_err<E>::value;
+  for (int j = 0; j < h_B.shape(1); j++) {
+    for (int i = 0; i < h_B.shape(0); i++) {
+      if (i == 4 && j == 2) {
+        expect_complex_near(h_B(i, j, 0) / (Nx * Ny), T(0, -0.5), max_err);
+      } else {
+        expect_complex_near(h_B(i, j, 0), T(0, 0), max_err);
+      }
+    }
   }
 
   // test roundtripping data, with normalization
