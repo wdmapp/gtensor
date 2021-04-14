@@ -92,17 +92,22 @@ public:
     int rank = real_lengths.size();
     int* nreal = real_lengths.data();
 
+    std::vector<int> complex_lengths = real_lengths;
+    complex_lengths[rank - 1] = real_lengths[rank - 1] / 2 + 1;
+    int* ncomplex = complex_lengths.data();
+
     int idist = std::accumulate(real_lengths.begin(), real_lengths.end(), 1,
                                 std::multiplies<int>());
-    int odist =
-      idist / real_lengths[rank - 1] * (real_lengths[rank - 1] / 2 + 1);
+    int odist = std::accumulate(complex_lengths.begin(), complex_lengths.end(),
+                                1, std::multiplies<int>());
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto type_inverse = detail::fft_config<D, R>::type_inverse;
-    auto result = cufftPlanMany(&plan_forward_, rank, nreal, nullptr, 1, idist,
-                                nullptr, 1, odist, type_forward, batch_size);
+    auto result = cufftPlanMany(&plan_forward_, rank, nreal, nreal, 1, idist,
+                                ncomplex, 1, odist, type_forward, batch_size);
     assert(result == CUFFT_SUCCESS);
-    auto result2 = cufftPlanMany(&plan_inverse_, rank, nreal, nullptr, 1, odist,
-                                 nullptr, 1, idist, type_inverse, batch_size);
+    auto result2 =
+      cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, 1, odist, nreal, 1,
+                    idist, type_inverse, batch_size);
     assert(result2 == CUFFT_SUCCESS);
   }
 
