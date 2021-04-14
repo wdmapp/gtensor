@@ -313,25 +313,26 @@ TEST(fft, move_only)
 template <typename E>
 void fft_r2c_2d()
 {
-  constexpr int N = 17;
+  constexpr int Nx = 7;
+  constexpr int Ny = 17;
   constexpr int batch_size = 1;
   using T = gt::complex<E>;
 
-  auto h_A = gt::zeros<E>({N, N, batch_size});
+  auto h_A = gt::zeros<E>({Nx, Ny, batch_size});
   auto d_A = gt::empty_device<E>(h_A.shape());
 
   auto h_A2 = gt::zeros<E>(h_A.shape());
   auto d_A2 = gt::empty_device<E>(h_A.shape());
 
-  auto h_B = gt::empty<T>({N, N / 2 + 1, batch_size});
+  auto h_B = gt::empty<T>({Nx / 2 + 1, Ny, batch_size});
   auto d_B = gt::empty_device<T>(h_B.shape());
 
   // origin at center of domain has value 1, to model delta function
-  h_A(8, 8, 0) = 1.0;
+  h_A(Nx / 2 + 1, Ny / 2 + 1, 0) = 1.0;
 
   gt::copy(h_A, d_A);
 
-  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N, N}, batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({Ny, Nx}, batch_size);
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
@@ -354,7 +355,7 @@ void fft_r2c_2d()
   gt::copy(d_A2, h_A2);
   for (int i = 0; i < h_A.shape(0); i++) {
     for (int j = 0; j < h_A.shape(1); j++) {
-      ASSERT_NEAR(h_A(i, j, 0), h_A2(i, j, 0) / (N * N), max_err);
+      ASSERT_NEAR(h_A(i, j, 0), h_A2(i, j, 0) / (Nx * Ny), max_err);
     }
   }
 }
@@ -372,25 +373,26 @@ TEST(fft, d2z_2d)
 template <typename E>
 void fft_c2c_2d()
 {
-  constexpr int N = 17;
+  constexpr int Nx = 17;
+  constexpr int Ny = 5;
   constexpr int batch_size = 1;
   using T = gt::complex<E>;
 
-  auto h_A = gt::zeros<T>({N, N, batch_size});
+  auto h_A = gt::zeros<T>({Nx, Ny, batch_size});
   auto d_A = gt::empty_device<T>(h_A.shape());
 
   auto h_A2 = gt::empty<T>(h_A.shape());
   auto d_A2 = gt::empty_device<T>(h_A.shape());
 
-  auto h_B = gt::empty<T>({N, N, batch_size});
+  auto h_B = gt::empty<T>({Nx, Ny, batch_size});
   auto d_B = gt::empty_device<T>(h_B.shape());
 
   // origin at center of domain has value 1, to model delta function
-  h_A(8, 8, 0) = T(1.0, 0.0);
+  h_A(Nx / 2 + 1, Ny / 2 + 1, 0) = T(1.0, 0.0);
 
   gt::copy(h_A, d_A);
 
-  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N, N}, batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({Ny, Nx}, batch_size);
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
@@ -406,7 +408,7 @@ void fft_c2c_2d()
   gt::copy(d_A2, h_A2);
   for (int i = 0; i < h_A.shape(0); i++) {
     for (int j = 0; j < h_A.shape(1); j++) {
-      expect_complex_near(h_A(i, j, 0), h_A2(i, j, 0) / T(N * N, 0));
+      expect_complex_near(h_A(i, j, 0), h_A2(i, j, 0) / T(Nx * Ny, 0));
     }
   }
 }
@@ -424,25 +426,27 @@ TEST(fft, z2z_2d)
 template <typename E>
 void fft_r2c_3d()
 {
-  constexpr int N = 17;
+  constexpr int Nx = 17;
+  constexpr int Ny = 11;
+  constexpr int Nz = 5;
   constexpr int batch_size = 1;
   using T = gt::complex<E>;
 
-  auto h_A = gt::zeros<E>({N, N, N, batch_size});
+  auto h_A = gt::zeros<E>({Nx, Ny, Nz, batch_size});
   auto d_A = gt::empty_device<E>(h_A.shape());
 
   auto h_A2 = gt::empty<E>(h_A.shape());
   auto d_A2 = gt::empty_device<E>(h_A.shape());
 
-  auto h_B = gt::empty<T>({N, N, N / 2 + 1, batch_size});
+  auto h_B = gt::empty<T>({Nx / 2 + 1, Ny, Nz, batch_size});
   auto d_B = gt::empty_device<T>(h_B.shape());
 
   // origin at center of domain has value 1, to model delta function
-  h_A(8, 8, 8, 0) = 1.0;
+  h_A(Nx / 2 + 1, Ny / 2 + 1, Nz / 2 + 1, 0) = 1.0;
 
   gt::copy(h_A, d_A);
 
-  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N, N, N}, batch_size);
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({Nz, Ny, Nx}, batch_size);
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
@@ -459,7 +463,8 @@ void fft_r2c_3d()
   for (int i = 0; i < h_A.shape(0); i++) {
     for (int j = 0; j < h_A.shape(1); j++) {
       for (int k = 0; k < h_A.shape(2); k++) {
-        ASSERT_NEAR(h_A(i, j, k, 0), h_A2(i, j, k, 0) / (N * N * N), max_err);
+        ASSERT_NEAR(h_A(i, j, k, 0), h_A2(i, j, k, 0) / (Nx * Ny * Nz),
+                    max_err);
       }
     }
   }
