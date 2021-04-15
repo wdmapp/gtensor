@@ -1,7 +1,9 @@
 #ifndef GTENSOR_FFT_CUDA_H
 #define GTENSOR_FFT_CUDA_H
 
+#include <numeric>
 #include <stdexcept>
+#include <vector>
 
 // Note: this file is included by fft/hip.h after redef/type aliasing
 // all the necessary types and functions.
@@ -84,18 +86,29 @@ class FFTPlanManyCUDA<gt::fft::Domain::REAL, R>
   constexpr static gt::fft::Domain D = gt::fft::Domain::REAL;
 
 public:
-  FFTPlanManyCUDA(int rank, int* n, int istride, int idist, int ostride,
-                  int odist, int batch_size)
+  FFTPlanManyCUDA(std::vector<int> real_lengths, int batch_size = 1)
     : is_valid_(true)
   {
+    int rank = real_lengths.size();
+    int* nreal = real_lengths.data();
+
+    std::vector<int> complex_lengths = real_lengths;
+    complex_lengths[rank - 1] = real_lengths[rank - 1] / 2 + 1;
+    int* ncomplex = complex_lengths.data();
+
+    int idist = std::accumulate(real_lengths.begin(), real_lengths.end(), 1,
+                                std::multiplies<int>());
+    int odist = std::accumulate(complex_lengths.begin(), complex_lengths.end(),
+                                1, std::multiplies<int>());
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto type_inverse = detail::fft_config<D, R>::type_inverse;
-    auto result =
-      cufftPlanMany(&plan_forward_, rank, n, nullptr, istride, idist, nullptr,
-                    ostride, odist, type_forward, batch_size);
+    auto result = cufftPlanMany(&plan_forward_, rank, nreal, nreal, 1, idist,
+                                ncomplex, 1, odist, type_forward, batch_size);
+    assert(result == CUFFT_SUCCESS);
     auto result2 =
-      cufftPlanMany(&plan_inverse_, rank, n, nullptr, ostride, odist, nullptr,
-                    istride, idist, type_inverse, batch_size);
+      cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, 1, odist, nreal, 1,
+                    idist, type_inverse, batch_size);
+    assert(result2 == CUFFT_SUCCESS);
   }
 
   // move only
@@ -104,7 +117,7 @@ public:
   FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
 
   // custom move to avoid double destroy in moved-from object
-  FFTPlanManyCUDA(FFTPlanManyCUDA&& other)
+  FFTPlanManyCUDA(FFTPlanManyCUDA&& other) : is_valid_(true)
   {
     plan_forward_ = other.plan_forward_;
     plan_inverse_ = other.plan_inverse_;
@@ -116,6 +129,7 @@ public:
     plan_forward_ = other.plan_forward_;
     plan_inverse_ = other.plan_inverse_;
     other.is_valid_ = false;
+    return *this;
   }
 
   virtual ~FFTPlanManyCUDA()
@@ -170,14 +184,15 @@ class FFTPlanManyCUDA<gt::fft::Domain::COMPLEX, R>
   constexpr static gt::fft::Domain D = gt::fft::Domain::COMPLEX;
 
 public:
-  FFTPlanManyCUDA(int rank, int* n, int istride, int idist, int ostride,
-                  int odist, int batch_size)
+  FFTPlanManyCUDA(std::vector<int> lengths, int batch_size = 1)
     : is_valid_(true)
   {
     auto type_forward = detail::fft_config<D, R>::type_forward;
+    int dist = std::accumulate(lengths.begin(), lengths.end(), 1,
+                               std::multiplies<int>());
     auto result =
-      cufftPlanMany(&plan_, rank, n, nullptr, istride, idist, nullptr, ostride,
-                    odist, type_forward, batch_size);
+      cufftPlanMany(&plan_, lengths.size(), lengths.data(), nullptr, 1, dist,
+                    nullptr, 1, dist, type_forward, batch_size);
     assert(result == CUFFT_SUCCESS);
   }
 
@@ -187,7 +202,7 @@ public:
   FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
 
   // custom move to avoid double destroy in moved-from object
-  FFTPlanManyCUDA(FFTPlanManyCUDA&& other)
+  FFTPlanManyCUDA(FFTPlanManyCUDA&& other) : is_valid_(true)
   {
     plan_ = other.plan_;
     other.is_valid_ = false;
@@ -197,6 +212,7 @@ public:
   {
     plan_ = other.plan_;
     other.is_valid_ = false;
+    return *this;
   }
 
   virtual ~FFTPlanManyCUDA()

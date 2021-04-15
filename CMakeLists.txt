@@ -143,9 +143,11 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
                           "${ROCM_PATH}/lib/librocsolver.so")
     target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
 
-    add_library(rocfft INTERFACE IMPORTED)
-    target_link_libraries(rocfft INTERFACE "${ROCM_PATH}/lib/librocfft.so")
-    target_include_directories(rocfft INTERFACE "${ROCM_PATH}/include")
+    # NB: in ROCm, rocfft library / package was deprecated in favor of
+    # hipfft library / package.
+    add_library(hipfft INTERFACE IMPORTED)
+    target_link_libraries(hipfft INTERFACE "${ROCM_PATH}/lib/libhipfft.so")
+    target_include_directories(hipfft INTERFACE "${ROCM_PATH}/hipfft/include")
 
     #find_package(rocprim REQUIRED CONFIG
     #             PATHS "${ROCM_PATH}/rocprim")
@@ -327,7 +329,7 @@ if (GTENSOR_ENABLE_FFT)
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     target_link_libraries(gtfft INTERFACE cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gtfft INTERFACE rocfft)
+    target_link_libraries(gtfft INTERFACE hipfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
   endif()

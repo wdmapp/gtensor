@@ -50,6 +50,25 @@ TEST(complex, norm)
   EXPECT_EQ(h_a(0), h_a(1));
 }
 
+TEST(complex, abs)
+{
+  using T = gt::complex<double>;
+  auto one = T{1., 0.};
+  auto i = T{0., 1.};
+
+  EXPECT_EQ(gt::abs(one), 1);
+  EXPECT_EQ(gt::abs(i), 1);
+
+  gt::gtensor<T, 1> h_a(2);
+
+  h_a(0) = T{1., 1.};
+  h_a(1) = T{1., -1.};
+  h_a(0) = gt::abs(h_a(0));
+  h_a(1) = gt::abs(h_a(1));
+
+  EXPECT_EQ(h_a(0), h_a(1));
+}
+
 TEST(complex, conj)
 {
   using T = gt::complex<double>;
