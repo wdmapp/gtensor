@@ -218,15 +218,16 @@ GT_INLINE gtensor_span<T, N> adapt(T* data, const int* shape_data)
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <size_type N, typename T>
-gtensor_span<T, N, space::device> adapt_device(T* data,
-                                               const shape_type<N>& shape)
+GT_INLINE gtensor_span<T, N, space::device> adapt_device(
+  T* data, const shape_type<N>& shape)
 {
   return gtensor_span<T, N, space::device>(
     gt::backend::device_pointer_cast(data), shape, calc_strides(shape));
 }
 
 template <size_type N, typename T>
-gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
+GT_INLINE gtensor_span<T, N, space::device> adapt_device(T* data,
+                                                         const int* shape_data)
 {
   return adapt_device<N, T>(data, {shape_data, N});
 }
