@@ -140,32 +140,30 @@ public:
     }
   }
 
-  void operator()(const typename detail::fft_config<D, R>::Tin* indata,
+  void operator()(typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
     if (!is_valid_) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bin*>(const_cast<Tin*>(indata));
+    auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
     auto result = fn(plan_forward_, bin, bout);
     assert(result == CUFFT_SUCCESS);
   }
 
-  void inverse(const typename detail::fft_config<D, R>::Tout* indata,
+  void inverse(typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
     if (!is_valid_) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bout*>(const_cast<Tout*>(indata));
+    auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
     auto result = fn(plan_inverse_, bin, bout);
@@ -222,32 +220,30 @@ public:
     }
   }
 
-  void operator()(const typename detail::fft_config<D, R>::Tin* indata,
+  void operator()(typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
     if (!is_valid_) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Tin = typename detail::fft_config<D, R>::Tin;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bin*>(const_cast<Tin*>(indata));
+    auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
     auto result = fn(plan_, bin, bout, CUFFT_FORWARD);
     assert(result == CUFFT_SUCCESS);
   }
 
-  void inverse(const typename detail::fft_config<D, R>::Tout* indata,
+  void inverse(typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
     if (!is_valid_) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Tout = typename detail::fft_config<D, R>::Tout;
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bout*>(const_cast<Tout*>(indata));
+    auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
     auto result = fn(plan_, bin, bout, CUFFT_INVERSE);

@@ -50,7 +50,7 @@ public:
             typename = std::enable_if_t<
               has_container_methods_v<C1> && has_space_type_device_v<C1> &&
               has_container_methods_v<C2> && has_space_type_device_v<C2>>>
-  void operator()(const C1& in, C2& out) const
+  void operator()(C1& in, C2& out) const
   {
     operator()(gt::backend::raw_pointer_cast(in.data()),
                gt::backend::raw_pointer_cast(out.data()));
@@ -60,7 +60,7 @@ public:
             typename = std::enable_if_t<
               has_container_methods_v<C1> && has_space_type_device_v<C1> &&
               has_container_methods_v<C2> && has_space_type_device_v<C2>>>
-  void inverse(const C1& in, C2& out) const
+  void inverse(C1& in, C2& out) const
   {
     inverse(gt::backend::raw_pointer_cast(in.data()),
             gt::backend::raw_pointer_cast(out.data()));
