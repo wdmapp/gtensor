@@ -205,13 +205,13 @@ GT_INLINE auto gtensor_span<T, N, S>::operator[](const shape_type& idx) const
 // adapt
 
 template <size_type N, typename T>
-gtensor_span<T, N> adapt(T* data, const shape_type<N>& shape)
+GT_INLINE gtensor_span<T, N> adapt(T* data, const shape_type<N>& shape)
 {
   return gtensor_span<T, N>(data, shape, calc_strides(shape));
 }
 
 template <size_type N, typename T>
-gtensor_span<T, N> adapt(T* data, const int* shape_data)
+GT_INLINE gtensor_span<T, N> adapt(T* data, const int* shape_data)
 {
   return adapt<N, T>(data, {shape_data, N});
 }
