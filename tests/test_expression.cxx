@@ -2,6 +2,7 @@
 
 #include "gtensor/complex.h"
 #include "gtensor/gtensor.h"
+#include "gtensor/reductions.h"
 
 #include "test_debug.h"
 
@@ -191,6 +192,14 @@ TEST(expression, abs)
 }
 
 TEST(expression, sin)
+{
+  gt::gtensor<double, 1> t1({0., M_PI / 2., M_PI, 3 * M_PI / 2.});
+  gt::gtensor<double, 1> ref({0., 1., 0., -1.});
+  auto e1 = gt::sin(t1);
+
+  EXPECT_LT(gt::norm_linf(gt::sin(t1) - ref), 1e-14);
+}
+
 TEST(shape, broadcast_same)
 {
   auto a = gt::shape(2, 3, 4);
