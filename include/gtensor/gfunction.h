@@ -393,12 +393,24 @@ MAKE_BINARY_OP(divide, /)
 #undef MAKE_BINARY_OP
 
 #define MAKE_UNARY_FUNC(NAME, FUNC)                                            \
+                                                                               \
+  namespace funcs                                                              \
+  {                                                                            \
+  struct NAME                                                                  \
+  {                                                                            \
+    template <typename T>                                                      \
+    GT_INLINE auto operator()(T a) const                                       \
+    {                                                                          \
+      return FUNC(a);                                                          \
+    }                                                                          \
+  };                                                                           \
+  }                                                                            \
+                                                                               \
   template <typename E,                                                        \
             typename Enable = std::enable_if_t<has_expression<E>::value>>      \
   auto NAME(E&& e)                                                             \
   {                                                                            \
-    return function(                                                           \
-      GT_LAMBDA(auto x) { return FUNC(x); }, std::forward<E>(e));              \
+    return function(funcs::NAME{}, std::forward<E>(e));                        \
   }
 
 MAKE_UNARY_FUNC(abs, std::abs)
