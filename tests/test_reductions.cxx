@@ -179,6 +179,12 @@ TEST(reductions, min_1d)
   test_min<gt::space::host>(2048);
 }
 
+TEST(reductions, norm)
+{
+  gt::gtensor<double, 1> g = {1., -3., 2.};
+  EXPECT_EQ(gt::norm_linf(g), 3.);
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(reductions, device_sum_1d)

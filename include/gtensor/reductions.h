@@ -303,6 +303,13 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
     });
 }
 
+template <typename E>
+auto norm_linf(const E& e)
+{
+  // FIXME, the gt::eval is a workaround for gt::max only handling containers
+  return gt::max(gt::eval(gt::abs(e)));
+}
+
 } // namespace gt
 
 #endif // GTENSOR_REDUCTIONS_H
