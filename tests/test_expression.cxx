@@ -183,6 +183,14 @@ TEST(expression, gscalar_lambda)
   EXPECT_EQ(e1, (gt::gtensor<double, 1>{2., 4.}));
 }
 
+TEST(expression, abs)
+{
+  gt::gtensor<double, 1> t1({1., -2.});
+  auto e1 = gt::abs(t1);
+  EXPECT_EQ(e1, (gt::gtensor<double, 1>{1., 2.}));
+}
+
+TEST(expression, sin)
 TEST(shape, broadcast_same)
 {
   auto a = gt::shape(2, 3, 4);
