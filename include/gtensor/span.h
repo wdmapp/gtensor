@@ -9,6 +9,7 @@
 #endif
 
 #include "defs.h"
+#include "macros.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
 #ifdef GTENSOR_USE_THRUST
