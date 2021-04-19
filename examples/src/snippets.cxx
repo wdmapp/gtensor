@@ -12,7 +12,7 @@ void derivative()
 double dx = 0.1;
 // python: x = np.arange(0, 1, dx)
 // python: y = x**2
-auto x = gt::arange_device<double>(0, 1, dx);
+gt::gtensor_device<double, 1> x = gt::arange<double>(0, 1, dx);
 gt::gtensor_device<double, 1> y = x * x;
 
 // python: dydx = -0.5/dx * y[:-2] + 0.5/dx * y[2:]
@@ -27,7 +27,7 @@ std::cout << "dy/dx: " << gt::eval(dydx) << std::endl;
 void mult_table()
 {
 // python: a = np.arange(1, 11)
-auto a = gt::arange<int>(1, 11);
+gt::gtensor<int, 1> a = gt::arange<int>(1, 11);
 // python: mtable = np.reshape(a, (1, 10)) * np.reshape(a, (10, 1))
 gt::gtensor<int, 2> mtable = a.view(_newaxis, _all)
                            * a.view(_all, _newaxis);
@@ -38,7 +38,7 @@ std::cout << "multiples of 4 " << mtable.view(3, _all) << std::endl;
 
 void reduction()
 {
-auto a = gt::arange_device<int>(1, 11);
+gt::gtensor_device<int, 1> a = gt::arange<int>(1, 11);
 std::cout << "sum " << gt::sum(a) << std::endl;
 /* sum 55 */
 }
@@ -60,8 +60,8 @@ std::cout << m << std::endl;
 void blas()
 {
 gt::blas::handle_t* h = gt::blas::create();
-auto x = gt::arange_device<double>(1, 11);
-auto y = gt::arange_device<double>(1, 11);
+gt::gtensor_device<double, 1> x = gt::arange<double>(1, 11);
+gt::gtensor_device<double, 1> y = gt::arange<double>(1, 11);
 gt::blas::axpy(h, 2.0, x, y);
 std::cout << "a*x+y = " << y << std::endl;
 /* a*x+y = { 3 6 9 12 15 18 21 24 27 30 } */
