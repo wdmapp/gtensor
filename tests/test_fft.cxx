@@ -360,7 +360,7 @@ void fft_r2c_2d()
   for (int j = 0; j < h_B.shape(1); j++) {
     for (int i = 0; i < h_B.shape(0); i++) {
       if (i == 4 && j == 2) {
-        expect_complex_near(h_B(i, j, 0) / (Nx * Ny), T(0, -0.5), max_err);
+        expect_complex_near(h_B(i, j, 0) / T(Nx * Ny, 0), T(0, -0.5), max_err);
       } else {
         expect_complex_near(h_B(i, j, 0), T(0, 0), max_err);
       }

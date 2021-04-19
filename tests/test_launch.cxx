@@ -112,7 +112,7 @@ void device_double_view_reverse_1d(gt::gtensor_device<double, 1>& a,
   auto b = gt::empty_like(a);
 
   auto k_a = a.to_kernel();
-  auto v_b = b.view(gt::slice(2, 0, -1));
+  auto v_b = b.view(gt::slice(2, gt::none, -1));
   auto k_b = v_b.to_kernel();
 
   gt::launch<1>(
