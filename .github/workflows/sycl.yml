@@ -20,6 +20,7 @@ jobs:
       GTEST_ROOT: ${{ github.workspace }}/googletest
       SYCL_DEVICE_TYPE: host
       DEBIAN_FRONTEND: noninteractive
+      GTENSOR_TEST_EXCLUDE: test_fft test_reductions
 
     steps:
     - name: install core packages
