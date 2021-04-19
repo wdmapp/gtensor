@@ -9,6 +9,7 @@
 #endif
 
 #include "defs.h"
+#include "macros.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
 #ifdef GTENSOR_USE_THRUST
@@ -60,6 +61,7 @@ public:
   using reference = std::add_lvalue_reference_t<element_type>;
   using const_reference =
     std::add_lvalue_reference_t<std::add_const_t<element_type>>;
+  using iterator = pointer;
   using size_type = gt::size_type;
 
   span() = default;
@@ -78,6 +80,9 @@ public:
 
   GT_INLINE pointer data() const { return data_; }
   GT_INLINE size_type size() const { return size_; }
+
+  GT_INLINE iterator begin() const { return data_; }
+  GT_INLINE iterator end() const { return data_ + size_; }
 
   GT_INLINE reference operator[](size_type i) const { return data_[i]; }
 
