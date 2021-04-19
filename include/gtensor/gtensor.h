@@ -719,6 +719,43 @@ eval(E&& e)
   return {std::forward<E>(e)};
 }
 
+// ======================================================================
+// arange
+
+template <typename T>
+class arange_generator_1d
+{
+public:
+  arange_generator_1d(T start, T step)
+    : start_(start), step_(step)
+  {}
+
+  GT_INLINE T operator()(int i) const
+  {
+    return start_ + T(i) * step_;
+  }
+
+private:
+  T start_;
+  T step_;
+};
+
+template <typename T, typename S = gt::space::host>
+inline auto arange(T start, T end, T step = 1)
+{
+  auto shape = gt::shape((end - start) / step);
+
+  auto a = gt::empty<T, S>(shape);
+  a = generator<1, T>(shape, arange_generator_1d<T>(start, step));
+  return a;
+}
+
+template <typename T>
+inline auto arange_device(T start, T end, T step = 1)
+{
+  return arange<T, gt::space::device>(start, end, step);
+}
+
 } // namespace gt
 
 #endif

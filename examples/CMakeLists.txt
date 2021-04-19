@@ -41,6 +41,12 @@ add_executable(stencil1d)
 target_gtensor_sources(stencil1d PRIVATE src/stencil1d.cxx)
 target_link_libraries(stencil1d gtensor::gtensor)
 
+add_executable(snippets)
+target_gtensor_sources(snippets PRIVATE src/snippets.cxx)
+target_link_libraries(snippets gtensor::gtensor)
+target_link_libraries(snippets gtensor::gtfft)
+target_link_libraries(snippets gtensor::blas)
+
 add_executable(mult_table)
 target_gtensor_sources(mult_table PRIVATE src/mult_table.cxx)
 target_link_libraries(mult_table gtensor::gtensor)
