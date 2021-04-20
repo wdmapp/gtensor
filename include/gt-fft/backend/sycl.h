@@ -2,6 +2,7 @@
 #define GTENSOR_FFT_SYCL_H
 
 #include <memory>
+#include <numeric>
 #include <stdexcept>
 
 #include <CL/sycl.hpp>
