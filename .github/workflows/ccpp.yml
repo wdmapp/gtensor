@@ -65,7 +65,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: cmake
-      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF -DGTENSOR_BUILD_CLIB=ON
+      run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF -DGTENSOR_ENABLE_CLIB=ON
       env:
         CXX: ${{ matrix.cxx }}
     - name: build
@@ -134,7 +134,7 @@ jobs:
     - name: gtensor install
       run: cmake --build build-install -v -t install
     - name: examples cmake
-      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON -DGTENSOR_BUILD_CLIB=ON
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON -DGTENSOR_ENABLE_CLIB=ON
       working-directory: ${{ github.workspace }}/examples
       env:
         gtensor_DIR: ${{ github.workspace }}/gtensor-install
@@ -178,15 +178,15 @@ jobs:
       env:
         CXX: g++-7
     - name: cmake thrust
-      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON
     - name: cmake thrust build
       run: cmake --build build-cuda -v
     - name: cmake thrust debug
-      run: cmake -S . -B build-cuda-debug -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+      run: cmake -S . -B build-cuda-debug -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON
     - name: cmake thrust debug build
       run: cmake --build build-cuda-debug -v
     - name: cmake nothrust
-      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON
     - name: cmake nothrust build
       run: cmake --build build-cuda-nothrust -v
     - name: GNU make setup gtensor subdir
@@ -213,7 +213,7 @@ jobs:
     - name: install core packages
       run: apt-get update -y && apt-get install -y wget git build-essential gnupg clang-9 sudo libnuma-dev
     - name: install extra ROCm packages
-      run: apt-get install -y rocthrust rocprim rocfft
+      run: apt-get install -y rocthrust rocprim rocfft rocblas hipfft rocsolver
     - name: install cmake
       run: |
         wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4-Linux-x86_64.sh'
@@ -229,15 +229,15 @@ jobs:
       env:
         CXX: clang++-9
     - name: cmake thrust
-      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+      run: cmake -S . -B build-hip -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON
     - name: cmake thrust build
       run: cmake --build build-hip -v
     - name: cmake thrust debug
-      run: cmake -S . -B build-hip-debug -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+      run: cmake -S . -B build-hip-debug -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON
     - name: cmake thrust debug build
       run: cmake --build build-hip-debug -v
     - name: cmake nothrust
-      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_BUILD_CLIB=ON -DGTENSOR_BUILD_BLAS=ON -DGTENSOR_BUILD_FFT=ON
+      run: cmake -S . -B build-hip-nothrust -DGTENSOR_DEVICE=hip -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON
     - name: cmake nothrust build
       run: cmake --build build-hip-nothrust -v
     - name: GNU make setup gtensor subdir

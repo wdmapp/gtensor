@@ -127,45 +127,47 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
 
   if (GTENSOR_USE_THRUST)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
+  endif()
 
-    add_library(rocthrust INTERFACE IMPORTED)
-    target_include_directories(rocthrust INTERFACE
-                               "${ROCM_PATH}/rocprim/include")
-    target_include_directories(rocthrust INTERFACE
-                               "${ROCM_PATH}/rocthrust/include")
+  # Note: always link thrust, used for reductions even when the gtensor
+  # internal data backend is used instead of thrust::device_vector
+  add_library(rocthrust INTERFACE IMPORTED)
+  target_include_directories(rocthrust INTERFACE
+                             "${ROCM_PATH}/rocprim/include")
+  target_include_directories(rocthrust INTERFACE
+                             "${ROCM_PATH}/rocthrust/include")
 
-    add_library(rocblas INTERFACE IMPORTED)
-    target_link_libraries(rocblas INTERFACE "${ROCM_PATH}/lib/librocblas.so")
-    target_include_directories(rocblas INTERFACE "${ROCM_PATH}/include")
+  add_library(rocblas INTERFACE IMPORTED)
+  target_link_libraries(rocblas INTERFACE "${ROCM_PATH}/lib/librocblas.so")
+  target_include_directories(rocblas INTERFACE "${ROCM_PATH}/include")
 
-    add_library(rocsolver INTERFACE IMPORTED)
-    target_link_libraries(rocsolver INTERFACE
-                          "${ROCM_PATH}/lib/librocsolver.so")
-    target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
+  add_library(rocsolver INTERFACE IMPORTED)
+  target_link_libraries(rocsolver INTERFACE
+                        "${ROCM_PATH}/lib/librocsolver.so")
+  target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
 
-    # NB: in ROCm, rocfft library / package was deprecated in favor of
-    # hipfft library / package.
-    add_library(hipfft INTERFACE IMPORTED)
-    target_link_libraries(hipfft INTERFACE "${ROCM_PATH}/lib/libhipfft.so")
-    target_include_directories(hipfft INTERFACE "${ROCM_PATH}/hipfft/include")
+  # NB: in ROCm, rocfft library / package was deprecated in favor of
+  # hipfft library / package.
+  add_library(hipfft INTERFACE IMPORTED)
+  target_link_libraries(hipfft INTERFACE "${ROCM_PATH}/lib/libhipfft.so")
+  target_include_directories(hipfft INTERFACE "${ROCM_PATH}/hipfft/include")
 
-    #find_package(rocprim REQUIRED CONFIG
-    #             PATHS "${ROCM_PATH}/rocprim")
-    #find_package(rocthrust REQUIRED CONFIG
-    #             PATHS "${ROCM_PATH}/rocthrust")
+  #find_package(rocprim REQUIRED CONFIG
+  #             PATHS "${ROCM_PATH}/rocprim")
+  #find_package(rocthrust REQUIRED CONFIG
+  #             PATHS "${ROCM_PATH}/rocthrust")
 
-    target_link_libraries(gtensor_hip INTERFACE rocthrust)
+  target_link_libraries(gtensor_hip INTERFACE rocthrust)
+  target_compile_options(gtensor_hip INTERFACE
+    $<$<COMPILE_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+  target_link_options(gtensor_hip INTERFACE
+    $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+
+  if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE
-      $<$<COMPILE_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+      $<$<COMPILE_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
     target_link_options(gtensor_hip INTERFACE
-      $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
-
-    if (HIP_GCC_TOOLCHAIN)
-      target_compile_options(gtensor_hip INTERFACE
-        $<$<COMPILE_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
-      target_link_options(gtensor_hip INTERFACE
-        $<$<LINK_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
-    endif()
+      $<$<LINK_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
   endif()
 
   # Enable to see the full hcc command and include search paths

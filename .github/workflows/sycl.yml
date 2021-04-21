@@ -27,7 +27,7 @@ jobs:
       run: apt-get update -y && apt-get install -y wget git build-essential gnupg clang-9
     - name: setup oneapi repos
       run: |
-        wget -q -O - 'https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB' | apt-key add -
+        wget -q -O - 'https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB' | apt-key add -
         echo "deb https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list
         echo 'deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu bionic-devel main' > /etc/apt/sources.list.d/intel-graphics.list
         apt-get update -y
