@@ -191,6 +191,14 @@ TEST(expression, abs)
   EXPECT_EQ(e1, (gt::gtensor<double, 1>{1., 2.}));
 }
 
+TEST(expression, abs_complex)
+{
+  using T = std::complex<double>;
+  gt::gtensor<T, 1> t1({T(3., 4.), -2.});
+  auto e1 = gt::abs(t1);
+  EXPECT_EQ(e1, (gt::gtensor<double, 1>{5., 2.}));
+}
+
 TEST(expression, sin)
 {
   gt::gtensor<double, 1> t1({0., M_PI / 2., M_PI, 3 * M_PI / 2.});
