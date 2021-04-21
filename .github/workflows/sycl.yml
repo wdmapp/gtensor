@@ -3,9 +3,9 @@ name: SYCL CI
 on:
   workflow_dispatch:
   push:
-    branches: [ master, 'pr/*' ]
+    branches: [ main, 'pr/*' ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   test-sycl:

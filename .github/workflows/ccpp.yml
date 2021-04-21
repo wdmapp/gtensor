@@ -2,9 +2,9 @@ name: C/C++ CI CPU
 
 on:
   push:
-    branches: [ master, 'pr/*' ]
+    branches: [ main, 'pr/*' ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
 
