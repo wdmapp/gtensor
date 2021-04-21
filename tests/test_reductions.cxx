@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <gtensor/complex.h>
 #include <gtensor/gtensor.h>
 #include <gtensor/reductions.h>
 
@@ -9,18 +10,28 @@
 
 using namespace gt::placeholders;
 
-TEST(reductions, sum_axis_to_2d)
+template <typename T>
+class Reductions : public testing::Test
+{};
+
+// FIXME, would be nice to test gt::complex, too, but that doesn't
+// compile right now
+using number_types = ::testing::Types<double, float>;
+TYPED_TEST_SUITE(Reductions, number_types);
+
+TYPED_TEST(Reductions, sum_axis_to_2d)
 {
-  gt::gtensor<double, 2> a({{11., 21., 31.}, {12., 22., 32.}});
+  using T = TypeParam;
+  gt::gtensor<T, 2> a({{11., 21., 31.}, {12., 22., 32.}});
   GT_DEBUG_VAR(a.shape());
 
-  gt::gtensor<double, 1> asum0(gt::shape(2));
-  gt::gtensor<double, 1> asum1(gt::shape(3));
+  gt::gtensor<T, 1> asum0(gt::shape(2));
+  gt::gtensor<T, 1> asum1(gt::shape(3));
 
   sum_axis_to(asum0, a, 0);
-  EXPECT_EQ(asum0, (gt::gtensor<double, 1>{63., 66.}));
+  EXPECT_EQ(asum0, (gt::gtensor<T, 1>{63., 66.}));
   sum_axis_to(asum1, a, 1);
-  EXPECT_EQ(asum1, (gt::gtensor<double, 1>{23., 43., 63.}));
+  EXPECT_EQ(asum1, (gt::gtensor<T, 1>{23., 43., 63.}));
 }
 
 TEST(reductions, sum_axis_to_2d_view)
