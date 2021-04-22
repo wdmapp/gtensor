@@ -392,6 +392,35 @@ MAKE_BINARY_OP(divide, /)
 
 #undef MAKE_BINARY_OP
 
+#define MAKE_UNARY_FUNC(NAME, FUNC)                                            \
+                                                                               \
+  namespace funcs                                                              \
+  {                                                                            \
+  struct NAME                                                                  \
+  {                                                                            \
+    template <typename T>                                                      \
+    GT_INLINE auto operator()(T a) const                                       \
+    {                                                                          \
+      return FUNC(a);                                                          \
+    }                                                                          \
+  };                                                                           \
+  }                                                                            \
+                                                                               \
+  template <typename E,                                                        \
+            typename Enable = std::enable_if_t<has_expression<E>::value>>      \
+  auto NAME(E&& e)                                                             \
+  {                                                                            \
+    return function(funcs::NAME{}, std::forward<E>(e));                        \
+  }
+
+MAKE_UNARY_FUNC(abs, std::abs)
+MAKE_UNARY_FUNC(sin, std::sin)
+MAKE_UNARY_FUNC(cos, std::cos)
+MAKE_UNARY_FUNC(tan, std::tan)
+MAKE_UNARY_FUNC(exp, std::exp)
+
+#undef MAKE_UNARY_FUNC
+
 // ======================================================================
 // ggenerator
 
