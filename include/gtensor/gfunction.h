@@ -392,6 +392,23 @@ MAKE_BINARY_OP(divide, /)
 
 #undef MAKE_BINARY_OP
 
+namespace detail
+{
+template <typename T>
+GT_INLINE auto drop_device_reference(T a)
+{
+  return a;
+}
+
+#ifdef GTENSOR_USE_THRUST
+template <typename T>
+GT_INLINE auto drop_device_reference(thrust::device_reference<T> a)
+{
+  return T(a);
+}
+#endif
+} // namespace detail
+
 #define MAKE_UNARY_FUNC(NAME, FUNC)                                            \
                                                                                \
   namespace funcs                                                              \
@@ -401,7 +418,7 @@ MAKE_BINARY_OP(divide, /)
     template <typename T>                                                      \
     GT_INLINE auto operator()(T a) const                                       \
     {                                                                          \
-      return FUNC(a);                                                          \
+      return FUNC(detail::drop_device_reference(a));                           \
     }                                                                          \
   };                                                                           \
   }                                                                            \

@@ -327,6 +327,21 @@ TEST(expression, host_index_expression)
 
 #ifdef GTENSOR_HAVE_DEVICE
 
+TEST(expression, device_abs)
+{
+  gt::gtensor_device<double, 1> t1({1., -2.});
+  auto e1 = gt::abs(t1);
+  EXPECT_EQ(e1, (gt::gtensor_device<double, 1>{1., 2.}));
+}
+
+TEST(expression, device_abs_complex)
+{
+  using T = std::complex<double>;
+  gt::gtensor_device<T, 1> t1({T(3., 4.), -2.});
+  auto e1 = gt::abs(t1);
+  EXPECT_EQ(e1, (gt::gtensor_device<double, 1>{5., 2.}));
+}
+
 TEST(expression, device_eval)
 {
   gt::gtensor_device<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
