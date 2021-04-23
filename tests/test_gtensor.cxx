@@ -566,6 +566,24 @@ TEST(gtensor, device_assign_expression)
             (gt::gtensor_device<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
 
+TEST(gtensor, device_assign_expression_4d)
+{
+  auto a = gt::empty_device<double>(gt::shape(2, 3, 4, 5));
+  auto h_a = gt::empty<double>(gt::shape(2, 3, 4, 5));
+  for (int i = 0; i < h_a.size(); i++) {
+    h_a.data()[i] = double(i);
+  }
+  gt::copy(h_a, a);
+
+  auto b = a + a;
+
+  auto h_b = gt::empty<double>(gt::shape(2, 3, 4, 5));
+  gt::copy(gt::eval(b), h_b);
+  for (int i = 0; i < h_b.size(); i++) {
+    EXPECT_EQ(h_b.data()[i], 2. * i);
+  }
+}
+
 TEST(gtensor, device_move_ctor)
 {
   gt::gtensor<double, 1> h_a{11., 12., 13.};
