@@ -125,20 +125,6 @@ using device_storage = gtensor_storage<T, device_allocator<T>, device_ops<T>>;
 #endif
 
 template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dest, size_type count)
-  {
-    return host_allocator<T>::copy(src, dest, count);
-  }
-};
-
-template <typename T>
 using host_storage = gtensor_storage<T, host_allocator<T>, host_ops<T>>;
 
 template <typename T, typename A, typename O>

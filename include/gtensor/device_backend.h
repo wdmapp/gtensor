@@ -166,8 +166,17 @@ struct host_allocator
       gtGpuCheck(cudaFreeHost(p));
     }
   }
+};
 
-  static void copy(const T* src, T* dst, gt::size_type count)
+template <typename T>
+struct host_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
   {
     device_copy_hh(src, dst, count);
   }
@@ -311,8 +320,17 @@ struct host_allocator
       gtGpuCheck(hipHostFree(p));
     }
   }
+};
 
-  static void copy(const T* src, T* dst, gt::size_type count)
+template <typename T>
+struct host_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
   {
     device_copy_hh(src, dst, count);
   }
@@ -463,6 +481,20 @@ struct host_allocator
 };
 */
 
+template <typename T>
+struct host_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
+  {
+    std::memcpy(dst, src, sizeof(value_type) * count);
+  }
+};
+
 #endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
 
 #ifdef GTENSOR_DEVICE_HOST
@@ -491,10 +523,19 @@ struct host_allocator
       free(p);
     }
   }
+};
 
-  static void copy(const T* src, T* dst, gt::size_type count)
+template <typename T>
+struct host_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
   {
-    std::memcpy(dst, src, count * sizeof(T));
+    std::memcpy(dst, src, sizeof(value_type) * count);
   }
 };
 
