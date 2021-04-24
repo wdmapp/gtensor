@@ -120,8 +120,17 @@ struct device_allocator
       gtGpuCheck(cudaFree(p));
     }
   }
+};
 
-  static void copy(const T* src, T* dst, gt::size_type count)
+template <typename T>
+struct device_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dd(src, dst, count);
   }
@@ -274,8 +283,17 @@ struct device_allocator
       gtGpuCheck(hipFree(p));
     }
   }
+};
 
-  static void copy(const T* src, T* dst, gt::size_type count)
+template <typename T>
+struct device_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dd(src, dst, count);
   }
@@ -403,8 +421,17 @@ struct device_allocator
       cl::sycl::free(p, gt::backend::sycl::get_queue());
     }
   }
+};
 
-  static void copy(const T* src, T* dst, gt::size_type count)
+template <typename T>
+struct device_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dd(src, dst, count);
   }

@@ -106,20 +106,6 @@ private:
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dest, size_type count)
-  {
-    return device_allocator<T>::copy(src, dest, count);
-  }
-};
-
-template <typename T>
 using device_storage = gtensor_storage<T, device_allocator<T>, device_ops<T>>;
 
 #endif
