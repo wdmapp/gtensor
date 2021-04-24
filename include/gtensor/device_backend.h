@@ -81,12 +81,6 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
     cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
 }
 
-template <typename T>
-inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
-}
-
 inline void device_memset(void* dst, int value, gt::size_type nbytes)
 {
   gtGpuCheck(cudaMemset(dst, value, nbytes));
@@ -144,11 +138,6 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
   gtGpuCheck(
     hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
 }
-template <typename T>
-inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
-}
 
 inline void device_memset(void* dst, int value, gt::size_type nbytes)
 {
@@ -182,12 +171,6 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memcpy(dst, src, sizeof(T) * count);
-}
-
-template <typename T>
-inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
-{
-  device_copy(src, dst, count);
 }
 
 inline void device_memset(void* dst, int value, gt::size_type nbytes)
@@ -315,6 +298,11 @@ struct ops
   {
     gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
   }
+
+  static void copy_hd(const T* src, T* dst, gt::size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+  }
 };
 
 template <typename T>
@@ -381,6 +369,11 @@ struct ops
   };
 
   static void copy_dh(const T* src, const T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+  }
+
+  static void copy_hd(const T* src, T* dst, gt::size_type count)
   {
     gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
   }
@@ -477,6 +470,11 @@ struct ops
   // };
 
   static void copy_dh(const T* src, const T* dst, size_type count)
+  {
+    device_copy(src, dst, count);
+  }
+
+  static void copy_hd(const T* src, const T* dst, size_type count)
   {
     device_copy(src, dst, count);
   }

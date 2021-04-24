@@ -372,7 +372,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   h_coeff[3] = 2.0 / 3.0;
   h_coeff[4] = -1.0 / 12.0;
 
-  gt::backend::device_copy_hd(h_coeff, d_coeff, ncoeff);
+  gt::backend::ops<Real>::copy_hd(h_coeff, d_coeff, ncoeff);
 
 #define ARRIDX(a, b, c) (c * lj0 * lx0 + b * lx0 + a)
 
@@ -393,13 +393,13 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
     }
   }
 
-  gt::backend::device_copy_hd(h_arr, d_arr, arr_size);
+  gt::backend::ops<Complex>::copy_hd(h_arr, d_arr, arr_size);
 
   for (j = 0; j < lj0; j++) {
     h_ikj[j] = Complex(0.0, (2.0 * j * pi));
   }
 
-  gt::backend::device_copy_hd(h_ikj, d_ikj, ikj_size);
+  gt::backend::ops<Complex>::copy_hd(h_ikj, d_ikj, ikj_size);
 
   // cpu reference
   for (int i = 0; i < time_warmup_count; i++) {
