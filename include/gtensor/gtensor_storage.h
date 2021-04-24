@@ -107,14 +107,12 @@ private:
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-using device_storage =
-  gtensor_storage<T, device_allocator<T>, typename ops<T>::device>;
+using device_storage = gtensor_storage<T, device_allocator<T>, ops::device>;
 
 #endif
 
 template <typename T>
-using host_storage =
-  gtensor_storage<T, host_allocator<T>, typename ops<T>::host>;
+using host_storage = gtensor_storage<T, host_allocator<T>, ops::host>;
 
 template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::resize(
@@ -191,14 +189,14 @@ template <typename T>
 void copy(const device_storage<T>& d, host_storage<T>& h)
 {
   assert(h.size() == d.size());
-  ops<T>::copy_dh(d.data(), h.data(), d.size());
+  ops::copy_dh(d.data(), h.data(), d.size());
 }
 
 template <typename T>
 void copy(const host_storage<T>& h, device_storage<T>& d)
 {
   assert(h.size() == d.size());
-  ops<T>::copy_hd(h.data(), d.data(), h.size());
+  ops::copy_hd(h.data(), d.data(), h.size());
 }
 
 #endif
