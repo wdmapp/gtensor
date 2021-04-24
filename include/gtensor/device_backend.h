@@ -104,20 +104,6 @@ inline void device_memset(void* dst, int value, gt::size_type nbytes)
   gtGpuCheck(cudaMemset(dst, value, nbytes));
 }
 
-template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy_dh(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dh(src, dst, count);
-  }
-};
-
 #elif defined(GTENSOR_DEVICE_HIP)
 
 inline void device_synchronize()
@@ -194,20 +180,6 @@ inline void device_memset(void* dst, int value, gt::size_type nbytes)
   gtGpuCheck(hipMemset(dst, value, nbytes));
 }
 
-template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy_dh(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dh(src, dst, count);
-  }
-};
-
 #elif defined(GTENSOR_DEVICE_SYCL)
 
 inline void device_synchronize()
@@ -260,20 +232,6 @@ inline void device_memset(void* dst, int value, gt::size_type nbytes)
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memset(dst, value, nbytes);
 }
-
-template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy_dh(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dh(src, dst, count);
-  }
-};
 
 #endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
 
@@ -388,6 +346,11 @@ struct ops
       device_copy_hh(src, dst, count);
     }
   };
+
+  static void copy_dh(const T* src, T* dst, size_type count)
+  {
+    device_copy_dh(src, dst, count);
+  }
 };
 
 template <typename T>
@@ -451,6 +414,11 @@ struct ops
       device_copy_hh(src, dst, count);
     }
   };
+
+  static void copy_dh(const T* src, const T* dst, size_type count)
+  {
+    device_copy_dh(src, dst, count);
+  }
 };
 
 template <typename T>
@@ -543,6 +511,10 @@ struct ops
   //   }
   // };
 
+  static void copy_dh(const T* src, const T* dst, size_type count)
+  {
+    device_copy_dh(src, dst, count);
+  }
 }; // namespace sycl
 
 template <typename T>
