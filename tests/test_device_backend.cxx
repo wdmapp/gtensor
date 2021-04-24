@@ -46,7 +46,7 @@ TEST(device_backend, managed_allocate)
   for (int i = 0; i < N; i++) {
     EXPECT_EQ(a[i], 1.0 + ((double)i) / N);
   }
-  gt::backend::managed_allocator<double>{}.deallocate(a);
+  gt::backend::managed_allocator<double>{}.deallocate(a, N);
 }
 
 #endif

@@ -402,14 +402,14 @@ struct device_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(size_type count)
+  T* allocate(size_type n)
   {
     T* p;
-    gtGpuCheck(cudaMalloc(&p, sizeof(T) * count));
+    gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
     return p;
   }
 
-  void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
+  void deallocate(T* p, size_type n = 0) { gtGpuCheck(cudaFree(p)); }
 };
 
 template <typename T>
@@ -418,14 +418,14 @@ struct managed_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(size_t count)
+  T* allocate(size_t n)
   {
     T* p;
-    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * count));
+    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
     return p;
   }
 
-  void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
+  void deallocate(T* p, size_type n = 0) { gtGpuCheck(cudaFree(p)); }
 };
 
 template <typename T>
@@ -434,14 +434,14 @@ struct host_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
     T* p;
-    gtGpuCheck(cudaMallocHost(&p, sizeof(T) * count));
+    gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
     return p;
   }
 
-  void deallocate(T* p) { gtGpuCheck(cudaFreeHost(p)); }
+  void deallocate(T* p, size_type n = 0) { gtGpuCheck(cudaFreeHost(p)); }
 };
 
 } // namespace cuda
@@ -462,14 +462,14 @@ struct device_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(size_type count)
+  T* allocate(size_type n)
   {
     T* p;
-    gtGpuCheck(hipMalloc(&p, sizeof(T) * count));
+    gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
     return p;
   }
 
-  void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
+  void deallocate(T* p, size_type n = 0) { gtGpuCheck(hipFree(p)); }
 };
 
 template <typename T>
@@ -478,14 +478,14 @@ struct managed_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
     T* p;
-    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * count));
+    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
     return p;
   }
 
-  void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
+  void deallocate(T* p, size_type n = 0) { gtGpuCheck(hipFree(p)); }
 };
 
 template <typename T>
@@ -494,14 +494,14 @@ struct host_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
     T* p;
-    gtGpuCheck(hipHostMalloc(&p, sizeof(T) * count, hipHostMallocDefault));
+    gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n, hipHostMallocDefault));
     return p;
   }
 
-  void deallocate(T* p) { gtGpuCheck(hipHostFree(p)); }
+  void deallocate(T* p, size_type n = 0) { gtGpuCheck(hipHostFree(p)); }
 };
 
 } // namespace hip
@@ -522,12 +522,15 @@ struct device_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
-    return cl::sycl::malloc_device<T>(count, gt::backend::sycl::get_queue());
+    return cl::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
   }
 
-  void deallocate(T* p) { cl::sycl::free(p, gt::backend::sycl::get_queue()); }
+  void deallocate(T* p, size_type n = 0)
+  {
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
+  }
 };
 
 } // namespace sycl
@@ -538,12 +541,15 @@ struct managed_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
-    return cl::sycl::malloc_shared<T>(count, gt::backend::sycl::get_queue());
+    return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
   }
 
-  void deallocate(T* p) { cl::sycl::free(p, gt::backend::sycl::get_queue()); }
+  void deallocate(T* p, size_type n = 0)
+  {
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
+  }
 };
 
 // The host allocation type in SYCL allows device code to directly access
@@ -555,9 +561,9 @@ struct host_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
-    T* p = static_cast<T*>(malloc(sizeof(T) * count));
+    T* p = static_cast<T*>(malloc(sizeof(T) * n));
     if (p == nullptr) {
       std::cerr << "host allocate failed" << std::endl;
       std::abort();
@@ -565,7 +571,7 @@ struct host_allocator
     return p;
   }
 
-  void deallocate(T* p) { free(p); }
+  void deallocate(T* p, size_type n = 0) { free(p); }
 };
 
 /*
@@ -598,9 +604,9 @@ struct host_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(gt::size_type count)
+  T* allocate(gt::size_type n)
   {
-    T* p = static_cast<T*>(malloc(sizeof(T) * count));
+    T* p = static_cast<T*>(malloc(sizeof(T) * n));
     if (p == nullptr) {
       std::cerr << "host allocate failed" << std::endl;
       std::abort();
@@ -608,7 +614,7 @@ struct host_allocator
     return p;
   }
 
-  void deallocate(T* p) { free(p); }
+  void deallocate(T* p, size_type n = 0) { free(p); }
 };
 
 } // namespace host

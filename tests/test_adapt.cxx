@@ -28,7 +28,7 @@ TEST(adapt, adapt_complex)
   EXPECT_EQ(a[0], (T{1., 1.}));
   EXPECT_EQ(a[S - 1], (T{1., -1.}));
 
-  gt::backend::host_allocator<T>{}.deallocate(a);
+  gt::backend::host_allocator<T>{}.deallocate(a, S);
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -49,7 +49,7 @@ TEST(adapt, adapt_device)
 
   EXPECT_EQ(aview, h_expected);
 
-  gt::backend::device_allocator<int>{}.deallocate(a);
+  gt::backend::device_allocator<int>{}.deallocate(a, N);
 }
 
 #endif // GTENSOR_HAVE_DEVICE

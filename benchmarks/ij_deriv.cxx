@@ -507,16 +507,16 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   // cleanup
   free(ref_darr);
 
-  gt::backend::host_allocator<Complex>{}.deallocate(h_arr);
-  gt::backend::device_allocator<Complex>{}.deallocate(d_arr);
+  gt::backend::host_allocator<Complex>{}.deallocate(h_arr, arr_size);
+  gt::backend::device_allocator<Complex>{}.deallocate(d_arr, arr_size);
 
-  gt::backend::host_allocator<Complex>{}.deallocate(h_darr);
-  gt::backend::device_allocator<Complex>{}.deallocate(d_darr);
+  gt::backend::host_allocator<Complex>{}.deallocate(h_darr, arr_size);
+  gt::backend::device_allocator<Complex>{}.deallocate(d_darr, arr_size);
 
-  gt::backend::host_allocator<Real>{}.deallocate(h_coeff);
+  gt::backend::host_allocator<Real>{}.deallocate(h_coeff, ncoeff);
 
-  gt::backend::host_allocator<Complex>{}.deallocate(h_ikj);
-  gt::backend::device_allocator<Complex>{}.deallocate(d_ikj);
+  gt::backend::host_allocator<Complex>{}.deallocate(h_ikj, ikj_size);
+  gt::backend::device_allocator<Complex>{}.deallocate(d_ikj, ikj_size);
 }
 
 int main(int argc, char** argv)

@@ -40,7 +40,7 @@ public:
   }
   gtensor_storage() : gtensor_storage(0) {}
 
-  ~gtensor_storage() { allocator_.deallocate(data_); }
+  ~gtensor_storage() { allocator_.deallocate(data_, capacity_); }
 
   // copy and move constructors
   gtensor_storage(const gtensor_storage& dv)
@@ -130,7 +130,7 @@ inline void gtensor_storage<T, A, O>::resize(
       size_type copy_size = std::min(size_, new_size);
       ops::copy(data_, new_data, copy_size);
     }
-    allocator_.deallocate(data_);
+    allocator_.deallocate(data_, capacity_);
     data_ = new_data;
     capacity_ = size_ = new_size;
   } else {
