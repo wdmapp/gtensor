@@ -49,7 +49,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      allocator_type::copy(dv.data_, data_, size_);
+      ops::copy(dv.data_, data_, size_);
     }
   }
 
@@ -69,7 +69,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      allocator_type::copy(dv.data_, data_, size_);
+      ops::copy(dv.data_, data_, size_);
     }
 
     return *this;
@@ -104,15 +104,39 @@ private:
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
+
 template <typename T>
-struct device_ops;
+struct device_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dest, size_type count)
+  {
+    return device_allocator<T>::copy(src, dest, count);
+  }
+};
 
 template <typename T>
 using device_storage = gtensor_storage<T, device_allocator<T>, device_ops<T>>;
+
 #endif
 
 template <typename T>
-struct host_ops;
+struct host_ops
+{
+  using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using size_type = gt::size_type;
+
+  static void copy(const_pointer src, pointer dest, size_type count)
+  {
+    return host_allocator<T>::copy(src, dest, count);
+  }
+};
 
 template <typename T>
 using host_storage = gtensor_storage<T, host_allocator<T>, host_ops<T>>;
@@ -131,7 +155,7 @@ inline void gtensor_storage<T, A, O>::resize(
     pointer new_data = allocator_type::allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      allocator_type::copy(data_, new_data, copy_size);
+      ops::copy(data_, new_data, copy_size);
     }
     allocator_type::deallocate(data_);
     data_ = new_data;
