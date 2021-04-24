@@ -613,26 +613,7 @@ namespace host
 {
 
 template <typename T>
-struct ops
-{
-  struct host
-  {
-    static T* allocate(size_type n)
-    {
-      T* p = static_cast<T*>(malloc(sizeof(T) * n));
-      if (p == nullptr) {
-        std::cerr << "host allocate failed" << std::endl;
-        std::abort();
-      }
-      return p;
-    }
-
-    static void deallocate(T* p) { free(p); }
-  };
-};
-
-template <typename T>
-using host_allocator = wrap_allocator<T, typename ops<T>::host>;
+using host_allocator = std::allocator<T>;
 
 }; // namespace host
 
