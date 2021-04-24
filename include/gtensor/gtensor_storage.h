@@ -15,7 +15,7 @@ namespace backend
  * Note that this is a small subset of the features in thrust::device_vector.
  * In particular, iterators are not yet supported.
  */
-template <typename T, typename Allocator>
+template <typename T, typename Allocator, typename Ops>
 class gtensor_storage
 {
 public:
@@ -29,6 +29,7 @@ public:
   using const_reference =
     std::add_lvalue_reference_t<std::add_const_t<element_type>>;
   using size_type = gt::size_type;
+  using ops = Ops;
 
   gtensor_storage(size_type count)
     : data_(nullptr), size_(count), capacity_(count)
@@ -104,15 +105,21 @@ private:
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T>
-using device_storage = gtensor_storage<T, device_allocator<T>>;
+struct device_ops;
+
+template <typename T>
+using device_storage = gtensor_storage<T, device_allocator<T>, device_ops<T>>;
 #endif
 
 template <typename T>
-using host_storage = gtensor_storage<T, host_allocator<T>>;
+struct host_ops;
 
-template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size,
-                                          bool discard)
+template <typename T>
+using host_storage = gtensor_storage<T, host_allocator<T>, host_ops<T>>;
+
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::resize(
+  gtensor_storage::size_type new_size, bool discard)
 {
   if (capacity_ == 0) {
     if (new_size == 0) {
@@ -135,15 +142,16 @@ inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size,
   }
 }
 
-template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize_discard(
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::resize_discard(
   gtensor_storage::size_type new_size)
 {
   resize(new_size, true);
 }
 
-template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size)
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::resize(
+  gtensor_storage::size_type new_size)
 {
   resize(new_size, false);
 }
@@ -152,8 +160,8 @@ inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size)
 // equality operators (for testing)
 
 template <typename T>
-bool operator==(const gtensor_storage<T, host_allocator<T>>& v1,
-                const gtensor_storage<T, host_allocator<T>>& v2)
+bool operator==(const gtensor_storage<T, host_allocator<T>, host_ops<T>>& v1,
+                const gtensor_storage<T, host_allocator<T>, host_ops<T>>& v2)
 {
   if (v1.size() != v2.size()) {
     return false;
@@ -169,8 +177,9 @@ bool operator==(const gtensor_storage<T, host_allocator<T>>& v1,
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
-                const gtensor_storage<T, device_allocator<T>>& v2)
+bool operator==(
+  const gtensor_storage<T, device_allocator<T>, device_ops<T>>& v1,
+  const gtensor_storage<T, device_allocator<T>, device_ops<T>>& v2)
 {
   if (v1.size() != v2.size()) {
     return false;
@@ -189,9 +198,9 @@ bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
 
 #endif
 
-template <typename T, typename A>
-bool operator!=(const gtensor_storage<T, A>& v1,
-                const gtensor_storage<T, A>& v2)
+template <typename T, typename A, typename O>
+bool operator!=(const gtensor_storage<T, A, O>& v1,
+                const gtensor_storage<T, A, O>& v2)
 {
   return !(v1 == v2);
 }
