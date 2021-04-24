@@ -153,11 +153,6 @@ struct managed_allocator
   }
 
   void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
-
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
 };
 
 template <typename T>
@@ -315,11 +310,6 @@ struct managed_allocator
   }
 
   void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
-
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
 };
 
 template <typename T>
@@ -450,11 +440,6 @@ struct managed_allocator
   }
 
   void deallocate(T* p) { cl::sycl::free(p, gt::backend::sycl::get_queue()); }
-
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
 };
 
 // The host allocation type in SYCL allows device code to directly access
@@ -476,12 +461,7 @@ struct host_allocator
     return p;
   }
 
-  static void deallocate(T* p) { free(p); }
-
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    std::memcpy(dst, src, sizeof(T) * count);
-  }
+  void deallocate(T* p) { free(p); }
 };
 
 /*
