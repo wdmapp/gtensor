@@ -20,6 +20,9 @@
 namespace gt
 {
 
+namespace allocator
+{
+
 // ======================================================================
 // caching_allocator
 
@@ -128,8 +131,6 @@ inline bool operator!=(const caching_allocator<T, AT>& a,
   return !(a == b);
 }
 
-namespace allocator
-{
 #ifdef GTENSOR_HAVE_DEVICE
 #ifdef GTENSOR_USE_THRUST
 
@@ -144,6 +145,7 @@ using device_allocator = caching_allocator<T, thrust::device_allocator<T>>;
 
 #endif
 #endif
+
 } // namespace allocator
 
 // ======================================================================
