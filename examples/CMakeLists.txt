@@ -20,6 +20,7 @@ if(NOT TARGET gtensor::gtensor)
     file(MAKE_DIRECTORY external/gtensor)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../include
               ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt
+              ${CMAKE_CURRENT_SOURCE_DIR}/../cmake
               ${CMAKE_CURRENT_SOURCE_DIR}/../gtensor-config.cmake.in
          DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/external/gtensor
          PATTERN examples EXCLUDE)
