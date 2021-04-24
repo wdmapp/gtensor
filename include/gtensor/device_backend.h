@@ -112,28 +112,9 @@ struct device_ops
   using const_pointer = const T*;
   using size_type = gt::size_type;
 
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
-
   static void copy_dh(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dh(src, dst, count);
-  }
-};
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_hh(src, dst, count);
   }
 };
 
@@ -221,28 +202,9 @@ struct device_ops
   using const_pointer = const T*;
   using size_type = gt::size_type;
 
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
-
   static void copy_dh(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dh(src, dst, count);
-  }
-};
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_hh(src, dst, count);
   }
 };
 
@@ -307,28 +269,9 @@ struct device_ops
   using const_pointer = const T*;
   using size_type = gt::size_type;
 
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
-
   static void copy_dh(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dh(src, dst, count);
-  }
-};
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    std::memcpy(dst, src, sizeof(value_type) * count);
   }
 };
 
@@ -340,20 +283,6 @@ inline void device_synchronize()
 {
   // no need to synchronize on host
 }
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    std::memcpy(dst, src, sizeof(value_type) * count);
-  }
-};
 
 #endif
 
@@ -411,6 +340,9 @@ namespace cuda
 template <typename T>
 struct ops
 {
+  using value_type = T;
+  using size_type = gt::size_type;
+
   struct device
   {
     static T* allocate(size_type n)
@@ -421,6 +353,11 @@ struct ops
     }
 
     static void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
+
+    static void copy(const T* src, T* dst, size_type count)
+    {
+      device_copy_dd(src, dst, count);
+    }
   };
 
   struct managed
@@ -445,6 +382,11 @@ struct ops
     }
 
     static void deallocate(T* p) { gtGpuCheck(cudaFreeHost(p)); }
+
+    static void copy(const T* src, T* dst, size_type count)
+    {
+      device_copy_hh(src, dst, count);
+    }
   };
 };
 
@@ -503,6 +445,11 @@ struct ops
     }
 
     static void deallocate(T* p) { gtGpuCheck(hipHostFree(p)); }
+
+    static void copy(const_pointer src, pointer dst, size_type count)
+    {
+      device_copy_hh(src, dst, count);
+    }
   };
 };
 
@@ -538,6 +485,11 @@ struct ops
     {
       cl::sycl::free(p, gt::backend::sycl::get_queue());
     }
+
+    static void copy(const_pointer src, pointer dst, size_type count)
+    {
+      device_copy_dd(src, dst, count);
+    }
   };
 
   struct managed
@@ -570,6 +522,11 @@ struct ops
     }
 
     static void deallocate(T* p) { free(p); }
+
+    static void copy(const_pointer src, pointer dst, size_type count)
+    {
+      std::memcpy(dst, src, sizeof(value_type) * count);
+    }
   };
 
   // template <typename T>
@@ -585,7 +542,8 @@ struct ops
   //     cl::sycl::free(p, gt::backend::sycl::get_queue());
   //   }
   // };
-};
+
+}; // namespace sycl
 
 template <typename T>
 using device_allocator = wrap_allocator<T, typename ops<T>::device>;
@@ -602,6 +560,21 @@ using host_allocator = wrap_allocator<T, typename ops<T>::host>;
 
 namespace host
 {
+
+template <typename T>
+struct ops
+{
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  struct host
+  {
+    static void copy(const T* src, T* dst, size_type count)
+    {
+      std::memcpy(dst, src, sizeof(value_type) * count);
+    }
+  };
+};
 
 template <typename T>
 using host_allocator = std::allocator<T>;
