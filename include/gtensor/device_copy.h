@@ -88,7 +88,7 @@ struct copy<space::host, space::host>
   template <typename T>
   static void run(const T* src, T* dest, std::size_t count)
   {
-    gt::backend::device_copy_hh(src, dest, count);
+    gt::backend::ops<T>::host::copy(src, dest, count);
   }
 };
 
