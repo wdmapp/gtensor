@@ -49,7 +49,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      ops::copy(dv.data_, data_, size_);
+      backend::ops::copy<space_type, space_type>(dv.data_, data_, size_);
     }
   }
 
@@ -189,14 +189,14 @@ template <typename T>
 void copy(const device_storage<T>& d, host_storage<T>& h)
 {
   assert(h.size() == d.size());
-  ops::copy_dh(d.data(), h.data(), d.size());
+  ops::copy<space::device, space::host>(d.data(), h.data(), d.size());
 }
 
 template <typename T>
 void copy(const host_storage<T>& h, device_storage<T>& d)
 {
   assert(h.size() == d.size());
-  ops::copy_hd(h.data(), d.data(), h.size());
+  ops::copy<space::host, space::device>(h.data(), d.data(), h.size());
 }
 
 #endif

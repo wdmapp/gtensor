@@ -25,6 +25,19 @@
 namespace gt
 {
 
+namespace space
+{
+
+struct host;
+
+#ifdef GTENSOR_HAVE_DEVICE
+struct device;
+#else
+using device = host;
+#endif
+
+} // namespace space
+
 namespace backend
 {
 
@@ -223,6 +236,34 @@ struct wrap_allocator
 namespace cuda
 {
 
+namespace detail
+{
+
+template <typename S_src, typename S_to>
+struct copy;
+
+template <>
+struct copy<space::device, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
+  }
+};
+
+template <>
+struct copy<space::host, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+  }
+};
+
+} // namespace detail
+
 struct ops
 {
   using size_type = gt::size_type;
@@ -291,16 +332,10 @@ struct ops
     }
   };
 
-  template <typename T>
-  static void copy_dh(const T* src, T* dst, size_type count)
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
-    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
-  }
-
-  template <typename T>
-  static void copy_hd(const T* src, T* dst, gt::size_type count)
-  {
-    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+    return detail::copy<S_src, S_to>::run(src, dst, count);
   }
 };
 
@@ -321,6 +356,34 @@ using host_allocator = wrap_allocator<T, typename ops::host>;
 
 namespace hip
 {
+
+namespace detail
+{
+
+template <typename S_src, typename S_to>
+struct copy;
+
+template <>
+struct copy<space::device, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+  }
+};
+
+template <>
+struct copy<space::host, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+  }
+};
+
+} // namespace detail
 
 struct ops
 {
@@ -382,16 +445,10 @@ struct ops
     }
   };
 
-  template <typename T>
-  static void copy_dh(const T* src, const T* dst, size_type count)
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
-    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
-  }
-
-  template <typename T>
-  static void copy_hd(const T* src, T* dst, gt::size_type count)
-  {
-    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+    return detail::copy<S_src, S_to>::run(src, dst, count);
   }
 };
 
@@ -412,6 +469,34 @@ using host_allocator = wrap_allocator<T, typename ops::host>;
 
 namespace sycl
 {
+
+namespace detail
+{
+
+template <typename S_src, typename S_to>
+struct copy;
+
+template <>
+struct copy<space::device, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    device_copy(src, dst, count);
+  }
+};
+
+template <>
+struct copy<space::host, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    device_copy(src, dst, count);
+  }
+};
+
+} // namespace detail
 
 struct ops
 {
@@ -495,16 +580,10 @@ struct ops
   //   }
   // };
 
-  template <typename T>
-  static void copy_dh(const T* src, const T* dst, size_type count)
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, gt::size_type count)
   {
-    device_copy(src, dst, count);
-  }
-
-  template <typename T>
-  static void copy_hd(const T* src, const T* dst, size_type count)
-  {
-    device_copy(src, dst, count);
+    return detail::copy<S_src, S_to>::run(src, dst, count);
   }
 };
 
@@ -528,14 +607,11 @@ struct ops
 {
   using size_type = gt::size_type;
 
-  struct host
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, size_type count)
   {
-    template <typename T>
-    static void copy(const T* src, T* dst, size_type count)
-    {
-      std::memcpy(dst, src, sizeof(T) * count);
-    }
-  };
+    std::memcpy(dst, src, sizeof(T) * count);
+  }
 };
 
 template <typename T>

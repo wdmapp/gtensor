@@ -82,12 +82,14 @@ void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)
 
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::ops::copy_dh((uint8_t*)src, (uint8_t*)dst, nbytes);
+  gt::backend::ops::copy<gt::space::device, gt::space::host>(
+    (uint8_t*)src, (uint8_t*)dst, nbytes);
 }
 
 void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::ops::copy_hd((uint8_t*)src, (uint8_t*)dst, nbytes);
+  gt::backend::ops::copy<gt::space::host, gt::space::device>(
+    (uint8_t*)src, (uint8_t*)dst, nbytes);
 }
 
 void gt_backend_memset(void* dst, int value, size_t nbytes)
