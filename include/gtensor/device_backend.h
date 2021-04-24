@@ -397,7 +397,7 @@ struct wrap_allocator
   using size_type = gt::size_type;
 
   T* allocate(size_type n) { return A::allocate(n); }
-  void deallocate(T* p, size_type n = 0) { A::deallocate(p); }
+  void deallocate(T* p, size_type n) { A::deallocate(p); }
 };
 
 // ======================================================================
