@@ -179,6 +179,13 @@ host_storage<T> host_mirror(const device_storage<T>& d)
 }
 
 template <typename T>
+void copy(const device_storage<T>& d, host_storage<T>& h)
+{
+  assert(h.size() == d.size());
+  device_ops<T>::copy_dh(d.data(), h.data(), d.size());
+}
+
+template <typename T>
 bool operator==(const device_storage<T>& v1, const device_storage<T>& v2)
 {
   if (v1.size() != v2.size()) {
@@ -186,9 +193,9 @@ bool operator==(const device_storage<T>& v1, const device_storage<T>& v2)
   }
   auto&& h1 = host_mirror(v1);
   auto&& h2 = host_mirror(v2);
-  device_ops<T>::copy_dh(v1.data(), h1.data(), v1.size());
-  device_ops<T>::copy_dh(v2.data(), h2.data(), v2.size());
-  for (int i = 0; i < v1.size(); i++) {
+  copy(v1, h1);
+  copy(v2, h2);
+  for (int i = 0; i < h1.size(); i++) {
     if (h1[i] != h2[i]) {
       return false;
     }
