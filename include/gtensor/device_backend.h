@@ -452,9 +452,6 @@ template <typename T>
 using device_allocator = wrap_allocator<T, typename ops<T>::device>;
 
 template <typename T>
-using managed_allocator = wrap_allocator<T, typename ops<T>::managed>;
-
-template <typename T>
 using host_allocator = wrap_allocator<T, typename ops<T>::host>;
 
 } // namespace cuda
@@ -511,9 +508,6 @@ struct ops
 
 template <typename T>
 using device_allocator = wrap_allocator<T, typename ops<T>::device>;
-
-template <typename T>
-using managed_allocator = wrap_allocator<T, typename ops<T>::managed>;
 
 template <typename T>
 using host_allocator = wrap_allocator<T, typename ops<T>::host>;
@@ -595,9 +589,6 @@ struct ops
 
 template <typename T>
 using device_allocator = wrap_allocator<T, typename ops<T>::device>;
-
-template <typename T>
-using managed_allocator = wrap_allocator<T, typename ops<T>::managed>;
 
 template <typename T>
 using host_allocator = wrap_allocator<T, typename ops<T>::host>;
