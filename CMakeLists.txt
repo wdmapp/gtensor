@@ -239,7 +239,7 @@ add_library(gtensor ALIAS gtensor_${GTENSOR_DEVICE})
 add_library(gtensor::gtensor ALIAS gtensor_${GTENSOR_DEVICE})
 
 include(CTest)
-if (BUILD_TESTING AND IS_MAIN_PROJECT)
+if ((BUILD_TESTING AND IS_MAIN_PROJECT) OR GTENSOR_BUILD_BENCHMARKS)
   message(STATUS "${PROJECT_NAME}: build testing is ON")
 
   CPMAddPackage(
@@ -260,6 +260,19 @@ if (BUILD_TESTING AND IS_MAIN_PROJECT)
   include(GoogleTest)
 else()
   message(STATUS "${PROJECT_NAME}: build testing is OFF")
+endif()
+
+if (GTENSOR_BUILD_BENCHMARKS)
+  CPMAddPackage(
+    NAME benchmark
+    GITHUB_REPOSITORY germasch/benchmark
+    GIT_TAG kg
+    VERSION 1.5.3kg
+    GIT_SHALLOW TRUE
+    OPTIONS
+      "BENCHMARK_ENABLE_TESTING OFF"
+      "BENCHMARK_ENABLE_INSTALL OFF"
+  )
 endif()
 
 function(target_gtensor_sources TARGET)
