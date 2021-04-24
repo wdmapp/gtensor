@@ -173,15 +173,19 @@ bool operator==(const gtensor_storage<T, host_allocator<T>, host_ops<T>>& v1,
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-bool operator==(
-  const gtensor_storage<T, device_allocator<T>, device_ops<T>>& v1,
-  const gtensor_storage<T, device_allocator<T>, device_ops<T>>& v2)
+host_storage<T> host_mirror(const device_storage<T>& d)
+{
+  return host_storage<T>(d.size());
+}
+
+template <typename T>
+bool operator==(const device_storage<T>& v1, const device_storage<T>& v2)
 {
   if (v1.size() != v2.size()) {
     return false;
   }
-  host_storage<T> h1(v1.size());
-  host_storage<T> h2(v2.size());
+  auto&& h1 = host_mirror(v1);
+  auto&& h2 = host_mirror(v2);
   device_ops<T>::copy_dh(v1.data(), h1.data(), v1.size());
   device_ops<T>::copy_dh(v2.data(), h2.data(), v2.size());
   for (int i = 0; i < v1.size(); i++) {
