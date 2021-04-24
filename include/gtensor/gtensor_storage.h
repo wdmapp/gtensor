@@ -194,6 +194,13 @@ void copy(const device_storage<T>& d, host_storage<T>& h)
   ops<T>::copy_dh(d.data(), h.data(), d.size());
 }
 
+template <typename T>
+void copy(const host_storage<T>& h, device_storage<T>& d)
+{
+  assert(h.size() == d.size());
+  device_copy_hd(h.data(), d.data(), h.size());
+}
+
 #endif
 
 template <typename T, typename A, typename O>
