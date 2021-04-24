@@ -35,12 +35,12 @@ public:
     : data_(nullptr), size_(count), capacity_(count)
   {
     if (capacity_ > 0) {
-      data_ = allocator_type::allocate(capacity_);
+      data_ = allocator_.allocate(capacity_);
     }
   }
   gtensor_storage() : gtensor_storage(0) {}
 
-  ~gtensor_storage() { allocator_type::deallocate(data_); }
+  ~gtensor_storage() { allocator_.deallocate(data_); }
 
   // copy and move constructors
   gtensor_storage(const gtensor_storage& dv)
@@ -101,6 +101,7 @@ private:
   pointer data_;
   size_type size_;
   size_type capacity_;
+  allocator_type allocator_;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -122,14 +123,14 @@ inline void gtensor_storage<T, A, O>::resize(
       return;
     }
     capacity_ = size_ = new_size;
-    data_ = allocator_type::allocate(capacity_);
+    data_ = allocator_.allocate(capacity_);
   } else if (new_size > capacity_) {
-    pointer new_data = allocator_type::allocate(new_size);
+    pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
       ops::copy(data_, new_data, copy_size);
     }
-    allocator_type::deallocate(data_);
+    allocator_.deallocate(data_);
     data_ = new_data;
     capacity_ = size_ = new_size;
   } else {
