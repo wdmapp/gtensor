@@ -156,13 +156,19 @@ inline void gtensor_storage<T, A, O>::resize(
 // equality operators (for testing)
 
 template <typename T>
-host_storage<T>& host_mirror(const host_storage<T>& h)
+host_storage<T>& host_mirror(host_storage<T>& h)
 {
   return h;
 }
 
 template <typename T>
-void copy(const host_storage<T>& d, host_storage<T>& h)
+const host_storage<T>& host_mirror(const host_storage<T>& h)
+{
+  return h;
+}
+
+template <typename T>
+void copy(const host_storage<T>& d, const host_storage<T>& h)
 {
   // this copy is, at this time, only for use with host_mirror,
   // which return a reference to the very same object in the host
@@ -176,8 +182,12 @@ bool operator==(const host_storage<T>& v1, const host_storage<T>& v2)
   if (v1.size() != v2.size()) {
     return false;
   }
-  for (int i = 0; i < v1.size(); i++) {
-    if (v1[i] != v2[i]) {
+  auto&& h1 = host_mirror(v1);
+  auto&& h2 = host_mirror(v2);
+  copy(v1, h1);
+  copy(v2, h2);
+  for (int i = 0; i < h1.size(); i++) {
+    if (h1[i] != h2[i]) {
       return false;
     }
   }
