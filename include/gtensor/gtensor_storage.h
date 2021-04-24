@@ -182,8 +182,8 @@ bool operator==(
   }
   host_storage<T> h1(v1.size());
   host_storage<T> h2(v2.size());
-  device_copy_dh(v1.data(), h1.data(), v1.size());
-  device_copy_dh(v2.data(), h2.data(), v2.size());
+  device_ops<T>::copy_dh(v1.data(), h1.data(), v1.size());
+  device_ops<T>::copy_dh(v2.data(), h2.data(), v2.size());
   for (int i = 0; i < v1.size(); i++) {
     if (h1[i] != h2[i]) {
       return false;

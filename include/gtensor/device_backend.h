@@ -134,6 +134,11 @@ struct device_ops
   {
     device_copy_dd(src, dst, count);
   }
+
+  static void copy_dh(const_pointer src, pointer dst, size_type count)
+  {
+    device_copy_dh(src, dst, count);
+  }
 };
 
 template <typename T>
@@ -297,6 +302,11 @@ struct device_ops
   {
     device_copy_dd(src, dst, count);
   }
+
+  static void copy_dh(const_pointer src, pointer dst, size_type count)
+  {
+    device_copy_dh(src, dst, count);
+  }
 };
 
 template <typename T>
@@ -434,6 +444,11 @@ struct device_ops
   static void copy(const_pointer src, pointer dst, size_type count)
   {
     device_copy_dd(src, dst, count);
+  }
+
+  static void copy_dh(const_pointer src, pointer dst, size_type count)
+  {
+    device_copy_dh(src, dst, count);
   }
 };
 
