@@ -171,8 +171,7 @@ void copy(const host_storage<T>& d, host_storage<T>& h)
 }
 
 template <typename T>
-bool operator==(const gtensor_storage<T, host_allocator<T>, host_ops<T>>& v1,
-                const gtensor_storage<T, host_allocator<T>, host_ops<T>>& v2)
+bool operator==(const host_storage<T>& v1, const host_storage<T>& v2)
 {
   if (v1.size() != v2.size()) {
     return false;
