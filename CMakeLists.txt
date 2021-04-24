@@ -4,6 +4,12 @@ project(gtensor
         LANGUAGES CXX
         HOMEPAGE_URL https://github.com/wdmapp/gtensor)
 
+if (NOT CMAKE_BUILD_TYPE)
+  message(STATUS "gtensor: Setting build type to 'Release' since none specified.")
+  set(CMAKE_BUILD_TYPE "Release"
+      CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 include(cmake/CPM.cmake)
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
