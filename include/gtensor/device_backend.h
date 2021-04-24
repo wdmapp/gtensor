@@ -107,19 +107,17 @@ inline void device_memset(void* dst, int value, gt::size_type nbytes)
 template <typename T>
 struct device_allocator
 {
-  static T* allocate(size_t count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(size_type count)
   {
     T* p;
     gtGpuCheck(cudaMalloc(&p, sizeof(T) * count));
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      gtGpuCheck(cudaFree(p));
-    }
-  }
+  void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
 };
 
 template <typename T>
@@ -144,19 +142,17 @@ struct device_ops
 template <typename T>
 struct managed_allocator
 {
-  static T* allocate(size_t count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(size_t count)
   {
     T* p;
     gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * count));
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      gtGpuCheck(cudaFree(p));
-    }
-  }
+  void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
 
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -167,19 +163,17 @@ struct managed_allocator
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     T* p;
     gtGpuCheck(cudaMallocHost(&p, sizeof(T) * count));
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      gtGpuCheck(cudaFreeHost(p));
-    }
-  }
+  void deallocate(T* p) { gtGpuCheck(cudaFreeHost(p)); }
 };
 
 template <typename T>
@@ -275,19 +269,17 @@ inline void device_memset(void* dst, int value, gt::size_type nbytes)
 template <typename T>
 struct device_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(size_type count)
   {
     T* p;
     gtGpuCheck(hipMalloc(&p, sizeof(T) * count));
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      gtGpuCheck(hipFree(p));
-    }
-  }
+  void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
 };
 
 template <typename T>
@@ -312,19 +304,17 @@ struct device_ops
 template <typename T>
 struct managed_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     T* p;
     gtGpuCheck(hipMallocManaged(&p, sizeof(T) * count));
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      gtGpuCheck(hipFree(p));
-    }
-  }
+  void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
 
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -335,19 +325,17 @@ struct managed_allocator
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     T* p;
     gtGpuCheck(hipHostMalloc(&p, sizeof(T) * count, hipHostMallocDefault));
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      gtGpuCheck(hipHostFree(p));
-    }
-  }
+  void deallocate(T* p) { gtGpuCheck(hipHostFree(p)); }
 };
 
 template <typename T>
@@ -420,17 +408,15 @@ inline void device_memset(void* dst, int value, gt::size_type nbytes)
 template <typename T>
 struct device_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     return cl::sycl::malloc_device<T>(count, gt::backend::sycl::get_queue());
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-  }
+  Void deallocate(T* p) { cl::sycl::free(p, gt::backend::sycl::get_queue()); }
 };
 
 template <typename T>
@@ -455,17 +441,15 @@ struct device_ops
 template <typename T>
 struct managed_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     return cl::sycl::malloc_shared<T>(count, gt::backend::sycl::get_queue());
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-  }
+  void deallocate(T* p) { cl::sycl::free(p, gt::backend::sycl::get_queue()); }
 
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -479,7 +463,10 @@ struct managed_allocator
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     T* p = static_cast<T*>(malloc(sizeof(T) * count));
     if (p == nullptr) {
@@ -489,12 +476,7 @@ struct host_allocator
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      free(p);
-    }
-  }
+  static void deallocate(T* p) { free(p); }
 
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -549,7 +531,10 @@ inline void device_synchronize()
 template <typename T>
 struct host_allocator
 {
-  static T* allocate(gt::size_type count)
+  using value_type = T;
+  using size_type = gt::size_type;
+
+  T* allocate(gt::size_type count)
   {
     T* p = static_cast<T*>(malloc(sizeof(T) * count));
     if (p == nullptr) {
@@ -559,12 +544,7 @@ struct host_allocator
     return p;
   }
 
-  static void deallocate(T* p)
-  {
-    if (p != nullptr) {
-      free(p);
-    }
-  }
+  void deallocate(T* p) { free(p); }
 };
 
 template <typename T>
@@ -614,7 +594,7 @@ inline Pointer device_pointer_cast(Pointer p)
 
 #endif // GTENSOR_USE_THRUST
 
-} // end namespace backend
+} // namespace backend
 
 // ======================================================================
 // synchronize
