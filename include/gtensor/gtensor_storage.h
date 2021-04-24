@@ -176,24 +176,6 @@ void copy(const host_storage<T>& d, const host_storage<T>& h)
   assert(&h == &d);
 }
 
-template <typename T>
-bool operator==(const host_storage<T>& v1, const host_storage<T>& v2)
-{
-  if (v1.size() != v2.size()) {
-    return false;
-  }
-  auto&& h1 = host_mirror(v1);
-  auto&& h2 = host_mirror(v2);
-  copy(v1, h1);
-  copy(v2, h2);
-  for (int i = 0; i < h1.size(); i++) {
-    if (h1[i] != h2[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
@@ -209,8 +191,11 @@ void copy(const device_storage<T>& d, host_storage<T>& h)
   device_ops<T>::copy_dh(d.data(), h.data(), d.size());
 }
 
-template <typename T>
-bool operator==(const device_storage<T>& v1, const device_storage<T>& v2)
+#endif
+
+template <typename T, typename A, typename O>
+bool operator==(const gtensor_storage<T, A, O>& v1,
+                const gtensor_storage<T, A, O>& v2)
 {
   if (v1.size() != v2.size()) {
     return false;
@@ -226,8 +211,6 @@ bool operator==(const device_storage<T>& v1, const device_storage<T>& v2)
   }
   return true;
 }
-
-#endif
 
 template <typename T, typename A, typename O>
 bool operator!=(const gtensor_storage<T, A, O>& v1,
