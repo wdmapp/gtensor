@@ -276,7 +276,7 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
-struct ops
+struct gallocator
 {
   using size_type = gt::size_type;
 
@@ -330,7 +330,10 @@ struct ops
       gtGpuCheck(cudaFreeHost(p));
     }
   };
+};
 
+struct ops
+{
   template <typename S_src, typename S_to, typename T>
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -339,10 +342,10 @@ struct ops
 };
 
 template <typename T>
-using device_allocator = wrap_allocator<T, typename ops::device>;
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename ops::host>;
+using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
 } // namespace cuda
 
@@ -404,7 +407,7 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
-struct ops
+struct gallocator
 {
   struct device
   {
@@ -456,7 +459,10 @@ struct ops
       gtGpuCheck(hipHostFree(p));
     }
   };
+};
 
+struct ops
+{
   template <typename S_src, typename S_to, typename T>
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -465,10 +471,10 @@ struct ops
 };
 
 template <typename T>
-using device_allocator = wrap_allocator<T, typename ops::device>;
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename ops::host>;
+using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
 } // namespace hip
 
@@ -500,7 +506,7 @@ struct copy
 
 } // namespace detail
 
-struct ops
+struct gallocator
 {
   struct device
   {
@@ -569,7 +575,10 @@ struct ops
   //     cl::sycl::free(p, gt::backend::sycl::get_queue());
   //   }
   // };
+};
 
+struct ops
+{
   template <typename S_src, typename S_to, typename T>
   static void copy(const T* src, T* dst, gt::size_type count)
   {
@@ -578,10 +587,10 @@ struct ops
 };
 
 template <typename T>
-using device_allocator = wrap_allocator<T, typename ops::device>;
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename ops::host>;
+using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
 } // namespace sycl
 
