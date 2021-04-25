@@ -66,12 +66,14 @@ void gt_backend_managed_deallocate(void* p)
 
 void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::ops::host::copy((uint8_t*)src, (uint8_t*)dst, nbytes);
+  gt::backend::ops::copy<gt::space::host, gt::space::host>(
+    (uint8_t*)src, (uint8_t*)dst, nbytes);
 }
 
 void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::ops::device::copy((uint8_t*)src, (uint8_t*)dst, nbytes);
+  gt::backend::ops::copy<gt::space::device, gt::space::device>(
+    (uint8_t*)src, (uint8_t*)dst, nbytes);
 }
 
 void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)

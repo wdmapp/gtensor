@@ -243,6 +243,17 @@ template <typename S_src, typename S_to>
 struct copy;
 
 template <>
+struct copy<space::device, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(
+      cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+  }
+};
+
+template <>
 struct copy<space::device, space::host>
 {
   template <typename T>
@@ -259,6 +270,16 @@ struct copy<space::host, space::device>
   static void run(const T* src, T* dst, size_type count)
   {
     gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+  }
+};
+
+template <>
+struct copy<space::host, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
   }
 };
 
@@ -282,13 +303,6 @@ struct ops
     static void deallocate(T* p)
     {
       gtGpuCheck(cudaFree(p));
-    }
-
-    template <typename T>
-    static void copy(const T* src, T* dst, size_type count)
-    {
-      gtGpuCheck(
-        cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
     }
   };
 
@@ -324,12 +338,6 @@ struct ops
     {
       gtGpuCheck(cudaFreeHost(p));
     }
-
-    template <typename T>
-    static void copy(const T* src, T* dst, size_type count)
-    {
-      gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
-    }
   };
 
   template <typename S_src, typename S_to, typename T>
@@ -364,6 +372,16 @@ template <typename S_src, typename S_to>
 struct copy;
 
 template <>
+struct copy<space::device, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+  }
+};
+
+template <>
 struct copy<space::device, space::host>
 {
   template <typename T>
@@ -380,6 +398,16 @@ struct copy<space::host, space::device>
   static void run(const T* src, T* dst, size_type count)
   {
     gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+  }
+};
+
+template <>
+struct copy<space::host, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
   }
 };
 
@@ -436,13 +464,6 @@ struct ops
     {
       gtGpuCheck(hipHostFree(p));
     }
-
-    template <typename T>
-    static void copy(const_pointer src, pointer dst, size_type count)
-    {
-      gtGpuCheck(
-        hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
-    }
   };
 
   template <typename S_src, typename S_to, typename T>
@@ -477,6 +498,16 @@ template <typename S_src, typename S_to>
 struct copy;
 
 template <>
+struct copy<space::device, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    device_copy(src, dst, count);
+  }
+};
+
+template <>
 struct copy<space::device, space::host>
 {
   template <typename T>
@@ -488,6 +519,16 @@ struct copy<space::device, space::host>
 
 template <>
 struct copy<space::host, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    device_copy(src, dst, count);
+  }
+};
+
+template <>
+struct copy<space::host, space::host>
 {
   template <typename T>
   static void run(const T* src, T* dst, size_type count)
@@ -512,12 +553,6 @@ struct ops
     static void deallocate(T* p)
     {
       cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-
-    template <typename T>
-    static void copy(const_pointer src, pointer dst, size_type count)
-    {
-      device_copy(src, dst, count);
     }
   };
 
@@ -557,12 +592,6 @@ struct ops
     static void deallocate(T* p)
     {
       free(p);
-    }
-
-    template <typename T>
-    static void copy(const_pointer src, pointer dst, size_type count)
-    {
-      device_copy(src, dst, count);
     }
   };
 
