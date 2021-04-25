@@ -1,6 +1,7 @@
 #ifndef GTENSOR_DEVICE_STORAGE_H
 #define GTENSOR_DEVICE_STORAGE_H
 
+#include <memory>
 #include <type_traits>
 
 #include "device_backend.h"
@@ -16,20 +17,17 @@ namespace backend
  * Note that this is a small subset of the features in thrust::device_vector.
  * In particular, iterators are not yet supported.
  */
-template <typename T, typename Allocator, typename S>
+template <typename T, typename A, typename S>
 class gtensor_storage
 {
 public:
-  using element_type = T;
-  using value_type = std::remove_cv_t<T>;
-  using allocator_type = Allocator;
-
-  using pointer = std::add_pointer_t<element_type>;
-  using const_pointer = std::add_pointer_t<std::add_const_t<element_type>>;
-  using reference = std::add_lvalue_reference_t<element_type>;
-  using const_reference =
-    std::add_lvalue_reference_t<std::add_const_t<element_type>>;
-  using size_type = gt::size_type;
+  using value_type = T;
+  using allocator_type = A;
+  using pointer = typename std::allocator_traits<A>::pointer;
+  using const_pointer = typename std::allocator_traits<A>::const_pointer;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using size_type = typename std::allocator_traits<A>::size_type;
   using space_type = S;
 
   gtensor_storage(size_type count)
