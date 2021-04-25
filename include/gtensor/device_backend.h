@@ -163,13 +163,13 @@ inline void device_synchronize()
 #ifdef GTENSOR_USE_THRUST
 
 template <typename Pointer>
-inline auto raw_pointer_cast(Pointer p)
+GT_INLINE auto raw_pointer_cast(Pointer p)
 {
   return thrust::raw_pointer_cast(p);
 }
 
 template <typename Pointer>
-inline auto device_pointer_cast(Pointer p)
+GT_INLINE auto device_pointer_cast(Pointer p)
 {
   return thrust::device_pointer_cast(p);
 }
@@ -178,13 +178,13 @@ inline auto device_pointer_cast(Pointer p)
 
 // define no-op device_pointer/raw ponter casts
 template <typename Pointer>
-inline Pointer raw_pointer_cast(Pointer p)
+GT_INLINE Pointer raw_pointer_cast(Pointer p)
 {
   return p;
 }
 
 template <typename Pointer>
-inline Pointer device_pointer_cast(Pointer p)
+GT_INLINE Pointer device_pointer_cast(Pointer p)
 {
   return p;
 }
