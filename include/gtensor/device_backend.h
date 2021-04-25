@@ -88,11 +88,6 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
     cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
 }
 
-inline void device_memset(void* dst, int value, gt::size_type nbytes)
-{
-  gtGpuCheck(cudaMemset(dst, value, nbytes));
-}
-
 #elif defined(GTENSOR_DEVICE_HIP)
 
 inline void device_synchronize()
@@ -140,11 +135,6 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
     hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
 }
 
-inline void device_memset(void* dst, int value, gt::size_type nbytes)
-{
-  gtGpuCheck(hipMemset(dst, value, nbytes));
-}
-
 #elif defined(GTENSOR_DEVICE_SYCL)
 
 inline void device_synchronize()
@@ -157,12 +147,6 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memcpy(dst, src, sizeof(T) * count);
-}
-
-inline void device_memset(void* dst, int value, gt::size_type nbytes)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memset(dst, value, nbytes);
 }
 
 #endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
@@ -282,6 +266,11 @@ struct ops
   static void copy(const T* src, T* dst, gt::size_type count)
   {
     return detail::copy<S_src, S_to>::run(src, dst, count);
+  }
+
+  static void memset(void* dst, int value, gt::size_type nbytes)
+  {
+    gtGpuCheck(cudaMemset(dst, value, nbytes));
   }
 };
 
@@ -415,6 +404,11 @@ struct ops
   {
     return detail::copy<S_src, S_to>::run(src, dst, count);
   }
+
+  static void memset(void* dst, int value, gt::size_type nbytes)
+  {
+    gtGpuCheck(hipMemset(dst, value, nbytes));
+  }
 };
 
 namespace gallocator
@@ -503,6 +497,12 @@ struct copy
     cl::sycl::queue& q = gt::backend::sycl::get_queue();
     q.memcpy(dst, src, sizeof(T) * count);
     q.wait();
+  }
+
+  static void memset(void* dst, int value, gt::size_type nbytes)
+  {
+    cl::sycl::queue& q = gt::backend::sycl::get_queue();
+    q.memset(dst, value, nbytes);
   }
 };
 
