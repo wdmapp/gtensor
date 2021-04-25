@@ -10,6 +10,11 @@
 
 using namespace gt::placeholders;
 
+template <typename T>
+using host_vector = gt::backend::host_storage<T>;
+template <typename T>
+using device_vector = gt::backend::device_storage<T>;
+
 template <typename Real>
 void compare_deriv(Real* error, Real* maxError, Real* relError,
                    Real* maxRelError, gt::complex<Real>* a,
@@ -324,7 +329,6 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   struct timespec start, end;
   double seconds_per_run = 0.0;
 
-  gt::complex<Real>*h_arr, *d_arr;
   gt::complex<Real>*h_darr, *d_darr, *ref_darr;
   gt::complex<Real>*h_ikj, *d_ikj;
 
@@ -350,8 +354,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   printf("== %dx%dx%d ==\n", li0, lj0, lbg0);
 
-  h_arr = gt::backend::host_allocator<Complex>{}.allocate(arr_size);
-  d_arr = gt::backend::device_allocator<Complex>{}.allocate(arr_size);
+  host_vector<Complex> h_arr(arr_size);
+  device_vector<Complex> d_arr(arr_size);
 
   h_darr = gt::backend::host_allocator<Complex>{}.allocate(darr_size);
   d_darr = gt::backend::device_allocator<Complex>{}.allocate(darr_size);
@@ -394,8 +398,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
     }
   }
 
-  gt::backend::ops::copy<gt::space::host, gt::space::device>(h_arr, d_arr,
-                                                             arr_size);
+  gt::backend::ops::copy<gt::space::host, gt::space::device>(
+    h_arr.data(), d_arr.data(), arr_size);
 
   for (j = 0; j < lj0; j++) {
     h_ikj[j] = Complex(0.0, (2.0 * j * pi));
@@ -406,11 +410,13 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // cpu reference
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_cpu(li0, lj0, lbg0, h_arr, ncoeff, h_coeff, h_ikj, ref_darr);
+    ij_deriv_cpu(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff, h_ikj,
+                 ref_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_cpu(li0, lj0, lbg0, h_arr, ncoeff, h_coeff, h_ikj, ref_darr);
+    ij_deriv_cpu(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff, h_ikj,
+                 ref_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -419,7 +425,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("cpu     seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
-  array_stats(&minNorm, &maxNorm, &minRe, &maxRe, &minIm, &maxIm, h_arr,
+  array_stats(&minNorm, &maxNorm, &minRe, &maxRe, &minIm, &maxIm, h_arr.data(),
               arr_size);
   printf("arr  norm (%0.2e, %0.2e) re (%0.2e, %0.2e) im (%0.2e, %0.2e)\n",
          minNorm, maxNorm, minRe, maxRe, minIm, maxIm);
@@ -431,11 +437,13 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // gtensor cpu
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_gt_host(li0, lj0, lbg0, h_arr, ncoeff, h_coeff, h_ikj, h_darr);
+    ij_deriv_gt_host(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff, h_ikj,
+                     h_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_gt_host(li0, lj0, lbg0, h_arr, ncoeff, h_coeff, h_ikj, h_darr);
+    ij_deriv_gt_host(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff, h_ikj,
+                     h_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -458,11 +466,11 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // native GPU api
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_gpu(li0, lj0, lbg0, d_arr, ncoeff, d_coeff, d_ikj, d_darr);
+    ij_deriv_gpu(li0, lj0, lbg0, d_arr.data(), ncoeff, d_coeff, d_ikj, d_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_gpu(li0, lj0, lbg0, d_arr, ncoeff, d_coeff, d_ikj, d_darr);
+    ij_deriv_gpu(li0, lj0, lbg0, d_arr.data(), ncoeff, d_coeff, d_ikj, d_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -471,8 +479,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("gpu     seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
-  gt::backend::ops::copy<gt::space::device, gt::space::host>(d_darr, h_darr,
-                                                             darr_size);
+  gt::backend::ops::copy<gt::space::device, gt::space::host>(
+    d_darr.data(), h_darr.data(), darr_size);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
                 li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
   printf("gpu diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
@@ -485,11 +493,13 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // gtensor gpu
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_gt_device(li0, lj0, lbg0, d_arr, ncoeff, h_coeff, d_ikj, d_darr);
+    ij_deriv_gt_device(li0, lj0, lbg0, d_arr.data(), ncoeff, h_coeff, d_ikj,
+                       d_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_gt_device(li0, lj0, lbg0, d_arr, ncoeff, h_coeff, d_ikj, d_darr);
+    ij_deriv_gt_device(li0, lj0, lbg0, d_arr.data(), ncoeff, h_coeff, d_ikj,
+                       d_darr);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -511,9 +521,6 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // cleanup
   free(ref_darr);
-
-  gt::backend::host_allocator<Complex>{}.deallocate(h_arr, arr_size);
-  gt::backend::device_allocator<Complex>{}.deallocate(d_arr, arr_size);
 
   gt::backend::host_allocator<Complex>{}.deallocate(h_darr, arr_size);
   gt::backend::device_allocator<Complex>{}.deallocate(d_darr, arr_size);
