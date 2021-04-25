@@ -108,12 +108,14 @@ private:
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-using device_storage = gtensor_storage<T, device_allocator<T>, space::device>;
+using device_storage =
+  gtensor_storage<T, standard::device_allocator<T>, space::device>;
 
 #endif
 
 template <typename T>
-using host_storage = gtensor_storage<T, host_allocator<T>, space::host>;
+using host_storage =
+  gtensor_storage<T, standard::host_allocator<T>, space::host>;
 
 template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::resize(

@@ -625,13 +625,12 @@ using host_allocator = std::allocator<T>;
 // select backend
 
 #ifdef GTENSOR_DEVICE_CUDA
+namespace standard
+{
 template <typename T>
 using device_allocator = cuda::device_allocator<T>;
 template <typename T>
 using host_allocator = cuda::host_allocator<T>;
-
-namespace standard
-{
 using ops = cuda::ops;
 namespace gallocator = cuda::gallocator;
 } // namespace standard

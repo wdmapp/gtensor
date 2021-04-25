@@ -12,7 +12,7 @@ TEST(adapt, adapt_complex)
   constexpr int M = 16;
   constexpr int S = N * M;
   using T = gt::complex<double>;
-  T* a = gt::backend::host_allocator<T>{}.allocate(S);
+  T* a = gt::backend::standard::host_allocator<T>{}.allocate(S);
   auto gta = gt::adapt<2>(a, gt::shape(N, M));
 
   GT_DEBUG_TYPE(gta);
@@ -28,7 +28,7 @@ TEST(adapt, adapt_complex)
   EXPECT_EQ(a[0], (T{1., 1.}));
   EXPECT_EQ(a[S - 1], (T{1., -1.}));
 
-  gt::backend::host_allocator<T>{}.deallocate(a, S);
+  gt::backend::standard::host_allocator<T>{}.deallocate(a, S);
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -36,7 +36,7 @@ TEST(adapt, adapt_complex)
 TEST(adapt, adapt_device)
 {
   constexpr int N = 10;
-  int* a = gt::backend::device_allocator<int>{}.allocate(N);
+  int* a = gt::backend::standard::device_allocator<int>{}.allocate(N);
   auto aview = gt::adapt_device(a, gt::shape(N));
 
   aview = gt::scalar(7);
@@ -49,7 +49,7 @@ TEST(adapt, adapt_device)
 
   EXPECT_EQ(aview, h_expected);
 
-  gt::backend::device_allocator<int>{}.deallocate(a, N);
+  gt::backend::standard::device_allocator<int>{}.deallocate(a, N);
 }
 
 #endif // GTENSOR_HAVE_DEVICE
