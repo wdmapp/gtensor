@@ -50,7 +50,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      backend::standard::copy<space_type, space_type>(dv.data_, data_, size_);
+      copy(dv.data_, data_, size_);
     }
   }
 
@@ -70,7 +70,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      backend::standard::copy<space_type, space_type>(dv.data_, data_, size_);
+      copy(dv.data_, data_, size_);
     }
 
     return *this;
@@ -97,8 +97,10 @@ public:
   const_pointer data() const { return data_; }
 
 private:
+  void copy(const_pointer src, pointer dst, size_type count);
   void resize(size_type new_size, bool discard);
   void resize_discard(size_type new_size);
+
   pointer data_;
   size_type size_;
   size_type capacity_;
@@ -115,6 +117,12 @@ using device_storage = gtensor_storage<T, A, space::device>;
 template <typename T, typename A = standard::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
 
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::copy(const_pointer src, pointer dst,
+                                           size_type count)
+{
+  backend::standard::copy<space_type, space_type>(src, dst, count);
+}
 
 template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::resize(
@@ -130,8 +138,7 @@ inline void gtensor_storage<T, A, O>::resize(
     pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      backend::standard::copy<space_type, space_type>(data_, new_data,
-                                                      copy_size);
+      copy(data_, new_data, copy_size);
     }
     allocator_.deallocate(data_, capacity_);
     data_ = new_data;
