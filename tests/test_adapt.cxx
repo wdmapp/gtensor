@@ -34,7 +34,8 @@ TEST(adapt, adapt_device)
 {
   constexpr int N = 10;
   gt::backend::device_storage<int> a(N);
-  auto aview = gt::adapt_device(a.data(), gt::shape(N));
+  auto aview =
+    gt::adapt_device(gt::backend::raw_pointer_cast(a.data()), gt::shape(N));
 
   aview = gt::scalar(7);
 

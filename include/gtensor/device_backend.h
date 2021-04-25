@@ -652,16 +652,13 @@ struct ops
 template <typename T>
 using host_allocator = std::allocator<T>;
 
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
 template <typename T>
-using device_allocator = wrap_allocator<T, typename gallocator::device>;
-
-// #if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
-// template <typename T>
-// using device_allocator = ::thrust::device_malloc_allocator<T>> ;
-// #else
-// template <typename T>
-// using device_allocator = ::thrust::device_allocator<T>;
-// #endif
+using device_allocator = ::thrust::device_malloc_allocator<T>;
+#else
+template <typename T>
+using device_allocator = ::thrust::device_allocator<T>;
+#endif
 
 }; // namespace thrust
 
