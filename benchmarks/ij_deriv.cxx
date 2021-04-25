@@ -369,8 +369,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   h_coeff[3] = 2.0 / 3.0;
   h_coeff[4] = -1.0 / 12.0;
 
-  gt::backend::ops::copy<gt::space::host, gt::space::device>(
-    h_coeff.data(), d_coeff.data(), ncoeff);
+  gt::backend::copy(h_coeff, d_coeff);
 
 #define ARRIDX(a, b, c) (c * lj0 * lx0 + b * lx0 + a)
 
@@ -391,15 +390,13 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
     }
   }
 
-  gt::backend::ops::copy<gt::space::host, gt::space::device>(
-    h_arr.data(), d_arr.data(), arr_size);
+  gt::backend::copy(h_arr, d_arr);
 
   for (j = 0; j < lj0; j++) {
     h_ikj[j] = Complex(0.0, (2.0 * j * pi));
   }
 
-  gt::backend::ops::copy<gt::space::host, gt::space::device>(
-    h_ikj.data(), d_ikj.data(), ikj_size);
+  gt::backend::copy(h_ikj, d_ikj);
 
   // cpu reference
   for (int i = 0; i < time_warmup_count; i++) {
@@ -422,8 +419,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
               arr_size);
   printf("arr  norm (%0.2e, %0.2e) re (%0.2e, %0.2e) im (%0.2e, %0.2e)\n",
          minNorm, maxNorm, minRe, maxRe, minIm, maxIm);
-  array_stats(&minNorm, &maxNorm, &minRe, &maxRe, &minIm, &maxIm, ref_darr,
-              darr_size);
+  array_stats(&minNorm, &maxNorm, &minRe, &maxRe, &minIm, &maxIm,
+              ref_darr.data(), darr_size);
   printf("darr norm (%0.2e, %0.2e) re (%0.2e, %0.2e) im (%0.2e, %0.2e)\n",
          minNorm, maxNorm, minRe, maxRe, minIm, maxIm);
 #endif
@@ -445,8 +442,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("gt host seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
-  gt::backend::ops::copy<gt::space::device, gt::space::host>(
-    d_darr.data(), h_darr.data(), darr_size);
+  gt::backend::copy(d_darr, h_darr);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
                 h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
   printf("gt host diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
@@ -474,14 +470,13 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("gpu     seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
-  gt::backend::ops::copy<gt::space::device, gt::space::host>(
-    d_darr.data(), h_darr.data(), darr_size);
-  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
-                li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
+  gt::backend::copy(d_darr, h_darr);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
+                h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
   printf("gpu diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
-  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr, h_darr, 0,
-                li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
+                h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
   printf("gpu diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
 #endif
@@ -503,8 +498,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("gt gpu  seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
-  gt::backend::ops::copy<space::device, space::host>(d_darr.data(),
-                                                     h_darr.data(), darr_size);
+  gt::backend::copy(d_darr, h_darr);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
                 h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
   printf("gt  diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
