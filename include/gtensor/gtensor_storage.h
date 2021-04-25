@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include "device_backend.h"
+#include "device_copy.h"
 
 namespace gt
 {
@@ -49,7 +50,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      backend::ops::copy<space_type, space_type>(dv.data_, data_, size_);
+      backend::standard::copy<space_type, space_type>(dv.data_, data_, size_);
     }
   }
 
@@ -69,7 +70,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      backend::ops::copy<space_type, space_type>(dv.data_, data_, size_);
+      backend::standard::copy<space_type, space_type>(dv.data_, data_, size_);
     }
 
     return *this;
@@ -128,7 +129,8 @@ inline void gtensor_storage<T, A, O>::resize(
     pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      backend::ops::copy<space_type, space_type>(data_, new_data, copy_size);
+      backend::standard::copy<space_type, space_type>(data_, new_data,
+                                                      copy_size);
     }
     allocator_.deallocate(data_, capacity_);
     data_ = new_data;
@@ -189,14 +191,16 @@ template <typename T>
 void copy(const device_storage<T>& d, host_storage<T>& h)
 {
   assert(h.size() == d.size());
-  ops::copy<space::device, space::host>(d.data(), h.data(), d.size());
+  gt::backend::standard::copy<space::device, space::host>(d.data(), h.data(),
+                                                          d.size());
 }
 
 template <typename T>
 void copy(const host_storage<T>& h, device_storage<T>& d)
 {
   assert(h.size() == d.size());
-  ops::copy<space::host, space::device>(h.data(), d.data(), h.size());
+  gt::backend::standard::copy<space::host, space::device>(h.data(), d.data(),
+                                                          h.size());
 }
 
 #endif
