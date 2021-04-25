@@ -152,15 +152,6 @@ inline void device_synchronize()
   gt::backend::sycl::get_queue().wait();
 }
 
-// TODO: SYCL exception handler
-template <typename T>
-inline void device_copy(const T* src, T* dst, gt::size_type count)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(dst, src, sizeof(T) * count);
-  q.wait();
-}
-
 template <typename T>
 inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
@@ -495,45 +486,15 @@ namespace detail
 {
 
 template <typename S_src, typename S_to>
-struct copy;
-
-template <>
-struct copy<space::device, space::device>
+struct copy
 {
+  // TODO: SYCL exception handler
   template <typename T>
   static void run(const T* src, T* dst, size_type count)
   {
-    device_copy(src, dst, count);
-  }
-};
-
-template <>
-struct copy<space::device, space::host>
-{
-  template <typename T>
-  static void run(const T* src, T* dst, size_type count)
-  {
-    device_copy(src, dst, count);
-  }
-};
-
-template <>
-struct copy<space::host, space::device>
-{
-  template <typename T>
-  static void run(const T* src, T* dst, size_type count)
-  {
-    device_copy(src, dst, count);
-  }
-};
-
-template <>
-struct copy<space::host, space::host>
-{
-  template <typename T>
-  static void run(const T* src, T* dst, size_type count)
-  {
-    device_copy(src, dst, count);
+    cl::sycl::queue& q = gt::backend::sycl::get_queue();
+    q.memcpy(dst, src, sizeof(T) * count);
+    q.wait();
   }
 };
 
