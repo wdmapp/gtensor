@@ -26,32 +26,32 @@ namespace standard
 template <typename S_from, typename S_to, typename T>
 inline void copy(const T* src, T* dest, std::size_t count)
 {
-  thrust::copy(src, src + count, dest);
+  ::thrust::copy(src, src + count, dest);
 }
 
 template <typename S_from, typename S_to, typename T>
-inline void copy(thrust::device_ptr<const T> src, T* dest, std::size_t count)
+inline void copy(::thrust::device_ptr<const T> src, T* dest, std::size_t count)
 {
-  thrust::copy(src, src + count, dest);
+  ::thrust::copy(src, src + count, dest);
 }
 
 template <typename S_from, typename S_to, typename T>
-inline void copy(thrust::device_ptr<T> src, T* dest, std::size_t count)
+inline void copy(::thrust::device_ptr<T> src, T* dest, std::size_t count)
 {
-  thrust::copy(src, src + count, dest);
+  ::thrust::copy(src, src + count, dest);
 }
 
 template <typename S_from, typename S_to, typename T>
-inline void copy(const T* src, thrust::device_ptr<T> dest, std::size_t count)
+inline void copy(const T* src, ::thrust::device_ptr<T> dest, std::size_t count)
 {
-  thrust::copy(src, src + count, dest);
+  ::thrust::copy(src, src + count, dest);
 }
 
 template <typename S_from, typename S_to, typename T>
-inline void copy(thrust::device_ptr<const T> src, thrust::device_ptr<T> dest,
-                 std::size_t count)
+inline void copy(::thrust::device_ptr<const T> src,
+                 ::thrust::device_ptr<T> dest, std::size_t count)
 {
-  thrust::copy(src, src + count, dest);
+  ::thrust::copy(src, src + count, dest);
 }
 
 #else // !GTENSOR_USE_THRUST: using gt::backend::device_storage

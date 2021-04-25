@@ -9,6 +9,11 @@
 #ifdef GTENSOR_HAVE_DEVICE
 #include "device_runtime.h"
 
+#ifdef GTENSOR_USE_THRUST
+#include <thrust/device_allocator.h>
+#include <thrust/fill.h>
+#endif
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
 #include "thrust_ext.h"
 #endif
@@ -622,18 +627,61 @@ using host_allocator = std::allocator<T>;
 }; // namespace host
 
 // ======================================================================
+// backend::thrust
+
+#ifdef GTENSOR_USE_THRUST
+
+namespace thrust
+{
+
+#if GTENSOR_DEVICE_CUDA
+namespace gallocator = backend::cuda::gallocator;
+#elif GTENSOR_DEVICE_HIP
+namespace gallocator = backend::hip::gallocator;
+#endif
+
+struct ops
+{
+  static void memset(void* dst_, int value, size_type nbytes)
+  {
+    auto dst = ::thrust::device_pointer_cast(static_cast<char*>(dst_));
+    ::thrust::fill(dst, dst + nbytes, value);
+  }
+};
+
+template <typename T>
+using host_allocator = std::allocator<T>;
+
+template <typename T>
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
+
+// #if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+// template <typename T>
+// using device_allocator = ::thrust::device_malloc_allocator<T>> ;
+// #else
+// template <typename T>
+// using device_allocator = ::thrust::device_allocator<T>;
+// #endif
+
+}; // namespace thrust
+
+#endif
+
+// ======================================================================
 // select backend
 
 namespace standard
 {
-#ifdef GTENSOR_DEVICE_CUDA
-using namespace cuda;
+#ifdef GTENSOR_USE_THRUST
+using namespace backend::thrust;
+#elif GTENSOR_DEVICE_CUDA
+using namespace backend::cuda;
 #elif GTENSOR_DEVICE_HIP
-using namespace hip;
+using namespace backend::hip;
 #elif GTENSOR_DEVICE_SYCL
-using namespace sycl;
+using namespace backend::sycl;
 #elif GTENSOR_DEVICE_HOST
-using namespace host;
+using namespace backend::host;
 #endif
 } // namespace standard
 
