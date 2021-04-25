@@ -630,12 +630,11 @@ using device_allocator = cuda::device_allocator<T>;
 template <typename T>
 using host_allocator = cuda::host_allocator<T>;
 
-namespace gallocator = cuda::gallocator;
-
 namespace standard
 {
 using ops = cuda::ops;
-}
+namespace gallocator = cuda::gallocator;
+} // namespace standard
 #elif GTENSOR_DEVICE_HIP
 using namespace hip;
 #elif GTENSOR_DEVICE_SYCL
