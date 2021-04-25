@@ -59,7 +59,7 @@ inline void copy(thrust::device_ptr<const T> src, thrust::device_ptr<T> dest,
 template <typename S_from, typename S_to, typename T>
 inline void copy(const T* src, T* dest, std::size_t count)
 {
-  gt::backend::ops::copy<S_from, S_to>(src, dest, count);
+  gt::backend::standard::ops::copy<S_from, S_to>(src, dest, count);
 }
 
 #endif // GTENSOR_USE_THRUST
