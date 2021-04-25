@@ -625,7 +625,15 @@ using host_allocator = std::allocator<T>;
 // select backend
 
 #ifdef GTENSOR_DEVICE_CUDA
-using namespace cuda;
+template <typename T>
+using device_allocator = cuda::device_allocator<T>;
+template <typename T>
+using host_allocator = cuda::host_allocator<T>;
+
+namespace gallocator = cuda::gallocator;
+
+using ops = cuda::ops;
+
 #elif GTENSOR_DEVICE_HIP
 using namespace hip;
 #elif GTENSOR_DEVICE_SYCL
