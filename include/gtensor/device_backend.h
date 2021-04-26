@@ -610,17 +610,6 @@ using host_allocator = wrap_allocator<T, typename gallocator::host>;
 namespace host
 {
 
-struct ops
-{
-  using size_type = gt::size_type;
-
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, size_type count)
-  {
-    std::memcpy(dst, src, sizeof(T) * count);
-  }
-};
-
 template <typename T>
 using host_allocator = std::allocator<T>;
 
