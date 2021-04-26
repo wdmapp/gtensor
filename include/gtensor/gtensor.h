@@ -114,7 +114,7 @@ inline gtensor<T, N, S>::gtensor(helper::nd_initializer_list_t<T, N> il)
   if (std::is_same<S, space::device>::value) {
     gtensor<T, N, space::host> host_temp(shape);
     helper::nd_initializer_list_copy<N>(il, host_temp);
-    gt::backend::standard::copy<space::host, space::device>(
+    gt::backend::system::copy<space::host, space::device>(
       host_temp.data(), base_type::data(), host_temp.size());
   } else {
     helper::nd_initializer_list_copy<N>(il, (*this));
@@ -181,28 +181,28 @@ template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::standard::copy<S_from, S_to>(from.data(), to.data(), to.size());
+  gt::backend::system::copy<S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor_span<T, N, S_from>& from, gtensor<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::standard::copy<S_from, S_to>(from.data(), to.data(), to.size());
+  gt::backend::system::copy<S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::standard::copy<S_from, S_to>(from.data(), to.data(), to.size());
+  gt::backend::system::copy<S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::standard::copy<S_from, S_to>(from.data(), to.data(), to.size());
+  gt::backend::system::copy<S_from, S_to>(from.data(), to.data(), to.size());
 }
 
 // ======================================================================

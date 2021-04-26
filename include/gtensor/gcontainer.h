@@ -96,7 +96,7 @@ inline void gcontainer<D>::fill(const value_type v)
 {
   if (v == value_type(0)) {
     auto data = gt::backend::raw_pointer_cast(this->data());
-    backend::standard::memset<expr_space_type<D>>(
+    backend::system::memset<expr_space_type<D>>(
       data, 0, sizeof(value_type) * this->size());
   } else {
     assign(derived(), scalar(v));

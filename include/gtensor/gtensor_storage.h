@@ -106,19 +106,19 @@ private:
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-template <typename T, typename A = standard::device_allocator<T>>
+template <typename T, typename A = system::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
 #endif
 
-template <typename T, typename A = standard::host_allocator<T>>
+template <typename T, typename A = system::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
 
 template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::copy(const_pointer src, pointer dst,
                                            size_type count)
 {
-  backend::standard::copy<space_type, space_type>(src, dst, count);
+  backend::system::copy<space_type, space_type>(src, dst, count);
 }
 
 template <typename T, typename A, typename O>
@@ -196,16 +196,16 @@ template <typename T>
 void copy(const device_storage<T>& d, host_storage<T>& h)
 {
   assert(h.size() == d.size());
-  gt::backend::standard::copy<space::device, space::host>(d.data(), h.data(),
-                                                          d.size());
+  gt::backend::system::copy<space::device, space::host>(d.data(), h.data(),
+                                                        d.size());
 }
 
 template <typename T>
 void copy(const host_storage<T>& h, device_storage<T>& d)
 {
   assert(h.size() == d.size());
-  gt::backend::standard::copy<space::host, space::device>(h.data(), d.data(),
-                                                          h.size());
+  gt::backend::system::copy<space::host, space::device>(h.data(), d.data(),
+                                                        h.size());
 }
 
 #endif

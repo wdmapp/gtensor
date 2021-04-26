@@ -644,9 +644,9 @@ inline void copy(P_src src, P_dst dst, size_type count)
 #endif
 
 // ======================================================================
-// standard backend
+// system (default) backend
 
-namespace standard
+namespace system
 {
 #ifdef GTENSOR_USE_THRUST
 using namespace backend::thrust;
@@ -659,7 +659,7 @@ using namespace backend::sycl;
 #elif GTENSOR_DEVICE_HOST
 using namespace backend::host;
 #endif
-} // namespace standard
+} // namespace system
 
 // ======================================================================
 // backend being used in clib (ie., the Fortran interface)
