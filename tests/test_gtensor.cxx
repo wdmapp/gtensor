@@ -99,18 +99,18 @@ TEST(gtensor, copy_ctor)
   EXPECT_EQ(b, a);
 
   // underlying storage copied
-  double* adata = gt::backend::raw_pointer_cast(a.data());
-  double* bdata = gt::backend::raw_pointer_cast(b.data());
+  auto adata = a.data();
+  auto bdata = b.data();
   EXPECT_NE(adata, bdata);
 }
 
 TEST(gtensor, move_ctor)
 {
   gt::gtensor<double, 1> a{11., 12., 13.};
-  double* adata = gt::backend::raw_pointer_cast(a.data());
+  auto adata = a.data();
 
   auto b = std::move(a);
-  double* bdata = gt::backend::raw_pointer_cast(b.data());
+  auto bdata = b.data();
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{11., 12., 13.}));
 
@@ -164,10 +164,10 @@ TEST(gtensor, copy_assign3)
 TEST(gtensor, move_assign)
 {
   gt::gtensor<double, 1> a{11., 12., 13.};
-  double* adata = gt::backend::raw_pointer_cast(a.data());
+  double* adata = a.data();
   gt::gtensor<double, 1> b;
   b = std::move(a);
-  double* bdata = gt::backend::raw_pointer_cast(b.data());
+  double* bdata = b.data();
 
   EXPECT_EQ(b, (gt::gtensor<double, 1>{11., 12., 13.}));
 
@@ -592,10 +592,10 @@ TEST(gtensor, device_move_ctor)
   gt::gtensor_device<double, 1> a(h_a.shape());
 
   gt::copy(h_a, a);
-  double* adata = gt::backend::raw_pointer_cast(a.data());
+  auto adata = a.data();
 
   auto b = std::move(a);
-  double* bdata = gt::backend::raw_pointer_cast(b.data());
+  auto bdata = b.data();
 
   // Note: explicit copy to avoid thrust implicit kernel for accessing
   // device vector from host. Aids in understanding thrust backend behavior.
@@ -614,10 +614,10 @@ TEST(gtensor, device_move_assign)
   gt::gtensor_device<double, 1> b(h_a.shape());
 
   gt::copy(h_a, a);
-  double* adata = gt::backend::raw_pointer_cast(a.data());
+  auto adata = a.data();
 
   b = std::move(a);
-  double* bdata = gt::backend::raw_pointer_cast(b.data());
+  auto bdata = b.data();
 
   // Note: explicit copy to avoid thrust implicit kernel for accessing
   // device vector from host. Aids in understanding thrust backend behavior.
