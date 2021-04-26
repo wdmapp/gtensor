@@ -5,7 +5,6 @@
 #include <type_traits>
 
 #include "device_backend.h"
-#include "device_copy.h"
 
 namespace gt
 {

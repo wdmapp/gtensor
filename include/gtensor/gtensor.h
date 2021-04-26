@@ -4,7 +4,6 @@
 
 #include "defs.h"
 #include "device_backend.h"
-#include "device_copy.h"
 
 #include "complex.h"
 #include "complex_ops.h"
