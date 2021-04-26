@@ -8,8 +8,9 @@
 
 namespace gt
 {
-
 namespace backend
+{
+namespace standard
 {
 
 template <typename S>
@@ -32,8 +33,8 @@ inline void memset<gt::space::device>(void* dst, int value,
 
 #endif
 
+} // namespace standard
 } // namespace backend
-
 } // namespace gt
 
 #endif
