@@ -265,14 +265,14 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
+template <typename S_src, typename S_to, typename T>
+inline void copy(const T* src, T* dst, gt::size_type count)
+{
+  return detail::copy<S_src, S_to>::run(src, dst, count);
+}
+
 struct ops
 {
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    return detail::copy<S_src, S_to>::run(src, dst, count);
-  }
-
   static void memset(void* dst, int value, gt::size_type nbytes)
   {
     gtGpuCheck(cudaMemset(dst, value, nbytes));
@@ -402,14 +402,14 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
+template <typename S_src, typename S_to, typename T>
+inline void copy(const T* src, T* dst, gt::size_type count)
+{
+  return detail::copy<S_src, S_to>::run(src, dst, count);
+}
+
 struct ops
 {
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    return detail::copy<S_src, S_to>::run(src, dst, count);
-  }
-
   static void memset(void* dst, int value, gt::size_type nbytes)
   {
     gtGpuCheck(hipMemset(dst, value, nbytes));
@@ -489,36 +489,20 @@ using host_allocator = wrap_allocator<T, typename gallocator::host>;
 namespace sycl
 {
 
-namespace detail
+template <typename S_src, typename S_to, typename T>
+inline void copy(const T* src, T* dst, gt::size_type count)
 {
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(dst, src, sizeof(T) * count);
+  q.wait();
+}
 
-template <typename S_src, typename S_to>
-struct copy
+struct ops
 {
-  // TODO: SYCL exception handler
-  template <typename T>
-  static void run(const T* src, T* dst, size_type count)
-  {
-    cl::sycl::queue& q = gt::backend::sycl::get_queue();
-    q.memcpy(dst, src, sizeof(T) * count);
-    q.wait();
-  }
-
   static void memset(void* dst, int value, gt::size_type nbytes)
   {
     cl::sycl::queue& q = gt::backend::sycl::get_queue();
     q.memset(dst, value, nbytes);
-  }
-};
-
-} // namespace detail
-
-struct ops
-{
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    return detail::copy<S_src, S_to>::run(src, dst, count);
   }
 };
 

@@ -25,12 +25,6 @@ namespace standard
 
 #else // !GTENSOR_USE_THRUST: using gt::backend::device_storage
 
-template <typename S_from, typename S_to, typename T>
-inline void copy(const T* src, T* dest, std::size_t count)
-{
-  gt::backend::standard::ops::copy<S_from, S_to>(src, dest, count);
-}
-
 #endif // GTENSOR_USE_THRUST
 
 #endif // GTENSOR_HAVE_DEVICE
