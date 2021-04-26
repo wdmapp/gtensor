@@ -46,78 +46,6 @@ using device = host;
 namespace backend
 {
 
-#ifdef GTENSOR_DEVICE_CUDA
-
-inline int device_get_count()
-{
-  int device_count;
-  gtGpuCheck(cudaGetDeviceCount(&device_count));
-  return device_count;
-}
-
-inline void device_set(int device_id)
-{
-  gtGpuCheck(cudaSetDevice(device_id));
-}
-
-inline int device_get()
-{
-  int device_id;
-  gtGpuCheck(cudaGetDevice(&device_id));
-  return device_id;
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  cudaDeviceProp prop;
-  uint32_t packed = 0;
-
-  gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
-
-  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
-  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
-  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
-
-  return packed;
-}
-
-#elif defined(GTENSOR_DEVICE_HIP)
-
-inline int device_get_count()
-{
-  int device_count;
-  gtGpuCheck(hipGetDeviceCount(&device_count));
-  return device_count;
-}
-
-inline void device_set(int device_id)
-{
-  gtGpuCheck(hipSetDevice(device_id));
-}
-
-inline int device_get()
-{
-  int device_id;
-  gtGpuCheck(hipGetDevice(&device_id));
-  return device_id;
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  hipDeviceProp_t prop;
-  uint32_t packed = 0;
-
-  gtGpuCheck(hipGetDeviceProperties(&prop, device_id));
-
-  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
-  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
-  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
-
-  return packed;
-}
-
-#endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
-
 #ifdef GTENSOR_USE_THRUST
 
 template <typename Pointer>
@@ -307,6 +235,39 @@ inline void device_copy_async_dd(const T* src, T* dst, size_type count)
     cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
 }
 
+inline int device_get_count()
+{
+  int device_count;
+  gtGpuCheck(cudaGetDeviceCount(&device_count));
+  return device_count;
+}
+
+inline void device_set(int device_id)
+{
+  gtGpuCheck(cudaSetDevice(device_id));
+}
+
+inline int device_get()
+{
+  int device_id;
+  gtGpuCheck(cudaGetDevice(&device_id));
+  return device_id;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  cudaDeviceProp prop;
+  uint32_t packed = 0;
+
+  gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
+
+  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+  return packed;
+}
+
 } // namespace cuda
 
 #endif
@@ -452,6 +413,39 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(
     hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+}
+
+inline int device_get_count()
+{
+  int device_count;
+  gtGpuCheck(hipGetDeviceCount(&device_count));
+  return device_count;
+}
+
+inline void device_set(int device_id)
+{
+  gtGpuCheck(hipSetDevice(device_id));
+}
+
+inline int device_get()
+{
+  int device_id;
+  gtGpuCheck(hipGetDevice(&device_id));
+  return device_id;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  hipDeviceProp_t prop;
+  uint32_t packed = 0;
+
+  gtGpuCheck(hipGetDeviceProperties(&prop, device_id));
+
+  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+  return packed;
 }
 
 } // namespace hip

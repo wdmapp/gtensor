@@ -14,22 +14,22 @@ void gt_synchronize()
 
 int gt_backend_device_get_count()
 {
-  return gt::backend::device_get_count();
+  return gt::backend::clib::device_get_count();
 }
 
 void gt_backend_device_set(int device_id)
 {
-  return gt::backend::device_set(device_id);
+  return gt::backend::clib::device_set(device_id);
 }
 
 int gt_backend_device_get()
 {
-  return gt::backend::device_get();
+  return gt::backend::clib::device_get();
 }
 
 uint32_t gt_backend_device_get_vendor_id(int device_id)
 {
-  return gt::backend::device_get_vendor_id(device_id);
+  return gt::backend::clib::device_get_vendor_id(device_id);
 }
 
 #endif // not GTENSOR_DEVICE_SYCL
