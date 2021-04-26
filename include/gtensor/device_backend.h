@@ -660,6 +660,12 @@ template <typename T>
 using device_allocator = ::thrust::device_allocator<T>;
 #endif
 
+template <typename S_src, typename S_dst, typename P_src, typename P_dst>
+inline void copy(P_src src, P_dst dst, size_type count)
+{
+  ::thrust::copy(src, src + count, dst);
+}
+
 }; // namespace thrust
 
 #endif
