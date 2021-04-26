@@ -613,12 +613,6 @@ inline void copy(const T* src, T* dst, size_type count)
 namespace thrust
 {
 
-#if GTENSOR_DEVICE_CUDA
-namespace gallocator = backend::cuda::gallocator;
-#elif GTENSOR_DEVICE_HIP
-namespace gallocator = backend::hip::gallocator;
-#endif
-
 struct ops
 {
   static void memset(void* dst_, int value, size_type nbytes)
@@ -650,7 +644,7 @@ inline void copy(P_src src, P_dst dst, size_type count)
 #endif
 
 // ======================================================================
-// select backend
+// standard backend
 
 namespace standard
 {
@@ -666,6 +660,20 @@ using namespace backend::sycl;
 using namespace backend::host;
 #endif
 } // namespace standard
+
+// ======================================================================
+// backend being used in clib (ie., the Fortran interface)
+
+namespace clib
+{
+#if GTENSOR_DEVICE_CUDA
+using namespace backend::cuda;
+#elif GTENSOR_DEVICE_HIP
+using namespace backend::hip;
+#elif GTENSOR_DEVICE_SYCL
+using namespace backend::sycl;
+#endif
+} // namespace clib
 
 } // namespace backend
 
