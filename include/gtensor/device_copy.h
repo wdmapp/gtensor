@@ -33,14 +33,6 @@ inline void copy(const T* src, T* dest, std::size_t count)
 
 #endif // GTENSOR_USE_THRUST
 
-#else // not GTENSOR_HAVE_DEVICE
-
-template <typename S_from, typename S_to, typename T>
-inline void copy(const T* src, T* dest, std::size_t count)
-{
-  std::memcpy((void*)dest, (void*)src, count * sizeof(T));
-}
-
 #endif // GTENSOR_HAVE_DEVICE
 
 } // namespace standard

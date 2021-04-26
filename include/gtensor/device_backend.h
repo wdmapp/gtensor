@@ -624,6 +624,12 @@ struct ops
 template <typename T>
 using host_allocator = std::allocator<T>;
 
+template <typename S_from, typename S_to, typename T>
+inline void copy(const T* src, T* dest, std::size_t count)
+{
+  std::memcpy((void*)dest, (void*)src, count * sizeof(T));
+}
+
 }; // namespace host
 
 // ======================================================================
