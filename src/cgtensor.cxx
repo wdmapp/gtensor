@@ -80,8 +80,8 @@ void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes)
 
 void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::device_copy_async_dd<uint8_t>((uint8_t*)src, (uint8_t*)dst,
-                                             nbytes);
+  gt::backend::clib::device_copy_async_dd<uint8_t>((uint8_t*)src, (uint8_t*)dst,
+                                                   nbytes);
 }
 
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes)

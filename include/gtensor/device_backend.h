@@ -48,11 +48,6 @@ namespace backend
 
 #ifdef GTENSOR_DEVICE_CUDA
 
-inline void device_synchronize()
-{
-  gtGpuCheck(cudaStreamSynchronize(0));
-}
-
 inline int device_get_count()
 {
   int device_count;
@@ -86,19 +81,7 @@ inline uint32_t device_get_vendor_id(int device_id)
   return packed;
 }
 
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(
-    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
-}
-
 #elif defined(GTENSOR_DEVICE_HIP)
-
-inline void device_synchronize()
-{
-  gtGpuCheck(hipStreamSynchronize(0));
-}
 
 inline int device_get_count()
 {
@@ -133,37 +116,7 @@ inline uint32_t device_get_vendor_id(int device_id)
   return packed;
 }
 
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(
-    hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
-}
-
-#elif defined(GTENSOR_DEVICE_SYCL)
-
-inline void device_synchronize()
-{
-  gt::backend::sycl::get_queue().wait();
-}
-
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(dst, src, sizeof(T) * count);
-}
-
 #endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
-
-#ifdef GTENSOR_DEVICE_HOST
-
-inline void device_synchronize()
-{
-  // no need to synchronize on host
-}
-
-#endif
 
 #ifdef GTENSOR_USE_THRUST
 
@@ -342,6 +295,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+inline void device_synchronize()
+{
+  gtGpuCheck(cudaStreamSynchronize(0));
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, size_type count)
+{
+  gtGpuCheck(
+    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+}
+
 } // namespace cuda
 
 #endif
@@ -477,6 +442,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+inline void device_synchronize()
+{
+  gtGpuCheck(hipStreamSynchronize(0));
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  gtGpuCheck(
+    hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+}
+
 } // namespace hip
 
 #endif
@@ -584,6 +561,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+inline void device_synchronize()
+{
+  gt::backend::sycl::get_queue().wait();
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(dst, src, sizeof(T) * count);
+}
+
 } // namespace sycl
 
 #endif // GTENSOR_DEVICE_SYCL
@@ -601,6 +590,11 @@ template <typename S_from, typename S_to, typename T>
 inline void copy(const T* src, T* dst, size_type count)
 {
   std::copy(src, src + count, dst);
+}
+
+inline void device_synchronize()
+{
+  // no need to synchronize on host
 }
 
 }; // namespace host
@@ -672,6 +666,8 @@ using namespace backend::cuda;
 using namespace backend::hip;
 #elif GTENSOR_DEVICE_SYCL
 using namespace backend::sycl;
+#else // just for device_synchronize()
+using namespace backend::host;
 #endif
 } // namespace clib
 
@@ -682,7 +678,7 @@ using namespace backend::sycl;
 
 void inline synchronize()
 {
-  gt::backend::device_synchronize();
+  gt::backend::clib::device_synchronize();
 }
 
 } // namespace gt
