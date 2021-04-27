@@ -169,14 +169,18 @@ __global__ void kernel_assign_3(Elhs lhs, Erhs rhs)
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_4(Elhs lhs, Erhs rhs)
 {
-  int i = threadIdx.x + blockIdx.x * BS_X;
-  int j = threadIdx.y + blockIdx.y * BS_Y;
-  int b = blockIdx.z;
-  int l = b / lhs.shape(2);
-  b -= l * lhs.shape(2);
-  int k = b;
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
-  if (i < lhs.shape(0) && j < lhs.shape(1)) {
+  if (idx < lhs.size()) {
+    int rem = idx;
+    int i = rem % lhs.shape(0);
+    rem /= lhs.shape(0);
+    int j = rem % lhs.shape(1);
+    rem /= lhs.shape(1);
+    int k = rem % lhs.shape(2);
+    rem /= lhs.shape(2);
+    int l = rem;
+
     lhs(i, j, k, l) = rhs(i, j, k, l);
   }
 }
@@ -278,10 +282,8 @@ struct assigner<4, space::device>
   static void run(E1& lhs, const E2& rhs)
   {
     // printf("assigner<4, device>\n");
-    dim3 numThreads(BS_X, BS_Y);
-    dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
-                   (lhs.shape(1) + BS_Y - 1) / BS_Y,
-                   lhs.shape(2) * lhs.shape(3));
+    dim3 numThreads(256);
+    dim3 numBlocks((lhs.size() + numThreads.x - 1) / numThreads.x);
 
     gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
