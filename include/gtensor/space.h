@@ -133,20 +133,16 @@ inline bool operator!=(const caching_allocator<T, AT>& a,
   return !(a == b);
 }
 
-// ======================================================================
+} // namespace allocator
 
-template <typename T>
-using host_allocator = gt::backend::system::host_allocator<T>;
-
-#ifdef GTENSOR_HAVE_DEVICE
-
-template <typename T>
-using device_allocator =
-  caching_allocator<T, gt::backend::system::device_allocator<T>>;
-
+#ifndef GTENSOR_DEFAULT_HOST_ALLOCATOR
+#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::backend::system::host_allocator<T>
 #endif
 
-} // namespace allocator
+#ifndef GTENSOR_DEFAULT_DEVICE_ALLOCATOR
+#define GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)                                    \
+  gt::allocator::caching_allocator<T, gt::backend::system::device_allocator<T>>
+#endif
 
 // ======================================================================
 // space
@@ -160,21 +156,21 @@ struct kernel;
 
 #ifdef GTENSOR_USE_THRUST
 
-template <typename T, typename A>
+template <typename T, typename A = GTENSOR_DEFAULT_HOST_ALLOCATOR(T)>
 using host_vector = thrust::host_vector<T, A>;
 
 #ifdef GTENSOR_HAVE_DEVICE
-template <typename T, typename A>
+template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
 using device_vector = thrust::device_vector<T, A>;
 #endif
 
 #else
 
-template <typename T, typename A = gt::allocator::host_allocator<T>>
-using host_vector = gt::backend::host_storage<T>;
+template <typename T, typename A = GTENSOR_DEFAULT_HOST_ALLOCATOR(T)>
+using host_vector = gt::backend::host_storage<T, A>;
 
 #ifdef GTENSOR_HAVE_DEVICE
-template <typename T, typename A = gt::allocator::device_allocator<T>>
+template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
 using device_vector = gt::backend::device_storage<T, A>;
 #endif
 
@@ -182,8 +178,8 @@ using device_vector = gt::backend::device_storage<T, A>;
 
 struct host
 {
-  template <typename T, typename A = gt::allocator::host_allocator<T>>
-  using Vector = host_vector<T, A>;
+  template <typename T>
+  using Vector = host_vector<T>;
   template <typename T>
   using Span = span<T>;
 };
@@ -192,8 +188,8 @@ struct host
 
 struct device
 {
-  template <typename T, typename A = gt::allocator::device_allocator<T>>
-  using Vector = device_vector<T, A>;
+  template <typename T>
+  using Vector = device_vector<T>;
   template <typename T>
   using Span = device_span<T>;
 };
