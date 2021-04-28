@@ -279,10 +279,12 @@ TEST(gtensor, is_expression_types)
   EXPECT_TRUE(gt::is_gtensor_span<decltype(aspan)>::value);
 }
 
-template <typename T, gt::size_type N, typename S, typename T2,
-          typename = std::enable_if_t<std::is_convertible<T2, T>::value>>
-void expect_all_eq(gt::gtensor<T, N, S>& a, T2 value)
+template <typename EC, gt::size_type N, typename S, typename T2,
+          typename = std::enable_if_t<
+            std::is_convertible<T2, typename EC::value_type>::value>>
+void expect_all_eq(gt::gtensor_container<EC, N, S>& a, T2 value)
 {
+  using T = typename EC::value_type;
   auto aflat = gt::flatten(a);
   for (int i = 0; i < aflat.shape(0); i++) {
     EXPECT_EQ(aflat(i), T(value));
