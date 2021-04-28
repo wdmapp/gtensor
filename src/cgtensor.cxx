@@ -36,32 +36,32 @@ uint32_t gt_backend_device_get_vendor_id(int device_id)
 
 void* gt_backend_host_allocate(size_t nbytes)
 {
-  return (void*)gt::backend::host_allocator<uint8_t>::allocate(nbytes);
+  return (void*)gt::backend::ops<uint8_t>::host::allocate(nbytes);
 }
 
 void* gt_backend_device_allocate(size_t nbytes)
 {
-  return (void*)gt::backend::device_allocator<uint8_t>::allocate(nbytes);
+  return (void*)gt::backend::ops<uint8_t>::device::allocate(nbytes);
 }
 
 void* gt_backend_managed_allocate(size_t nbytes)
 {
-  return (void*)gt::backend::managed_allocator<uint8_t>::allocate(nbytes);
+  return (void*)gt::backend::ops<uint8_t>::managed::allocate(nbytes);
 }
 
 void gt_backend_host_deallocate(void* p)
 {
-  gt::backend::host_allocator<uint8_t>::deallocate((uint8_t*)p);
+  gt::backend::ops<uint8_t>::host::deallocate((uint8_t*)p);
 }
 
 void gt_backend_device_deallocate(void* p)
 {
-  gt::backend::device_allocator<uint8_t>::deallocate((uint8_t*)p);
+  gt::backend::ops<uint8_t>::device::deallocate((uint8_t*)p);
 }
 
 void gt_backend_managed_deallocate(void* p)
 {
-  gt::backend::managed_allocator<uint8_t>::deallocate((uint8_t*)p);
+  gt::backend::ops<uint8_t>::managed::deallocate((uint8_t*)p);
 }
 
 void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes)

@@ -15,7 +15,7 @@ namespace backend
  * Note that this is a small subset of the features in thrust::device_vector.
  * In particular, iterators are not yet supported.
  */
-template <typename T, typename Allocator>
+template <typename T, typename Allocator, typename Ops>
 class gtensor_storage
 {
 public:
@@ -29,17 +29,18 @@ public:
   using const_reference =
     std::add_lvalue_reference_t<std::add_const_t<element_type>>;
   using size_type = gt::size_type;
+  using ops = Ops;
 
   gtensor_storage(size_type count)
     : data_(nullptr), size_(count), capacity_(count)
   {
     if (capacity_ > 0) {
-      data_ = allocator_type::allocate(capacity_);
+      data_ = allocator_.allocate(capacity_);
     }
   }
   gtensor_storage() : gtensor_storage(0) {}
 
-  ~gtensor_storage() { allocator_type::deallocate(data_); }
+  ~gtensor_storage() { allocator_.deallocate(data_, capacity_); }
 
   // copy and move constructors
   gtensor_storage(const gtensor_storage& dv)
@@ -48,7 +49,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      allocator_type::copy(dv.data_, data_, size_);
+      ops::copy(dv.data_, data_, size_);
     }
   }
 
@@ -68,7 +69,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      allocator_type::copy(dv.data_, data_, size_);
+      ops::copy(dv.data_, data_, size_);
     }
 
     return *this;
@@ -100,33 +101,36 @@ private:
   pointer data_;
   size_type size_;
   size_type capacity_;
+  allocator_type allocator_;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
+
 template <typename T>
-using device_storage = gtensor_storage<T, device_allocator<T>>;
+using device_storage = gtensor_storage<T, device_allocator<T>, device_ops<T>>;
+
 #endif
 
 template <typename T>
-using host_storage = gtensor_storage<T, host_allocator<T>>;
+using host_storage = gtensor_storage<T, host_allocator<T>, host_ops<T>>;
 
-template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size,
-                                          bool discard)
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::resize(
+  gtensor_storage::size_type new_size, bool discard)
 {
   if (capacity_ == 0) {
     if (new_size == 0) {
       return;
     }
     capacity_ = size_ = new_size;
-    data_ = allocator_type::allocate(capacity_);
+    data_ = allocator_.allocate(capacity_);
   } else if (new_size > capacity_) {
-    pointer new_data = allocator_type::allocate(new_size);
+    pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      allocator_type::copy(data_, new_data, copy_size);
+      ops::copy(data_, new_data, copy_size);
     }
-    allocator_type::deallocate(data_);
+    allocator_.deallocate(data_, capacity_);
     data_ = new_data;
     capacity_ = size_ = new_size;
   } else {
@@ -135,15 +139,16 @@ inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size,
   }
 }
 
-template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize_discard(
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::resize_discard(
   gtensor_storage::size_type new_size)
 {
   resize(new_size, true);
 }
 
-template <typename T, typename A>
-inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size)
+template <typename T, typename A, typename O>
+inline void gtensor_storage<T, A, O>::resize(
+  gtensor_storage::size_type new_size)
 {
   resize(new_size, false);
 }
@@ -152,34 +157,55 @@ inline void gtensor_storage<T, A>::resize(gtensor_storage::size_type new_size)
 // equality operators (for testing)
 
 template <typename T>
-bool operator==(const gtensor_storage<T, host_allocator<T>>& v1,
-                const gtensor_storage<T, host_allocator<T>>& v2)
+host_storage<T>& host_mirror(host_storage<T>& h)
 {
-  if (v1.size() != v2.size()) {
-    return false;
-  }
-  for (int i = 0; i < v1.size(); i++) {
-    if (v1[i] != v2[i]) {
-      return false;
-    }
-  }
-  return true;
+  return h;
+}
+
+template <typename T>
+const host_storage<T>& host_mirror(const host_storage<T>& h)
+{
+  return h;
+}
+
+template <typename T>
+void copy(const host_storage<T>& d, const host_storage<T>& h)
+{
+  // this copy is, at this time, only for use with host_mirror,
+  // which return a reference to the very same object in the host
+  // case
+  assert(&h == &d);
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
-                const gtensor_storage<T, device_allocator<T>>& v2)
+host_storage<T> host_mirror(const device_storage<T>& d)
+{
+  return host_storage<T>(d.size());
+}
+
+template <typename T>
+void copy(const device_storage<T>& d, host_storage<T>& h)
+{
+  assert(h.size() == d.size());
+  device_ops<T>::copy_dh(d.data(), h.data(), d.size());
+}
+
+#endif
+
+template <typename T, typename A, typename O>
+bool operator==(const gtensor_storage<T, A, O>& v1,
+                const gtensor_storage<T, A, O>& v2)
 {
   if (v1.size() != v2.size()) {
     return false;
   }
-  host_storage<T> h1(v1.size());
-  host_storage<T> h2(v2.size());
-  device_copy_dh(v1.data(), h1.data(), v1.size());
-  device_copy_dh(v2.data(), h2.data(), v2.size());
-  for (int i = 0; i < v1.size(); i++) {
+  auto&& h1 = host_mirror(v1);
+  auto&& h2 = host_mirror(v2);
+  copy(v1, h1);
+  copy(v2, h2);
+  for (int i = 0; i < h1.size(); i++) {
     if (h1[i] != h2[i]) {
       return false;
     }
@@ -187,17 +213,15 @@ bool operator==(const gtensor_storage<T, device_allocator<T>>& v1,
   return true;
 }
 
-#endif
-
-template <typename T, typename A>
-bool operator!=(const gtensor_storage<T, A>& v1,
-                const gtensor_storage<T, A>& v2)
+template <typename T, typename A, typename O>
+bool operator!=(const gtensor_storage<T, A, O>& v1,
+                const gtensor_storage<T, A, O>& v2)
 {
   return !(v1 == v2);
 }
 
 } // end namespace backend
 
-} // end namespace gt
+} // namespace gt
 
 #endif // GTENSOR_DEVICE_STORAGE_H

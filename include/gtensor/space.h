@@ -20,6 +20,9 @@
 namespace gt
 {
 
+namespace allocator
+{
+
 // ======================================================================
 // caching_allocator
 
@@ -128,6 +131,23 @@ inline bool operator!=(const caching_allocator<T, AT>& a,
   return !(a == b);
 }
 
+#ifdef GTENSOR_HAVE_DEVICE
+#ifdef GTENSOR_USE_THRUST
+
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+template <typename T>
+using device_allocator =
+  caching_allocator<T, thrust::device_malloc_allocator<T>>;
+#else
+template <typename T>
+using device_allocator = caching_allocator<T, thrust::device_allocator<T>>;
+#endif
+
+#endif
+#endif
+
+} // namespace allocator
+
 // ======================================================================
 // space
 
@@ -154,19 +174,10 @@ struct host
 
 #ifdef GTENSOR_USE_THRUST
 
-#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
-template <typename T>
-using device_allocator =
-  caching_allocator<T, thrust::device_malloc_allocator<T>>;
-#else
-template <typename T>
-using device_allocator = caching_allocator<T, thrust::device_allocator<T>>;
-#endif
-
 struct device
 {
   template <typename T>
-  using Vector = thrust::device_vector<T, device_allocator<T>>;
+  using Vector = thrust::device_vector<T, gt::allocator::device_allocator<T>>;
   template <typename T>
   using Span = device_span<T>;
 };

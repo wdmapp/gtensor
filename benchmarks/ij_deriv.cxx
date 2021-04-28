@@ -350,19 +350,19 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   printf("== %dx%dx%d ==\n", li0, lj0, lbg0);
 
-  h_arr = gt::backend::host_allocator<Complex>::allocate(arr_size);
-  d_arr = gt::backend::device_allocator<Complex>::allocate(arr_size);
+  h_arr = gt::backend::host_allocator<Complex>{}.allocate(arr_size);
+  d_arr = gt::backend::device_allocator<Complex>{}.allocate(arr_size);
 
-  h_darr = gt::backend::host_allocator<Complex>::allocate(darr_size);
-  d_darr = gt::backend::device_allocator<Complex>::allocate(darr_size);
+  h_darr = gt::backend::host_allocator<Complex>{}.allocate(darr_size);
+  d_darr = gt::backend::device_allocator<Complex>{}.allocate(darr_size);
 
   ref_darr = (Complex*)malloc(sizeof(Complex) * darr_size);
 
-  h_ikj = gt::backend::host_allocator<Complex>::allocate(ikj_size);
-  d_ikj = gt::backend::device_allocator<Complex>::allocate(ikj_size);
+  h_ikj = gt::backend::host_allocator<Complex>{}.allocate(ikj_size);
+  d_ikj = gt::backend::device_allocator<Complex>{}.allocate(ikj_size);
 
-  h_coeff = gt::backend::host_allocator<Real>::allocate(ncoeff);
-  d_coeff = gt::backend::device_allocator<Real>::allocate(ncoeff);
+  h_coeff = gt::backend::host_allocator<Real>{}.allocate(ncoeff);
+  d_coeff = gt::backend::device_allocator<Real>{}.allocate(ncoeff);
 
   // initialize the input arrays
   // 4th order centered difference
@@ -507,16 +507,16 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   // cleanup
   free(ref_darr);
 
-  gt::backend::host_allocator<Complex>::deallocate(h_arr);
-  gt::backend::device_allocator<Complex>::deallocate(d_arr);
+  gt::backend::host_allocator<Complex>{}.deallocate(h_arr, arr_size);
+  gt::backend::device_allocator<Complex>{}.deallocate(d_arr, arr_size);
 
-  gt::backend::host_allocator<Complex>::deallocate(h_darr);
-  gt::backend::device_allocator<Complex>::deallocate(d_darr);
+  gt::backend::host_allocator<Complex>{}.deallocate(h_darr, arr_size);
+  gt::backend::device_allocator<Complex>{}.deallocate(d_darr, arr_size);
 
-  gt::backend::host_allocator<Real>::deallocate(h_coeff);
+  gt::backend::host_allocator<Real>{}.deallocate(h_coeff, ncoeff);
 
-  gt::backend::host_allocator<Complex>::deallocate(h_ikj);
-  gt::backend::device_allocator<Complex>::deallocate(d_ikj);
+  gt::backend::host_allocator<Complex>{}.deallocate(h_ikj, ikj_size);
+  gt::backend::device_allocator<Complex>{}.deallocate(d_ikj, ikj_size);
 }
 
 int main(int argc, char** argv)
