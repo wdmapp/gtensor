@@ -111,3 +111,33 @@ TEST(gtensor_span, index_by_shape)
   EXPECT_EQ(aspan[gt::shape(1, 1)], 22.);
   EXPECT_EQ(aspan[gt::shape(2, 1)], 32.);
 }
+
+TEST(gtensor_span, fill_full)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  auto a_span = gt::adapt<2>(a.data(), a.shape());
+
+  a_span.fill(1.);
+
+  EXPECT_EQ(a_span, (gt::gtensor<double, 2>({{1., 1., 1.}, {1., 1., 1.}})));
+}
+
+TEST(gtensor_span, fill_from_strides_1)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  auto a_span = gt::gtensor_span<double, 2>(a.data(), {2, 2}, a.strides());
+
+  a_span.fill(1.);
+  EXPECT_EQ(a_span, (gt::gtensor<double, 2>({{1., 1.}, {1., 1.}})));
+  EXPECT_EQ(a, (gt::gtensor<double, 2>({{1., 1., 13.}, {1., 1., 23.}})));
+}
+
+TEST(gtensor_span, DISABLED_fill_from_strides_0)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  auto a_span = gt::gtensor_span<double, 2>(a.data(), {2, 2}, a.strides());
+
+  a_span.fill(0.);
+  EXPECT_EQ(a_span, (gt::gtensor<double, 2>({{0., 0.}, {0., 0.}})));
+  EXPECT_EQ(a, (gt::gtensor<double, 2>({{0., 0., 13.}, {0., 0., 23.}})));
+}
