@@ -133,6 +133,11 @@ inline bool operator!=(const caching_allocator<T, AT>& a,
   return !(a == b);
 }
 
+// ======================================================================
+
+template <typename T>
+using host_allocator = gt::backend::system::host_allocator<T>;
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
@@ -155,8 +160,8 @@ struct kernel;
 
 #ifdef GTENSOR_USE_THRUST
 
-template <typename T>
-using host_vector = thrust::device_vector<T>;
+template <typename T, typename A>
+using host_vector = thrust::host_vector<T, A>;
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T, typename A>
@@ -165,11 +170,11 @@ using device_vector = thrust::device_vector<T, A>;
 
 #else
 
-template <typename T>
+template <typename T, typename A = gt::allocator::host_allocator<T>>
 using host_vector = gt::backend::host_storage<T>;
 
 #ifdef GTENSOR_HAVE_DEVICE
-template <typename T, typename A>
+template <typename T, typename A = gt::allocator::device_allocator<T>>
 using device_vector = gt::backend::device_storage<T, A>;
 #endif
 
@@ -177,8 +182,8 @@ using device_vector = gt::backend::device_storage<T, A>;
 
 struct host
 {
-  template <typename T>
-  using Vector = host_vector<T>;
+  template <typename T, typename A = gt::allocator::host_allocator<T>>
+  using Vector = host_vector<T, A>;
   template <typename T>
   using Span = span<T>;
 };
@@ -187,8 +192,8 @@ struct host
 
 struct device
 {
-  template <typename T>
-  using Vector = device_vector<T, gt::allocator::device_allocator<T>>;
+  template <typename T, typename A = gt::allocator::device_allocator<T>>
+  using Vector = device_vector<T, A>;
   template <typename T>
   using Span = device_span<T>;
 };
