@@ -153,27 +153,37 @@ struct any;
 
 struct kernel;
 
+#ifdef GTENSOR_USE_THRUST
+
+template <typename T>
+using host_vector = thrust::device_vector<T>;
+
+#ifdef GTENSOR_HAVE_DEVICE
+template <typename T, typename A>
+using device_vector = thrust::device_vector<T, A>;
+#endif
+
+#else
+
+template <typename T>
+using host_vector = gt::backend::host_storage<T>;
+
+#ifdef GTENSOR_HAVE_DEVICE
+template <typename T, typename A>
+using device_vector = gt::backend::device_storage<T, A>;
+#endif
+
+#endif // GTENSOR_USE_THRUST
+
 struct host
 {
   template <typename T>
-#ifdef GTENSOR_USE_THRUST
-  using Vector = thrust::host_vector<T>;
-#else
-  using Vector = gt::backend::host_storage<T>;
-#endif
+  using Vector = host_vector<T>;
   template <typename T>
   using Span = span<T>;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
-
-#ifdef GTENSOR_USE_THRUST
-template <typename T, typename A>
-using device_vector = thrust::device_vector<T, A>;
-#else
-template <typename T, typename A>
-using device_vector = gt::backend::device_storage<T, A>;
-#endif // GTENSOR_USE_THRUST
 
 struct device
 {
