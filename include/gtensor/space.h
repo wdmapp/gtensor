@@ -42,11 +42,11 @@ struct kernel;
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T, typename A = GTENSOR_DEFAULT_HOST_ALLOCATOR(T)>
-using host_vector = thrust::host_vector<T, A>;
+using host_vector = ::thrust::host_vector<T, A>;
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
-using device_vector = thrust::device_vector<T, A>;
+using device_vector = ::thrust::device_vector<T, A>;
 #endif
 
 #else
