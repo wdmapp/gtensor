@@ -30,13 +30,11 @@ template <class T, class A>
 struct caching_allocator : A
 {
   using base_type = A;
-  using value_type = typename A::value_type;
-  using reference = typename A::reference;
-  using const_reference = typename A::const_reference;
-  using pointer = typename A::pointer;
-  using const_pointer = typename A::const_pointer;
-  using size_type = typename A::size_type;
-  using difference_type = typename A::difference_type;
+  using value_type = typename std::allocator_traits<A>::value_type;
+  using pointer = typename std::allocator_traits<A>::pointer;
+  using const_pointer = typename std::allocator_traits<A>::const_pointer;
+  using size_type = typename std::allocator_traits<A>::size_type;
+  using difference_type = typename std::allocator_traits<A>::difference_type;
 
   caching_allocator() {}
   caching_allocator(const caching_allocator&) {}
@@ -64,17 +62,21 @@ struct caching_allocator : A
       std::cout << "ALLOC: allocating " << cnt << " bytes\n";
 #endif
     }
-    allocated_.emplace(std::make_pair(p, cnt));
+    if (p) {
+      allocated_.emplace(std::make_pair(p, cnt));
+    }
     return p;
   }
 
   void deallocate(pointer p, size_type cnt)
   {
     gt::synchronize();
-    auto it = allocated_.find(p);
-    assert(it != allocated_.end());
-    free_.emplace(std::make_pair(it->second, p));
-    allocated_.erase(it);
+    if (p) {
+      auto it = allocated_.find(p);
+      assert(it != allocated_.end());
+      free_.emplace(std::make_pair(it->second, p));
+      allocated_.erase(it);
+    }
 #ifdef DEBUG
     std::cout << "ALLOC: deallocing cnt " << cnt
               << " #allocated = " << allocated_.size()
@@ -132,18 +134,11 @@ inline bool operator!=(const caching_allocator<T, AT>& a,
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
-#ifdef GTENSOR_USE_THRUST
 
-#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
 template <typename T>
 using device_allocator =
-  caching_allocator<T, thrust::device_malloc_allocator<T>>;
-#else
-template <typename T>
-using device_allocator = caching_allocator<T, thrust::device_allocator<T>>;
-#endif
+  caching_allocator<T, gt::backend::system::device_allocator<T>>;
 
-#endif
 #endif
 
 } // namespace allocator
@@ -187,7 +182,8 @@ struct device
 struct device
 {
   template <typename T>
-  using Vector = gt::backend::device_storage<T>;
+  using Vector =
+    gt::backend::device_storage<T, gt::allocator::device_allocator<T>>;
   template <typename T>
   using Span = device_span<T>;
 };
