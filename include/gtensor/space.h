@@ -61,27 +61,29 @@ using device_vector = gt::backend::device_storage<T, A>;
 
 #endif // GTENSOR_USE_THRUST
 
-struct host
+template <typename S>
+struct space_traits
+{};
+
+template <>
+struct space_traits<host>
 {
   template <typename T>
-  using Vector = host_vector<T>;
+  using storage_type = host_vector<T>;
   template <typename T>
-  using Span = span<T>;
+  using span_type = span<T>;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-struct device
+template <>
+struct space_traits<device>
 {
   template <typename T>
-  using Vector = device_vector<T>;
+  using storage_type = device_vector<T>;
   template <typename T>
-  using Span = device_span<T>;
+  using span_type = device_span<T>;
 };
-
-#else // not GTENSOR_HAVE_DEVICE
-
-using device = host;
 
 #endif
 
