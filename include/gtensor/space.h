@@ -168,27 +168,20 @@ struct host
 #ifdef GTENSOR_HAVE_DEVICE
 
 #ifdef GTENSOR_USE_THRUST
-
-struct device
-{
-  template <typename T>
-  using Vector = thrust::device_vector<T, gt::allocator::device_allocator<T>>;
-  template <typename T>
-  using Span = device_span<T>;
-};
-
+template <typename T, typename A>
+using device_vector = thrust::device_vector<T, A>;
 #else
+template <typename T, typename A>
+using device_vector = gt::backend::device_storage<T, A>;
+#endif // GTENSOR_USE_THRUST
 
 struct device
 {
   template <typename T>
-  using Vector =
-    gt::backend::device_storage<T, gt::allocator::device_allocator<T>>;
+  using Vector = device_vector<T, gt::allocator::device_allocator<T>>;
   template <typename T>
   using Span = device_span<T>;
 };
-
-#endif // GTENSOR_USE_THRUST
 
 #else // not GTENSOR_HAVE_DEVICE
 
