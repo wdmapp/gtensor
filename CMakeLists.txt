@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(gtensor
         VERSION 0.01
         LANGUAGES CXX
@@ -108,11 +108,6 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
 endif()
 
 if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
-
-  if (${CMAKE_VERSION} VERSION_LESS "3.18.0")
-    message(FATAL_ERROR "gtensor HIP support requires cmake 3.18+")
-  endif()
-
   message(STATUS "${PROJECT_NAME}: adding gtensor_hip target")
   add_gtensor_library(hip)
 
