@@ -315,7 +315,7 @@ if (GTENSOR_ENABLE_BLAS)
   target_link_libraries(gtblas INTERFACE gtensor::gtensor)
 
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
-    target_link_libraries(gtblas INTERFACE "cublas")
+    target_link_libraries(gtblas INTERFACE CUDA::cublas)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
     target_link_libraries(gtblas INTERFACE rocblas rocsolver)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
