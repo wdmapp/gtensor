@@ -61,6 +61,47 @@ using device_vector = gt::backend::device_storage<T, A>;
 
 #endif // GTENSOR_USE_THRUST
 
+// ======================================================================
+// storage_traits
+
+template <typename EC>
+struct storage_traits;
+
+template <typename T, typename A>
+struct storage_traits<gt::backend::host_storage<T, A>>
+{
+  using space_type = space::host;
+};
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+template <typename T, typename A>
+struct storage_traits<gt::backend::device_storage<T, A>>
+{
+  using space_type = space::device;
+};
+
+#endif
+
+#ifdef GTENSOR_USE_THRUST
+
+template <typename T, typename A>
+struct storage_traits<::thrust::host_vector<T, A>>
+{
+  using space_type = space::host;
+};
+
+template <typename T, typename A>
+struct storage_traits<::thrust::device_vector<T, A>>
+{
+  using space_type = space::device;
+};
+
+#endif
+
+// ======================================================================
+// space_traits
+
 template <typename S>
 struct space_traits
 {};

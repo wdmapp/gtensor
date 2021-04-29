@@ -67,20 +67,26 @@ public:
       storage_{other.data(), other.size()}
   {}
 
-  // Implicit conversion from a gtensor object with the same or compaitible
+  // Implicit conversion from a gtensor object with the same or compatible
   // element type
-  template <class EC, std::enable_if_t<is_allowed_element_type_conversion<
-                                         typename EC::value_type, T>::value,
-                                       int> = 0>
-  gtensor_span(gtensor_container<EC, N, S>& other)
+  template <
+    class EC,
+    std::enable_if_t<
+      is_allowed_element_type_conversion<typename EC::value_type, T>::value &&
+        std::is_same<S, typename space::storage_traits<EC>::space_type>::value,
+      int> = 0>
+  gtensor_span(gtensor_container<EC, N>& other)
     : base_type{other.shape(), other.strides()},
       storage_{other.data(), other.size()}
   {}
 
-  template <class EC, std::enable_if_t<is_allowed_element_type_conversion<
-                                         typename EC::value_type, T>::value,
-                                       int> = 0>
-  gtensor_span(const gtensor_container<EC, N, S>& other)
+  template <
+    class EC,
+    std::enable_if_t<
+      is_allowed_element_type_conversion<typename EC::value_type, T>::value &&
+        std::is_same<S, typename space::storage_traits<EC>::space_type>::value,
+      int> = 0>
+  gtensor_span(const gtensor_container<EC, N>& other)
     : base_type{other.shape(), other.strides()},
       storage_{other.data(), other.size()}
   {}

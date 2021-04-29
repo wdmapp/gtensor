@@ -8,13 +8,13 @@
 namespace gt
 {
 
-template <typename EC, size_type N, typename S>
+template <typename EC, size_type N>
 class gtensor_container;
 
 template <typename T, size_type N, typename S = space::host>
 using gtensor =
   gtensor_container<typename space::space_traits<S>::template storage_type<T>,
-                    N, S>;
+                    N>;
 } // namespace gt
 
 #endif
