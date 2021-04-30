@@ -393,13 +393,17 @@ MAKE_BINARY_OP(divide, /)
 
 #undef MAKE_BINARY_OP
 
+// FIXME: The nv_exec_check_disable removes a warning cause by std::abs
+// not being usable on the device, but eventually we'll actually want to support
+// this one the device
+
 #define MAKE_UNARY_FUNC(NAME, FUNC)                                            \
                                                                                \
   namespace funcs                                                              \
   {                                                                            \
   struct NAME                                                                  \
   {                                                                            \
-    template <typename T>                                                      \
+    _Pragma("nv_exec_check_disable") template <typename T>                     \
     GT_INLINE auto operator()(T a) const                                       \
     {                                                                          \
       return FUNC(a);                                                          \
