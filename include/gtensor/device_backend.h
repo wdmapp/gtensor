@@ -66,6 +66,9 @@ using device = host;
 
 #endif
 
+template <typename S>
+struct space_traits;
+
 } // namespace space
 
 namespace backend
@@ -73,12 +76,11 @@ namespace backend
 
 // ======================================================================
 
-template <typename T, typename A>
+template <typename T, typename A, typename S>
 struct wrap_allocator
 {
   using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
+  using pointer = typename gt::space::space_traits<S>::template pointer<T>;
   using size_type = gt::size_type;
 
   pointer allocate(size_type n) { return A::template allocate<T>(n); }
@@ -214,10 +216,12 @@ struct host
 } // namespace gallocator
 
 template <typename T>
-using device_allocator = wrap_allocator<T, typename gallocator::device>;
+using device_allocator =
+  wrap_allocator<T, typename gallocator::device, gt::space::device>;
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename gallocator::host>;
+using host_allocator =
+  wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
 template <typename Pointer>
 GT_INLINE Pointer raw_pointer_cast(Pointer p)
@@ -406,10 +410,12 @@ struct host
 } // namespace gallocator
 
 template <typename T>
-using device_allocator = wrap_allocator<T, typename gallocator::device>;
+using device_allocator =
+  wrap_allocator<T, typename gallocator::device, gt::space::device>;
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename gallocator::host>;
+using host_allocator =
+  wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
 template <typename Pointer>
 GT_INLINE Pointer raw_pointer_cast(Pointer p)
@@ -570,10 +576,12 @@ struct host
 } // namespace gallocator
 
 template <typename T>
-using device_allocator = wrap_allocator<T, typename gallocator::device>;
+using device_allocator =
+  wrap_allocator<T, typename gallocator::device, gt::space::device>;
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename gallocator::host>;
+using host_allocator =
+  wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
 template <typename Pointer>
 GT_INLINE Pointer raw_pointer_cast(Pointer p)
