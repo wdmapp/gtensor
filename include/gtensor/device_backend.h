@@ -77,10 +77,12 @@ template <typename T, typename A>
 struct wrap_allocator
 {
   using value_type = T;
+  using pointer = T*;
+  using const_pointer = const T*;
   using size_type = gt::size_type;
 
-  T* allocate(size_type n) { return A::template allocate<T>(n); }
-  void deallocate(T* p, size_type n) { A::deallocate(p); }
+  pointer allocate(size_type n) { return A::template allocate<T>(n); }
+  void deallocate(pointer p, size_type n) { A::deallocate(p); }
 };
 
 // ======================================================================
