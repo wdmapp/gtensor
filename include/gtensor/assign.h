@@ -418,7 +418,7 @@ struct assigner<N, space::device>
     auto size = calc_size(lhs.shape());
     auto k_lhs = flatten(lhs).to_kernel();
     auto k_rhs = flatten(rhs).to_kernel();
-    auto block_size = std::min(size, BS_LINEAR);
+    auto block_size = std::min(size_type(size), size_type(BS_LINEAR));
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto e = q.submit([&](sycl::handler& cgh) {

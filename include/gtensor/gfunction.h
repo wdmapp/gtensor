@@ -210,7 +210,7 @@ public:
 
   shape_type shape() const;
   int shape(int i) const;
-  GT_INLINE size_type size() const { return shape().size(); };
+  GT_INLINE size_type size() const { return calc_size(shape()); }
 
   template <typename... Args>
   GT_INLINE value_type operator()(Args... args) const;
@@ -251,6 +251,7 @@ public:
 
   shape_type shape() const;
   int shape(int i) const;
+  GT_INLINE size_type size() const { return calc_size(shape()); }
 
   template <typename... Args>
   GT_INLINE value_type operator()(Args... args) const;
