@@ -71,37 +71,6 @@ using device = host;
 namespace backend
 {
 
-#ifdef GTENSOR_USE_THRUST
-
-template <typename Pointer>
-GT_INLINE auto raw_pointer_cast(Pointer p)
-{
-  return thrust::raw_pointer_cast(p);
-}
-
-template <typename Pointer>
-GT_INLINE auto device_pointer_cast(Pointer p)
-{
-  return thrust::device_pointer_cast(p);
-}
-
-#else // using gt::backend::device_storage
-
-// define no-op device_pointer/raw ponter casts
-template <typename Pointer>
-GT_INLINE Pointer raw_pointer_cast(Pointer p)
-{
-  return p;
-}
-
-template <typename Pointer>
-GT_INLINE Pointer device_pointer_cast(Pointer p)
-{
-  return p;
-}
-
-#endif // GTENSOR_USE_THRUST
-
 // ======================================================================
 
 template <typename T, typename A>
@@ -247,6 +216,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
+
+template <typename Pointer>
+GT_INLINE Pointer raw_pointer_cast(Pointer p)
+{
+  return p;
+}
+
+template <typename Pointer>
+GT_INLINE Pointer device_pointer_cast(Pointer p)
+{
+  return p;
+}
 
 inline void device_synchronize()
 {
@@ -428,6 +409,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+template <typename Pointer>
+GT_INLINE Pointer raw_pointer_cast(Pointer p)
+{
+  return p;
+}
+
+template <typename Pointer>
+GT_INLINE Pointer device_pointer_cast(Pointer p)
+{
+  return p;
+}
+
 inline void device_synchronize()
 {
   gtGpuCheck(hipStreamSynchronize(0));
@@ -580,6 +573,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+template <typename Pointer>
+GT_INLINE Pointer raw_pointer_cast(Pointer p)
+{
+  return p;
+}
+
+template <typename Pointer>
+GT_INLINE Pointer device_pointer_cast(Pointer p)
+{
+  return p;
+}
+
 inline void device_synchronize()
 {
   gt::backend::sycl::get_queue().wait();
@@ -609,6 +614,18 @@ template <typename S_from, typename S_to, typename T>
 inline void copy(const T* src, T* dst, size_type count)
 {
   std::copy(src, src + count, dst);
+}
+
+template <typename Pointer>
+GT_INLINE Pointer raw_pointer_cast(Pointer p)
+{
+  return p;
+}
+
+template <typename Pointer>
+GT_INLINE Pointer device_pointer_cast(Pointer p)
+{
+  return p;
 }
 
 inline void device_synchronize()
@@ -652,6 +669,18 @@ inline void copy(P_src src, P_dst dst, size_type count)
   ::thrust::copy(src, src + count, dst);
 }
 
+template <typename Pointer>
+GT_INLINE auto raw_pointer_cast(Pointer p)
+{
+  return ::thrust::raw_pointer_cast(p);
+}
+
+template <typename Pointer>
+GT_INLINE auto device_pointer_cast(Pointer p)
+{
+  return ::thrust::device_pointer_cast(p);
+}
+
 }; // namespace thrust
 
 #endif
@@ -690,6 +719,18 @@ using namespace backend::sycl;
 using namespace backend::host;
 #endif
 } // namespace clib
+
+template <typename Pointer>
+GT_INLINE auto raw_pointer_cast(Pointer p)
+{
+  return system::raw_pointer_cast(p);
+}
+
+template <typename Pointer>
+GT_INLINE auto device_pointer_cast(Pointer p)
+{
+  return system::device_pointer_cast(p);
+}
 
 namespace detail
 {
