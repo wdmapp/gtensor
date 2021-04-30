@@ -41,37 +41,50 @@ using span = std::span<T>;
 
 #else // not C++ 20, define subset of span we care about
 
-namespace detail
+template <typename P>
+struct pointer_traits;
+
+template <typename T>
+struct pointer_traits<T*>
 {
-struct span_types_host
-{
-  template <typename T>
+  using element_type = T;
   using pointer = T*;
-  template <typename T>
+  using const_pointer = const T*;
   using reference = T&;
+  using const_reference = const T&;
+
+  template <typename U>
+  using rebind = U*;
 };
 
-struct span_types_thrust
+#ifdef GTENSOR_USE_THRUST
+
+template <typename T>
+struct pointer_traits<::thrust::device_ptr<T>>
 {
-  template <typename T>
+  using element_type = T;
   using pointer = ::thrust::device_ptr<T>;
-  template <typename T>
+  using const_pointer = ::thrust::device_ptr<const T>;
   using reference = ::thrust::device_reference<T>;
-};
-} // namespace detail
+  using const_reference = ::thrust::device_reference<const T>;
 
-template <typename T, typename TYPES = detail::span_types_host>
+  template <typename U>
+  using rebind = ::thrust::device_ptr<U>;
+};
+
+#endif
+
+template <typename T, typename Ptr = T*>
 class span
 {
 public:
   using element_type = T;
   using value_type = std::remove_cv_t<T>;
 
-  using pointer = typename TYPES::template pointer<element_type>;
-  using const_pointer = typename TYPES::template pointer<const element_type>;
-  using reference = typename TYPES::template reference<element_type>;
-  using const_reference =
-    typename TYPES::template reference<const element_type>;
+  using pointer = typename pointer_traits<Ptr>::pointer;
+  using const_pointer = typename pointer_traits<Ptr>::const_pointer;
+  using reference = typename pointer_traits<Ptr>::reference;
+  using const_reference = typename pointer_traits<Ptr>::const_reference;
   using iterator = pointer;
   using size_type = gt::size_type;
 
@@ -83,7 +96,9 @@ public:
   template <class OtherT,
             std::enable_if_t<
               is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  GT_INLINE span(const span<OtherT, TYPES>& other)
+  GT_INLINE span(
+    const span<OtherT, typename pointer_traits<Ptr>::template rebind<OtherT>>&
+      other)
     : data_{other.data()}, size_{other.size()}
   {}
 
@@ -114,7 +129,7 @@ private:
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T>
-using device_span = span<T, detail::span_types_thrust>;
+using device_span = span<T, thrust::device_ptr<T>>;
 
 #else // not GTENSOR_USE_THRUST
 
