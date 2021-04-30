@@ -41,18 +41,37 @@ using span = std::span<T>;
 
 #else // not C++ 20, define subset of span we care about
 
-template <typename T>
+namespace detail
+{
+struct span_types_host
+{
+  template <typename T>
+  using pointer = T*;
+  template <typename T>
+  using reference = T&;
+};
+
+struct span_types_thrust
+{
+  template <typename T>
+  using pointer = ::thrust::device_ptr<T>;
+  template <typename T>
+  using reference = ::thrust::device_reference<T>;
+};
+} // namespace detail
+
+template <typename T, typename TYPES = detail::span_types_host>
 class span
 {
 public:
   using element_type = T;
   using value_type = std::remove_cv_t<T>;
 
-  using pointer = std::add_pointer_t<element_type>;
-  using const_pointer = std::add_pointer_t<std::add_const_t<element_type>>;
-  using reference = std::add_lvalue_reference_t<element_type>;
+  using pointer = typename TYPES::template pointer<element_type>;
+  using const_pointer = typename TYPES::template pointer<const element_type>;
+  using reference = typename TYPES::template reference<element_type>;
   using const_reference =
-    std::add_lvalue_reference_t<std::add_const_t<element_type>>;
+    typename TYPES::template reference<const element_type>;
   using iterator = pointer;
   using size_type = gt::size_type;
 
@@ -64,7 +83,7 @@ public:
   template <class OtherT,
             std::enable_if_t<
               is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  GT_INLINE span(const span<OtherT>& other)
+  GT_INLINE span(const span<OtherT, TYPES>& other)
     : data_{other.data()}, size_{other.size()}
   {}
 
@@ -95,42 +114,7 @@ private:
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T>
-class device_span
-{
-public:
-  using element_type = T;
-  using value_type = std::remove_cv_t<T>;
-
-  using pointer = thrust::device_ptr<T>;
-  using const_pointer = std::add_const_t<pointer>;
-  using reference = thrust::device_reference<T>;
-  using const_reference = std::add_const_t<reference>;
-  using size_type = gt::size_type;
-
-  device_span() = default;
-  GT_INLINE device_span(pointer data, size_type size) : data_{data}, size_{size}
-  {}
-
-  device_span(const device_span& other) = default;
-
-  template <class OtherT,
-            std::enable_if_t<
-              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  GT_INLINE device_span(const device_span<OtherT>& other)
-    : data_{other.data()}, size_{other.size()}
-  {}
-
-  device_span& operator=(const device_span& other) = default;
-
-  GT_INLINE pointer data() const { return data_; }
-  GT_INLINE size_type size() const { return size_; }
-
-  GT_INLINE reference operator[](size_type i) const { return data_[i]; }
-
-private:
-  pointer data_;
-  size_type size_ = 0;
-};
+using device_span = span<T, detail::span_types_thrust>;
 
 #else // not GTENSOR_USE_THRUST
 
