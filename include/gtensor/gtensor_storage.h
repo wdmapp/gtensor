@@ -15,7 +15,7 @@ namespace backend
  * Note that this is a small subset of the features in thrust::device_vector.
  * In particular, iterators are not yet supported.
  */
-template <typename T, typename Allocator, typename Ops>
+template <typename T, typename Allocator, typename S>
 class gtensor_storage
 {
 public:
@@ -29,7 +29,7 @@ public:
   using const_reference =
     std::add_lvalue_reference_t<std::add_const_t<element_type>>;
   using size_type = gt::size_type;
-  using ops = Ops;
+  using space_type = S;
 
   gtensor_storage(size_type count)
     : data_(nullptr), size_(count), capacity_(count)
@@ -49,7 +49,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      ops::copy(dv.data_, data_, size_);
+      backend::ops::copy<space_type, space_type>(dv.data_, data_, size_);
     }
   }
 
@@ -69,7 +69,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      ops::copy(dv.data_, data_, size_);
+      backend::ops::copy<space_type, space_type>(dv.data_, data_, size_);
     }
 
     return *this;
@@ -107,12 +107,12 @@ private:
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <typename T>
-using device_storage = gtensor_storage<T, device_allocator<T>, device_ops<T>>;
+using device_storage = gtensor_storage<T, device_allocator<T>, space::device>;
 
 #endif
 
 template <typename T>
-using host_storage = gtensor_storage<T, host_allocator<T>, host_ops<T>>;
+using host_storage = gtensor_storage<T, host_allocator<T>, space::host>;
 
 template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::resize(
@@ -128,7 +128,7 @@ inline void gtensor_storage<T, A, O>::resize(
     pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      ops::copy(data_, new_data, copy_size);
+      backend::ops::copy<space_type, space_type>(data_, new_data, copy_size);
     }
     allocator_.deallocate(data_, capacity_);
     data_ = new_data;
@@ -189,7 +189,14 @@ template <typename T>
 void copy(const device_storage<T>& d, host_storage<T>& h)
 {
   assert(h.size() == d.size());
-  device_ops<T>::copy_dh(d.data(), h.data(), d.size());
+  ops::copy<space::device, space::host>(d.data(), h.data(), d.size());
+}
+
+template <typename T>
+void copy(const host_storage<T>& h, device_storage<T>& d)
+{
+  assert(h.size() == d.size());
+  ops::copy<space::host, space::device>(h.data(), d.data(), h.size());
 }
 
 #endif

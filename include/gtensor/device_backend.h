@@ -25,6 +25,19 @@
 namespace gt
 {
 
+namespace space
+{
+
+struct host;
+
+#ifdef GTENSOR_HAVE_DEVICE
+struct device;
+#else
+using device = host;
+#endif
+
+} // namespace space
+
 namespace backend
 {
 
@@ -69,73 +82,11 @@ inline uint32_t device_get_vendor_id(int device_id)
 }
 
 template <typename T>
-inline void device_copy_hh(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
-}
-
-template <typename T>
-inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
-}
-
-template <typename T>
 inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(
     cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
 }
-
-template <typename T>
-inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
-}
-
-template <typename T>
-inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
-}
-
-inline void device_memset(void* dst, int value, gt::size_type nbytes)
-{
-  gtGpuCheck(cudaMemset(dst, value, nbytes));
-}
-
-template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
-
-  static void copy_dh(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dh(src, dst, count);
-  }
-};
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_hh(src, dst, count);
-  }
-};
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
@@ -178,73 +129,11 @@ inline uint32_t device_get_vendor_id(int device_id)
 }
 
 template <typename T>
-inline void device_copy_hh(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
-}
-
-template <typename T>
-inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
-}
-
-template <typename T>
 inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
   gtGpuCheck(
     hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
 }
-
-template <typename T>
-inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToHost));
-}
-
-template <typename T>
-inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
-}
-
-inline void device_memset(void* dst, int value, gt::size_type nbytes)
-{
-  gtGpuCheck(hipMemset(dst, value, nbytes));
-}
-
-template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
-
-  static void copy_dh(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dh(src, dst, count);
-  }
-};
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_hh(src, dst, count);
-  }
-};
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
@@ -253,84 +142,12 @@ inline void device_synchronize()
   gt::backend::sycl::get_queue().wait();
 }
 
-// TODO: SYCL exception handler
-template <typename T>
-inline void device_copy(const T* src, T* dst, gt::size_type count)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(dst, src, sizeof(T) * count);
-  q.wait();
-}
-
-template <typename T>
-inline void device_copy_hh(const T* src, T* dst, gt::size_type count)
-{
-  device_copy(src, dst, count);
-}
-
-template <typename T>
-inline void device_copy_dd(const T* src, T* dst, gt::size_type count)
-{
-  device_copy(src, dst, count);
-}
-
 template <typename T>
 inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memcpy(dst, src, sizeof(T) * count);
 }
-
-template <typename T>
-inline void device_copy_dh(const T* src, T* dst, gt::size_type count)
-{
-  device_copy(src, dst, count);
-}
-
-template <typename T>
-inline void device_copy_hd(const T* src, T* dst, gt::size_type count)
-{
-  device_copy(src, dst, count);
-}
-
-inline void device_memset(void* dst, int value, gt::size_type nbytes)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memset(dst, value, nbytes);
-}
-
-template <typename T>
-struct device_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dd(src, dst, count);
-  }
-
-  static void copy_dh(const_pointer src, pointer dst, size_type count)
-  {
-    device_copy_dh(src, dst, count);
-  }
-};
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    std::memcpy(dst, src, sizeof(value_type) * count);
-  }
-};
 
 #endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
 
@@ -340,20 +157,6 @@ inline void device_synchronize()
 {
   // no need to synchronize on host
 }
-
-template <typename T>
-struct host_ops
-{
-  using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using size_type = gt::size_type;
-
-  static void copy(const_pointer src, pointer dst, size_type count)
-  {
-    std::memcpy(dst, src, sizeof(value_type) * count);
-  }
-};
 
 #endif
 
@@ -396,7 +199,7 @@ struct wrap_allocator
   using value_type = T;
   using size_type = gt::size_type;
 
-  T* allocate(size_type n) { return A::allocate(n); }
+  T* allocate(size_type n) { return A::template allocate<T>(n); }
   void deallocate(T* p, size_type n) { A::deallocate(p); }
 };
 
@@ -408,51 +211,131 @@ struct wrap_allocator
 namespace cuda
 {
 
-template <typename T>
-struct ops
+namespace detail
 {
-  struct device
+
+template <typename S_src, typename S_to>
+struct copy;
+
+template <>
+struct copy<space::device, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
   {
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
-      return p;
-    }
-
-    static void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
-  };
-
-  struct managed
-  {
-    static T* allocate(size_t n)
-    {
-      T* p;
-      gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
-      return p;
-    }
-
-    static void deallocate(T* p) { gtGpuCheck(cudaFree(p)); }
-  };
-
-  struct host
-  {
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
-      return p;
-    }
-
-    static void deallocate(T* p) { gtGpuCheck(cudaFreeHost(p)); }
-  };
+    gtGpuCheck(
+      cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+  }
 };
 
-template <typename T>
-using device_allocator = wrap_allocator<T, typename ops<T>::device>;
+template <>
+struct copy<space::device, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
+  }
+};
+
+template <>
+struct copy<space::host, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+  }
+};
+
+template <>
+struct copy<space::host, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
+  }
+};
+
+} // namespace detail
+
+struct ops
+{
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, gt::size_type count)
+  {
+    return detail::copy<S_src, S_to>::run(src, dst, count);
+  }
+
+  static void memset(void* dst, int value, gt::size_type nbytes)
+  {
+    gtGpuCheck(cudaMemset(dst, value, nbytes));
+  }
+};
+
+namespace gallocator
+{
+using size_type = gt::size_type;
+
+struct device
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p;
+    gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(cudaFree(p));
+  }
+};
+
+struct managed
+{
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    T* p;
+    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(cudaFree(p));
+  }
+};
+
+struct host
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p;
+    gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(cudaFreeHost(p));
+  }
+};
+
+} // namespace gallocator
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename ops<T>::host>;
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
+
+template <typename T>
+using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
 } // namespace cuda
 
@@ -466,51 +349,128 @@ using host_allocator = wrap_allocator<T, typename ops<T>::host>;
 namespace hip
 {
 
-template <typename T>
-struct ops
+namespace detail
 {
-  struct device
+
+template <typename S_src, typename S_to>
+struct copy;
+
+template <>
+struct copy<space::device, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
   {
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
-      return p;
-    }
-
-    static void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
-  };
-
-  struct managed
-  {
-    static T* allocate(size_t n)
-    {
-      T* p;
-      gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
-      return p;
-    }
-
-    static void deallocate(T* p) { gtGpuCheck(hipFree(p)); }
-  };
-
-  struct host
-  {
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n));
-      return p;
-    }
-
-    static void deallocate(T* p) { gtGpuCheck(hipHostFree(p)); }
-  };
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+  }
 };
 
-template <typename T>
-using device_allocator = wrap_allocator<T, typename ops<T>::device>;
+template <>
+struct copy<space::device, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+  }
+};
+
+template <>
+struct copy<space::host, space::device>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToDevice));
+  }
+};
+
+template <>
+struct copy<space::host, space::host>
+{
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(hipMemcpy(dst, src, sizeof(T) * count, hipMemcpyHostToHost));
+  }
+};
+
+} // namespace detail
+
+struct ops
+{
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, gt::size_type count)
+  {
+    return detail::copy<S_src, S_to>::run(src, dst, count);
+  }
+
+  static void memset(void* dst, int value, gt::size_type nbytes)
+  {
+    gtGpuCheck(hipMemset(dst, value, nbytes));
+  }
+};
+
+namespace gallocator
+{
+struct device
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p;
+    gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(hipFree(p));
+  }
+};
+
+struct managed
+{
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    T* p;
+    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(hipFree(p));
+  }
+};
+
+struct host
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p;
+    gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(hipHostFree(p));
+  }
+};
+
+} // namespace gallocator
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename ops<T>::host>;
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
+
+template <typename T>
+using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
 } // namespace hip
 
@@ -524,74 +484,116 @@ using host_allocator = wrap_allocator<T, typename ops<T>::host>;
 namespace sycl
 {
 
-template <typename T>
-struct ops
+namespace detail
 {
-  struct device
+
+template <typename S_src, typename S_to>
+struct copy
+{
+  // TODO: SYCL exception handler
+  template <typename T>
+  static void run(const T* src, T* dst, size_type count)
   {
-    static T* allocate(size_type n)
-    {
-      return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
-    }
+    cl::sycl::queue& q = gt::backend::sycl::get_queue();
+    q.memcpy(dst, src, sizeof(T) * count);
+    q.wait();
+  }
 
-    static void deallocate(T* p)
-    {
-      cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-  };
-
-  struct managed
+  static void memset(void* dst, int value, gt::size_type nbytes)
   {
-    static T* allocate(size_t n)
-    {
-      return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
-    }
-
-    static void deallocate(T* p)
-    {
-      cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-  };
-
-  // The host allocation type in SYCL allows device code to directly access
-  // the data. This is generally not necessary or effecient for gtensor, so
-  // we opt for the same implementation as for the HOST device below.
-
-  struct host
-  {
-    static T* allocate(size_type n)
-    {
-      T* p = static_cast<T*>(malloc(sizeof(T) * n));
-      if (!p) {
-        std::cerr << "host allocate failed" << std::endl;
-        std::abort();
-      }
-      return p;
-    }
-
-    static void deallocate(T* p) { free(p); }
-  };
-
-  // template <typename T>
-  // struct host
-  // {
-  //   static T* allocate( : size_type count)
-  //   {
-  //     return cl::sycl::malloc_host<T>(count, gt::backend::sycl::get_queue());
-  //   }
-
-  //   static void deallocate(T* p)
-  //   {
-  //     cl::sycl::free(p, gt::backend::sycl::get_queue());
-  //   }
-  // };
+    cl::sycl::queue& q = gt::backend::sycl::get_queue();
+    q.memset(dst, value, nbytes);
+  }
 };
 
-template <typename T>
-using device_allocator = wrap_allocator<T, typename ops<T>::device>;
+} // namespace detail
+
+struct ops
+{
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, gt::size_type count)
+  {
+    return detail::copy<S_src, S_to>::run(src, dst, count);
+  }
+};
+
+namespace gallocator
+{
+struct device
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
+  }
+};
+
+struct managed
+{
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
+  }
+};
+
+// The host allocation type in SYCL allows device code to directly access
+// the data. This is generally not necessary or effecient for gtensor, so
+// we opt for the same implementation as for the HOST device below.
+
+struct host
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p = static_cast<T*>(malloc(sizeof(T) * n));
+    if (!p) {
+      std::cerr << "host allocate failed" << std::endl;
+      std::abort();
+    }
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    free(p);
+  }
+};
+
+// template <typename T>
+// struct host
+// {
+//   static T* allocate( : size_type count)
+//   {
+//     return cl::sycl::malloc_host<T>(count, gt::backend::sycl::get_queue());
+//   }
+
+//   static void deallocate(T* p)
+//   {
+//     cl::sycl::free(p, gt::backend::sycl::get_queue());
+//   }
+// };
+
+} // namespace gallocator
 
 template <typename T>
-using host_allocator = wrap_allocator<T, typename ops<T>::host>;
+using device_allocator = wrap_allocator<T, typename gallocator::device>;
+
+template <typename T>
+using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
 } // namespace sycl
 
@@ -602,6 +604,17 @@ using host_allocator = wrap_allocator<T, typename ops<T>::host>;
 
 namespace host
 {
+
+struct ops
+{
+  using size_type = gt::size_type;
+
+  template <typename S_src, typename S_to, typename T>
+  static void copy(const T* src, T* dst, size_type count)
+  {
+    std::memcpy(dst, src, sizeof(T) * count);
+  }
+};
 
 template <typename T>
 using host_allocator = std::allocator<T>;

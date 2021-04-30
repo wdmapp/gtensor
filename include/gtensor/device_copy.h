@@ -46,58 +46,10 @@ inline void copy(thrust::device_ptr<const T> src, thrust::device_ptr<T> dest,
 
 #else // using gt::backend::device_storage
 
-namespace detail
-{
-
-template <typename S_from, typename S_to>
-struct copy;
-
-template <>
-struct copy<space::device, space::host>
-{
-  template <typename T>
-  static void run(const T* src, T* dest, std::size_t count)
-  {
-    gt::backend::device_copy_dh(src, dest, count);
-  }
-};
-
-template <>
-struct copy<space::device, space::device>
-{
-  template <typename T>
-  static void run(const T* src, T* dest, std::size_t count)
-  {
-    gt::backend::device_copy_dd(src, dest, count);
-  }
-};
-
-template <>
-struct copy<space::host, space::device>
-{
-  template <typename T>
-  static void run(const T* src, T* dest, std::size_t count)
-  {
-    gt::backend::device_copy_hd(src, dest, count);
-  }
-};
-
-template <>
-struct copy<space::host, space::host>
-{
-  template <typename T>
-  static void run(const T* src, T* dest, std::size_t count)
-  {
-    gt::backend::device_copy_hh(src, dest, count);
-  }
-};
-
-} // end namespace detail
-
 template <typename T, typename S_from, typename S_to>
 inline void copy(const T* src, T* dest, std::size_t count)
 {
-  detail::copy<S_from, S_to>::run(src, dest, count);
+  gt::backend::ops::copy<S_from, S_to>(src, dest, count);
 }
 
 #endif
