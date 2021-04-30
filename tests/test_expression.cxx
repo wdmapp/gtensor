@@ -93,6 +93,8 @@ TEST(expression, gfunction)
   EXPECT_EQ(e, (gt::gtensor<double, 1>{4., 6.}));
 
   EXPECT_EQ(e.dimension(), 1);
+  EXPECT_EQ(e.shape(), gt::shape(2));
+  EXPECT_EQ(e.size(), 2);
 
   auto e2 = 10. + t2;
   EXPECT_EQ(e2, (gt::gtensor<double, 1>{13., 14.}));
