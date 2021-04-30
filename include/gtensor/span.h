@@ -4,10 +4,6 @@
 
 #include <cassert>
 
-#if __cplusplus >= 202000L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202000L)
-#include <span>
-#endif
-
 #include "defs.h"
 #include "macros.h"
 
@@ -26,20 +22,17 @@ namespace gt
 // span
 //
 // very minimal, just enough to support making a gtensor_span
-// Note that the span has pointer semantics, in that coyping does
+// Note that the span has pointer semantics, in that copying does
 // not copy the underlying data, just the pointer and size, and
 // requesting access to the underlying data from a const instance
 // via data() and operator[] returns a non-const reference allowing
 // modification. This is consistent with the C++20 standardized
 // span and with gsl::span. To not allow modification, the underlying
 // data type can be const.
-
-#if __cplusplus >= 202000L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202000L)
-
-template <typename T>
-using span = std::span<T>;
-
-#else // not C++ 20, define subset of span we care about
+//
+// This is not a plug-in replacement with std::span. It does only support
+// dynamic_extent, and is otherwise missing features, but it does support
+// custom pointer and reference types, as needed to handle device_pointer
 
 template <typename P>
 struct pointer_traits;
@@ -116,8 +109,6 @@ private:
   pointer data_ = nullptr;
   size_type size_ = 0;
 };
-
-#endif // C++20
 
 #ifdef GTENSOR_HAVE_DEVICE
 
