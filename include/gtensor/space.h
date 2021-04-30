@@ -111,9 +111,9 @@ struct space_traits<host>
   template <typename T>
   using storage_type = host_vector<T>;
   template <typename T>
-  using span_type = span<T>;
-  template <typename T>
   using pointer = T*;
+  template <typename T>
+  using span_type = span<T, pointer<T>>;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -123,8 +123,6 @@ struct space_traits<device>
 {
   template <typename T>
   using storage_type = device_vector<T>;
-  template <typename T>
-  using span_type = device_span<T>;
 #ifdef GTENSOR_USE_THRUST
   template <typename T>
   using pointer = ::thrust::device_ptr<T>;
@@ -132,6 +130,8 @@ struct space_traits<device>
   template <typename T>
   using pointer = T*;
 #endif
+  template <typename T>
+  using span_type = span<T, pointer<T>>;
 };
 
 #endif
