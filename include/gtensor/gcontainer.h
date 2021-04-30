@@ -7,7 +7,6 @@
 #include "gscalar.h"
 #include "gstrided.h"
 #include "helper.h"
-#include "memset.h"
 
 namespace gt
 {

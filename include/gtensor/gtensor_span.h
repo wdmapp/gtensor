@@ -6,7 +6,6 @@
 
 #include "device_backend.h"
 #include "macros.h"
-#include "memset.h"
 #include "space.h"
 #include "span.h"
 
