@@ -29,8 +29,7 @@ public:
   using size_type = typename std::allocator_traits<A>::size_type;
   using space_type = S;
 
-  gtensor_storage(size_type count)
-    : data_(nullptr), size_(count), capacity_(count)
+  gtensor_storage(size_type count) : data_(), size_(count), capacity_(count)
   {
     if (capacity_ > 0) {
       data_ = allocator_.allocate(capacity_);
@@ -55,7 +54,7 @@ public:
     : data_(dv.data_), size_(dv.size_), capacity_(dv.capacity_)
   {
     dv.size_ = dv.capacity_ = 0;
-    dv.data_ = nullptr;
+    dv.data_ = {};
   }
 
   // operators
@@ -80,7 +79,7 @@ public:
     capacity_ = dv.capacity_;
 
     dv.size_ = dv.capacity_ = 0;
-    dv.data_ = nullptr;
+    dv.data_ = {};
 
     return *this;
   }

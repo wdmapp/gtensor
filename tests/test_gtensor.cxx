@@ -242,7 +242,8 @@ TEST(gtensor, type_aliases)
   EXPECT_TRUE((std::is_same<decltype(h1)::reference, double&>::value));
   EXPECT_TRUE(
     (std::is_same<decltype(h1)::const_reference, const double&>::value));
-  EXPECT_TRUE((std::is_same<decltype(h1)::pointer, double*>::value));
+  static_assert(std::is_same<decltype(h1)::pointer, double*>::value,
+                "type mismatch");
   EXPECT_TRUE(
     (std::is_same<decltype(h1)::const_pointer, const double*>::value));
 }

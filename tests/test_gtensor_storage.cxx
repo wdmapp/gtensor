@@ -5,6 +5,12 @@
 
 #include "test_debug.h"
 
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+// type to work around not being able to compare thrust::device_ptr to nullptr
+template <typename T>
+using device_ptr = typename gt::backend::device_storage<T>::pointer;
+#endif
+
 TEST(gtensor_storage, host_copy_assign)
 {
   constexpr int N = 16;
@@ -153,7 +159,8 @@ TEST(gtensor_storage, type_aliases)
   EXPECT_TRUE((std::is_same<decltype(h1)::reference, double&>::value));
   EXPECT_TRUE(
     (std::is_same<decltype(h1)::const_reference, const double&>::value));
-  EXPECT_TRUE((std::is_same<decltype(h1)::pointer, double*>::value));
+  static_assert(std::is_same<decltype(h1)::pointer, double*>::value,
+                "type mismatch");
   EXPECT_TRUE(
     (std::is_same<decltype(h1)::const_pointer, const double*>::value));
 }
@@ -200,7 +207,11 @@ TEST(gtensor_storage, device_move_assign)
   EXPECT_EQ(d1_copy.size(), N);
 
   EXPECT_EQ(d1.size(), 0);
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+  EXPECT_EQ(d1.data(), device_ptr<T>());
+#else
   EXPECT_EQ(d1.data(), nullptr);
+#endif
 
   EXPECT_EQ(d2.size(), N);
   EXPECT_EQ(d2, d1_copy);
@@ -225,7 +236,11 @@ TEST(gtensor_storage, device_move_ctor)
   EXPECT_EQ(d1_copy.size(), N);
 
   EXPECT_EQ(d1.size(), 0);
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+  EXPECT_EQ(d1.data(), device_ptr<T>());
+#else
   EXPECT_EQ(d1.data(), nullptr);
+#endif
 
   EXPECT_EQ(d2.size(), N);
   EXPECT_EQ(d2, d1_copy);
@@ -243,12 +258,20 @@ TEST(gtensor_storage, device_resize_from_zero)
 
   EXPECT_EQ(d1.size(), 0);
   EXPECT_EQ(d1.capacity(), 0);
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+  EXPECT_EQ(d1.data(), device_ptr<T>());
+#else
   EXPECT_EQ(d1.data(), nullptr);
+#endif
 
   d1.resize(N);
   EXPECT_EQ(d1.size(), N);
   EXPECT_EQ(d1.capacity(), N);
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+  EXPECT_EQ(d1.data(), device_ptr<T>());
+#else
   EXPECT_NE(d1.data(), nullptr);
+#endif
 
   // make sure new pointer is viable by copying data to it
   gt::backend::copy(h1, d1);
@@ -272,7 +295,7 @@ TEST(gtensor_storage, device_resize_to_zero)
 
   EXPECT_EQ(d1.size(), 0);
   EXPECT_EQ(d1.capacity(), N);
-  EXPECT_NE(d1.data(), nullptr);
+  EXPECT_NE(d1.data(), gt::backend::device_storage<T>::pointer());
 }
 
 TEST(gtensor_storage, device_resize_expand)

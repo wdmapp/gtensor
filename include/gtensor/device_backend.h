@@ -11,6 +11,7 @@
 
 #ifdef GTENSOR_USE_THRUST
 #include <thrust/device_allocator.h>
+#include <thrust/device_vector.h>
 #include <thrust/fill.h>
 #endif
 
