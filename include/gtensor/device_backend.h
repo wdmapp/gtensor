@@ -673,6 +673,24 @@ using namespace backend::sycl;
 using namespace backend::host;
 #endif
 
+} // namespace system
+
+// ======================================================================
+// backend being used in clib (ie., the Fortran interface)
+
+namespace clib
+{
+#if GTENSOR_DEVICE_CUDA
+using namespace backend::cuda;
+#elif GTENSOR_DEVICE_HIP
+using namespace backend::hip;
+#elif GTENSOR_DEVICE_SYCL
+using namespace backend::sycl;
+#else // just for device_synchronize()
+using namespace backend::host;
+#endif
+} // namespace clib
+
 namespace detail
 {
 template <typename S>
@@ -686,7 +704,7 @@ struct fill<gt::space::device>
   static void run(T* first, T* second, const U& value)
   {
     assert(value == T(0) || sizeof(T) == 1);
-    ops::memset((char*)first, value, (second - first) * sizeof(T));
+    system::ops::memset((char*)first, value, (second - first) * sizeof(T));
   }
 };
 #endif
@@ -708,24 +726,6 @@ void fill(T* first, T* second, const U& value)
 {
   return detail::fill<S>::run(first, second, value);
 }
-
-} // namespace system
-
-// ======================================================================
-// backend being used in clib (ie., the Fortran interface)
-
-namespace clib
-{
-#if GTENSOR_DEVICE_CUDA
-using namespace backend::cuda;
-#elif GTENSOR_DEVICE_HIP
-using namespace backend::hip;
-#elif GTENSOR_DEVICE_SYCL
-using namespace backend::sycl;
-#else // just for device_synchronize()
-using namespace backend::host;
-#endif
-} // namespace clib
 
 } // namespace backend
 

@@ -163,7 +163,7 @@ inline void gtensor_span<T, N, S>::fill(const value_type v)
 {
   if (v == T(0)) {
     auto data = gt::backend::raw_pointer_cast(this->data());
-    backend::system::fill<S>(data, data + this->size(), 0);
+    backend::fill<S>(data, data + this->size(), 0);
   } else {
     assign(*this, scalar(v));
   }
