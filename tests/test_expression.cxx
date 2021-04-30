@@ -105,6 +105,16 @@ TEST(expression, gfunction)
   EXPECT_EQ(e4, (gt::gtensor<double, 1>{11., 12.}));
 }
 
+TEST(expression, gfunction_unary)
+{
+  gt::gtensor<double, 1> t({1., 2.});
+
+  auto e = -t;
+  EXPECT_EQ(e.shape(), gt::shape(2));
+  EXPECT_EQ(e.size(), 2);
+  EXPECT_EQ(e, (gt::gtensor<double, 1>{-1., -2.}));
+}
+
 TEST(expression, gfunction_to_kernel)
 {
   gt::gtensor<double, 1> t1({1., 2.});
