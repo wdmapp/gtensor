@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(gtensor
         VERSION 0.01
         LANGUAGES CXX
@@ -98,6 +98,7 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
   message(STATUS "${PROJECT_NAME}: adding gtensor_cuda target")
   add_gtensor_library(cuda)
   enable_language(CUDA)
+  find_package(CUDAToolkit REQUIRED)
   target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_DEVICE_CUDA)
   if (GTENSOR_USE_THRUST)
@@ -108,11 +109,6 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
 endif()
 
 if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
-
-  if (${CMAKE_VERSION} VERSION_LESS "3.18.0")
-    message(FATAL_ERROR "gtensor HIP support requires cmake 3.18+")
-  endif()
-
   message(STATUS "${PROJECT_NAME}: adding gtensor_hip target")
   add_gtensor_library(hip)
 
@@ -319,7 +315,7 @@ if (GTENSOR_ENABLE_BLAS)
   target_link_libraries(gtblas INTERFACE gtensor::gtensor)
 
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
-    target_link_libraries(gtblas INTERFACE "cublas")
+    target_link_libraries(gtblas INTERFACE CUDA::cublas)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
     target_link_libraries(gtblas INTERFACE rocblas rocsolver)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
@@ -345,7 +341,7 @@ if (GTENSOR_ENABLE_FFT)
   target_link_libraries(gtfft INTERFACE gtensor::gtensor)
 
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
-    target_link_libraries(gtfft INTERFACE cufft)
+    target_link_libraries(gtfft INTERFACE CUDA::cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
     target_link_libraries(gtfft INTERFACE hipfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
