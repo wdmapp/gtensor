@@ -23,14 +23,6 @@ namespace gt
 {
 
 // ======================================================================
-// is_allowed_element_type_conversion
-
-template <typename From, typename To>
-struct is_allowed_element_type_conversion
-  : std::is_convertible<From (*)[], To (*)[]>
-{};
-
-// ======================================================================
 // span
 //
 // very minimal, just enough to support making a gtensor_span
