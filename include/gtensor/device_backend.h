@@ -9,6 +9,12 @@
 #ifdef GTENSOR_HAVE_DEVICE
 #include "device_runtime.h"
 
+#ifdef GTENSOR_USE_THRUST
+#include <thrust/device_allocator.h>
+#include <thrust/device_vector.h>
+#include <thrust/fill.h>
+#endif
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
 #include "thrust_ext.h"
 #endif
@@ -40,125 +46,6 @@ using device = host;
 
 namespace backend
 {
-
-#ifdef GTENSOR_DEVICE_CUDA
-
-inline void device_synchronize()
-{
-  gtGpuCheck(cudaStreamSynchronize(0));
-}
-
-inline int device_get_count()
-{
-  int device_count;
-  gtGpuCheck(cudaGetDeviceCount(&device_count));
-  return device_count;
-}
-
-inline void device_set(int device_id)
-{
-  gtGpuCheck(cudaSetDevice(device_id));
-}
-
-inline int device_get()
-{
-  int device_id;
-  gtGpuCheck(cudaGetDevice(&device_id));
-  return device_id;
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  cudaDeviceProp prop;
-  uint32_t packed = 0;
-
-  gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
-
-  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
-  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
-  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
-
-  return packed;
-}
-
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(
-    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
-}
-
-#elif defined(GTENSOR_DEVICE_HIP)
-
-inline void device_synchronize()
-{
-  gtGpuCheck(hipStreamSynchronize(0));
-}
-
-inline int device_get_count()
-{
-  int device_count;
-  gtGpuCheck(hipGetDeviceCount(&device_count));
-  return device_count;
-}
-
-inline void device_set(int device_id)
-{
-  gtGpuCheck(hipSetDevice(device_id));
-}
-
-inline int device_get()
-{
-  int device_id;
-  gtGpuCheck(hipGetDevice(&device_id));
-  return device_id;
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  hipDeviceProp_t prop;
-  uint32_t packed = 0;
-
-  gtGpuCheck(hipGetDeviceProperties(&prop, device_id));
-
-  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
-  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
-  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
-
-  return packed;
-}
-
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
-{
-  gtGpuCheck(
-    hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
-}
-
-#elif defined(GTENSOR_DEVICE_SYCL)
-
-inline void device_synchronize()
-{
-  gt::backend::sycl::get_queue().wait();
-}
-
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(dst, src, sizeof(T) * count);
-}
-
-#endif // GTENSOR_DEVICE_{CUDA,HIP,SYCL}
-
-#ifdef GTENSOR_DEVICE_HOST
-
-inline void device_synchronize()
-{
-  // no need to synchronize on host
-}
-
-#endif
 
 #ifdef GTENSOR_USE_THRUST
 
@@ -260,14 +147,14 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
+template <typename S_src, typename S_to, typename T>
+inline void copy(const T* src, T* dst, gt::size_type count)
+{
+  return detail::copy<S_src, S_to>::run(src, dst, count);
+}
+
 struct ops
 {
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    return detail::copy<S_src, S_to>::run(src, dst, count);
-  }
-
   static void memset(void* dst, int value, gt::size_type nbytes)
   {
     gtGpuCheck(cudaMemset(dst, value, nbytes));
@@ -337,6 +224,51 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+inline void device_synchronize()
+{
+  gtGpuCheck(cudaStreamSynchronize(0));
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, size_type count)
+{
+  gtGpuCheck(
+    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+}
+
+inline int device_get_count()
+{
+  int device_count;
+  gtGpuCheck(cudaGetDeviceCount(&device_count));
+  return device_count;
+}
+
+inline void device_set(int device_id)
+{
+  gtGpuCheck(cudaSetDevice(device_id));
+}
+
+inline int device_get()
+{
+  int device_id;
+  gtGpuCheck(cudaGetDevice(&device_id));
+  return device_id;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  cudaDeviceProp prop;
+  uint32_t packed = 0;
+
+  gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
+
+  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+  return packed;
+}
+
 } // namespace cuda
 
 #endif
@@ -397,14 +329,14 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
+template <typename S_src, typename S_to, typename T>
+inline void copy(const T* src, T* dst, gt::size_type count)
+{
+  return detail::copy<S_src, S_to>::run(src, dst, count);
+}
+
 struct ops
 {
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    return detail::copy<S_src, S_to>::run(src, dst, count);
-  }
-
   static void memset(void* dst, int value, gt::size_type nbytes)
   {
     gtGpuCheck(hipMemset(dst, value, nbytes));
@@ -472,6 +404,51 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+inline void device_synchronize()
+{
+  gtGpuCheck(hipStreamSynchronize(0));
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  gtGpuCheck(
+    hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
+}
+
+inline int device_get_count()
+{
+  int device_count;
+  gtGpuCheck(hipGetDeviceCount(&device_count));
+  return device_count;
+}
+
+inline void device_set(int device_id)
+{
+  gtGpuCheck(hipSetDevice(device_id));
+}
+
+inline int device_get()
+{
+  int device_id;
+  gtGpuCheck(hipGetDevice(&device_id));
+  return device_id;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  hipDeviceProp_t prop;
+  uint32_t packed = 0;
+
+  gtGpuCheck(hipGetDeviceProperties(&prop, device_id));
+
+  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+  return packed;
+}
+
 } // namespace hip
 
 #endif
@@ -484,36 +461,20 @@ using host_allocator = wrap_allocator<T, typename gallocator::host>;
 namespace sycl
 {
 
-namespace detail
+template <typename S_src, typename S_to, typename T>
+inline void copy(const T* src, T* dst, gt::size_type count)
 {
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(dst, src, sizeof(T) * count);
+  q.wait();
+}
 
-template <typename S_src, typename S_to>
-struct copy
+struct ops
 {
-  // TODO: SYCL exception handler
-  template <typename T>
-  static void run(const T* src, T* dst, size_type count)
-  {
-    cl::sycl::queue& q = gt::backend::sycl::get_queue();
-    q.memcpy(dst, src, sizeof(T) * count);
-    q.wait();
-  }
-
   static void memset(void* dst, int value, gt::size_type nbytes)
   {
     cl::sycl::queue& q = gt::backend::sycl::get_queue();
     q.memset(dst, value, nbytes);
-  }
-};
-
-} // namespace detail
-
-struct ops
-{
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, gt::size_type count)
-  {
-    return detail::copy<S_src, S_to>::run(src, dst, count);
   }
 };
 
@@ -595,6 +556,18 @@ using device_allocator = wrap_allocator<T, typename gallocator::device>;
 template <typename T>
 using host_allocator = wrap_allocator<T, typename gallocator::host>;
 
+inline void device_synchronize()
+{
+  gt::backend::sycl::get_queue().wait();
+}
+
+template <typename T>
+inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+{
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(dst, src, sizeof(T) * count);
+}
+
 } // namespace sycl
 
 #endif // GTENSOR_DEVICE_SYCL
@@ -605,34 +578,93 @@ using host_allocator = wrap_allocator<T, typename gallocator::host>;
 namespace host
 {
 
+template <typename T>
+using host_allocator = std::allocator<T>;
+
+template <typename S_from, typename S_to, typename T>
+inline void copy(const T* src, T* dst, size_type count)
+{
+  std::copy(src, src + count, dst);
+}
+
+inline void device_synchronize()
+{
+  // no need to synchronize on host
+}
+
+}; // namespace host
+
+// ======================================================================
+// backend::thrust
+
+#ifdef GTENSOR_USE_THRUST
+
+namespace thrust
+{
+
 struct ops
 {
-  using size_type = gt::size_type;
-
-  template <typename S_src, typename S_to, typename T>
-  static void copy(const T* src, T* dst, size_type count)
+  static void memset(void* dst_, int value, size_type nbytes)
   {
-    std::memcpy(dst, src, sizeof(T) * count);
+    auto dst = ::thrust::device_pointer_cast(static_cast<char*>(dst_));
+    ::thrust::fill(dst, dst + nbytes, value);
   }
 };
 
 template <typename T>
 using host_allocator = std::allocator<T>;
 
-}; // namespace host
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+template <typename T>
+using device_allocator = ::thrust::device_malloc_allocator<T>;
+#else
+template <typename T>
+using device_allocator = ::thrust::device_allocator<T>;
+#endif
+
+template <typename S_src, typename S_dst, typename P_src, typename P_dst>
+inline void copy(P_src src, P_dst dst, size_type count)
+{
+  ::thrust::copy(src, src + count, dst);
+}
+
+}; // namespace thrust
+
+#endif
 
 // ======================================================================
-// select backend
+// system (default) backend
 
-#ifdef GTENSOR_DEVICE_CUDA
-using namespace cuda;
+namespace system
+{
+#ifdef GTENSOR_USE_THRUST
+using namespace backend::thrust;
+#elif GTENSOR_DEVICE_CUDA
+using namespace backend::cuda;
 #elif GTENSOR_DEVICE_HIP
-using namespace hip;
+using namespace backend::hip;
 #elif GTENSOR_DEVICE_SYCL
-using namespace sycl;
+using namespace backend::sycl;
 #elif GTENSOR_DEVICE_HOST
-using namespace host;
+using namespace backend::host;
 #endif
+} // namespace system
+
+// ======================================================================
+// backend being used in clib (ie., the Fortran interface)
+
+namespace clib
+{
+#if GTENSOR_DEVICE_CUDA
+using namespace backend::cuda;
+#elif GTENSOR_DEVICE_HIP
+using namespace backend::hip;
+#elif GTENSOR_DEVICE_SYCL
+using namespace backend::sycl;
+#else // just for device_synchronize()
+using namespace backend::host;
+#endif
+} // namespace clib
 
 } // namespace backend
 
@@ -641,7 +673,7 @@ using namespace host;
 
 void inline synchronize()
 {
-  gt::backend::device_synchronize();
+  gt::backend::clib::device_synchronize();
 }
 
 } // namespace gt
