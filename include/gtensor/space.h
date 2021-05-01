@@ -112,8 +112,6 @@ struct space_traits<host>
   using storage_type = host_vector<T>;
   template <typename T>
   using pointer = T*;
-  template <typename T>
-  using span_type = span<T, pointer<T>>;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -130,8 +128,6 @@ struct space_traits<device>
   template <typename T>
   using pointer = T*;
 #endif
-  template <typename T>
-  using span_type = span<T, pointer<T>>;
 };
 
 #endif
