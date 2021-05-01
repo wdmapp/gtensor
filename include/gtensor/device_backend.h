@@ -90,7 +90,7 @@ struct space_traits<device>
   using pointer = ::thrust::device_ptr<T>;
 #else
   template <typename T>
-  using pointer = T*;
+  using pointer = gt::device_ptr<T>;
 #endif
 };
 
@@ -124,8 +124,11 @@ struct wrap_allocator
   using pointer = typename gt::space::space_traits<S>::template pointer<T>;
   using size_type = gt::size_type;
 
-  pointer allocate(size_type n) { return A::template allocate<T>(n); }
-  void deallocate(pointer p, size_type n) { A::deallocate(p); }
+  pointer allocate(size_type n) { return pointer(A::template allocate<T>(n)); }
+  void deallocate(pointer p, size_type n)
+  {
+    A::deallocate(gt::pointer_traits<pointer>::get(p));
+  }
 };
 
 // ======================================================================
@@ -149,31 +152,40 @@ struct copy;
 template <>
 struct copy<space::device, space::device>
 {
-  template <typename T>
-  static void run(device_ptr<const T> src, device_ptr<T> dst, size_type count)
+  template <
+    typename T, typename U,
+    std::enable_if_t<is_allowed_element_type_conversion<U, T>::value, int> = 0>
+  static void run(device_ptr<T> src, device_ptr<U> dst, size_type count)
   {
-    gtGpuCheck(
-      cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
+    gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst),
+                          backend::raw_pointer_cast(src), sizeof(T) * count,
+                          cudaMemcpyDeviceToDevice));
   }
 };
 
 template <>
 struct copy<space::device, space::host>
 {
-  template <typename T>
-  static void run(device_ptr<const T> src, T* dst, size_type count)
+  template <
+    typename T, typename U,
+    std::enable_if_t<is_allowed_element_type_conversion<U, T>::value, int> = 0>
+  static void run(device_ptr<T> src, U* dst, size_type count)
   {
-    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
+    gtGpuCheck(cudaMemcpy(dst, backend::raw_pointer_cast(src),
+                          sizeof(T) * count, cudaMemcpyDeviceToHost));
   }
 };
 
 template <>
 struct copy<space::host, space::device>
 {
-  template <typename T>
-  static void run(const T* src, device_ptr<T> dst, size_type count)
+  template <
+    typename T, typename U,
+    std::enable_if_t<is_allowed_element_type_conversion<U, T>::value, int> = 0>
+  static void run(const T* src, device_ptr<U> dst, size_type count)
   {
-    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
+    gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst), src,
+                          sizeof(T) * count, cudaMemcpyHostToDevice));
   }
 };
 
@@ -189,8 +201,8 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
-template <typename S_src, typename S_to, typename T>
-inline void copy(const T* src, T* dst, gt::size_type count)
+template <typename S_src, typename S_to, typename P_src, typename P_dst>
+inline void copy(P_src src, P_dst dst, gt::size_type count)
 {
   return detail::copy<S_src, S_to>::run(src, dst, count);
 }
