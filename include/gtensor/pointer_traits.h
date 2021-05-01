@@ -28,6 +28,21 @@ struct pointer_traits<T*>
   static pointer get(pointer p) { return p; }
 };
 
+template <typename T>
+struct pointer_traits<gt::device_ptr<T>>
+{
+  using element_type = T;
+  using pointer = gt::device_ptr<T>;
+  using const_pointer = gt::device_ptr<const T>;
+  using reference = T&;
+  using const_reference = const T&;
+
+  template <typename U>
+  using rebind = gt::device_ptr<U>;
+
+  static T* get(pointer p) { return p.get(); }
+};
+
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T>
