@@ -115,7 +115,8 @@ inline gtensor_container<EC, N>::gtensor_container(
   if (std::is_same<space_type, space::device>::value) {
     gtensor<value_type, N, space::host> host_temp(shape);
     helper::nd_initializer_list_copy<N>(il, host_temp);
-    gt::backend::system::copy<space::host, space::device>(
+    gt::backend::system::copy<
+      space::host, typename gt::space::storage_traits<EC>::space_type>(
       host_temp.data(), base_type::data(), host_temp.size());
   } else {
     helper::nd_initializer_list_copy<N>(il, (*this));
