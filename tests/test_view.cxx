@@ -39,7 +39,7 @@ auto get_linear_index_gtensor(gt::shape_type<2> shape)
 
   int size = calc_size(shape);
 
-  double* h_data = gt::backend::raw_pointer_cast(h_a.data());
+  double* h_data = h_a.data();
   for (int i = 0; i < size; i++) {
     h_data[i] = i;
   }
@@ -461,12 +461,12 @@ TEST(gview, device_copy_ctor)
   gt::copy(h_a, d_a);
 
   auto d_av = d_a.view(_s(1, 3), _all);
-  auto d_av00_addr = gt::backend::raw_pointer_cast(&d_av(0, 0));
+  auto d_av00_addr = &d_av(0, 0);
 
   auto d_av2(d_av);
 
   // make sure that no data was copied
-  EXPECT_EQ(gt::backend::raw_pointer_cast(&d_av2(0, 0)), d_av00_addr);
+  EXPECT_EQ(&d_av2(0, 0), d_av00_addr);
 }
 
 // Note: this case reproduces a performance regression in GENE, where a

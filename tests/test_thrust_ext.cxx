@@ -101,9 +101,9 @@ TEST(thrust_ext, move_construct)
   v[0] = T(12., 0.);
   v[1] = T(2., 0.);
 
-  T* vp = thrust::raw_pointer_cast(v.data());
+  auto vp = v.data();
   thrust::device_vector<T> v2(std::move(v));
-  T* v2p = thrust::raw_pointer_cast(v2.data());
+  auto v2p = v2.data();
 
   // make sure that no data was copied
   EXPECT_EQ(vp, v2p);
