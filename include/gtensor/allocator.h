@@ -3,10 +3,33 @@
 #include <map>
 #include <memory>
 
+#ifdef GTENSOR_USE_THRUST
+#include <thrust/device_ptr.h>
+#endif
+
 namespace gt
 {
 namespace allocator
 {
+
+namespace detail
+{
+template <typename P, typename std::enable_if_t<
+                        std::is_convertible<P, bool>::value, int> = 0>
+bool is_valid(P p)
+{
+  return bool(p);
+}
+
+#ifdef GTENSOR_USE_THRUST
+template <typename T>
+bool is_valid(::thrust::device_ptr<T> p)
+{
+  return bool(p.get());
+}
+#endif
+
+} // namespace detail
 
 // ======================================================================
 // caching_allocator
@@ -47,7 +70,7 @@ struct caching_allocator : A
       std::cout << "ALLOC: allocating " << cnt << " bytes\n";
 #endif
     }
-    if (p) {
+    if (detail::is_valid(p)) {
       allocated_.emplace(std::make_pair(p, cnt));
     }
     return p;
@@ -56,7 +79,7 @@ struct caching_allocator : A
   void deallocate(pointer p, size_type cnt)
   {
     gt::synchronize();
-    if (p) {
+    if (detail::is_valid(p)) {
       auto it = allocated_.find(p);
       assert(it != allocated_.end());
       free_.emplace(std::make_pair(it->second, p));
