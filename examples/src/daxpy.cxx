@@ -36,18 +36,16 @@ using namespace gt::placeholders;
  * all the data which would happen by default (just like std::vector, gtensor
  * has copy semantics by default).
  */
-template <typename S>
-gt::gtensor<double, 1, S> daxpy(double a, const gt::gtensor<double, 1, S>& x,
-                                const gt::gtensor<double, 1, S>& y)
+template <typename Ex, typename Ey>
+auto daxpy(double a, const Ex& x, const Ey& y)
 {
   // The expression 'a * x + y' generates a gfunction template, which is an
-  // un-evaluated expression. In this case, the return statement and return
-  // type force evaluation so a new gtensor is created. It can be useful to
-  // instead set the return type to 'auto', in which case the un-evaluated
-  // expression will be returned and can be combined with other operations
-  // before being evaluated, or assigned to a gtensor to force immediate
-  // evaluation.
-  return a * x + y;
+  // un-evaluated expression. In this case, we force evaluation in the return
+  // statementso a new gtensor is created. It can be useful to not add the
+  // `gt::eval`, in which case the un-evaluated expression will be returned and
+  // can be combined with other operations before being evaluated, or assigned
+  // to a gtensor to force immediate evaluation.
+  return gt::eval(a * x + y);
 }
 
 int main(int argc, char** argv)
