@@ -75,7 +75,8 @@ void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes)
 void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes)
 {
   gt::backend::clib::copy<gt::space::device, gt::space::device>(
-    (uint8_t*)src, (uint8_t*)dst, nbytes);
+    gt::backend::device_pointer_cast((const uint8_t*)src),
+    gt::backend::device_pointer_cast((uint8_t*)dst), nbytes);
 }
 
 void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)
@@ -87,13 +88,15 @@ void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes)
 {
   gt::backend::clib::copy<gt::space::device, gt::space::host>(
-    (uint8_t*)src, (uint8_t*)dst, nbytes);
+    gt::backend::device_pointer_cast((const uint8_t*)src), (uint8_t*)dst,
+    nbytes);
 }
 
 void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes)
 {
   gt::backend::clib::copy<gt::space::host, gt::space::device>(
-    (uint8_t*)src, (uint8_t*)dst, nbytes);
+    (const uint8_t*)src, gt::backend::device_pointer_cast((uint8_t*)dst),
+    nbytes);
 }
 
 void gt_backend_memset(void* dst, int value, size_t nbytes)
