@@ -249,18 +249,6 @@ template <typename T>
 using host_allocator =
   wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
-template <typename Pointer>
-GT_INLINE Pointer raw_pointer_cast(Pointer p)
-{
-  return p;
-}
-
-template <typename Pointer>
-GT_INLINE Pointer device_pointer_cast(Pointer p)
-{
-  return p;
-}
-
 inline void device_synchronize()
 {
   gtGpuCheck(cudaStreamSynchronize(0));
@@ -443,18 +431,6 @@ template <typename T>
 using host_allocator =
   wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
-template <typename Pointer>
-GT_INLINE Pointer raw_pointer_cast(Pointer p)
-{
-  return p;
-}
-
-template <typename Pointer>
-GT_INLINE Pointer device_pointer_cast(Pointer p)
-{
-  return p;
-}
-
 inline void device_synchronize()
 {
   gtGpuCheck(hipStreamSynchronize(0));
@@ -609,18 +585,6 @@ template <typename T>
 using host_allocator =
   wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
-template <typename Pointer>
-GT_INLINE Pointer raw_pointer_cast(Pointer p)
-{
-  return p;
-}
-
-template <typename Pointer>
-GT_INLINE Pointer device_pointer_cast(Pointer p)
-{
-  return p;
-}
-
 inline void device_synchronize()
 {
   gt::backend::sycl::get_queue().wait();
@@ -650,18 +614,6 @@ template <typename S_from, typename S_to, typename T>
 inline void copy(const T* src, T* dst, size_type count)
 {
   std::copy(src, src + count, dst);
-}
-
-template <typename Pointer>
-GT_INLINE Pointer raw_pointer_cast(Pointer p)
-{
-  return p;
-}
-
-template <typename Pointer>
-GT_INLINE Pointer device_pointer_cast(Pointer p)
-{
-  return p;
 }
 
 inline void device_synchronize()
@@ -705,18 +657,6 @@ inline void copy(P_src src, P_dst dst, size_type count)
   ::thrust::copy(src, src + count, dst);
 }
 
-template <typename Pointer>
-GT_INLINE auto raw_pointer_cast(Pointer p)
-{
-  return ::thrust::raw_pointer_cast(p);
-}
-
-template <typename Pointer>
-GT_INLINE auto device_pointer_cast(Pointer p)
-{
-  return ::thrust::device_pointer_cast(p);
-}
-
 }; // namespace thrust
 
 #endif
@@ -756,16 +696,18 @@ using namespace backend::host;
 #endif
 } // namespace clib
 
-template <typename Pointer>
-GT_INLINE auto raw_pointer_cast(Pointer p)
+template <typename P>
+GT_INLINE auto raw_pointer_cast(P p)
 {
-  return system::raw_pointer_cast(p);
+  return gt::pointer_traits<P>::get(p);
 }
 
-template <typename Pointer>
-GT_INLINE auto device_pointer_cast(Pointer p)
+template <typename T>
+GT_INLINE auto device_pointer_cast(T* p)
 {
-  return system::device_pointer_cast(p);
+  using pointer =
+    typename gt::space::space_traits<gt::space::device>::template pointer<T>;
+  return pointer(p);
 }
 
 namespace detail
