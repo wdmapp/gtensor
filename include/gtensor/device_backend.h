@@ -27,6 +27,7 @@
 
 #include "defs.h"
 #include "macros.h"
+#include "pointer_traits.h"
 
 namespace gt
 {
@@ -124,6 +125,10 @@ namespace cuda
 namespace detail
 {
 
+template <typename T>
+using device_ptr =
+  typename gt::space::space_traits<gt::space::device>::template pointer<T>;
+
 template <typename S_src, typename S_to>
 struct copy;
 
@@ -131,7 +136,7 @@ template <>
 struct copy<space::device, space::device>
 {
   template <typename T>
-  static void run(const T* src, T* dst, size_type count)
+  static void run(device_ptr<const T> src, device_ptr<T> dst, size_type count)
   {
     gtGpuCheck(
       cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
@@ -142,7 +147,7 @@ template <>
 struct copy<space::device, space::host>
 {
   template <typename T>
-  static void run(const T* src, T* dst, size_type count)
+  static void run(device_ptr<const T> src, T* dst, size_type count)
   {
     gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyDeviceToHost));
   }
@@ -152,7 +157,7 @@ template <>
 struct copy<space::host, space::device>
 {
   template <typename T>
-  static void run(const T* src, T* dst, size_type count)
+  static void run(const T* src, device_ptr<T> dst, size_type count)
   {
     gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToDevice));
   }
