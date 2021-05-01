@@ -99,35 +99,6 @@ struct storage_traits<::thrust::device_vector<T, A>>
 
 #endif
 
-// ======================================================================
-// space_traits
-
-template <typename S>
-struct space_traits;
-
-template <>
-struct space_traits<host>
-{
-  template <typename T>
-  using pointer = T*;
-};
-
-#ifdef GTENSOR_HAVE_DEVICE
-
-template <>
-struct space_traits<device>
-{
-#ifdef GTENSOR_USE_THRUST
-  template <typename T>
-  using pointer = ::thrust::device_ptr<T>;
-#else
-  template <typename T>
-  using pointer = T*;
-#endif
-};
-
-#endif
-
 } // namespace space
 
 // ======================================================================
