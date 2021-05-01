@@ -6,13 +6,10 @@
 
 #include "defs.h"
 #include "macros.h"
+#include "pointer_traits.h"
 
 #ifdef GTENSOR_HAVE_DEVICE
-#ifdef GTENSOR_USE_THRUST
-#include <thrust/device_ptr.h>
-#else
 #include "gtensor_storage.h"
-#endif
 #endif
 
 namespace gt
@@ -33,39 +30,6 @@ namespace gt
 // This is not a plug-in replacement with std::span. It does only support
 // dynamic_extent, and is otherwise missing features, but it does support
 // custom pointer and reference types, as needed to handle device_pointer
-
-template <typename P>
-struct pointer_traits;
-
-template <typename T>
-struct pointer_traits<T*>
-{
-  using element_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using reference = T&;
-  using const_reference = const T&;
-
-  template <typename U>
-  using rebind = U*;
-};
-
-#ifdef GTENSOR_USE_THRUST
-
-template <typename T>
-struct pointer_traits<::thrust::device_ptr<T>>
-{
-  using element_type = T;
-  using pointer = ::thrust::device_ptr<T>;
-  using const_pointer = ::thrust::device_ptr<const T>;
-  using reference = ::thrust::device_reference<T>;
-  using const_reference = ::thrust::device_reference<const T>;
-
-  template <typename U>
-  using rebind = ::thrust::device_ptr<U>;
-};
-
-#endif
 
 template <typename T, typename Ptr = T*>
 class span
