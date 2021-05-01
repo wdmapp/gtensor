@@ -109,8 +109,6 @@ template <>
 struct space_traits<host>
 {
   template <typename T>
-  using storage_type = host_vector<T>;
-  template <typename T>
   using pointer = T*;
 };
 
@@ -119,8 +117,6 @@ struct space_traits<host>
 template <>
 struct space_traits<device>
 {
-  template <typename T>
-  using storage_type = device_vector<T>;
 #ifdef GTENSOR_USE_THRUST
   template <typename T>
   using pointer = ::thrust::device_ptr<T>;
