@@ -101,6 +101,20 @@ struct space_traits<device>
 namespace backend
 {
 
+template <typename P>
+GT_INLINE auto raw_pointer_cast(P p)
+{
+  return gt::pointer_traits<P>::get(p);
+}
+
+template <typename T>
+GT_INLINE auto device_pointer_cast(T* p)
+{
+  using pointer =
+    typename gt::space::space_traits<gt::space::device>::template pointer<T>;
+  return pointer(p);
+}
+
 // ======================================================================
 
 template <typename T, typename A, typename S>
@@ -700,20 +714,6 @@ using namespace backend::sycl;
 using namespace backend::host;
 #endif
 } // namespace clib
-
-template <typename P>
-GT_INLINE auto raw_pointer_cast(P p)
-{
-  return gt::pointer_traits<P>::get(p);
-}
-
-template <typename T>
-GT_INLINE auto device_pointer_cast(T* p)
-{
-  using pointer =
-    typename gt::space::space_traits<gt::space::device>::template pointer<T>;
-  return pointer(p);
-}
 
 namespace detail
 {
