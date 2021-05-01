@@ -112,23 +112,6 @@ private:
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-// ======================================================================
-// device_span
-//
-// for a gtensor_span of device memory
-
-#ifdef GTENSOR_USE_THRUST
-
-template <typename T>
-using device_span = span<T, thrust::device_ptr<T>>;
-
-#else // not GTENSOR_USE_THRUST
-
-template <typename T>
-using device_span = span<T>;
-
-#endif // GTENSOR_USE_THRUST
-
 #endif // GTENSOR_HAVE_DEVICE
 
 } // namespace gt
