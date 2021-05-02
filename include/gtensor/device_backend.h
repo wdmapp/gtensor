@@ -144,47 +144,50 @@ struct wrap_allocator
 namespace cuda
 {
 
-namespace detail
+namespace copy_impl
 {
 
-template <typename T>
-using device_ptr =
-  typename gt::space::space_traits<gt::space::device>::template pointer<T>;
-
-template <typename T, typename U>
-inline void copy(space::device tag_src, space::device tag_dst,
-                 device_ptr<T> src, device_ptr<U> dst, size_type count)
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::device tag_in, gt::space::device tag_out,
+                   InputPtr in, size_type count, OutputPtr out)
 {
-  static_assert(sizeof(T) == sizeof(U), "copy: incompatible sizes");
-  gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst),
-                        backend::raw_pointer_cast(src), sizeof(T) * count,
-                        cudaMemcpyDeviceToDevice));
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyDeviceToDevice));
 }
 
-template <typename T, typename U>
-inline void copy(space::device tag_src, space::host tag_dst, device_ptr<T> src,
-                 U* dst, size_type count)
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::device tag_in, gt::space::host tag_out,
+                   InputPtr in, size_type count, OutputPtr out)
 {
-  gtGpuCheck(cudaMemcpy(dst, backend::raw_pointer_cast(src), sizeof(T) * count,
-                        cudaMemcpyDeviceToHost));
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyDeviceToHost));
 }
 
-template <typename T, typename U>
-inline void copy(space::host tag_src, space::device tag_dst, const T* src,
-                 device_ptr<U> dst, size_type count)
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::device tag_out,
+                   InputPtr in, size_type count, OutputPtr out)
 {
-  gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst), src, sizeof(T) * count,
-                        cudaMemcpyHostToDevice));
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyHostToDevice));
 }
 
-template <typename T>
-inline void copy(space::host tag_src, space::host tag_dst, const T* src, T* dst,
-                 size_type count)
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
 {
-  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyHostToHost));
 }
 
-} // namespace detail
+} // namespace copy_impl
 
 template <
   typename S_src, typename S_dst, typename P_src, typename P_dst,
@@ -194,7 +197,7 @@ template <
                    int> = 0>
 inline void copy(P_src src, P_dst dst, gt::size_type count)
 {
-  return detail::copy(S_src{}, S_dst{}, src, dst, count);
+  return copy_impl::copy_n(S_src{}, S_dst{}, src, count, dst);
 }
 
 struct ops
