@@ -66,7 +66,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      copy(dv.data_, data_, size_);
+      gt::copy_n(dv.data_, size_, data_);
     }
 
     return *this;
@@ -93,7 +93,6 @@ public:
   const_pointer data() const { return data_; }
 
 private:
-  void copy(const_pointer src, pointer dst, size_type count);
   void resize(size_type new_size, bool discard);
   void resize_discard(size_type new_size);
 
@@ -114,13 +113,6 @@ template <typename T, typename A = system::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
 
 template <typename T, typename A, typename O>
-inline void gtensor_storage<T, A, O>::copy(const_pointer src, pointer dst,
-                                           size_type count)
-{
-  gt::copy_n(src, count, dst);
-}
-
-template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::resize(
   gtensor_storage::size_type new_size, bool discard)
 {
@@ -134,7 +126,7 @@ inline void gtensor_storage<T, A, O>::resize(
     pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      copy(data_, new_data, copy_size);
+      gt::copy_n(data_, copy_size, new_data);
     }
     allocator_.deallocate(data_, capacity_);
     data_ = new_data;
