@@ -714,38 +714,27 @@ using namespace backend::host;
 
 namespace detail
 {
-template <typename S>
-struct fill;
-
 #ifdef GTENSOR_HAVE_DEVICE
-template <>
-struct fill<gt::space::device>
+template <typename T, typename U>
+inline void fill(gt::space::device tag, T* first, T* second, const U& value)
 {
-  template <typename T, typename U>
-  static void run(T* first, T* second, const U& value)
-  {
-    assert(value == T(0) || sizeof(T) == 1);
-    system::ops::memset((char*)first, value, (second - first) * sizeof(T));
-  }
-};
+  assert(value == T(0) || sizeof(T) == 1);
+  system::ops::memset((char*)first, value, (second - first) * sizeof(T));
+}
 #endif
 
-template <>
-struct fill<gt::space::host>
+template <typename T, typename U>
+inline void fill(gt::space::host tag, T* first, T* second, const U& value)
 {
-  template <typename T, typename U>
-  static void run(T* first, T* second, const U& value)
-  {
-    std::fill(first, second, value);
-  }
-};
+  std::fill(first, second, value);
+}
 } // namespace detail
 
 template <typename S, typename T, typename U,
           std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
 void fill(T* first, T* second, const U& value)
 {
-  return detail::fill<S>::run(first, second, value);
+  return detail::fill(S{}, first, second, value);
 }
 
 } // namespace backend
