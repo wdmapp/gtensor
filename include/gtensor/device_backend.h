@@ -35,18 +35,23 @@ namespace gt
 namespace space
 {
 
-struct host;
+struct host
+{};
 #ifdef GTENSOR_USE_THRUST
-struct thrust;
+struct thrust
+{};
 #endif
 #ifdef GTENSOR_DEVICE_CUDA
-struct cuda;
+struct cuda
+{};
 #endif
 #ifdef GTENSOR_DEVICE_HIP
-struct hip;
+struct hip
+{};
 #endif
 #ifdef GTENSOR_DEVICE_SYCL
-struct sycl;
+struct sycl
+{};
 #endif
 
 #ifdef GTENSOR_HAVE_DEVICE
@@ -146,64 +151,50 @@ template <typename T>
 using device_ptr =
   typename gt::space::space_traits<gt::space::device>::template pointer<T>;
 
-template <typename S_src, typename S_to>
-struct copy;
-
-template <>
-struct copy<space::device, space::device>
+template <typename T, typename U>
+inline void copy(space::device tag_src, space::device tag_dst,
+                 device_ptr<T> src, device_ptr<U> dst, size_type count)
 {
-  template <typename T, typename U>
-  static void run(device_ptr<T> src, device_ptr<U> dst, size_type count)
-  {
-    gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst),
-                          backend::raw_pointer_cast(src), sizeof(T) * count,
-                          cudaMemcpyDeviceToDevice));
-  }
-};
+  static_assert(sizeof(T) == sizeof(U), "copy: incompatible sizes");
+  gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst),
+                        backend::raw_pointer_cast(src), sizeof(T) * count,
+                        cudaMemcpyDeviceToDevice));
+}
 
-template <>
-struct copy<space::device, space::host>
+template <typename T, typename U>
+inline void copy(space::device tag_src, space::host tag_dst, device_ptr<T> src,
+                 U* dst, size_type count)
 {
-  template <typename T, typename U>
-  static void run(device_ptr<T> src, U* dst, size_type count)
-  {
-    gtGpuCheck(cudaMemcpy(dst, backend::raw_pointer_cast(src),
-                          sizeof(T) * count, cudaMemcpyDeviceToHost));
-  }
-};
+  gtGpuCheck(cudaMemcpy(dst, backend::raw_pointer_cast(src), sizeof(T) * count,
+                        cudaMemcpyDeviceToHost));
+}
 
-template <>
-struct copy<space::host, space::device>
+template <typename T, typename U>
+inline void copy(space::host tag_src, space::device tag_dst, const T* src,
+                 device_ptr<U> dst, size_type count)
 {
-  template <typename T, typename U>
-  static void run(const T* src, device_ptr<U> dst, size_type count)
-  {
-    gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst), src,
-                          sizeof(T) * count, cudaMemcpyHostToDevice));
-  }
-};
+  gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst), src, sizeof(T) * count,
+                        cudaMemcpyHostToDevice));
+}
 
-template <>
-struct copy<space::host, space::host>
+template <typename T>
+inline void copy(space::host tag_src, space::host tag_dst, const T* src, T* dst,
+                 size_type count)
 {
-  template <typename T>
-  static void run(const T* src, T* dst, size_type count)
-  {
-    gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
-  }
-};
+  gtGpuCheck(cudaMemcpy(dst, src, sizeof(T) * count, cudaMemcpyHostToHost));
+}
 
 } // namespace detail
 
 template <
-  typename S_src, typename S_to, typename P_src, typename P_dst,
+  typename S_src, typename S_dst, typename P_src, typename P_dst,
   std::enable_if_t<is_allowed_element_type_conversion<
                      typename pointer_traits<P_dst>::element_type,
                      typename pointer_traits<P_src>::element_type>::value,
                    int> = 0>
 inline void copy(P_src src, P_dst dst, gt::size_type count)
 {
-  return detail::copy<S_src, S_to>::run(src, dst, count);
+  return detail::copy(S_src{}, S_dst{}, src, dst, count);
 }
 
 struct ops

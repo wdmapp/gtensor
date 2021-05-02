@@ -25,7 +25,7 @@ struct pointer_traits<T*>
   template <typename U>
   using rebind = U*;
 
-  static pointer get(pointer p) { return p; }
+  GT_INLINE static pointer get(pointer p) { return p; }
 };
 
 template <typename T>
@@ -40,7 +40,7 @@ struct pointer_traits<gt::device_ptr<T>>
   template <typename U>
   using rebind = gt::device_ptr<U>;
 
-  static T* get(pointer p) { return p.get(); }
+  GT_INLINE static T* get(pointer p) { return p.get(); }
 };
 
 #ifdef GTENSOR_USE_THRUST
@@ -57,7 +57,7 @@ struct pointer_traits<::thrust::device_ptr<T>>
   template <typename U>
   using rebind = ::thrust::device_ptr<U>;
 
-  static T* get(pointer p) { return p.get(); }
+  GT_INLINE static T* get(pointer p) { return p.get(); }
 };
 
 #endif
