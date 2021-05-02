@@ -116,63 +116,6 @@ using host_allocator = typename allocator_impl::selector<T, S>::type;
 
 #ifdef GTENSOR_DEVICE_CUDA
 
-namespace copy_impl
-{
-
-template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::cuda tag_in, gt::space::cuda tag_out, InputPtr in,
-                   size_type count, OutputPtr out)
-{
-  gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
-    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
-    cudaMemcpyDeviceToDevice));
-}
-
-template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::cuda tag_in, gt::space::host tag_out, InputPtr in,
-                   size_type count, OutputPtr out)
-{
-  gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
-    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
-    cudaMemcpyDeviceToHost));
-}
-
-template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::host tag_in, gt::space::cuda tag_out, InputPtr in,
-                   size_type count, OutputPtr out)
-{
-  gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
-    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
-    cudaMemcpyHostToDevice));
-}
-
-#if 0 // handled generically instead for host->host copies
-template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
-                   size_type count, OutputPtr out)
-{
-  gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
-    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
-    cudaMemcpyHostToHost));
-}
-#endif
-
-} // namespace copy_impl
-
-namespace fill_impl
-{
-template <typename Ptr, typename T>
-inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
-{
-  assert(value == T(0) || sizeof(T) == 1);
-  gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), value, last - first));
-}
-} // namespace fill_impl
-
 namespace cuda
 {
 
@@ -301,7 +244,64 @@ struct selector<T, gt::space::host>
 
 } // namespace allocator_impl
 
+namespace copy_impl
+{
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::cuda tag_in, gt::space::cuda tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyDeviceToDevice));
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::cuda tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyDeviceToHost));
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::cuda tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyHostToDevice));
+}
+
+#if 0 // handled generically instead for host->host copies
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  gtGpuCheck(cudaMemcpy(
+    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
+    cudaMemcpyHostToHost));
+}
 #endif
+
+} // namespace copy_impl
+
+namespace fill_impl
+{
+template <typename Ptr, typename T>
+inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
+{
+  assert(value == T(0) || sizeof(T) == 1);
+  gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), value, last - first));
+}
+} // namespace fill_impl
+
+#endif // GTENSOR_DEVICE_CUDA
 
 // ======================================================================
 // backend::hip
@@ -652,6 +652,19 @@ struct selector<T, gt::space::host>
 
 #ifdef GTENSOR_USE_THRUST
 
+namespace allocator_impl
+{
+template <typename T>
+struct selector<T, gt::space::thrust>
+{
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+  using type = ::thrust::device_malloc_allocator<T>;
+#else
+  using type = ::thrust::device_allocator<T>;
+#endif
+};
+} // namespace allocator_impl
+
 namespace copy_impl
 {
 
@@ -686,19 +699,6 @@ inline void fill(gt::space::thrust tag, Ptr first, Ptr last, const T& value)
   ::thrust::fill(first, last, value);
 }
 } // namespace fill_impl
-
-namespace allocator_impl
-{
-template <typename T>
-struct selector<T, gt::space::thrust>
-{
-#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
-  using type = ::thrust::device_malloc_allocator<T>;
-#else
-  using type = ::thrust::device_allocator<T>;
-#endif
-};
-} // namespace allocator_impl
 
 #endif
 
