@@ -712,29 +712,32 @@ using namespace backend::host;
 #endif
 } // namespace clib
 
-namespace detail
+namespace fill_impl
 {
 #ifdef GTENSOR_HAVE_DEVICE
-template <typename T, typename U>
-inline void fill(gt::space::device tag, T* first, T* second, const U& value)
+template <typename Ptr, typename T>
+inline void fill(gt::space::device tag, Ptr first, Ptr last, const T& value)
 {
   assert(value == T(0) || sizeof(T) == 1);
-  system::ops::memset((char*)first, value, (second - first) * sizeof(T));
+  system::ops::memset((char*)first, value, (last - first) * sizeof(T));
 }
 #endif
 
-template <typename T, typename U>
-inline void fill(gt::space::host tag, T* first, T* second, const U& value)
+template <typename Ptr, typename T>
+inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 {
-  std::fill(first, second, value);
+  std::fill(first, last, value);
 }
-} // namespace detail
+} // namespace fill_impl
 
-template <typename S, typename T, typename U,
-          std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
-void fill(T* first, T* second, const U& value)
+template <
+  typename S, typename Ptr, typename T,
+  std::enable_if_t<
+    std::is_convertible<T, typename pointer_traits<Ptr>::element_type>::value,
+    int> = 0>
+void fill(Ptr first, Ptr last, const T& value)
 {
-  return detail::fill(S{}, first, second, value);
+  return fill_impl::fill(S{}, first, last, value);
 }
 
 } // namespace backend
