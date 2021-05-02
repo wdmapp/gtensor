@@ -631,15 +631,6 @@ inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 namespace host
 {
 
-template <typename T>
-using host_allocator = std::allocator<T>;
-
-template <typename S_from, typename S_to, typename T>
-inline void copy(const T* src, T* dst, size_type count)
-{
-  std::copy(src, src + count, dst);
-}
-
 inline void device_synchronize()
 {
   // no need to synchronize on host
@@ -695,20 +686,6 @@ inline void fill(gt::space::thrust tag, Ptr first, Ptr last, const T& value)
   ::thrust::fill(first, last, value);
 }
 } // namespace fill_impl
-
-namespace thrust
-{
-
-template <typename T>
-using host_allocator = std::allocator<T>;
-
-template <typename S_src, typename S_dst, typename P_src, typename P_dst>
-inline void copy(P_src src, P_dst dst, size_type count)
-{
-  ::thrust::copy(src, src + count, dst);
-}
-
-}; // namespace thrust
 
 namespace allocator_impl
 {
