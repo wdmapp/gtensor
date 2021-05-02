@@ -46,7 +46,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      copy(dv.data_, data_, size_);
+      copy_n(dv.data_, size_, data_);
     }
   }
 
