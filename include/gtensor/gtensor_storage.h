@@ -117,7 +117,7 @@ template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::copy(const_pointer src, pointer dst,
                                            size_type count)
 {
-  backend::system::copy<space_type, space_type>(src, dst, count);
+  gt::copy_n(src, count, dst);
 }
 
 template <typename T, typename A, typename O>
@@ -192,19 +192,17 @@ host_storage<T> host_mirror(const device_storage<T>& d)
 }
 
 template <typename T>
-void copy(const device_storage<T>& d, host_storage<T>& h)
+void copy(const device_storage<T>& from, host_storage<T>& to)
 {
-  assert(h.size() == d.size());
-  gt::backend::system::copy<space::device, space::host>(d.data(), h.data(),
-                                                        d.size());
+  assert(from.size() == to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 template <typename T>
-void copy(const host_storage<T>& h, device_storage<T>& d)
+void copy(const host_storage<T>& from, device_storage<T>& to)
 {
-  assert(h.size() == d.size());
-  gt::backend::system::copy<space::host, space::device>(h.data(), d.data(),
-                                                        h.size());
+  assert(from.size() == to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 #endif

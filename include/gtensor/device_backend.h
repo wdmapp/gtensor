@@ -104,15 +104,12 @@ struct wrap_allocator
 
 #ifdef GTENSOR_DEVICE_CUDA
 
-namespace cuda
-{
-
 namespace copy_impl
 {
 
 template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::device tag_in, gt::space::device tag_out,
-                   InputPtr in, size_type count, OutputPtr out)
+inline void copy_n(gt::space::cuda tag_in, gt::space::cuda tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
     backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
@@ -121,8 +118,8 @@ inline void copy_n(gt::space::device tag_in, gt::space::device tag_out,
 }
 
 template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::device tag_in, gt::space::host tag_out,
-                   InputPtr in, size_type count, OutputPtr out)
+inline void copy_n(gt::space::cuda tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
     backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
@@ -131,8 +128,8 @@ inline void copy_n(gt::space::device tag_in, gt::space::host tag_out,
 }
 
 template <typename InputPtr, typename OutputPtr>
-inline void copy_n(gt::space::host tag_in, gt::space::device tag_out,
-                   InputPtr in, size_type count, OutputPtr out)
+inline void copy_n(gt::space::host tag_in, gt::space::cuda tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
     backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
@@ -140,6 +137,7 @@ inline void copy_n(gt::space::host tag_in, gt::space::device tag_out,
     cudaMemcpyHostToDevice));
 }
 
+#if 0 // handled generically instead for host->host copies
 template <typename InputPtr, typename OutputPtr>
 inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
@@ -149,19 +147,12 @@ inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     cudaMemcpyHostToHost));
 }
+#endif
 
 } // namespace copy_impl
 
-template <
-  typename S_src, typename S_dst, typename P_src, typename P_dst,
-  std::enable_if_t<is_allowed_element_type_conversion<
-                     typename pointer_traits<P_dst>::element_type,
-                     typename pointer_traits<P_src>::element_type>::value,
-                   int> = 0>
-inline void copy(P_src src, P_dst dst, gt::size_type count)
+namespace cuda
 {
-  return copy_impl::copy_n(S_src{}, S_dst{}, src, count, dst);
-}
 
 struct ops
 {
@@ -591,6 +582,18 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 // ======================================================================
 // backend::host
 
+namespace copy_impl
+{
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  std::copy_n(in, count, out);
+}
+
+} // namespace copy_impl
+
 namespace host
 {
 
@@ -614,6 +617,32 @@ inline void device_synchronize()
 // backend::thrust
 
 #ifdef GTENSOR_USE_THRUST
+
+namespace copy_impl
+{
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::thrust tag_in, gt::space::thrust tag_out,
+                   InputPtr in, size_type count, OutputPtr out)
+{
+  ::thrust::copy_n(in, count, out);
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::thrust tag_in, gt::space::host tag_out,
+                   InputPtr in, size_type count, OutputPtr out)
+{
+  ::thrust::copy_n(in, count, out);
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::thrust tag_out,
+                   InputPtr in, size_type count, OutputPtr out)
+{
+  ::thrust::copy_n(in, count, out);
+}
+
+} // namespace copy_impl
 
 namespace thrust
 {
@@ -720,6 +749,22 @@ void fill(T* first, T* second, const U& value)
 }
 
 } // namespace backend
+
+// ======================================================================
+// copy_n
+
+template <
+  typename InputPtr, typename OutputPtr,
+  std::enable_if_t<is_allowed_element_type_conversion<
+                     typename pointer_traits<OutputPtr>::element_type,
+                     typename pointer_traits<InputPtr>::element_type>::value,
+                   int> = 0>
+inline void copy_n(InputPtr in, gt::size_type count, OutputPtr out)
+{
+  return gt::backend::copy_impl::copy_n(
+    typename pointer_traits<InputPtr>::space_type{},
+    typename pointer_traits<OutputPtr>::space_type{}, in, count, out);
+}
 
 // ======================================================================
 // synchronize

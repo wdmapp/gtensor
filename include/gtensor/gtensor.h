@@ -115,9 +115,7 @@ inline gtensor_container<EC, N>::gtensor_container(
   if (std::is_same<space_type, space::device>::value) {
     gtensor<value_type, N, space::host> host_temp(shape);
     helper::nd_initializer_list_copy<N>(il, host_temp);
-    gt::backend::system::copy<
-      space::host, typename gt::space::storage_traits<EC>::space_type>(
-      host_temp.data(), base_type::data(), host_temp.size());
+    gt::copy_n(host_temp.data(), host_temp.size(), base_type::data());
   } else {
     helper::nd_initializer_list_copy<N>(il, (*this));
   }
@@ -185,9 +183,7 @@ void copy(const gtensor_container<EC_from, N>& from,
           gtensor_container<EC_to, N>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::system::copy<typename space::storage_traits<EC_from>::space_type,
-                            typename space::storage_traits<EC_to>::space_type>(
-    from.data(), to.data(), to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 template <typename EC_to, size_type N, typename S_from>
@@ -195,9 +191,7 @@ void copy(const gtensor_span<typename EC_to::value_type, N, S_from>& from,
           gtensor_container<EC_to, N>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::system::copy<S_from,
-                            typename space::storage_traits<EC_to>::space_type>(
-    from.data(), to.data(), to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 template <typename EC_from, size_type N, typename S_to>
@@ -205,15 +199,14 @@ void copy(const gtensor_container<EC_from, N>& from,
           gtensor_span<typename EC_from::value_type, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::system::copy<typename space::storage_traits<EC_from>::space_type,
-                            S_to>(from.data(), to.data(), to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 template <typename T, size_type N, typename S_from, typename S_to>
 void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 {
   assert(from.size() == to.size());
-  gt::backend::system::copy<S_from, S_to>(from.data(), to.data(), to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 // ======================================================================

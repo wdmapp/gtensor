@@ -75,7 +75,7 @@ TEST(device_ptr, deref)
   device_ptr_deref(p1);
 
   T h_val;
-  gt::backend::system::copy<gt::space::device, gt::space::host>(p, &h_val, 1);
+  gt::copy_n(p, 1, &h_val);
   EXPECT_EQ(h_val, T(99));
 
   alloc.deallocate(p, 1);
@@ -102,8 +102,8 @@ TEST(device_ptr, access)
   device_ptr_access(d_arr, N);
 
   std::array<T, N> h_arr;
-  gt::backend::system::copy<gt::space::device, gt::space::host>(p, h_arr.data(),
-                                                                N);
+  gt::copy_n(p, N, h_arr.data());
+
   EXPECT_EQ(h_arr, (std::array<T, N>{0, 1, 2, 3, 4}));
 
   alloc.deallocate(p, N);
@@ -132,7 +132,7 @@ TEST(device_ptr, arrow)
   device_ptr_arrow(p1);
 
   T h_val;
-  gt::backend::system::copy<gt::space::device, gt::space::host>(p, &h_val, 1);
+  gt::copy(p, 1, &h_val);
   EXPECT_EQ(h_val, T(99, 98));
 
   alloc.deallocate(p, 1);
