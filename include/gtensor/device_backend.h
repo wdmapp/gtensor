@@ -726,25 +726,6 @@ struct selector<T, gt::space::thrust>
 #endif
 
 // ======================================================================
-// system (default) backend
-
-namespace system
-{
-#ifdef GTENSOR_USE_THRUST
-using namespace backend::thrust;
-#elif GTENSOR_DEVICE_CUDA
-using namespace backend::cuda;
-#elif GTENSOR_DEVICE_HIP
-using namespace backend::hip;
-#elif GTENSOR_DEVICE_SYCL
-using namespace backend::sycl;
-#elif GTENSOR_DEVICE_HOST
-using namespace backend::host;
-#endif
-
-} // namespace system
-
-// ======================================================================
 // backend being used in clib (ie., the Fortran interface)
 
 namespace clib
