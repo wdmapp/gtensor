@@ -108,6 +108,9 @@ struct selector;
 template <typename T, typename S = gt::space::device>
 using device_allocator = typename allocator_impl::selector<T, S>::type;
 
+template <typename T, typename S = gt::space::host>
+using host_allocator = typename allocator_impl::selector<T, S>::type;
+
 // ======================================================================
 // backend::cuda
 
@@ -230,10 +233,6 @@ struct host
 
 } // namespace gallocator
 
-template <typename T>
-using host_allocator =
-  wrap_allocator<T, typename gallocator::host, gt::space::host>;
-
 inline void device_synchronize()
 {
   gtGpuCheck(cudaStreamSynchronize(0));
@@ -283,12 +282,23 @@ inline uint32_t device_get_vendor_id(int device_id)
 
 namespace allocator_impl
 {
+
 template <typename T>
 struct selector<T, gt::space::cuda>
 {
   using type =
     wrap_allocator<T, typename cuda::gallocator::device, gt::space::cuda>;
 };
+
+#if 0
+template <typename T>
+struct selector<T, gt::space::host>
+{
+  using type =
+    wrap_allocator<T, typename cuda::gallocator::host, gt::space::host>;
+};
+#endif
+
 } // namespace allocator_impl
 
 #endif
@@ -636,6 +646,15 @@ inline void device_synchronize()
 }
 
 }; // namespace host
+
+namespace allocator_impl
+{
+template <typename T>
+struct selector<T, gt::space::host>
+{
+  using type = std::allocator<T>;
+};
+} // namespace allocator_impl
 
 // ======================================================================
 // backend::thrust

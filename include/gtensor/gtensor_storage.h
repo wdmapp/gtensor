@@ -109,7 +109,7 @@ using device_storage = gtensor_storage<T, A, space::device>;
 
 #endif
 
-template <typename T, typename A = system::host_allocator<T>>
+template <typename T, typename A = backend::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
 
 template <typename T, typename A, typename O>

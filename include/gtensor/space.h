@@ -18,7 +18,7 @@
 #endif
 
 #ifndef GTENSOR_DEFAULT_HOST_ALLOCATOR
-#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::backend::system::host_allocator<T>
+#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::backend::host_allocator<T>
 #endif
 
 #ifndef GTENSOR_DEFAULT_DEVICE_ALLOCATOR
