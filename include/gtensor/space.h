@@ -23,7 +23,7 @@
 
 #ifndef GTENSOR_DEFAULT_DEVICE_ALLOCATOR
 #define GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)                                    \
-  gt::allocator::caching_allocator<T, gt::backend::system::device_allocator<T>>
+  gt::allocator::caching_allocator<T, gt::backend::device_allocator<T>>
 #endif
 
 namespace gt

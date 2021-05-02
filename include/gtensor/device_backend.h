@@ -99,6 +99,15 @@ struct wrap_allocator
   }
 };
 
+namespace allocator_impl
+{
+template <typename T, typename S>
+struct selector;
+}
+
+template <typename T, typename S = gt::space::device>
+using device_allocator = typename allocator_impl::selector<T, S>::type;
+
 // ======================================================================
 // backend::cuda
 
@@ -222,10 +231,6 @@ struct host
 } // namespace gallocator
 
 template <typename T>
-using device_allocator =
-  wrap_allocator<T, typename gallocator::device, gt::space::device>;
-
-template <typename T>
 using host_allocator =
   wrap_allocator<T, typename gallocator::host, gt::space::host>;
 
@@ -275,6 +280,16 @@ inline uint32_t device_get_vendor_id(int device_id)
 }
 
 } // namespace cuda
+
+namespace allocator_impl
+{
+template <typename T>
+struct selector<T, gt::space::cuda>
+{
+  using type =
+    wrap_allocator<T, typename cuda::gallocator::device, gt::space::cuda>;
+};
+} // namespace allocator_impl
 
 #endif
 
@@ -668,14 +683,6 @@ namespace thrust
 template <typename T>
 using host_allocator = std::allocator<T>;
 
-#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
-template <typename T>
-using device_allocator = ::thrust::device_malloc_allocator<T>;
-#else
-template <typename T>
-using device_allocator = ::thrust::device_allocator<T>;
-#endif
-
 template <typename S_src, typename S_dst, typename P_src, typename P_dst>
 inline void copy(P_src src, P_dst dst, size_type count)
 {
@@ -683,6 +690,19 @@ inline void copy(P_src src, P_dst dst, size_type count)
 }
 
 }; // namespace thrust
+
+namespace allocator_impl
+{
+template <typename T>
+struct selector<T, gt::space::thrust>
+{
+#if GTENSOR_DEVICE_CUDA && THRUST_VERSION <= 100903
+  using type = ::thrust::device_malloc_allocator<T>;
+#else
+  using type = ::thrust::device_allocator<T>;
+#endif
+};
+} // namespace allocator_impl
 
 #endif
 

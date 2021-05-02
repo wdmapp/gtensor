@@ -67,7 +67,7 @@ TEST(device_ptr, deref)
 {
   using T = double;
 
-  gt::backend::system::device_allocator<T> alloc;
+  gt::backend::device_allocator<T> alloc;
 
   auto p = alloc.allocate(1);
   gt::device_ptr<T> p1(gt::backend::raw_pointer_cast(p));
@@ -94,7 +94,7 @@ TEST(device_ptr, access)
   using T = double;
   const int N = 5;
 
-  gt::backend::system::device_allocator<T> alloc;
+  gt::backend::device_allocator<T> alloc;
 
   auto p = alloc.allocate(5);
   gt::device_ptr<T> d_arr(gt::backend::raw_pointer_cast(p));
@@ -124,7 +124,7 @@ TEST(device_ptr, arrow)
 {
   using T = std::pair<double, double>;
 
-  gt::backend::system::device_allocator<T> alloc;
+  gt::backend::device_allocator<T> alloc;
 
   auto p = alloc.allocate(1);
   gt::device_ptr<T> p1(gt::backend::raw_pointer_cast(p));

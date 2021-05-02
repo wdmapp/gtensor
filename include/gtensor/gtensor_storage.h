@@ -104,7 +104,7 @@ private:
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-template <typename T, typename A = system::device_allocator<T>>
+template <typename T, typename A = backend::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
 #endif
