@@ -152,9 +152,7 @@ struct copy;
 template <>
 struct copy<space::device, space::device>
 {
-  template <
-    typename T, typename U,
-    std::enable_if_t<is_allowed_element_type_conversion<U, T>::value, int> = 0>
+  template <typename T, typename U>
   static void run(device_ptr<T> src, device_ptr<U> dst, size_type count)
   {
     gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst),
@@ -166,9 +164,7 @@ struct copy<space::device, space::device>
 template <>
 struct copy<space::device, space::host>
 {
-  template <
-    typename T, typename U,
-    std::enable_if_t<is_allowed_element_type_conversion<U, T>::value, int> = 0>
+  template <typename T, typename U>
   static void run(device_ptr<T> src, U* dst, size_type count)
   {
     gtGpuCheck(cudaMemcpy(dst, backend::raw_pointer_cast(src),
@@ -179,9 +175,7 @@ struct copy<space::device, space::host>
 template <>
 struct copy<space::host, space::device>
 {
-  template <
-    typename T, typename U,
-    std::enable_if_t<is_allowed_element_type_conversion<U, T>::value, int> = 0>
+  template <typename T, typename U>
   static void run(const T* src, device_ptr<U> dst, size_type count)
   {
     gtGpuCheck(cudaMemcpy(backend::raw_pointer_cast(dst), src,
@@ -201,7 +195,12 @@ struct copy<space::host, space::host>
 
 } // namespace detail
 
-template <typename S_src, typename S_to, typename P_src, typename P_dst>
+template <
+  typename S_src, typename S_to, typename P_src, typename P_dst,
+  std::enable_if_t<is_allowed_element_type_conversion<
+                     typename pointer_traits<P_dst>::element_type,
+                     typename pointer_traits<P_src>::element_type>::value,
+                   int> = 0>
 inline void copy(P_src src, P_dst dst, gt::size_type count)
 {
   return detail::copy<S_src, S_to>::run(src, dst, count);
