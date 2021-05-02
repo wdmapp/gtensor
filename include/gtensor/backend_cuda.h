@@ -19,7 +19,6 @@ namespace cuda
 
 namespace gallocator
 {
-using size_type = gt::size_type;
 
 struct device
 {
