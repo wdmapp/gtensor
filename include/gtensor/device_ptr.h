@@ -30,7 +30,7 @@ public:
   GT_INLINE T& operator[](size_type i) const { return p_[i]; }
   GT_INLINE T* operator->() const { return p_; }
 
-  GT_INLINE operator bool() const { return bool(p_); }
+  explicit GT_INLINE operator bool() const { return bool(p_); }
   GT_INLINE self_type operator+(size_type off) const
   {
     return self_type(get() + off);
