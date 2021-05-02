@@ -18,25 +18,9 @@ namespace backend
 namespace sycl
 {
 
-template <typename S_src, typename S_to, typename T>
-inline void copy(const T* src, T* dst, gt::size_type count)
-{
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(dst, src, sizeof(T) * count);
-  q.wait();
-}
-
-struct ops
-{
-  static void memset(void* dst, int value, gt::size_type nbytes)
-  {
-    cl::sycl::queue& q = gt::backend::sycl::get_queue();
-    q.memset(dst, value, nbytes);
-  }
-};
-
 namespace gallocator
 {
+
 struct device
 {
   template <typename T>
@@ -107,27 +91,97 @@ struct host
 
 } // namespace gallocator
 
-template <typename T>
-using device_allocator =
-  wrap_allocator<T, typename gallocator::device, gt::space::device>;
-
-template <typename T>
-using host_allocator =
-  wrap_allocator<T, typename gallocator::host, gt::space::host>;
-
 inline void device_synchronize()
 {
   gt::backend::sycl::get_queue().wait();
 }
 
 template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
+inline void device_copy_async_dd(const T* src, T* dst, size_type count)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   q.memcpy(dst, src, sizeof(T) * count);
 }
 
 } // namespace sycl
-} // namespace backend
 
-#endif GTENSOR_BACKEND_SYCL_H
+namespace allocator_impl
+{
+
+template <typename T>
+struct selector<T, gt::space::sycl>
+{
+  using type =
+    wrap_allocator<T, typename sycl::gallocator::device, gt::space::sycl>;
+};
+
+#if 0
+template <typename T>
+struct selector<T, gt::space::host>
+{
+  using type =
+    wrap_allocator<T, typename sycl::gallocator::host, gt::space::host>;
+};
+#endif
+
+} // namespace allocator_impl
+
+namespace copy_impl
+{
+
+template <typename InputPtr, typename OutputPtr>
+inline void sycl_copy_n(InputPtr in, size_type count, OutputPtr out)
+{
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memcpy(backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+           sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count);
+  q.wait();
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::sycl tag_in, gt::space::sycl tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  sycl_copy_n(in, count, out);
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::sycl tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  sycl_copy_n(in, count, out);
+}
+
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::sycl tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  sycl_copy_n(in, count, out);
+}
+
+#if 0
+template <typename InputPtr, typename OutputPtr>
+inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
+                   size_type count, OutputPtr out)
+{
+  sycl_copy_n(in, count, out);
+}
+#endif
+
+} // namespace copy_impl
+
+namespace fill_impl
+{
+template <typename Ptr, typename T>
+inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
+{
+  assert(value == T(0) || sizeof(T) == 1);
+  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.memset(backend::raw_pointer_cast(dst), value, last - first);
+}
+} // namespace fill_impl
+
+} // namespace backend
+} // namespace gt
+
+#endif // GTENSOR_BACKEND_SYCL_H
