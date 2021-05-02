@@ -151,16 +151,18 @@ inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
 
 } // namespace copy_impl
 
+namespace fill_impl
+{
+template <typename Ptr, typename T>
+inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
+{
+  assert(value == T(0) || sizeof(T) == 1);
+  gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), value, last - first));
+}
+} // namespace fill_impl
+
 namespace cuda
 {
-
-struct ops
-{
-  static void memset(void* dst, int value, gt::size_type nbytes)
-  {
-    gtGpuCheck(cudaMemset(dst, value, nbytes));
-  }
-};
 
 namespace gallocator
 {
@@ -584,15 +586,22 @@ inline void device_copy_async_dd(const T* src, T* dst, gt::size_type count)
 
 namespace copy_impl
 {
-
 template <typename InputPtr, typename OutputPtr>
 inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   std::copy_n(in, count, out);
 }
-
 } // namespace copy_impl
+
+namespace fill_impl
+{
+template <typename Ptr, typename T>
+inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
+{
+  std::fill(first, last, value);
+}
+} // namespace fill_impl
 
 namespace host
 {
@@ -644,17 +653,17 @@ inline void copy_n(gt::space::host tag_in, gt::space::thrust tag_out,
 
 } // namespace copy_impl
 
+namespace fill_impl
+{
+template <typename Ptr, typename T>
+inline void fill(gt::space::thrust tag, Ptr first, Ptr last, const T& value)
+{
+  ::thrust::fill(first, last, value);
+}
+} // namespace fill_impl
+
 namespace thrust
 {
-
-struct ops
-{
-  static void memset(void* dst_, int value, size_type nbytes)
-  {
-    auto dst = ::thrust::device_pointer_cast(static_cast<char*>(dst_));
-    ::thrust::fill(dst, dst + nbytes, value);
-  }
-};
 
 template <typename T>
 using host_allocator = std::allocator<T>;
@@ -711,24 +720,6 @@ using namespace backend::sycl;
 using namespace backend::host;
 #endif
 } // namespace clib
-
-namespace fill_impl
-{
-#ifdef GTENSOR_HAVE_DEVICE
-template <typename Ptr, typename T>
-inline void fill(gt::space::device tag, Ptr first, Ptr last, const T& value)
-{
-  assert(value == T(0) || sizeof(T) == 1);
-  system::ops::memset((char*)first, value, (last - first) * sizeof(T));
-}
-#endif
-
-template <typename Ptr, typename T>
-inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
-{
-  std::fill(first, last, value);
-}
-} // namespace fill_impl
 
 template <
   typename S, typename Ptr, typename T,
