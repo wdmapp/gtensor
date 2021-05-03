@@ -149,7 +149,7 @@ inline void copy_n(gt::space::cuda tag_in, gt::space::cuda tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     cudaMemcpyDeviceToDevice));
 }
@@ -159,7 +159,7 @@ inline void copy_n(gt::space::cuda tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     cudaMemcpyDeviceToHost));
 }
@@ -169,7 +169,7 @@ inline void copy_n(gt::space::host tag_in, gt::space::cuda tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     cudaMemcpyHostToDevice));
 }
@@ -180,7 +180,7 @@ inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(cudaMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     cudaMemcpyHostToHost));
 }
@@ -195,11 +195,11 @@ inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
 {
   using element_type = typename gt::pointer_traits<Ptr>::element_type;
   if (element_type(value) == element_type()) {
-    gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), 0,
+    gtGpuCheck(cudaMemset(gt::raw_pointer_cast(first), 0,
                           (last - first) * sizeof(element_type)));
   } else {
     assert(sizeof(element_type) == 1);
-    gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), value,
+    gtGpuCheck(cudaMemset(gt::raw_pointer_cast(first), value,
                           (last - first) * sizeof(element_type)));
   }
 }

@@ -51,8 +51,8 @@ void fft_r2c_1d()
   // but with fftw convention for real transforms, the last term is
   // conjugate of second and set to 0 to save storage / computation
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
-  // plan.exec_forward(gt::backend::raw_pointer_cast(d_A.data()),
-  //                  gt::backend::raw_pointer_cast(d_B.data()));
+  // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
 
   // test roundtripping data
@@ -108,8 +108,8 @@ void fft_c2r_1d()
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
-  // plan.exec_inverse(gt::backend::raw_pointer_cast(d_B.data()),
-  //                  gt::backend::raw_pointer_cast(d_A.data()));
+  // plan.exec_inverse(gt::raw_pointer_cast(d_B.data()),
+  //                  gt::raw_pointer_cast(d_A.data()));
   plan.inverse(d_B, d_A);
 
   gt::copy(d_A, h_A);
@@ -167,8 +167,8 @@ void fft_c2c_1d_forward()
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N}, batch_size);
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
-  // plan.exec_forward(gt::backend::raw_pointer_cast(d_A.data()),
-  //                  gt::backend::raw_pointer_cast(d_B.data()));
+  // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
 
   gt::copy(d_B, h_B);
@@ -232,8 +232,8 @@ void fft_c2c_1d_inverse()
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N}, batch_size);
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
-  // plan.exec_inverse(gt::backend::raw_pointer_cast(d_A.data()),
-  //                  gt::backend::raw_pointer_cast(d_B.data()));
+  // plan.exec_inverse(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
   plan.inverse(d_A, d_B);
 
   gt::copy(d_B, h_B);

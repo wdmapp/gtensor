@@ -71,9 +71,6 @@ using device_ptr = space_pointer<T, S>;
 template <typename T, typename S = gt::space::host>
 using host_ptr = space_pointer<T, S>;
 
-namespace backend
-{
-
 template <typename P>
 GT_INLINE auto raw_pointer_cast(P p)
 {
@@ -86,6 +83,9 @@ GT_INLINE auto device_pointer_cast(T* p)
   using pointer = typename gt::device_ptr<T, gt::space::device>;
   return pointer(p);
 }
+
+namespace backend
+{
 
 // ======================================================================
 

@@ -31,8 +31,8 @@ void test_axpy_real()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  // gt::blas::axpy(h, N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
-  //               gt::backend::raw_pointer_cast(d_y.data()), 1);
+  // gt::blas::axpy(h, N, &a, gt::raw_pointer_cast(d_x.data()), 1,
+  //               gt::raw_pointer_cast(d_y.data()), 1);
   gt::blas::axpy(h, a, d_x, d_y);
 
   gt::blas::destroy(h);
@@ -75,8 +75,8 @@ void test_axpy_complex()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  gt::blas::axpy(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1,
-                 gt::backend::raw_pointer_cast(d_y.data()), 1);
+  gt::blas::axpy(h, N, a, gt::raw_pointer_cast(d_x.data()), 1,
+                 gt::raw_pointer_cast(d_y.data()), 1);
 
   gt::blas::destroy(h);
 
@@ -118,7 +118,7 @@ void test_scal_complex()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  // gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+  // gt::blas::scal(h, N, a, gt::raw_pointer_cast(d_x.data()), 1);
   gt::blas::scal(h, a, d_x);
   gt::blas::scal(h, b, d_y);
 
@@ -159,7 +159,7 @@ void test_scal_real()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  // gt::blas::scal(h, N, a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+  // gt::blas::scal(h, N, a, gt::raw_pointer_cast(d_x.data()), 1);
   gt::blas::scal(h, a, d_x);
 
   gt::blas::destroy(h);
@@ -348,9 +348,9 @@ void test_gemv_real()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  // gt::blas::gemv(h, N, N, a, gt::backend::raw_pointer_cast(d_A.data()), N,
-  //                gt::backend::raw_pointer_cast(d_x.data()), 1, b,
-  //                gt::backend::raw_pointer_cast(d_y.data()), 1);
+  // gt::blas::gemv(h, N, N, a, gt::raw_pointer_cast(d_A.data()), N,
+  //                gt::raw_pointer_cast(d_x.data()), 1, b,
+  //                gt::raw_pointer_cast(d_y.data()), 1);
   gt::blas::gemv(h, a, d_A, d_x, b, d_y);
 
   gt::blas::destroy(h);
@@ -409,9 +409,9 @@ void test_gemv_complex()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  // gt::blas::gemv(h, N, N, a, gt::backend::raw_pointer_cast(d_mat.data()), N,
-  //                gt::backend::raw_pointer_cast(d_x.data()), 1, b,
-  //                gt::backend::raw_pointer_cast(d_y.data()), 1);
+  // gt::blas::gemv(h, N, N, a, gt::raw_pointer_cast(d_mat.data()), N,
+  //                gt::raw_pointer_cast(d_x.data()), 1, b,
+  //                gt::raw_pointer_cast(d_y.data()), 1);
   gt::blas::gemv(h, a, d_mat, d_x, b, d_y);
 
   gt::blas::destroy(h);
