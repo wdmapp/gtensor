@@ -109,13 +109,14 @@ template <typename T, typename S>
 struct selector;
 }
 
+} // namespace backend
+
 template <typename T, typename S = gt::space::device>
-using device_allocator = typename allocator_impl::selector<T, S>::type;
+using device_allocator = typename backend::allocator_impl::selector<T, S>::type;
 
 template <typename T, typename S = gt::space::host>
-using host_allocator = typename allocator_impl::selector<T, S>::type;
+using host_allocator = typename backend::allocator_impl::selector<T, S>::type;
 
-} // namespace backend
 } // namespace gt
 
 #include "backend_host.h"

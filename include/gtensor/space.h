@@ -18,12 +18,12 @@
 #endif
 
 #ifndef GTENSOR_DEFAULT_HOST_ALLOCATOR
-#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::backend::host_allocator<T>
+#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::host_allocator<T>
 #endif
 
 #ifndef GTENSOR_DEFAULT_DEVICE_ALLOCATOR
 #define GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)                                    \
-  gt::allocator::caching_allocator<T, gt::backend::device_allocator<T>>
+  gt::allocator::caching_allocator<T, gt::device_allocator<T>>
 #endif
 
 namespace gt
