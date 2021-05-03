@@ -122,27 +122,6 @@ inline uint32_t device_get_vendor_id(int device_id)
 
 } // namespace hip
 
-namespace allocator_impl
-{
-
-template <typename T>
-struct selector<T, gt::space::hip>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::hip>::device, gt::space::hip>;
-};
-
-#if 0
-template <typename T>
-struct selector<T, gt::space::host>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::hip>::host, gt::space::host>;
-};
-#endif
-
-} // namespace allocator_impl
-
 namespace copy_impl
 {
 

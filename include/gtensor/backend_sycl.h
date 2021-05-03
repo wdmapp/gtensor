@@ -107,27 +107,6 @@ inline void device_copy_async_dd(const T* src, T* dst, size_type count)
 
 } // namespace sycl
 
-namespace allocator_impl
-{
-
-template <typename T>
-struct selector<T, gt::space::sycl>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::sycl>::device, gt::space::sycl>;
-};
-
-#if 0
-template <typename T>
-struct selector<T, gt::space::host>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::sycl>::host, gt::space::sycl>;
-};
-#endif
-
-} // namespace allocator_impl
-
 namespace copy_impl
 {
 

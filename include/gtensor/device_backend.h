@@ -86,8 +86,8 @@ GT_INLINE auto device_pointer_cast(T* p)
 
 namespace backend
 {
-
-// ======================================================================
+namespace allocator_impl
+{
 
 template <typename T, typename A, typename S>
 struct wrap_allocator
@@ -103,22 +103,26 @@ struct wrap_allocator
   }
 };
 
-namespace allocator_impl
-{
 template <typename S>
 struct gallocator;
 
 template <typename T, typename S>
-struct selector;
+struct selector
+{
+  using type = wrap_allocator<T, typename gallocator<S>::device, S>;
+};
+
 } // namespace allocator_impl
 
+#if 0 // host handled generically
+template <typename T>
+struct selector<T, gt::space::host>
+{
+  using type =
+    wrap_allocator<T, gallocator<gt::space::cuda>::host, gt::space::host>;
+};
+#endif
 } // namespace backend
-
-template <typename T, typename S = gt::space::device>
-using device_allocator = typename backend::allocator_impl::selector<T, S>::type;
-
-template <typename T, typename S = gt::space::host>
-using host_allocator = typename backend::allocator_impl::selector<T, S>::type;
 
 } // namespace gt
 
@@ -161,6 +165,12 @@ using namespace backend::host;
 } // namespace clib
 
 } // namespace backend
+
+template <typename T, typename S = gt::space::device>
+using device_allocator = typename backend::allocator_impl::selector<T, S>::type;
+
+template <typename T, typename S = gt::space::host>
+using host_allocator = typename backend::allocator_impl::selector<T, S>::type;
 
 // ======================================================================
 // fill

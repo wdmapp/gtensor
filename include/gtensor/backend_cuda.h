@@ -122,27 +122,6 @@ inline uint32_t device_get_vendor_id(int device_id)
 
 } // namespace cuda
 
-namespace allocator_impl
-{
-
-template <typename T>
-struct selector<T, gt::space::cuda>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::cuda>::device, gt::space::cuda>;
-};
-
-#if 0
-template <typename T>
-struct selector<T, gt::space::host>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::cuda>::host, gt::space::host>;
-};
-#endif
-
-} // namespace allocator_impl
-
 namespace copy_impl
 {
 
