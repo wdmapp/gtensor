@@ -57,8 +57,7 @@ TEST(span, type_aliases)
 namespace gt
 {
 template <typename T>
-using device_span = gt::span<
-  T, typename gt::space::space_traits<gt::space::device>::template pointer<T>>;
+using device_span = gt::span<T, gt::device_ptr<T>>;
 }
 
 TEST(span, device_convert_const)

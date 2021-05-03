@@ -59,11 +59,14 @@ struct space_traits<device>
 
 } // namespace space
 
+template <typename T, typename S>
+using space_pointer = typename gt::space::space_traits<S>::template pointer<T>;
+
 template <typename T, typename S = gt::space::device>
-using device_ptr = typename gt::space::space_traits<S>::template pointer<T>;
+using device_ptr = space_pointer<T, S>;
 
 template <typename T, typename S = gt::space::host>
-using host_ptr = typename gt::space::space_traits<S>::template pointer<T>;
+using host_ptr = space_pointer<T, S>;
 
 namespace backend
 {

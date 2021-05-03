@@ -24,9 +24,7 @@ struct gtensor_inner_types<gtensor_span<T, N, S>>
   using space_type = S;
   constexpr static size_type dimension = N;
 
-  using storage_type =
-    typename gt::span<T,
-                      typename gt::space::space_traits<S>::template pointer<T>>;
+  using storage_type = typename gt::span<T, gt::space_pointer<T, S>>;
   using value_type = typename storage_type::value_type;
   using pointer = typename storage_type::pointer;
   using const_pointer = typename storage_type::const_pointer;
