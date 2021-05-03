@@ -51,13 +51,19 @@ struct space_traits<device>
   using pointer = ::thrust::device_ptr<T>;
 #else
   template <typename T>
-  using pointer = gt::device_ptr<T>;
+  using pointer = gt::backend::device_ptr<T>;
 #endif
 };
 
 #endif
 
 } // namespace space
+
+template <typename T, typename S = gt::space::device>
+using device_ptr = typename gt::space::space_traits<S>::template pointer<T>;
+
+template <typename T, typename S = gt::space::host>
+using host_ptr = typename gt::space::space_traits<S>::template pointer<T>;
 
 namespace backend
 {

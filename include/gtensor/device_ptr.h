@@ -7,6 +7,9 @@
 
 namespace gt
 {
+namespace backend
+{
+
 template <typename T>
 class device_ptr
 {
@@ -85,6 +88,7 @@ private:
   T* p_ = nullptr;
 };
 
+} // namespace backend
 } // namespace gt
 
 #endif

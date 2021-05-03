@@ -32,17 +32,17 @@ struct pointer_traits<T*>
 };
 
 template <typename T>
-struct pointer_traits<gt::device_ptr<T>>
+struct pointer_traits<gt::backend::device_ptr<T>>
 {
   using element_type = T;
-  using pointer = gt::device_ptr<T>;
-  using const_pointer = gt::device_ptr<const T>;
+  using pointer = gt::backend::device_ptr<T>;
+  using const_pointer = gt::backend::device_ptr<const T>;
   using reference = T&;
   using const_reference = const T&;
-  using space_type = gt::space::device;
+  using space_type = typename pointer::space_type;
 
   template <typename U>
-  using rebind = gt::device_ptr<U>;
+  using rebind = gt::backend::device_ptr<U>;
 
   GT_INLINE static T* get(pointer p) { return p.get(); }
 };
