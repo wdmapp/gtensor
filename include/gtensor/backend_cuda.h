@@ -14,64 +14,66 @@ namespace gt
 namespace backend
 {
 
+namespace allocator_impl
+{
+template <>
+struct gallocator<gt::space::cuda>
+{
+  struct device
+  {
+    template <typename T>
+    static T* allocate(size_type n)
+    {
+      T* p;
+      gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
+      return p;
+    }
+
+    template <typename T>
+    static void deallocate(T* p)
+    {
+      gtGpuCheck(cudaFree(p));
+    }
+  };
+
+  struct managed
+  {
+    template <typename T>
+    static T* allocate(size_t n)
+    {
+      T* p;
+      gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
+      return p;
+    }
+
+    template <typename T>
+    static void deallocate(T* p)
+    {
+      gtGpuCheck(cudaFree(p));
+    }
+  };
+
+  struct host
+  {
+    template <typename T>
+    static T* allocate(size_type n)
+    {
+      T* p;
+      gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
+      return p;
+    }
+
+    template <typename T>
+    static void deallocate(T* p)
+    {
+      gtGpuCheck(cudaFreeHost(p));
+    }
+  };
+};
+} // namespace allocator_impl
+
 namespace cuda
 {
-
-namespace gallocator
-{
-
-struct device
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    T* p;
-    gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
-    return p;
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gtGpuCheck(cudaFree(p));
-  }
-};
-
-struct managed
-{
-  template <typename T>
-  static T* allocate(size_t n)
-  {
-    T* p;
-    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
-    return p;
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gtGpuCheck(cudaFree(p));
-  }
-};
-
-struct host
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    T* p;
-    gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
-    return p;
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gtGpuCheck(cudaFreeHost(p));
-  }
-};
-
-} // namespace gallocator
 
 inline void device_synchronize()
 {
@@ -127,7 +129,7 @@ template <typename T>
 struct selector<T, gt::space::cuda>
 {
   using type =
-    wrap_allocator<T, typename cuda::gallocator::device, gt::space::cuda>;
+    wrap_allocator<T, gallocator<gt::space::cuda>::device, gt::space::cuda>;
 };
 
 #if 0
@@ -135,7 +137,7 @@ template <typename T>
 struct selector<T, gt::space::host>
 {
   using type =
-    wrap_allocator<T, typename cuda::gallocator::host, gt::space::host>;
+    wrap_allocator<T, gallocator<gt::space::cuda>::host, gt::space::host>;
 };
 #endif
 

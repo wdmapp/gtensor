@@ -105,9 +105,12 @@ struct wrap_allocator
 
 namespace allocator_impl
 {
+template <typename S>
+struct gallocator;
+
 template <typename T, typename S>
 struct selector;
-}
+} // namespace allocator_impl
 
 } // namespace backend
 
@@ -145,10 +148,13 @@ namespace clib
 {
 #if GTENSOR_DEVICE_CUDA
 using namespace backend::cuda;
+using gallocator = backend::allocator_impl::gallocator<gt::space::cuda>;
 #elif GTENSOR_DEVICE_HIP
 using namespace backend::hip;
+using gallocator = backend::allocator_impl::gallocator<gt::space::hip>;
 #elif GTENSOR_DEVICE_SYCL
 using namespace backend::sycl;
+using gallocator = backend::allocator_impl::gallocator<gt::space::sycl>;
 #else // just for device_synchronize()
 using namespace backend::host;
 #endif

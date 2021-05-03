@@ -14,64 +14,66 @@ namespace gt
 namespace backend
 {
 
+namespace allocator_impl
+{
+template <>
+struct gallocator<gt::space::hip>
+{
+  struct device
+  {
+    template <typename T>
+    static T* allocate(size_type n)
+    {
+      T* p;
+      gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
+      return p;
+    }
+
+    template <typename T>
+    static void deallocate(T* p)
+    {
+      gtGpuCheck(hipFree(p));
+    }
+  };
+
+  struct managed
+  {
+    template <typename T>
+    static T* allocate(size_t n)
+    {
+      T* p;
+      gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
+      return p;
+    }
+
+    template <typename T>
+    static void deallocate(T* p)
+    {
+      gtGpuCheck(hipFree(p));
+    }
+  };
+
+  struct host
+  {
+    template <typename T>
+    static T* allocate(size_type n)
+    {
+      T* p;
+      gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n));
+      return p;
+    }
+
+    template <typename T>
+    static void deallocate(T* p)
+    {
+      gtGpuCheck(hipHostFree(p));
+    }
+  };
+};
+} // namespace allocator_impl
+
 namespace hip
 {
-
-namespace gallocator
-{
-
-struct device
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    T* p;
-    gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
-    return p;
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gtGpuCheck(hipFree(p));
-  }
-};
-
-struct managed
-{
-  template <typename T>
-  static T* allocate(size_t n)
-  {
-    T* p;
-    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
-    return p;
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gtGpuCheck(hipFree(p));
-  }
-};
-
-struct host
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    T* p;
-    gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n));
-    return p;
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gtGpuCheck(hipHostFree(p));
-  }
-};
-
-} // namespace gallocator
 
 inline void device_synchronize()
 {
@@ -127,7 +129,7 @@ template <typename T>
 struct selector<T, gt::space::hip>
 {
   using type =
-    wrap_allocator<T, typename hip::gallocator::device, gt::space::hip>;
+    wrap_allocator<T, gallocator<gt::space::hip>::device, gt::space::hip>;
 };
 
 #if 0
@@ -135,7 +137,7 @@ template <typename T>
 struct selector<T, gt::space::host>
 {
   using type =
-    wrap_allocator<T, typename hip::gallocator::host, gt::space::hip>;
+    wrap_allocator<T, gallocator<gt::space::hip>::host, gt::space::host>;
 };
 #endif
 
