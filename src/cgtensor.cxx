@@ -97,9 +97,8 @@ void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes)
 
 void gt_backend_memset(void* dst, int value, size_t nbytes)
 {
-  gt::backend::fill(gt::backend::device_pointer_cast((uint8_t*)dst),
-                    gt::backend::device_pointer_cast((uint8_t*)dst) + nbytes,
-                    value);
+  gt::fill(gt::device_pointer_cast((uint8_t*)dst),
+           gt::device_pointer_cast((uint8_t*)dst) + nbytes, value);
 }
 
 #endif
