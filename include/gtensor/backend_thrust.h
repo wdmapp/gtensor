@@ -30,6 +30,12 @@ struct selector<T, gt::space::thrust>
   using type = ::thrust::device_allocator<T>;
 #endif
 };
+
+template <typename T>
+struct selector<T, gt::space::thrust_host>
+{
+  using type = std::allocator<T>;
+};
 } // namespace allocator_impl
 
 namespace copy_impl

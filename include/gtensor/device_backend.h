@@ -109,19 +109,11 @@ struct gallocator;
 template <typename T, typename S>
 struct selector
 {
-  using type = wrap_allocator<T, typename gallocator<S>::device, S>;
+  using type = wrap_allocator<T, gallocator<S>, S>;
 };
 
 } // namespace allocator_impl
 
-#if 0 // host handled generically
-template <typename T>
-struct selector<T, gt::space::host>
-{
-  using type =
-    wrap_allocator<T, gallocator<gt::space::cuda>::host, gt::space::host>;
-};
-#endif
 } // namespace backend
 
 } // namespace gt
@@ -152,16 +144,16 @@ namespace clib
 {
 #if GTENSOR_DEVICE_CUDA
 using namespace backend::cuda;
-using gallocator = backend::allocator_impl::gallocator<gt::space::cuda>;
 #elif GTENSOR_DEVICE_HIP
 using namespace backend::hip;
-using gallocator = backend::allocator_impl::gallocator<gt::space::hip>;
 #elif GTENSOR_DEVICE_SYCL
 using namespace backend::sycl;
-using gallocator = backend::allocator_impl::gallocator<gt::space::sycl>;
 #else // just for device_synchronize()
 using namespace backend::host;
 #endif
+
+template <typename S>
+using gallocator = gt::backend::allocator_impl::gallocator<S>;
 } // namespace clib
 
 } // namespace backend

@@ -16,60 +16,61 @@ namespace backend
 
 namespace allocator_impl
 {
+
 template <>
 struct gallocator<gt::space::hip>
 {
-  struct device
+  template <typename T>
+  static T* allocate(size_type n)
   {
-    template <typename T>
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
-      return p;
-    }
+    T* p;
+    gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
+    return p;
+  }
 
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      gtGpuCheck(hipFree(p));
-    }
-  };
-
-  struct managed
+  template <typename T>
+  static void deallocate(T* p)
   {
-    template <typename T>
-    static T* allocate(size_t n)
-    {
-      T* p;
-      gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
-      return p;
-    }
-
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      gtGpuCheck(hipFree(p));
-    }
-  };
-
-  struct host
-  {
-    template <typename T>
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n));
-      return p;
-    }
-
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      gtGpuCheck(hipHostFree(p));
-    }
-  };
+    gtGpuCheck(hipFree(p));
+  }
 };
+
+template <>
+struct gallocator<gt::space::hip_managed>
+{
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    T* p;
+    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(hipFree(p));
+  }
+};
+
+template <>
+struct gallocator<gt::space::hip_host>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p;
+    gtGpuCheck(hipHostMalloc(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(hipHostFree(p));
+  }
+};
+
 } // namespace allocator_impl
 
 namespace hip

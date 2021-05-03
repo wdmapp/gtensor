@@ -20,74 +20,75 @@ namespace allocator_impl
 template <>
 struct gallocator<gt::space::sycl>
 {
-  struct device
+  template <typename T>
+  static T* allocate(size_type n)
   {
-    template <typename T>
-    static T* allocate(size_type n)
-    {
-      return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
-    }
+    return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
+  }
 
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-  };
-
-  struct managed
+  template <typename T>
+  static void deallocate(T* p)
   {
-    template <typename T>
-    static T* allocate(size_t n)
-    {
-      return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
-    }
-
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      cl::sycl::free(p, gt::backend::sycl::get_queue());
-    }
-  };
-
-  // The host allocation type in SYCL allows device code to directly access
-  // the data. This is generally not necessary or effecient for gtensor, so
-  // we opt for the same implementation as for the HOST device below.
-
-  struct host
-  {
-    template <typename T>
-    static T* allocate(size_type n)
-    {
-      T* p = static_cast<T*>(malloc(sizeof(T) * n));
-      if (!p) {
-        std::cerr << "host allocate failed" << std::endl;
-        std::abort();
-      }
-      return p;
-    }
-
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      free(p);
-    }
-  };
-
-  // template <typename T>
-  // struct host
-  // {
-  //   static T* allocate( : size_type count)
-  //   {
-  //     return cl::sycl::malloc_host<T>(count, gt::backend::sycl::get_queue());
-  //   }
-
-  //   static void deallocate(T* p)
-  //   {
-  //     cl::sycl::free(p, gt::backend::sycl::get_queue());
-  //   }
-  // };
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
+  }
 };
+
+template <>
+struct gallocator<gt::space::sycl_managed>
+{
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
+  }
+}; // namespace allocator_impl
+
+// The host allocation type in SYCL allows device code to directly access
+// the data. This is generally not necessary or effecient for gtensor, so
+// we opt for the same implementation as for the HOST device below.
+
+template <>
+struct gallocator<gt::space::sycl_host>
+
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p = static_cast<T*>(malloc(sizeof(T) * n));
+    if (!p) {
+      std::cerr << "host allocate failed" << std::endl;
+      std::abort();
+    }
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    free(p);
+  }
+};
+
+// template <typename T>
+// struct host
+// {
+//   static T* allocate( : size_type count)
+//   {
+//     return cl::sycl::malloc_host<T>(count, gt::backend::sycl::get_queue());
+//   }
+
+//   static void deallocate(T* p)
+//   {
+//     cl::sycl::free(p, gt::backend::sycl::get_queue());
+//   }
+// };
+
 } // namespace allocator_impl
 
 namespace sycl

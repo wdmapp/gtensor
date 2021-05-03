@@ -36,7 +36,8 @@ TEST(device_backend, list_devices)
 #define N 10
 TEST(device_backend, managed_allocate)
 {
-  double* a = gt::backend::clib::gallocator::managed::allocate<double>(N);
+  using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
+  double* a = allocator::allocate<double>(N);
   for (int i = 0; i < N; i++) {
     a[i] = ((double)i) / N;
   }
@@ -46,7 +47,7 @@ TEST(device_backend, managed_allocate)
   for (int i = 0; i < N; i++) {
     EXPECT_EQ(a[i], 1.0 + ((double)i) / N);
   }
-  gt::backend::clib::gallocator::managed::deallocate(a);
+  allocator::deallocate(a);
 }
 
 #endif

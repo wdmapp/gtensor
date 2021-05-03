@@ -16,60 +16,61 @@ namespace backend
 
 namespace allocator_impl
 {
+
 template <>
 struct gallocator<gt::space::cuda>
 {
-  struct device
+  template <typename T>
+  static T* allocate(size_type n)
   {
-    template <typename T>
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
-      return p;
-    }
+    T* p;
+    gtGpuCheck(cudaMalloc(&p, sizeof(T) * n));
+    return p;
+  }
 
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      gtGpuCheck(cudaFree(p));
-    }
-  };
-
-  struct managed
+  template <typename T>
+  static void deallocate(T* p)
   {
-    template <typename T>
-    static T* allocate(size_t n)
-    {
-      T* p;
-      gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
-      return p;
-    }
-
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      gtGpuCheck(cudaFree(p));
-    }
-  };
-
-  struct host
-  {
-    template <typename T>
-    static T* allocate(size_type n)
-    {
-      T* p;
-      gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
-      return p;
-    }
-
-    template <typename T>
-    static void deallocate(T* p)
-    {
-      gtGpuCheck(cudaFreeHost(p));
-    }
-  };
+    gtGpuCheck(cudaFree(p));
+  }
 };
+
+template <>
+struct gallocator<gt::space::cuda_managed>
+{
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    T* p;
+    gtGpuCheck(cudaMallocManaged(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(cudaFree(p));
+  }
+};
+
+template <>
+struct gallocator<gt::space::cuda_host>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    T* p;
+    gtGpuCheck(cudaMallocHost(&p, sizeof(T) * n));
+    return p;
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gtGpuCheck(cudaFreeHost(p));
+  }
+};
+
 } // namespace allocator_impl
 
 namespace cuda
