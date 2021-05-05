@@ -164,8 +164,7 @@ template <typename T, size_type N, typename S>
 inline void gtensor_span<T, N, S>::fill(const value_type v)
 {
   if (v == T(0)) {
-    auto data = gt::backend::raw_pointer_cast(this->data());
-    backend::fill<S>(data, data + this->size(), 0);
+    backend::fill(this->data(), this->data() + this->size(), 0);
   } else {
     assign(*this, scalar(v));
   }
