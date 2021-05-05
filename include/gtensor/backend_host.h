@@ -4,6 +4,8 @@
 
 #include "pointer_traits.h"
 
+#include <algorithm>
+
 // ======================================================================
 // gt::backend::host
 
