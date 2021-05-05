@@ -70,7 +70,7 @@ public:
   GT_INLINE reference operator[](size_type i) const { return data_[i]; }
 
 private:
-  pointer data_ = nullptr;
+  pointer data_ = {};
   size_type size_ = 0;
 };
 
