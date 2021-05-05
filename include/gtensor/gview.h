@@ -33,8 +33,19 @@ public:
   shape_type shape() const { return e_.shape(); }
   shape_type strides() const { return strides_; }
 
-  decltype(auto) to_kernel() const { return e_.to_kernel(); }
-  decltype(auto) to_kernel() { return e_.to_kernel(); }
+  decltype(auto) to_kernel() const
+  {
+    auto k_e_ = e_.to_kernel();
+    using kernel_type = decltype(k_e_);
+    return gview_adaptor<kernel_type>(std::forward<kernel_type>(k_e_));
+  }
+
+  decltype(auto) to_kernel()
+  {
+    auto k_e_ = e_.to_kernel();
+    using kernel_type = decltype(k_e_);
+    return gview_adaptor<kernel_type>(std::forward<kernel_type>(k_e_));
+  }
 
   GT_INLINE size_type size() const { return e_.size(); };
 
@@ -408,6 +419,7 @@ auto view(E&& e, Args&&... args)
 
 // ======================================================================
 // reshape
+//
 
 template <size_type N, typename E>
 inline auto reshape(E&& _e, gt::shape_type<N> shape)
