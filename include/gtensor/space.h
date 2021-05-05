@@ -42,11 +42,11 @@ struct kernel;
 #ifdef GTENSOR_USE_THRUST
 
 template <typename T, typename A = GTENSOR_DEFAULT_HOST_ALLOCATOR(T)>
-using host_vector = thrust::host_vector<T, A>;
+using host_vector = ::thrust::host_vector<T, A>;
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
-using device_vector = thrust::device_vector<T, A>;
+using device_vector = ::thrust::device_vector<T, A>;
 #endif
 
 #else
@@ -61,27 +61,70 @@ using device_vector = gt::backend::device_storage<T, A>;
 
 #endif // GTENSOR_USE_THRUST
 
-struct host
+// ======================================================================
+// storage_traits
+
+template <typename EC>
+struct storage_traits;
+
+template <typename T, typename A>
+struct storage_traits<gt::backend::host_storage<T, A>>
 {
-  template <typename T>
-  using Vector = host_vector<T>;
-  template <typename T>
-  using Span = span<T>;
+  using space_type = space::host;
 };
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-struct device
+template <typename T, typename A>
+struct storage_traits<gt::backend::device_storage<T, A>>
 {
-  template <typename T>
-  using Vector = device_vector<T>;
-  template <typename T>
-  using Span = device_span<T>;
+  using space_type = space::device;
 };
 
-#else // not GTENSOR_HAVE_DEVICE
+#endif
 
-using device = host;
+#ifdef GTENSOR_USE_THRUST
+
+template <typename T, typename A>
+struct storage_traits<::thrust::host_vector<T, A>>
+{
+  using space_type = space::host;
+};
+
+template <typename T, typename A>
+struct storage_traits<::thrust::device_vector<T, A>>
+{
+  using space_type = space::device;
+};
+
+#endif
+
+// ======================================================================
+// space_traits
+
+template <typename S>
+struct space_traits
+{};
+
+template <>
+struct space_traits<host>
+{
+  template <typename T>
+  using storage_type = host_vector<T>;
+  template <typename T>
+  using span_type = span<T>;
+};
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+template <>
+struct space_traits<device>
+{
+  template <typename T>
+  using storage_type = device_vector<T>;
+  template <typename T>
+  using span_type = device_span<T>;
+};
 
 #endif
 

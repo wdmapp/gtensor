@@ -2,17 +2,17 @@
 
 #include <gtensor/gtensor.h>
 
-template <typename T, typename S>
-gt::gtensor<T, 2, S> outer_product(gt::gtensor<T, 1, S>& a,
-                                   gt::gtensor<T, 1, S>& b)
+template <typename Ea, typename Eb>
+auto outer_product(const Ea& a, const Eb& b)
 {
   int n = a.shape(0);
   assert(n == b.shape(0));
-  return gt::reshape(a, gt::shape(1, n)) * gt::reshape(b, gt::shape(n, 1));
+  return gt::eval(gt::reshape(a, gt::shape(1, n)) *
+                  gt::reshape(b, gt::shape(n, 1)));
 }
 
-template <typename T, typename S>
-auto outer_product_expr(gt::gtensor<T, 1, S>& a, gt::gtensor<T, 1, S>& b)
+template <typename Ea, typename Eb>
+auto outer_product_expr(const Ea& a, const Eb& b)
 {
   int n = a.shape(0);
   assert(n == b.shape(0));

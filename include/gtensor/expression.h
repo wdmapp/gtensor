@@ -3,16 +3,13 @@
 #define GTENSOR_EXPRESSION_H
 
 #include "defs.h"
+#include "gtensor_forward.h"
 #include "gtl.h"
 #include "helper.h"
 #include "space.h"
 
 namespace gt
 {
-
-// fwd decl FIXME?
-template <typename T, size_type N, typename S>
-struct gtensor;
 
 template <typename T, size_type N, typename S>
 struct gtensor_span;

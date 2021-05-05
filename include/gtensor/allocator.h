@@ -1,7 +1,10 @@
 
+#include "meta.h"
+
 #include <iostream>
 #include <map>
 #include <memory>
+#include <utility>
 
 #ifdef GTENSOR_USE_THRUST
 #include <thrust/device_ptr.h>
@@ -14,8 +17,10 @@ namespace allocator
 
 namespace detail
 {
-template <typename P, typename std::enable_if_t<
-                        std::is_convertible<P, bool>::value, int> = 0>
+
+template <typename P,
+          // has operator bool?
+          typename Enable = gt::meta::void_t<decltype(bool(std::declval<P>()))>>
 bool is_valid(P p)
 {
   return bool(p);

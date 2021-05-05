@@ -16,10 +16,6 @@ namespace gt
 // ======================================================================
 // gtensor_span
 
-// forward declaration for conversion constructor
-template <typename T, size_type N, typename S>
-class gtensor;
-
 template <typename T, size_type N, typename S = space::host>
 class gtensor_span;
 
@@ -29,7 +25,7 @@ struct gtensor_inner_types<gtensor_span<T, N, S>>
   using space_type = S;
   constexpr static size_type dimension = N;
 
-  using storage_type = typename space_type::template Span<T>;
+  using storage_type = typename space::space_traits<S>::template span_type<T>;
   using value_type = typename storage_type::value_type;
   using pointer = typename storage_type::pointer;
   using const_pointer = typename storage_type::const_pointer;
@@ -71,20 +67,26 @@ public:
       storage_{other.data(), other.size()}
   {}
 
-  // Implicit conversion from a gtensor object with the same or compaitible
+  // Implicit conversion from a gtensor object with the same or compatible
   // element type
-  template <class OtherT,
-            std::enable_if_t<
-              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  gtensor_span(gtensor<OtherT, N, S>& other)
+  template <
+    class EC,
+    std::enable_if_t<
+      is_allowed_element_type_conversion<typename EC::value_type, T>::value &&
+        std::is_same<S, typename space::storage_traits<EC>::space_type>::value,
+      int> = 0>
+  gtensor_span(gtensor_container<EC, N>& other)
     : base_type{other.shape(), other.strides()},
       storage_{other.data(), other.size()}
   {}
 
-  template <class OtherT,
-            std::enable_if_t<
-              is_allowed_element_type_conversion<OtherT, T>::value, int> = 0>
-  gtensor_span(const gtensor<OtherT, N, S>& other)
+  template <
+    class EC,
+    std::enable_if_t<
+      is_allowed_element_type_conversion<typename EC::value_type, T>::value &&
+        std::is_same<S, typename space::storage_traits<EC>::space_type>::value,
+      int> = 0>
+  gtensor_span(const gtensor_container<EC, N>& other)
     : base_type{other.shape(), other.strides()},
       storage_{other.data(), other.size()}
   {}
