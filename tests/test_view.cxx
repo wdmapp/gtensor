@@ -451,6 +451,29 @@ TEST(gview, flatten_view)
   EXPECT_EQ(aflat, (gt::gtensor<double, 1>{21., 31., 22., 32.}));
 }
 
+TEST(gview, flatten_gtensor_to_kernel)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aflat = gt::flatten(a);
+  auto k_aflat = aflat.to_kernel();
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(aflat);
+  GT_DEBUG_TYPE(k_aflat);
+  EXPECT_EQ(k_aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+}
+
+TEST(gview, flatten_gfunction_to_kernel)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  gt::gtensor<double, 2> b{{11., 21., 31.}, {12., 22., 32.}};
+  auto aflat = gt::flatten(a + b);
+  auto k_aflat = aflat.to_kernel();
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(aflat);
+  GT_DEBUG_TYPE(k_aflat);
+  EXPECT_EQ(k_aflat, (gt::gtensor<double, 1>{22., 42., 62., 24., 44., 64.}));
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_copy_ctor)
