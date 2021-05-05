@@ -193,8 +193,15 @@ namespace fill_impl
 template <typename Ptr, typename T>
 inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
 {
-  assert(value == T(0) || sizeof(T) == 1);
-  gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), value, last - first));
+  using element_type = typename gt::pointer_traits<Ptr>::element_type;
+  if (element_type(value) == element_type()) {
+    gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), 0,
+                          (last - first) * sizeof(element_type)));
+  } else {
+    assert(sizeof(element_type) == 1);
+    gtGpuCheck(cudaMemset(backend::raw_pointer_cast(first), value,
+                          (last - first) * sizeof(element_type)));
+  }
 }
 } // namespace fill_impl
 

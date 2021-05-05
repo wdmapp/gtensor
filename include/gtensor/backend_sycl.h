@@ -175,9 +175,16 @@ namespace fill_impl
 template <typename Ptr, typename T>
 inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
 {
-  assert(value == T(0) || sizeof(T) == 1);
+  using element_type = typename gt::pointer_traits<Ptr>::element_type;
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memset(backend::raw_pointer_cast(dst), value, last - first);
+  if (element_type(value) == element_type()) {
+    q.memset(backend::raw_pointer_cast(first), 0,
+             (last - first) * sizeof(element_type));
+  } else {
+    assert(sizeof(element_type) == 1);
+    q.memset(backend::raw_pointer_cast(first), value,
+             (last - first) * sizeof(element_type));
+  }
 }
 } // namespace fill_impl
 
