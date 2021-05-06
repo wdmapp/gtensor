@@ -46,7 +46,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      copy(dv.data_, data_, size_);
+      copy_n(dv.data_, size_, data_);
     }
   }
 
@@ -66,7 +66,7 @@ public:
     resize_discard(dv.size_);
 
     if (size_ > 0) {
-      copy(dv.data_, data_, size_);
+      gt::copy_n(dv.data_, size_, data_);
     }
 
     return *this;
@@ -93,7 +93,6 @@ public:
   const_pointer data() const { return data_; }
 
 private:
-  void copy(const_pointer src, pointer dst, size_type count);
   void resize(size_type new_size, bool discard);
   void resize_discard(size_type new_size);
 
@@ -105,20 +104,13 @@ private:
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-template <typename T, typename A = system::device_allocator<T>>
+template <typename T, typename A = backend::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
 #endif
 
-template <typename T, typename A = system::host_allocator<T>>
+template <typename T, typename A = backend::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
-
-template <typename T, typename A, typename O>
-inline void gtensor_storage<T, A, O>::copy(const_pointer src, pointer dst,
-                                           size_type count)
-{
-  backend::system::copy<space_type, space_type>(src, dst, count);
-}
 
 template <typename T, typename A, typename O>
 inline void gtensor_storage<T, A, O>::resize(
@@ -134,7 +126,7 @@ inline void gtensor_storage<T, A, O>::resize(
     pointer new_data = allocator_.allocate(new_size);
     if (!discard && size_ > 0) {
       size_type copy_size = std::min(size_, new_size);
-      copy(data_, new_data, copy_size);
+      gt::copy_n(data_, copy_size, new_data);
     }
     allocator_.deallocate(data_, capacity_);
     data_ = new_data;
@@ -192,19 +184,17 @@ host_storage<T> host_mirror(const device_storage<T>& d)
 }
 
 template <typename T>
-void copy(const device_storage<T>& d, host_storage<T>& h)
+void copy(const device_storage<T>& from, host_storage<T>& to)
 {
-  assert(h.size() == d.size());
-  gt::backend::system::copy<space::device, space::host>(d.data(), h.data(),
-                                                        d.size());
+  assert(from.size() == to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 template <typename T>
-void copy(const host_storage<T>& h, device_storage<T>& d)
+void copy(const host_storage<T>& from, device_storage<T>& to)
 {
-  assert(h.size() == d.size());
-  gt::backend::system::copy<space::host, space::device>(h.data(), d.data(),
-                                                        h.size());
+  assert(from.size() == to.size());
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 #endif

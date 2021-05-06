@@ -54,6 +54,13 @@ TEST(span, type_aliases)
 
 #ifdef GTENSOR_HAVE_DEVICE
 
+namespace gt
+{
+template <typename T>
+using device_span = gt::span<
+  T, typename gt::space::space_traits<gt::space::device>::template pointer<T>>;
+}
+
 TEST(span, device_convert_const)
 {
   constexpr int N = 1024;

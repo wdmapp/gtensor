@@ -18,12 +18,12 @@
 #endif
 
 #ifndef GTENSOR_DEFAULT_HOST_ALLOCATOR
-#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::backend::system::host_allocator<T>
+#define GTENSOR_DEFAULT_HOST_ALLOCATOR(T) gt::backend::host_allocator<T>
 #endif
 
 #ifndef GTENSOR_DEFAULT_DEVICE_ALLOCATOR
 #define GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)                                    \
-  gt::allocator::caching_allocator<T, gt::backend::system::device_allocator<T>>
+  gt::allocator::caching_allocator<T, gt::backend::device_allocator<T>>
 #endif
 
 namespace gt
@@ -95,35 +95,6 @@ template <typename T, typename A>
 struct storage_traits<::thrust::device_vector<T, A>>
 {
   using space_type = space::device;
-};
-
-#endif
-
-// ======================================================================
-// space_traits
-
-template <typename S>
-struct space_traits
-{};
-
-template <>
-struct space_traits<host>
-{
-  template <typename T>
-  using storage_type = host_vector<T>;
-  template <typename T>
-  using span_type = span<T>;
-};
-
-#ifdef GTENSOR_HAVE_DEVICE
-
-template <>
-struct space_traits<device>
-{
-  template <typename T>
-  using storage_type = device_vector<T>;
-  template <typename T>
-  using span_type = device_span<T>;
 };
 
 #endif

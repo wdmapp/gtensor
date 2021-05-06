@@ -6,7 +6,6 @@
 
 #include "device_backend.h"
 #include "macros.h"
-#include "memset.h"
 #include "space.h"
 #include "span.h"
 
@@ -25,7 +24,9 @@ struct gtensor_inner_types<gtensor_span<T, N, S>>
   using space_type = S;
   constexpr static size_type dimension = N;
 
-  using storage_type = typename space::space_traits<S>::template span_type<T>;
+  using storage_type =
+    typename gt::span<T,
+                      typename gt::space::space_traits<S>::template pointer<T>>;
   using value_type = typename storage_type::value_type;
   using pointer = typename storage_type::pointer;
   using const_pointer = typename storage_type::const_pointer;
@@ -163,8 +164,7 @@ template <typename T, size_type N, typename S>
 inline void gtensor_span<T, N, S>::fill(const value_type v)
 {
   if (v == T(0)) {
-    auto data = gt::backend::raw_pointer_cast(this->data());
-    backend::system::memset<S>(data, 0, sizeof(T) * this->size());
+    backend::fill(this->data(), this->data() + this->size(), 0);
   } else {
     assign(*this, scalar(v));
   }

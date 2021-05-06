@@ -276,3 +276,16 @@ TEST(helper, has_container_methods)
   EXPECT_FALSE(gt::has_container_methods_v<decltype(aview)>);
   EXPECT_FALSE(gt::has_container_methods<decltype(aview)>::value);
 }
+
+TEST(helper, is_allowed_element_type_conversion)
+{
+  static_assert(
+    gt::is_allowed_element_type_conversion<double, const double>::value,
+    "convert to const");
+  static_assert(
+    !gt::is_allowed_element_type_conversion<const double, double>::value,
+    "convert from const");
+  static_assert(
+    gt::is_allowed_element_type_conversion<const double, const double>::value,
+    "convert same");
+}

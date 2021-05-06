@@ -329,6 +329,14 @@ size_type max(F&& f, const std::tuple<E...>& tpl)
 
 } // namespace helper
 
+// ======================================================================
+// is_allowed_element_type_conversion
+
+template <typename From, typename To>
+struct is_allowed_element_type_conversion
+  : std::is_convertible<From (*)[], To (*)[]>
+{};
+
 } // namespace gt
 
 #endif

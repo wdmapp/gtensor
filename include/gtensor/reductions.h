@@ -48,8 +48,8 @@ inline auto sum(const Container& a)
   // Not necessary in CUDA 11.2. For thrust backend and newer CUDA,
   // this only entails an extra device_ptr copy construct, so performance
   // impact will be minimal.
-  P begin(a.data());
-  P end(a.data() + a.size());
+  P begin(gt::backend::raw_pointer_cast(a.data()));
+  P end(gt::backend::raw_pointer_cast(a.data()) + a.size());
   return thrust::reduce(begin, end, 0., thrust::plus<T>());
 }
 
@@ -59,8 +59,8 @@ inline auto max(const Container& a)
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
-  P begin(a.data());
-  P end(a.data() + a.size());
+  P begin(gt::backend::raw_pointer_cast(a.data()));
+  P end(gt::backend::raw_pointer_cast(a.data()) + a.size());
   return thrust::reduce(begin, end, 0., thrust::maximum<T>());
 }
 
@@ -70,8 +70,8 @@ inline auto min(const Container& a)
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
-  P begin(a.data());
-  P end(a.data() + a.size());
+  P begin(gt::backend::raw_pointer_cast(a.data()));
+  P end(gt::backend::raw_pointer_cast(a.data()) + a.size());
   auto min_element = thrust::min_element(begin, end);
   return *min_element;
 }

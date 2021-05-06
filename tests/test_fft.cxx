@@ -43,8 +43,7 @@ void fft_r2c_1d()
 
   // zero output array, rocfft at least does not zero padding elements
   // for real to complex transform
-  gt::backend::system::ops::memset(gt::backend::raw_pointer_cast(d_B.data()), 0,
-                                   batch_size * Nout * sizeof(T*));
+  gt::backend::fill(d_B.data(), d_B.data() + batch_size * Nout, 0);
 
   gt::copy(h_A, d_A);
 
@@ -284,8 +283,7 @@ TEST(fft, move_only)
 
   // zero output array, rocfft at least does not zero padding elements
   // for real to complex transform
-  gt::backend::system::ops::memset(gt::backend::raw_pointer_cast(d_B.data()), 0,
-                                   batch_size * Nout * sizeof(T*));
+  gt::backend::fill(d_B.data(), d_B.data() + batch_size * Nout, 0);
 
   gt::copy(h_A, d_A);
 

@@ -11,6 +11,14 @@
 
 #include <cstdio>
 
+#ifdef GTENSOR_DEVICE_CUDA
+#include <cuda_runtime_api.h>
+#endif
+
+#ifdef GTENSOR_DEVICE_HIP
+#include <hip/hip_runtime.h>
+#endif
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 #define GT_INLINE inline __host__ __device__
