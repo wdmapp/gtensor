@@ -10,7 +10,7 @@ on:
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    container: ubuntu:20.04
+    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-20.04:latest
     env:
       CXX: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
       DPCPP_ROOT: /opt/intel/oneapi
@@ -23,16 +23,6 @@ jobs:
       GTENSOR_TEST_EXCLUDE: test_fft test_reductions
 
     steps:
-    - name: install core packages
-      run: apt-get update -y && apt-get install -y wget git build-essential gnupg clang-9
-    - name: setup oneapi repos
-      run: |
-        wget -q -O - 'https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB' | apt-key add -
-        echo "deb https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list
-        echo 'deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu bionic-devel main' > /etc/apt/sources.list.d/intel-graphics.list
-        apt-get update -y
-    - name: install dpcpp
-      run: apt-get install -y intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl intel-oneapi-mkl-devel clinfo intel-opencl-icd intel-level-zero-gpu level-zero
     - uses: actions/checkout@v2
     - name: clinfo
       run: |
