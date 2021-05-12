@@ -182,8 +182,10 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   message(STATUS "${PROJECT_NAME}: adding gtensor_sycl target")
   add_gtensor_library(sycl)
 
-  target_compile_options(gtensor_sycl INTERFACE -fsycl)
-  target_link_options(gtensor_sycl INTERFACE -fsycl)
+  target_compile_options(gtensor_sycl INTERFACE
+                         $<$<COMPILE_LANGUAGE:CXX>:-fsycl>)
+  target_link_options(gtensor_sycl INTERFACE
+                      $<$<COMPILE_LANGUAGE:CXX>:-fsycl>)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL)
 
