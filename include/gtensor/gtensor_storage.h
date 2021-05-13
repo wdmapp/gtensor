@@ -104,12 +104,12 @@ private:
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-template <typename T, typename A = backend::device_allocator<T>>
+template <typename T, typename A = gt::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
 #endif
 
-template <typename T, typename A = backend::host_allocator<T>>
+template <typename T, typename A = gt::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
 
 template <typename T, typename A, typename O>

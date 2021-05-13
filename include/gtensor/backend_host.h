@@ -27,7 +27,7 @@ inline void device_synchronize()
 namespace allocator_impl
 {
 template <typename T>
-struct selector<T, gt::space::host>
+struct selector<T, gt::space::host_only>
 {
   using type = std::allocator<T>;
 };

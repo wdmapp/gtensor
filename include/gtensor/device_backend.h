@@ -25,42 +25,51 @@
 
 namespace gt
 {
-namespace space
+
+namespace backend
 {
 
 // ======================================================================
-// space_traits
+// space_pointer_impl::selector
 
+namespace space_pointer_impl
+{
 template <typename S>
-struct space_traits;
+struct selector
+{
+  template <typename T>
+  using pointer = gt::backend::device_ptr<T>;
+};
 
 template <>
-struct space_traits<host>
+struct selector<gt::space::host>
 {
   template <typename T>
   using pointer = T*;
 };
 
-#ifdef GTENSOR_HAVE_DEVICE
-
-template <>
-struct space_traits<device>
-{
 #ifdef GTENSOR_USE_THRUST
+template <>
+struct selector<gt::space::thrust>
+{
   template <typename T>
   using pointer = ::thrust::device_ptr<T>;
-#else
-  template <typename T>
-  using pointer = gt::device_ptr<T>;
-#endif
 };
-
 #endif
 
-} // namespace space
+} // namespace space_pointer_impl
 
-namespace backend
-{
+} // namespace backend
+
+template <typename T, typename S>
+using space_pointer =
+  typename gt::backend::space_pointer_impl::selector<S>::template pointer<T>;
+
+template <typename T, typename S = gt::space::device>
+using device_ptr = space_pointer<T, S>;
+
+template <typename T, typename S = gt::space::host>
+using host_ptr = space_pointer<T, S>;
 
 template <typename P>
 GT_INLINE auto raw_pointer_cast(P p)
@@ -71,18 +80,20 @@ GT_INLINE auto raw_pointer_cast(P p)
 template <typename T>
 GT_INLINE auto device_pointer_cast(T* p)
 {
-  using pointer =
-    typename gt::space::space_traits<gt::space::device>::template pointer<T>;
+  using pointer = typename gt::device_ptr<T, gt::space::device>;
   return pointer(p);
 }
 
-// ======================================================================
+namespace backend
+{
+namespace allocator_impl
+{
 
 template <typename T, typename A, typename S>
 struct wrap_allocator
 {
   using value_type = T;
-  using pointer = typename gt::space::space_traits<S>::template pointer<T>;
+  using pointer = gt::space_pointer<T, S>;
   using size_type = gt::size_type;
 
   pointer allocate(size_type n) { return pointer(A::template allocate<T>(n)); }
@@ -92,19 +103,19 @@ struct wrap_allocator
   }
 };
 
-namespace allocator_impl
-{
+template <typename S>
+struct gallocator;
+
 template <typename T, typename S>
-struct selector;
-}
+struct selector
+{
+  using type = wrap_allocator<T, gallocator<S>, S>;
+};
 
-template <typename T, typename S = gt::space::device>
-using device_allocator = typename allocator_impl::selector<T, S>::type;
-
-template <typename T, typename S = gt::space::host>
-using host_allocator = typename allocator_impl::selector<T, S>::type;
+} // namespace allocator_impl
 
 } // namespace backend
+
 } // namespace gt
 
 #include "backend_host.h"
@@ -128,6 +139,7 @@ namespace gt
 {
 namespace backend
 {
+
 namespace clib
 {
 #if GTENSOR_DEVICE_CUDA
@@ -139,7 +151,21 @@ using namespace backend::sycl;
 #else // just for device_synchronize()
 using namespace backend::host;
 #endif
+
+template <typename S>
+using gallocator = gt::backend::allocator_impl::gallocator<S>;
 } // namespace clib
+
+} // namespace backend
+
+template <typename T, typename S = gt::space::device>
+using device_allocator = typename backend::allocator_impl::selector<T, S>::type;
+
+template <typename T, typename S = gt::space::host>
+using host_allocator = typename backend::allocator_impl::selector<T, S>::type;
+
+// ======================================================================
+// fill
 
 template <
   typename Ptr, typename T,
@@ -148,11 +174,9 @@ template <
     int> = 0>
 void fill(Ptr first, Ptr last, const T& value)
 {
-  return fill_impl::fill(typename pointer_traits<Ptr>::space_type{}, first,
-                         last, value);
+  return backend::fill_impl::fill(typename pointer_traits<Ptr>::space_type{},
+                                  first, last, value);
 }
-
-} // namespace backend
 
 // ======================================================================
 // copy_n

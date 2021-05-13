@@ -455,17 +455,17 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // native GPU api
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_gpu(li0, lj0, lbg0, gt::backend::raw_pointer_cast(d_arr.data()),
-                 ncoeff, gt::backend::raw_pointer_cast(d_coeff.data()),
-                 gt::backend::raw_pointer_cast(d_ikj.data()),
-                 gt::backend::raw_pointer_cast(d_darr.data()));
+    ij_deriv_gpu(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()), ncoeff,
+                 gt::raw_pointer_cast(d_coeff.data()),
+                 gt::raw_pointer_cast(d_ikj.data()),
+                 gt::raw_pointer_cast(d_darr.data()));
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_gpu(li0, lj0, lbg0, gt::backend::raw_pointer_cast(d_arr.data()),
-                 ncoeff, gt::backend::raw_pointer_cast(d_coeff.data()),
-                 gt::backend::raw_pointer_cast(d_ikj.data()),
-                 gt::backend::raw_pointer_cast(d_darr.data()));
+    ij_deriv_gpu(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()), ncoeff,
+                 gt::raw_pointer_cast(d_coeff.data()),
+                 gt::raw_pointer_cast(d_ikj.data()),
+                 gt::raw_pointer_cast(d_darr.data()));
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -487,17 +487,17 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
   // gtensor gpu
   for (int i = 0; i < time_warmup_count; i++) {
-    ij_deriv_gt_device(
-      li0, lj0, lbg0, gt::backend::raw_pointer_cast(d_arr.data()), ncoeff,
-      h_coeff.data(), gt::backend::raw_pointer_cast(d_ikj.data()),
-      gt::backend::raw_pointer_cast(d_darr.data()));
+    ij_deriv_gt_device(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()),
+                       ncoeff, h_coeff.data(),
+                       gt::raw_pointer_cast(d_ikj.data()),
+                       gt::raw_pointer_cast(d_darr.data()));
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
-    ij_deriv_gt_device(
-      li0, lj0, lbg0, gt::backend::raw_pointer_cast(d_arr.data()), ncoeff,
-      h_coeff.data(), gt::backend::raw_pointer_cast(d_ikj.data()),
-      gt::backend::raw_pointer_cast(d_darr.data()));
+    ij_deriv_gt_device(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()),
+                       ncoeff, h_coeff.data(),
+                       gt::raw_pointer_cast(d_ikj.data()),
+                       gt::raw_pointer_cast(d_darr.data()));
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =

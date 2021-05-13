@@ -3,14 +3,25 @@
 
 #include "defs.h"
 #include "helper.h"
+#include "space_forward.h"
 
 namespace gt
 {
+namespace backend
+{
+
 template <typename T>
 class device_ptr
 {
 public:
   using self_type = device_ptr<T>;
+
+  using element_type = T;
+  using difference_type = std::ptrdiff_t;
+  using space_type = gt::space::device;
+
+  template <typename U>
+  using rebind = device_ptr<U>;
 
   device_ptr() = default;
   device_ptr(std::nullptr_t){};
@@ -40,7 +51,7 @@ public:
     return self_type(get() - off);
   }
 
-  GT_INLINE std::ptrdiff_t operator-(const self_type& other) const
+  GT_INLINE difference_type operator-(const self_type& other) const
   {
     return get() - other.get();
   }
@@ -77,6 +88,7 @@ private:
   T* p_ = nullptr;
 };
 
+} // namespace backend
 } // namespace gt
 
 #endif

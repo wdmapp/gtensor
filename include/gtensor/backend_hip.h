@@ -14,13 +14,11 @@ namespace gt
 namespace backend
 {
 
-namespace hip
+namespace allocator_impl
 {
 
-namespace gallocator
-{
-
-struct device
+template <>
+struct gallocator<gt::space::hip>
 {
   template <typename T>
   static T* allocate(size_type n)
@@ -37,7 +35,8 @@ struct device
   }
 };
 
-struct managed
+template <>
+struct gallocator<gt::space::hip_managed>
 {
   template <typename T>
   static T* allocate(size_t n)
@@ -54,7 +53,8 @@ struct managed
   }
 };
 
-struct host
+template <>
+struct gallocator<gt::space::hip_host>
 {
   template <typename T>
   static T* allocate(size_type n)
@@ -71,7 +71,10 @@ struct host
   }
 };
 
-} // namespace gallocator
+} // namespace allocator_impl
+
+namespace hip
+{
 
 inline void device_synchronize()
 {
@@ -120,27 +123,6 @@ inline uint32_t device_get_vendor_id(int device_id)
 
 } // namespace hip
 
-namespace allocator_impl
-{
-
-template <typename T>
-struct selector<T, gt::space::hip>
-{
-  using type =
-    wrap_allocator<T, typename hip::gallocator::device, gt::space::hip>;
-};
-
-#if 0
-template <typename T>
-struct selector<T, gt::space::host>
-{
-  using type =
-    wrap_allocator<T, typename hip::gallocator::host, gt::space::hip>;
-};
-#endif
-
-} // namespace allocator_impl
-
 namespace copy_impl
 {
 
@@ -149,7 +131,7 @@ inline void copy_n(gt::space::hip tag_in, gt::space::hip tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(hipMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     hipMemcpyDeviceToDevice));
 }
@@ -159,7 +141,7 @@ inline void copy_n(gt::space::hip tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(hipMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     hipMemcpyDeviceToHost));
 }
@@ -169,7 +151,7 @@ inline void copy_n(gt::space::host tag_in, gt::space::hip tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(hipMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     hipMemcpyHostToDevice));
 }
@@ -180,7 +162,7 @@ inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
   gtGpuCheck(hipMemcpy(
-    backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+    gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
     sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count,
     hipMemcpyHostToHost));
 }
@@ -195,11 +177,11 @@ inline void fill(gt::space::hip tag, Ptr first, Ptr last, const T& value)
 {
   using element_type = typename gt::pointer_traits<Ptr>::element_type;
   if (element_type(value) == element_type()) {
-    gtGpuCheck(hipMemset(backend::raw_pointer_cast(first), 0,
+    gtGpuCheck(hipMemset(gt::raw_pointer_cast(first), 0,
                          (last - first) * sizeof(element_type)));
   } else {
     assert(sizeof(element_type) == 1);
-    gtGpuCheck(hipMemset(backend::raw_pointer_cast(first), value,
+    gtGpuCheck(hipMemset(gt::raw_pointer_cast(first), value,
                          (last - first) * sizeof(element_type)));
   }
 }

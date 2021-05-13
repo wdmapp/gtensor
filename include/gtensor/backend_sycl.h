@@ -15,13 +15,10 @@ namespace gt
 namespace backend
 {
 
-namespace sycl
+namespace allocator_impl
 {
-
-namespace gallocator
-{
-
-struct device
+template <>
+struct gallocator<gt::space::sycl>
 {
   template <typename T>
   static T* allocate(size_type n)
@@ -36,7 +33,8 @@ struct device
   }
 };
 
-struct managed
+template <>
+struct gallocator<gt::space::sycl_managed>
 {
   template <typename T>
   static T* allocate(size_t n)
@@ -49,13 +47,15 @@ struct managed
   {
     cl::sycl::free(p, gt::backend::sycl::get_queue());
   }
-};
+}; // namespace allocator_impl
 
 // The host allocation type in SYCL allows device code to directly access
 // the data. This is generally not necessary or effecient for gtensor, so
 // we opt for the same implementation as for the HOST device below.
 
-struct host
+template <>
+struct gallocator<gt::space::sycl_host>
+
 {
   template <typename T>
   static T* allocate(size_type n)
@@ -89,7 +89,10 @@ struct host
 //   }
 // };
 
-} // namespace gallocator
+} // namespace allocator_impl
+
+namespace sycl
+{
 
 inline void device_synchronize()
 {
@@ -105,27 +108,6 @@ inline void device_copy_async_dd(const T* src, T* dst, size_type count)
 
 } // namespace sycl
 
-namespace allocator_impl
-{
-
-template <typename T>
-struct selector<T, gt::space::sycl>
-{
-  using type =
-    wrap_allocator<T, typename sycl::gallocator::device, gt::space::sycl>;
-};
-
-#if 0
-template <typename T>
-struct selector<T, gt::space::host>
-{
-  using type =
-    wrap_allocator<T, typename sycl::gallocator::host, gt::space::host>;
-};
-#endif
-
-} // namespace allocator_impl
-
 namespace copy_impl
 {
 
@@ -133,7 +115,7 @@ template <typename InputPtr, typename OutputPtr>
 inline void sycl_copy_n(InputPtr in, size_type count, OutputPtr out)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(backend::raw_pointer_cast(out), backend::raw_pointer_cast(in),
+  q.memcpy(gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
            sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count);
   q.wait();
 }
@@ -178,11 +160,11 @@ inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
   using element_type = typename gt::pointer_traits<Ptr>::element_type;
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
   if (element_type(value) == element_type()) {
-    q.memset(backend::raw_pointer_cast(first), 0,
+    q.memset(gt::raw_pointer_cast(first), 0,
              (last - first) * sizeof(element_type));
   } else {
     assert(sizeof(element_type) == 1);
-    q.memset(backend::raw_pointer_cast(first), value,
+    q.memset(gt::raw_pointer_cast(first), value,
              (last - first) * sizeof(element_type));
   }
 }

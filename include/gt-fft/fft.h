@@ -52,8 +52,8 @@ public:
               has_container_methods_v<C2> && has_space_type_device_v<C2>>>
   void operator()(C1& in, C2& out) const
   {
-    operator()(gt::backend::raw_pointer_cast(in.data()),
-               gt::backend::raw_pointer_cast(out.data()));
+    operator()(gt::raw_pointer_cast(in.data()),
+               gt::raw_pointer_cast(out.data()));
   }
 
   template <typename C1, typename C2,
@@ -62,8 +62,7 @@ public:
               has_container_methods_v<C2> && has_space_type_device_v<C2>>>
   void inverse(C1& in, C2& out) const
   {
-    inverse(gt::backend::raw_pointer_cast(in.data()),
-            gt::backend::raw_pointer_cast(out.data()));
+    inverse(gt::raw_pointer_cast(in.data()), gt::raw_pointer_cast(out.data()));
   }
 };
 

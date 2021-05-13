@@ -24,8 +24,8 @@ void test_real_axpy(F&& f)
 
   gtblas_create();
 
-  f(N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
-    gt::backend::raw_pointer_cast(d_y.data()), 1);
+  f(N, &a, gt::raw_pointer_cast(d_x.data()), 1,
+    gt::raw_pointer_cast(d_y.data()), 1);
 
   gtblas_destroy();
 
@@ -67,8 +67,8 @@ void test_complex_axpy(F&& f)
 
   gtblas_create();
 
-  f(N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1,
-    gt::backend::raw_pointer_cast(d_y.data()), 1);
+  f(N, &a, gt::raw_pointer_cast(d_x.data()), 1,
+    gt::raw_pointer_cast(d_y.data()), 1);
 
   gtblas_destroy();
 
@@ -105,7 +105,7 @@ void test_real_scal(F&& f)
 
   gtblas_create();
 
-  f(N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1);
+  f(N, &a, gt::raw_pointer_cast(d_x.data()), 1);
 
   gtblas_destroy();
 
@@ -147,8 +147,8 @@ void test_complex_scal(F&& f, F2&& f2)
 
   gtblas_create();
 
-  f(N, &a, gt::backend::raw_pointer_cast(d_x.data()), 1);
-  f2(N, &a2, gt::backend::raw_pointer_cast(d_y.data()), 1);
+  f(N, &a, gt::raw_pointer_cast(d_x.data()), 1);
+  f2(N, &a2, gt::raw_pointer_cast(d_y.data()), 1);
 
   gtblas_destroy();
 
@@ -218,9 +218,9 @@ void test_gemv_real(F&& f)
 
   gtblas_create();
 
-  f(N, N, &a, gt::backend::raw_pointer_cast(d_A.data()), N,
-    gt::backend::raw_pointer_cast(d_x.data()), 1, &b,
-    gt::backend::raw_pointer_cast(d_y.data()), 1);
+  f(N, N, &a, gt::raw_pointer_cast(d_A.data()), N,
+    gt::raw_pointer_cast(d_x.data()), 1, &b, gt::raw_pointer_cast(d_y.data()),
+    1);
 
   gtblas_destroy();
 
@@ -278,9 +278,9 @@ void test_gemv_complex(F&& f)
 
   gtblas_create();
 
-  f(N, N, &a, gt::backend::raw_pointer_cast(d_mat.data()), N,
-    gt::backend::raw_pointer_cast(d_x.data()), 1, &b,
-    gt::backend::raw_pointer_cast(d_y.data()), 1);
+  f(N, N, &a, gt::raw_pointer_cast(d_mat.data()), N,
+    gt::raw_pointer_cast(d_x.data()), 1, &b, gt::raw_pointer_cast(d_y.data()),
+    1);
 
   gtblas_destroy();
 

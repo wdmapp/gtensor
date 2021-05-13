@@ -94,7 +94,7 @@ template <typename D>
 inline void gcontainer<D>::fill(const value_type v)
 {
   if (v == value_type(0)) {
-    backend::fill(this->data(), this->data() + this->size(), 0);
+    gt::fill(this->data(), this->data() + this->size(), 0);
   } else {
     assign(derived(), scalar(v));
   }

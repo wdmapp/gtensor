@@ -70,7 +70,7 @@ TEST(device_ptr, deref)
   gt::backend::device_allocator<T> alloc;
 
   auto p = alloc.allocate(1);
-  gt::device_ptr<T> p1(gt::backend::raw_pointer_cast(p));
+  gt::device_ptr<T> p1(gt::raw_pointer_cast(p));
 
   device_ptr_deref(p1);
 
@@ -97,7 +97,7 @@ TEST(device_ptr, access)
   gt::backend::device_allocator<T> alloc;
 
   auto p = alloc.allocate(5);
-  gt::device_ptr<T> d_arr(gt::backend::raw_pointer_cast(p));
+  gt::device_ptr<T> d_arr(gt::raw_pointer_cast(p));
 
   device_ptr_access(d_arr, N);
 
@@ -127,7 +127,7 @@ TEST(device_ptr, arrow)
   gt::backend::device_allocator<T> alloc;
 
   auto p = alloc.allocate(1);
-  gt::device_ptr<T> p1(gt::backend::raw_pointer_cast(p));
+  gt::device_ptr<T> p1(gt::raw_pointer_cast(p));
 
   device_ptr_arrow(p1);
 

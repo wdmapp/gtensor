@@ -119,17 +119,16 @@ void test_getrf_batch_real()
   auto h_A0 = h_A.view(gt::all, gt::all, 0);
 
   set_A0(h_A0);
-  h_Aptr(0) = gt::backend::raw_pointer_cast(d_A.data());
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
 
   gt::copy(h_A, d_A);
   gt::copy(h_Aptr, d_Aptr);
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  gt::blas::getrf_batched(h, N, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
-                          gt::backend::raw_pointer_cast(d_p.data()),
-                          gt::backend::raw_pointer_cast(d_info.data()),
-                          batch_size);
+  gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                          gt::raw_pointer_cast(d_p.data()),
+                          gt::raw_pointer_cast(d_info.data()), batch_size);
 
   gt::blas::destroy(h);
 
@@ -195,7 +194,7 @@ void test_getrs_batch_real()
 
   // set up first (and only) batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::backend::raw_pointer_cast(d_A.data());
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   set_A0_piv(h_p.view(gt::all, 0));
 
   // set up two col vectors to solve in first (and only) batch
@@ -207,7 +206,7 @@ void test_getrs_batch_real()
   h_B(0, 1, 0) = 73;
   h_B(1, 1, 0) = 78;
   h_B(2, 1, 0) = 154;
-  h_Bptr(0) = gt::backend::raw_pointer_cast(d_B.data());
+  h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
 
   gt::copy(h_Aptr, d_Aptr);
   gt::copy(h_A, d_A);
@@ -217,10 +216,9 @@ void test_getrs_batch_real()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  gt::blas::getrs_batched(
-    h, N, NRHS, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
-    gt::backend::raw_pointer_cast(d_p.data()),
-    gt::backend::raw_pointer_cast(d_Bptr.data()), N, batch_size);
+  gt::blas::getrs_batched(h, N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
+                          gt::raw_pointer_cast(d_p.data()),
+                          gt::raw_pointer_cast(d_Bptr.data()), N, batch_size);
 
   gt::blas::destroy(h);
 
@@ -264,7 +262,7 @@ void test_getrf_batch_complex()
 
   // setup first batch matrix input
   set_A0(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::backend::raw_pointer_cast(d_A.data());
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
 
   // setup second batch matrix input
   set_A1_complex(h_A.view(gt::all, gt::all, 1));
@@ -277,10 +275,9 @@ void test_getrf_batch_complex()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  gt::blas::getrf_batched(h, N, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
-                          gt::backend::raw_pointer_cast(d_p.data()),
-                          gt::backend::raw_pointer_cast(d_info.data()),
-                          batch_size);
+  gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                          gt::raw_pointer_cast(d_p.data()),
+                          gt::raw_pointer_cast(d_info.data()), batch_size);
 
   gt::blas::destroy(h);
 
@@ -369,7 +366,7 @@ void test_getrs_batch_complex()
 
   // setup input for first batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::backend::raw_pointer_cast(d_A.data());
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   set_A0_piv(h_p.view(gt::all, 0));
 
   // setup input for second batch
@@ -394,7 +391,7 @@ void test_getrs_batch_complex()
   h_B(1, 1, 1) = T(90, -12);
   h_B(2, 1, 1) = T(112, 42);
 
-  h_Bptr(0) = gt::backend::raw_pointer_cast(d_B.data());
+  h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
   h_Bptr(1) = h_Bptr(0) + N * NRHS;
 
   gt::copy(h_Aptr, d_Aptr);
@@ -406,10 +403,9 @@ void test_getrs_batch_complex()
 
   gt::blas::handle_t* h = gt::blas::create();
 
-  gt::blas::getrs_batched(
-    h, N, NRHS, gt::backend::raw_pointer_cast(d_Aptr.data()), N,
-    gt::backend::raw_pointer_cast(d_p.data()),
-    gt::backend::raw_pointer_cast(d_Bptr.data()), N, batch_size);
+  gt::blas::getrs_batched(h, N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
+                          gt::raw_pointer_cast(d_p.data()),
+                          gt::raw_pointer_cast(d_Bptr.data()), N, batch_size);
 
   gt::blas::destroy(h);
 
