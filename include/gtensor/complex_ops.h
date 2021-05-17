@@ -46,6 +46,12 @@ using std::exp;
 using thrust::exp;
 
 template <typename T>
+GT_INLINE complex<T> exp(thrust::device_reference<thrust::complex<T>> a)
+{
+  return thrust::exp(thrust::raw_reference_cast(a));
+}
+
+template <typename T>
 GT_INLINE complex<T> exp(thrust::device_reference<const thrust::complex<T>> a)
 {
   return thrust::exp(thrust::raw_reference_cast(a));
