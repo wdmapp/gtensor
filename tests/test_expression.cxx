@@ -213,12 +213,64 @@ TEST(expression, abs_complex)
 
 TEST(expression, sin)
 {
-  gt::gtensor<double, 1> t1({0., M_PI / 2., M_PI, 3 * M_PI / 2.});
+  gt::gtensor<double, 1> t({0., M_PI / 2., M_PI, 3 * M_PI / 2.});
   gt::gtensor<double, 1> ref({0., 1., 0., -1.});
-  auto e1 = gt::sin(t1);
 
-  EXPECT_LT(gt::norm_linf(gt::sin(t1) - ref), 1e-14);
+  EXPECT_LT(gt::norm_linf(gt::sin(t) - ref), 1e-14);
 }
+
+TEST(expression, cos)
+{
+  gt::gtensor<double, 1> t({0., M_PI / 2., M_PI, 3 * M_PI / 2.});
+  gt::gtensor<double, 1> ref({1., 0., -1., 0.});
+
+  EXPECT_LT(gt::norm_linf(gt::cos(t) - ref), 1e-14);
+}
+
+TEST(expression, exp)
+{
+  gt::gtensor<double, 1> t({0., 1.});
+  gt::gtensor<double, 1> ref({1., std::exp(1.)});
+
+  EXPECT_LT(gt::norm_linf(gt::exp(t) - ref), 1e-14);
+}
+
+TEST(expression, exp_complex)
+{
+  using namespace std::complex_literals;
+
+  gt::gtensor<double, 1> t({0., M_PI / 2., M_PI, 3 * M_PI / 2.});
+  gt::gtensor<std::complex<double>, 1> ref({1., 1.i, -1., -1.i});
+
+  EXPECT_LT(gt::norm_linf(gt::exp(1.i * t) - ref), 1e-14);
+}
+
+#ifdef GTENSOR_HAVE_DEVICE
+TEST(expression, device_exp_complex)
+{
+  using namespace std::complex_literals;
+  // gt::complex<double> I(0., 1.);
+
+  gt::gtensor_device<gt::complex<double>, 1> t(gt::shape(4));
+  gt::gtensor<gt::complex<double>, 1> h_t(gt::shape(4));
+  h_t(0) = 1.i * 0. * M_PI / 2.;
+  h_t(1) = 1.i * 1. * M_PI / 2.;
+  h_t(2) = 1.i * 2. * M_PI / 2.;
+  h_t(3) = 1.i * 3. * M_PI / 2.;
+  copy(h_t, t);
+
+  gt::gtensor_device<gt::complex<double>, 1> ref(gt::shape(4));
+  gt::gtensor<gt::complex<double>, 1> h_ref(gt::shape(4));
+  h_ref(0) = 1.;
+  h_ref(1) = 1.i;
+  h_ref(2) = -1.;
+  h_ref(3) = -1.i;
+  copy(h_ref, ref);
+
+  gt::gtensor_device<gt::complex<double>, 1> res = gt::exp(t);
+  EXPECT_LT(gt::norm_linf(res - ref), 1e-14);
+}
+#endif
 
 TEST(shape, broadcast_same)
 {
