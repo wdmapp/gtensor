@@ -16,12 +16,6 @@ GT_INLINE T norm(const complex<T>& a)
 }
 
 template <typename T>
-GT_INLINE T abs(const complex<T>& a)
-{
-  return thrust::abs(a);
-}
-
-template <typename T>
 GT_INLINE complex<T> conj(const complex<T>& a)
 {
   return thrust::conj(a);
@@ -32,6 +26,9 @@ GT_INLINE T norm(thrust::device_reference<complex<T>> a)
 {
   return thrust::norm(thrust::raw_reference_cast(a));
 }
+
+using std::abs;
+using thrust::abs;
 
 template <typename T>
 GT_INLINE T abs(thrust::device_reference<complex<T>> a)
@@ -62,11 +59,7 @@ GT_INLINE T norm(const complex<T>& a)
   return std::norm(a);
 }
 
-template <typename T>
-GT_INLINE T abs(const complex<T>& a)
-{
-  return std::abs(a);
-}
+using std::abs;
 
 template <typename T>
 GT_INLINE complex<T> conj(const complex<T>& a)
