@@ -418,11 +418,11 @@ MAKE_BINARY_OP(divide, /)
     return function(funcs::NAME{}, std::forward<E>(e));                        \
   }
 
-MAKE_UNARY_FUNC(abs, std::abs)
+MAKE_UNARY_FUNC(abs, gt::abs)
 MAKE_UNARY_FUNC(sin, std::sin)
 MAKE_UNARY_FUNC(cos, std::cos)
 MAKE_UNARY_FUNC(tan, std::tan)
-MAKE_UNARY_FUNC(exp, std::exp)
+MAKE_UNARY_FUNC(exp, gt::exp)
 
 #undef MAKE_UNARY_FUNC
 

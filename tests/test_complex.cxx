@@ -92,6 +92,22 @@ TEST(complex, conj)
   EXPECT_EQ(h_a(1), one_one);
 }
 
+TEST(complex, exp_real)
+{
+  double x = 1.;
+
+  EXPECT_EQ(gt::exp(x), std::exp(1.));
+}
+
+TEST(complex, exp)
+{
+  using namespace std::complex_literals;
+  using T = gt::complex<double>;
+  T x = 1.i * M_PI / 2.;
+
+  EXPECT_LT(gt::abs(gt::exp(x) - T(0., 1.)), 1e-14);
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(complex, device_complex_ops)
@@ -335,6 +351,48 @@ TEST(complex, device_conj)
   for (int i = 0; i < N; i++) {
     EXPECT_EQ(h_conj(i), gt::conj(h_a(i)));
   }
+}
+
+template <typename T>
+static void run_device_exp(gt::gtensor_device<T, 1>& res,
+                           const gt::gtensor_device<T, 1>& x)
+{
+  auto k_res = res.to_kernel();
+  auto k_x = x.to_kernel();
+
+  gt::launch<1>(
+    x.shape(), GT_LAMBDA(int i) { k_res(i) = gt::exp(k_x(i)); });
+}
+
+TEST(complex, device_exp_real)
+{
+  using T = double;
+
+  gt::gtensor_device<T, 1> x = {1.};
+  auto res = gt::empty_like(x);
+  run_device_exp(res, x);
+
+  gt::gtensor<T, 1> h_res(res.shape());
+  copy(res, h_res);
+  EXPECT_EQ(h_res(0), std::exp(T(1.)));
+}
+
+TEST(complex, device_exp)
+{
+  using namespace std::complex_literals;
+  using T = gt::complex<double>;
+
+  gt::gtensor_device<T, 1> x(gt::shape(1));
+  gt::gtensor<T, 1> h_x(x.shape());
+  h_x(0) = 1.i * M_PI / 2.;
+  copy(h_x, x);
+
+  auto res = gt::empty_like(x);
+  run_device_exp(res, x);
+
+  gt::gtensor<T, 1> h_res(res.shape());
+  copy(res, h_res);
+  EXPECT_LT(gt::abs(h_res(0) - T(0., 1.)), 1e-14);
 }
 
 #endif // CUDA or HIP
