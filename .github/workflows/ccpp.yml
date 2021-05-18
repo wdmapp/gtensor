@@ -1,4 +1,4 @@
-name: C/C++ CI CPU
+name: CPU CI, CUDA/HIP build CI
 
 on:
   push:

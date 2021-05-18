@@ -1,5 +1,8 @@
 # gtensor
 
+![CCPP workflow](https://github.com/wdmapp/gtensor/actions/workflows/ccpp.yml/badge.svg)
+![SYCL workflow](https://github.com/wdmapp/gtensor/actions/workflows/sycl.yml/badge.svg)
+
 gtensor is a multi-dimensional array C++14 header-only library for hybrid GPU
 development. It was inspired by
 [xtensor](https://xtensor.readthedocs.io/en/latest/), and designed to support
