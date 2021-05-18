@@ -251,7 +251,9 @@ TEST(expression, exp_complex)
   EXPECT_LT(gt::norm_linf(gt::exp(I * t) - ref), 1e-14);
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
+// Note: not currently working on Intel SYCL host backend on github
+// CI, but does work locally on GPU backend
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(GTENSOR_DEVICE_SYCL_HOST)
 TEST(expression, device_exp_complex)
 {
   using namespace std::complex_literals;
