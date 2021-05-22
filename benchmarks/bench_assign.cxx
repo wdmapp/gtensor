@@ -10,6 +10,7 @@ static void BM_device_assign_4d(benchmark::State& state)
 
   for (auto _ : state) {
     b = a + 2 * a;
+    gt::synchronize();
   }
 }
 
