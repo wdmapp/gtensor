@@ -143,4 +143,101 @@ static void BM_add_dgdxy_fused(benchmark::State& state)
 
 BENCHMARK(BM_add_dgdxy_fused)->Unit(benchmark::kMillisecond);
 
+// ======================================================================
+// BM_add_dgdxy_6d
+//
+// same as above, but without collapsing dims 3-6
+
+// FIXME, almost same as i_sten_6d_f
+auto x_deriv_5(const gt::gtensor_span_device<const complex_t, 6>& f,
+               const gt::gtensor_span<const real_t, 1>& sten, int bnd)
+{
+  return sten(0) * f.view(_s(bnd - 2, -bnd - 2)) +
+         sten(1) * f.view(_s(bnd - 1, -bnd - 1)) +
+         sten(2) * f.view(_s(bnd + 0, -bnd + 0)) +
+         sten(3) * f.view(_s(bnd + 1, -bnd + 1)) +
+         sten(4) * f.view(_s(bnd + 2, -bnd + 2));
+}
+
+auto y_deriv(const gt::gtensor_span_device<const complex_t, 6>& f,
+             const gt::gtensor_span_device<const complex_t, 1>& ikj, int bnd)
+{
+  return ikj.view(_newaxis, _all, _newaxis, _newaxis, _newaxis, _newaxis) *
+         f.view(_s(bnd, -bnd));
+}
+
+static void BM_add_dgdxy_6d(benchmark::State& state)
+{
+  const int bnd = 2; // # of ghost points
+  auto shape_rhs = gt::shape(70, 32, 24, 24, 32, 2);
+  auto shape_f = shape_rhs;
+  shape_f[0] += 2 * bnd;
+
+  auto sten =
+    gt::gtensor<real_t, 1>({1. / 12., -2. / 3., 0., 2. / 3., -1 / 12.});
+
+  auto rhs = gt::zeros_device<complex_t>(shape_rhs);
+  auto f = gt::zeros_device<complex_t>(shape_f);
+  auto ikj = gt::zeros_device<complex_t>({shape_rhs[1]});
+  auto p1 = gt::zeros_device<complex_t>(
+    {shape_rhs[0], shape_rhs[2], shape_rhs[3], shape_rhs[4], shape_rhs[5]});
+  auto p2 = gt::zeros_device<complex_t>(
+    {shape_rhs[0], shape_rhs[2], shape_rhs[3], shape_rhs[4], shape_rhs[5]});
+
+  auto dij =
+    gt::empty_device<complex_t>({shape_rhs[0], shape_rhs[1], shape_rhs[2],
+                                 shape_rhs[3], shape_rhs[4], shape_rhs[5], 2});
+
+  for (auto _ : state) {
+    dij.view(_all, _all, _all, _all, _all, _all, 0) = x_deriv_5(f, sten, bnd);
+    dij.view(_all, _all, _all, _all, _all, _all, 1) = y_deriv(f, ikj, bnd);
+
+    rhs =
+      rhs +
+      p1.view(_all, _newaxis) *
+        dij.view(_all, _all, _all, _all, _all, _all, 0) +
+      p2.view(_all, _newaxis) * dij.view(_all, _all, _all, _all, _all, _all, 1);
+    gt::synchronize();
+  }
+}
+
+BENCHMARK(BM_add_dgdxy_6d)->Unit(benchmark::kMillisecond);
+
+// ======================================================================
+// BM_add_dgdxy_fused_6d
+
+static void BM_add_dgdxy_fused_6d(benchmark::State& state)
+{
+  const int bnd = 2; // # of ghost points
+  auto shape_rhs = gt::shape(70, 32, 24, 24, 32, 2);
+  auto shape_f = shape_rhs;
+  shape_f[0] += 2 * bnd;
+
+  auto sten =
+    gt::gtensor<real_t, 1>({1. / 12., -2. / 3., 0., 2. / 3., -1 / 12.});
+
+  auto rhs = gt::zeros_device<complex_t>(shape_rhs);
+  auto f = gt::zeros_device<complex_t>(shape_f);
+  auto ikj = gt::zeros_device<complex_t>({shape_rhs[1]});
+  auto p1 = gt::zeros_device<complex_t>(
+    {shape_rhs[0], shape_rhs[2], shape_rhs[3], shape_rhs[4], shape_rhs[5]});
+  auto p2 = gt::zeros_device<complex_t>(
+    {shape_rhs[0], shape_rhs[2], shape_rhs[3], shape_rhs[4], shape_rhs[5]});
+
+  for (auto _ : state) {
+    auto dx_f = x_deriv_5(f, sten, bnd);
+    auto dy_f = y_deriv(f, ikj, bnd);
+
+    // rhs = rhs + p1.view(_all, _newaxis) * dx_f + p2.view(_all, _newaxis) *
+    // dy_f;
+
+    rhs = rhs + p1.view(_all, _newaxis) * x_deriv_5(f, sten, bnd) +
+          p2.view(_all, _newaxis) * y_deriv(f, ikj, bnd);
+
+    gt::synchronize();
+  }
+}
+
+BENCHMARK(BM_add_dgdxy_fused_6d)->Unit(benchmark::kMillisecond);
+
 BENCHMARK_MAIN();
