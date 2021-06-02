@@ -15,15 +15,17 @@ include(cmake/CPM.cmake)
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
-set(GTENSOR_USE_THRUST ON CACHE BOOL "Use thrust (cuda and hip devices)")
-set(GTENSOR_TEST_DEBUG OFF CACHE BOOL "Turn on debug printing for unit tests")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
-set(GTENSOR_BUILD_EXAMPLES OFF CACHE BOOL "Build example programs")
+
+option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
+option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" ON)
+option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
+option(GTENSOR_BUILD_EXAMPLES "Build example programs" OFF)
 
 # Experimental library features
-set(GTENSOR_ENABLE_CLIB OFF CACHE BOOL "Enable libcgtensor")
-set(GTENSOR_ENABLE_BLAS OFF CACHE BOOL "Enable gtblas")
-set(GTENSOR_ENABLE_FFT  OFF CACHE BOOL "Enable gtfft")
+option(GTENSOR_ENABLE_CLIB "Enable libcgtensor" OFF)
+option(GTENSOR_ENABLE_BLAS "Enable gtblas" OFF)
+option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
