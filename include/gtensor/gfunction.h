@@ -96,7 +96,7 @@ using space_t = typename detail::space_type<S...>::type;
 // broadcast_shape
 
 template <typename S, typename S2>
-inline void broadcast_shape(S& to, const S2& from)
+GT_INLINE void broadcast_shape(S& to, const S2& from)
 {
   // FIXME, rev it
   auto end_from = from.size() - 1;
@@ -110,8 +110,10 @@ inline void broadcast_shape(S& to, const S2& from)
     } else if (from[end_from - i] == 1) {
       // broadcasting, from, nothing to do
     } else {
+#ifndef __CUDA_ARCH__
       throw std::runtime_error("cannot broadcast to = " + to_string(to) +
                                " from = " + to_string(from) + "\n");
+#endif
     }
   }
 }
@@ -123,13 +125,13 @@ namespace detail
 {
 
 template <typename S, typename E>
-inline void calc_shape(S& shape, const E& e)
+GT_INLINE void calc_shape(S& shape, const E& e)
 {
   broadcast_shape(shape, e.shape());
 }
 
 template <typename S, typename E, typename... Es>
-inline void calc_shape(S& shape, const E& e, const Es&... es)
+GT_INLINE void calc_shape(S& shape, const E& e, const Es&... es)
 {
   broadcast_shape(shape, e.shape());
   calc_shape(shape, es...);
@@ -138,7 +140,7 @@ inline void calc_shape(S& shape, const E& e, const Es&... es)
 } // namespace detail
 
 template <typename S, typename... Es>
-inline void calc_shape(S& shape, const Es&... es)
+GT_INLINE void calc_shape(S& shape, const Es&... es)
 {
   for (auto& val : shape) {
     val = 1;
@@ -208,8 +210,8 @@ public:
 
   gfunction(F&& f, E&& e) : f_(std::forward<F>(f)), e_(std::forward<E>(e)) {}
 
-  shape_type shape() const;
-  int shape(int i) const;
+  GT_INLINE shape_type shape() const;
+  GT_INLINE int shape(int i) const;
   GT_INLINE size_type size() const { return calc_size(shape()); }
 
   template <typename... Args>
@@ -249,8 +251,8 @@ public:
       e2_(std::forward<E2>(e2))
   {}
 
-  shape_type shape() const;
-  int shape(int i) const;
+  GT_INLINE shape_type shape() const;
+  GT_INLINE int shape(int i) const;
   GT_INLINE size_type size() const { return calc_size(shape()); }
 
   template <typename... Args>
@@ -268,7 +270,7 @@ private:
 // gfunction implementation
 
 template <typename F, typename E>
-inline auto gfunction<F, E, gt_empty_expr>::shape() const -> shape_type
+GT_INLINE auto gfunction<F, E, gt_empty_expr>::shape() const -> shape_type
 {
   shape_type shape;
   calc_shape(shape, e_);
@@ -276,13 +278,13 @@ inline auto gfunction<F, E, gt_empty_expr>::shape() const -> shape_type
 }
 
 template <typename F, typename E>
-inline int gfunction<F, E, gt_empty_expr>::shape(int i) const
+GT_INLINE int gfunction<F, E, gt_empty_expr>::shape(int i) const
 {
   return shape()[i];
 }
 
 template <typename F, typename E1, typename E2>
-inline auto gfunction<F, E1, E2>::shape() const -> shape_type
+GT_INLINE auto gfunction<F, E1, E2>::shape() const -> shape_type
 {
   shape_type shape;
   calc_shape(shape, e1_, e2_);
@@ -290,7 +292,7 @@ inline auto gfunction<F, E1, E2>::shape() const -> shape_type
 }
 
 template <typename F, typename E1, typename E2>
-inline int gfunction<F, E1, E2>::shape(int i) const
+GT_INLINE int gfunction<F, E1, E2>::shape(int i) const
 {
   return shape()[i];
 }
@@ -440,9 +442,9 @@ public:
 
   ggenerator(const shape_type& shape, const F& f) : shape_(shape), f_(f) {}
 
-  shape_type shape() const { return shape_; }
-  int shape(int i) const { return shape_[i]; }
-  size_type size() const { return calc_size(shape()); }
+  GT_INLINE shape_type shape() const { return shape_; }
+  GT_INLINE int shape(int i) const { return shape_[i]; }
+  GT_INLINE size_type size() const { return calc_size(shape()); }
 
   template <typename... Args>
   GT_INLINE auto operator()(Args... args) const
