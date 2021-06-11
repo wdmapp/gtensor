@@ -110,7 +110,9 @@ GT_INLINE void broadcast_shape(S& to, const S2& from)
     } else if (from[end_from - i] == 1) {
       // broadcasting, from, nothing to do
     } else {
-#ifndef __CUDA_ARCH__
+#ifdef __CUDA_ARCH__
+      assert(false);
+#else
       throw std::runtime_error("cannot broadcast to = " + to_string(to) +
                                " from = " + to_string(from) + "\n");
 #endif
