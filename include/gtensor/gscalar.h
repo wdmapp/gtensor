@@ -20,7 +20,7 @@ public:
 
   gscalar(T value) : value_(value) {}
 
-  shape_type shape() const { return {}; }
+  GT_INLINE shape_type shape() const { return {}; }
 
   template <typename... Args>
   GT_INLINE value_type operator()(Args... args) const
