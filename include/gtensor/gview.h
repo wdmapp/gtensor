@@ -456,10 +456,35 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
 // ======================================================================
 // flatten
 
+namespace detail
+{
+
+template <typename E, bool DimGreaterThanOne>
+struct flatten_impl
+{};
+
+template <typename E>
+struct flatten_impl<E, true>
+{
+  static inline auto run(E&& e)
+  {
+    return reshape(std::forward<E>(e), shape(e.size()));
+  }
+};
+
+template <typename E>
+struct flatten_impl<E, false>
+{
+  static inline auto run(E&& e) { return e; }
+};
+
+} // end namespace detail
+
 template <typename E>
 inline auto flatten(E&& e)
 {
-  return reshape(std::forward<E>(e), shape(e.size()));
+  return detail::flatten_impl<E, (expr_dimension<E>() > 1)>::run(
+    std::forward<E>(e));
 }
 
 // ======================================================================

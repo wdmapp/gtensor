@@ -317,6 +317,42 @@ void ij_deriv_gpu(const int len1, // 16-1024
                  arr, ncoeff, coeff, ikj, darr);
   gt::synchronize();
 }
+#elif defined(GTENSOR_DEVICE_SYCL)
+template <typename Real>
+void ij_deriv_gpu(const int len1, // 16-1024
+                  const int len2, // 1-256
+                  const int len3, // 2-64
+                  const gt::complex<Real>* arr, const int ncoeff,
+                  const Real* coeff, const gt::complex<Real>* ikj,
+                  gt::complex<Real>* darr)
+{
+  sycl::queue& q = gt::backend::sycl::get_queue();
+
+  auto e = q.submit([&](sycl::handler& cgh) {
+    cgh.parallel_for(sycl::range<3>(len1, len2, len3), [=](sycl::id<3> idx3) {
+      int idx, didx1, didx2;
+      int wblen1 = len1 + ncoeff - 1;
+      int nb = (ncoeff - 1) / 2;
+      gt::complex<Real> tmp;
+
+      int sten;
+      int i = idx3[0];
+      int j = idx3[1];
+      int k = idx3[2];
+      idx = k * len2 * wblen1 + j * wblen1 + i;
+      didx1 = k * 2 * len2 * len1 + j * len1 + i;
+      didx2 = didx1 + len2 * len1;
+
+      tmp = coeff[0] * arr[idx];
+      for (sten = 1; sten < ncoeff; sten++) {
+        tmp = tmp + (coeff[sten] * arr[idx + sten]);
+      }
+      darr[didx1] = tmp;
+      darr[didx2] = ikj[j] * arr[idx + nb];
+    });
+  });
+  e.wait();
+}
 #endif // end CUDA or HIP
 
 template <typename Real>
