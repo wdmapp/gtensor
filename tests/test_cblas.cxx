@@ -50,7 +50,7 @@ template <typename R, typename F>
 void test_complex_axpy(F&& f)
 {
   constexpr int N = 1024;
-  using T = gt::complex<R>;
+  using T = f2c_complex<R>;
   gt::gtensor<T, 1> h_x(N);
   gt::gtensor_device<T, 1> d_x(N);
   gt::gtensor<T, 1> h_y(N);
@@ -130,7 +130,7 @@ template <typename R, typename F, typename F2>
 void test_complex_scal(F&& f, F2&& f2)
 {
   constexpr int N = 1024;
-  using T = gt::complex<R>;
+  using T = f2c_complex<R>;
   gt::gtensor<T, 1> h_x(N);
   gt::gtensor_device<T, 1> d_x(N);
   gt::gtensor<T, 1> h_y(N);
@@ -254,7 +254,7 @@ template <typename R, typename F>
 void test_gemv_complex(F&& f)
 {
   constexpr int N = 32;
-  using T = gt::complex<R>;
+  using T = f2c_complex<R>;
   gt::gtensor<T, 1> h_x(N);
   gt::gtensor_device<T, 1> d_x(N);
   gt::gtensor<T, 1> h_y(N);
