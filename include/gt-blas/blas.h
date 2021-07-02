@@ -21,11 +21,11 @@ struct handle_t;
 } // namespace gt
 
 #if defined(GTENSOR_DEVICE_CUDA)
-#include "gtensor/blas/cuda.h"
+#include "backend/cuda.h"
 #elif defined(GTENSOR_DEVICE_HIP)
-#include "gtensor/blas/hip.h"
+#include "backend/hip.h"
 #elif defined(GTENSOR_DEVICE_SYCL)
-#include "gtensor/blas/sycl.h"
+#include "backend/sycl.h"
 #endif
 
 namespace gt

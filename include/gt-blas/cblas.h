@@ -1,4 +1,4 @@
-#include "gtensor/blas.h"
+#include "gt-blas/blas.h"
 
 // Use 4/8 byte aligned type for Fortran interop; gt::complex may
 // use thrust::complex which is 8/16 byte aligned

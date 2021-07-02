@@ -1,8 +1,8 @@
 #include <cassert>
 #include <cstdint>
 
-#include "gtensor/blas.h"
-#include "gtensor/cblas.h"
+#include "gt-blas/blas.h"
+#include "gt-blas/cblas.h"
 
 static gt::blas::handle_t* g_handle = nullptr;
 

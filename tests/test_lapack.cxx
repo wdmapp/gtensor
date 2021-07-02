@@ -2,7 +2,7 @@
 
 #include "gtensor/gtensor.h"
 
-#include "gtensor/blas.h"
+#include "gt-blas/blas.h"
 
 #include "test_helpers.h"
 

@@ -2,7 +2,7 @@
 
 #include "gtensor/gtensor.h"
 
-#include "gtensor/cblas.h"
+#include "gt-blas/cblas.h"
 
 template <typename T, typename F>
 void test_real_axpy(F&& f)
