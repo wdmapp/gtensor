@@ -2,12 +2,7 @@
 
 #include "gtensor/gtensor.h"
 
-#include "gtensor/blas.h"
-
-/*
-#define DOUBLE_PREC
-#include "gtensor/gpublas.h"
-*/
+#include "gt-blas/blas.h"
 
 #include "test_debug.h"
 

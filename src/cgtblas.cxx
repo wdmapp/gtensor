@@ -1,7 +1,78 @@
-#include "gtensor/blas.h"
-#include "gtensor/cblas.h"
+#include <cassert>
+#include <cstdint>
+
+#include "gt-blas/blas.h"
+#include "gt-blas/cblas.h"
 
 static gt::blas::handle_t* g_handle = nullptr;
+
+namespace detail
+{
+
+template <typename T>
+inline void assert_aligned(T* p, size_t alignment)
+{
+  assert((uintptr_t)(void*)p % alignment == 0);
+}
+
+template <typename T>
+inline T fc2cpp_deref(const T* f)
+{
+  return *f;
+}
+
+// NB: convert to the gt type component-wise in case the alignment
+// requirements are different, which will be the case when the thrust
+// storage backend is used.
+template <typename T>
+inline gt::complex<T> fc2cpp_deref(const f2c_complex<T>* c)
+{
+  return gt::complex<T>(c->real(), c->imag());
+}
+
+template <typename T>
+inline T* cast_aligned(T* f)
+{
+  assert_aligned(f, sizeof(T));
+  return f;
+}
+
+template <typename T>
+inline T** cast_aligned(T** f)
+{
+  assert_aligned(f[0], sizeof(T));
+  return f;
+}
+
+template <typename T>
+inline auto cast_aligned(f2c_complex<T>* c)
+{
+  assert_aligned(c, 2 * sizeof(T));
+  return reinterpret_cast<gt::complex<T>*>(c);
+}
+
+template <typename T>
+inline auto cast_aligned(f2c_complex<T>** c)
+{
+  assert_aligned(c[0], 2 * sizeof(T));
+  return reinterpret_cast<gt::complex<T>**>(c);
+}
+
+template <typename T>
+inline auto cast_aligned(const f2c_complex<T>* c)
+{
+  assert_aligned(c, 2 * sizeof(T));
+  return reinterpret_cast<const gt::complex<T>*>(c);
+}
+
+template <typename T>
+inline auto cast_aligned(const f2c_complex<T>** c)
+{
+  assert_aligned(c[0], 2 * sizeof(T));
+  return reinterpret_cast<const gt::complex<T>**>(c);
+}
+
+} // namespace detail
 
 void gtblas_create()
 {
@@ -35,13 +106,15 @@ void gtblas_get_stream(gt::blas::stream_t* stream_id)
   void CNAME(int n, const CPPTYPE* a, const CPPTYPE* x, int incx, CPPTYPE* y,  \
              int incy)                                                         \
   {                                                                            \
-    gt::blas::axpy(g_handle, n, *a, x, incx, y, incy);                         \
+    gt::blas::axpy(g_handle, n, detail::fc2cpp_deref(a),                       \
+                   detail::cast_aligned(x), incx, detail::cast_aligned(y),     \
+                   incy);                                                      \
   }
 
 CREATE_C_AXPY(gtblas_saxpy, float)
 CREATE_C_AXPY(gtblas_daxpy, double)
-CREATE_C_AXPY(gtblas_caxpy, gt::complex<float>)
-CREATE_C_AXPY(gtblas_zaxpy, gt::complex<double>)
+CREATE_C_AXPY(gtblas_caxpy, f2c_complex<float>)
+CREATE_C_AXPY(gtblas_zaxpy, f2c_complex<double>)
 
 #undef CREATE_C_AXPY
 
@@ -51,15 +124,16 @@ CREATE_C_AXPY(gtblas_zaxpy, gt::complex<double>)
 #define CREATE_C_SCAL(CNAME, STYPE, ATYPE)                                     \
   void CNAME(int n, const STYPE* a, ATYPE* x, int incx)                        \
   {                                                                            \
-    gt::blas::scal(g_handle, n, *a, x, incx);                                  \
+    gt::blas::scal(g_handle, n, detail::fc2cpp_deref(a),                       \
+                   detail::cast_aligned(x), incx);                             \
   }
 
 CREATE_C_SCAL(gtblas_sscal, float, float)
 CREATE_C_SCAL(gtblas_dscal, double, double)
-CREATE_C_SCAL(gtblas_cscal, gt::complex<float>, gt::complex<float>)
-CREATE_C_SCAL(gtblas_zscal, gt::complex<double>, gt::complex<double>)
-CREATE_C_SCAL(gtblas_csscal, float, gt::complex<float>)
-CREATE_C_SCAL(gtblas_zdscal, double, gt::complex<double>)
+CREATE_C_SCAL(gtblas_cscal, f2c_complex<float>, f2c_complex<float>)
+CREATE_C_SCAL(gtblas_zscal, f2c_complex<double>, f2c_complex<double>)
+CREATE_C_SCAL(gtblas_csscal, float, f2c_complex<float>)
+CREATE_C_SCAL(gtblas_zdscal, double, f2c_complex<double>)
 
 #undef CREATE_C_SCAL
 
@@ -69,13 +143,14 @@ CREATE_C_SCAL(gtblas_zdscal, double, gt::complex<double>)
 #define CREATE_C_COPY(CNAME, CPPTYPE)                                          \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::copy(g_handle, n, x, incx, y, incy);                             \
+    gt::blas::copy(g_handle, n, detail::cast_aligned(x), incx,                 \
+                   detail::cast_aligned(y), incy);                             \
   }
 
 CREATE_C_COPY(gtblas_scopy, float)
 CREATE_C_COPY(gtblas_dcopy, double)
-CREATE_C_COPY(gtblas_ccopy, gt::complex<float>)
-CREATE_C_COPY(gtblas_zcopy, gt::complex<double>)
+CREATE_C_COPY(gtblas_ccopy, f2c_complex<float>)
+CREATE_C_COPY(gtblas_zcopy, f2c_complex<double>)
 
 // ======================================================================
 // gtblas_Xdot
@@ -83,7 +158,8 @@ CREATE_C_COPY(gtblas_zcopy, gt::complex<double>)
 #define CREATE_C_DOT(CNAME, CPPTYPE)                                           \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::dot(g_handle, n, x, incx, y, incy);                              \
+    gt::blas::dot(g_handle, n, detail::cast_aligned(x), incx,                  \
+                  detail::cast_aligned(y), incy);                              \
   }
 
 CREATE_C_DOT(gtblas_sdot, float)
@@ -97,11 +173,12 @@ CREATE_C_DOT(gtblas_ddot, double)
 #define CREATE_C_DOTU(CNAME, CPPTYPE)                                          \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::dotu(g_handle, n, x, incx, y, incy);                             \
+    gt::blas::dotu(g_handle, n, detail::cast_aligned(x), incx,                 \
+                   detail::cast_aligned(y), incy);                             \
   }
 
-CREATE_C_DOTU(gtblas_cdotu, gt::complex<float>)
-CREATE_C_DOTU(gtblas_zdotu, gt::complex<double>)
+CREATE_C_DOTU(gtblas_cdotu, f2c_complex<float>)
+CREATE_C_DOTU(gtblas_zdotu, f2c_complex<double>)
 
 #undef CREATE_C_DOTU
 
@@ -111,11 +188,12 @@ CREATE_C_DOTU(gtblas_zdotu, gt::complex<double>)
 #define CREATE_C_DOTC(CNAME, CPPTYPE)                                          \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::dotu(g_handle, n, x, incx, y, incy);                             \
+    gt::blas::dotu(g_handle, n, detail::cast_aligned(x), incx,                 \
+                   detail::cast_aligned(y), incy);                             \
   }
 
-CREATE_C_DOTC(gtblas_cdotc, gt::complex<float>)
-CREATE_C_DOTC(gtblas_zdotc, gt::complex<double>)
+CREATE_C_DOTC(gtblas_cdotc, f2c_complex<float>)
+CREATE_C_DOTC(gtblas_zdotc, f2c_complex<double>)
 
 #undef CREATE_C_DOTC
 
@@ -127,13 +205,16 @@ CREATE_C_DOTC(gtblas_zdotc, gt::complex<double>)
              const CPPTYPE* x, int incx, const CPPTYPE* beta, CPPTYPE* y,      \
              int incy)                                                         \
   {                                                                            \
-    gt::blas::gemv(g_handle, m, n, *alpha, A, lda, x, incx, *beta, y, incy);   \
+    gt::blas::gemv(g_handle, m, n, detail::fc2cpp_deref(alpha),                \
+                   detail::cast_aligned(A), lda, detail::cast_aligned(x),      \
+                   incx, detail::fc2cpp_deref(beta), detail::cast_aligned(y),  \
+                   incy);                                                      \
   }
 
 CREATE_C_GEMV(gtblas_sgemv, float)
 CREATE_C_GEMV(gtblas_dgemv, double)
-CREATE_C_GEMV(gtblas_cgemv, gt::complex<float>)
-CREATE_C_GEMV(gtblas_zgemv, gt::complex<double>)
+CREATE_C_GEMV(gtblas_cgemv, f2c_complex<float>)
+CREATE_C_GEMV(gtblas_zgemv, f2c_complex<double>)
 
 #undef CREATE_C_GEMV
 
@@ -144,14 +225,14 @@ CREATE_C_GEMV(gtblas_zgemv, gt::complex<double>)
   void CNAME(int n, CPPTYPE** d_Aarray, int lda,                               \
              gt::blas::index_t* d_PivotArray, int* d_infoArray, int batchSize) \
   {                                                                            \
-    gt::blas::getrf_batched(g_handle, n, d_Aarray, lda, d_PivotArray,          \
-                            d_infoArray, batchSize);                           \
+    gt::blas::getrf_batched(g_handle, n, detail::cast_aligned(d_Aarray), lda,  \
+                            d_PivotArray, d_infoArray, batchSize);             \
   }
 
 CREATE_C_GETRF_BATCHED(gtblas_sgetrf_batched, float)
 CREATE_C_GETRF_BATCHED(gtblas_dgetrf_batched, double)
-CREATE_C_GETRF_BATCHED(gtblas_cgetrf_batched, gt::complex<float>)
-CREATE_C_GETRF_BATCHED(gtblas_zgetrf_batched, gt::complex<double>)
+CREATE_C_GETRF_BATCHED(gtblas_cgetrf_batched, f2c_complex<float>)
+CREATE_C_GETRF_BATCHED(gtblas_zgetrf_batched, f2c_complex<double>)
 
 #undef CREATE_C_GETRF_BATCHED
 
@@ -163,13 +244,14 @@ CREATE_C_GETRF_BATCHED(gtblas_zgetrf_batched, gt::complex<double>)
              gt::blas::index_t* d_PivotArray, CPPTYPE** d_Barray, int ldb,     \
              int batchSize)                                                    \
   {                                                                            \
-    gt::blas::getrs_batched(g_handle, n, nrhs, d_Aarray, lda, d_PivotArray,    \
-                            d_Barray, ldb, batchSize);                         \
+    gt::blas::getrs_batched(g_handle, n, nrhs, detail::cast_aligned(d_Aarray), \
+                            lda, d_PivotArray, detail::cast_aligned(d_Barray), \
+                            ldb, batchSize);                                   \
   }
 
 CREATE_C_GETRS_BATCHED(gtblas_sgetrs_batched, float)
 CREATE_C_GETRS_BATCHED(gtblas_dgetrs_batched, double)
-CREATE_C_GETRS_BATCHED(gtblas_cgetrs_batched, gt::complex<float>)
-CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, gt::complex<double>)
+CREATE_C_GETRS_BATCHED(gtblas_cgetrs_batched, f2c_complex<float>)
+CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, f2c_complex<double>)
 
 #undef CREATE_C_GETRS_BATCHED

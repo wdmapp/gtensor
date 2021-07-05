@@ -1,5 +1,5 @@
+#include <gt-blas/blas.h>
 #include <gt-fft/fft.h>
-#include <gtensor/blas.h>
 #include <gtensor/gtensor.h>
 #include <gtensor/reductions.h>
 #include <iostream>
