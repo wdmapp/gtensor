@@ -8,7 +8,7 @@
 #include <CL/sycl.hpp>
 #include <oneapi/mkl.hpp>
 
-#include "gtensor/sycl_backend.h"
+#include "gtensor/backend_sycl.h"
 
 // Should be possible to use MKL_LONG, but for somereason it is not defined
 // correctly even when MKL_ILP64 is set correctly.
