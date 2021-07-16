@@ -99,6 +99,26 @@ inline void device_synchronize()
   gt::backend::sycl::get_queue().wait();
 }
 
+inline int device_get_count()
+{
+  return gt::backend::sycl::get_device_count();
+}
+
+inline void device_set(int device_id)
+{
+  gt::backend::sycl::set_device(device_id);
+}
+
+inline int device_get()
+{
+  return gt::backend::sycl::get_device();
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  return gt::backend::sycl::get_device_vendor_id(device_id);
+}
+
 template <typename T>
 inline void device_copy_async_dd(const T* src, T* dst, size_type count)
 {

@@ -10,9 +10,6 @@
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-// NOTE: device management API doesn't have SYCL impl yet
-#ifndef GTENSOR_DEVICE_SYCL
-
 TEST(device_backend, list_devices)
 {
   int n_devices = gt::backend::clib::device_get_count();
@@ -31,8 +28,6 @@ TEST(device_backend, list_devices)
   }
 }
 
-#endif // not GTENSOR_DEVICE_SYCL
-
 #define N 10
 TEST(device_backend, managed_allocate)
 {
@@ -50,4 +45,4 @@ TEST(device_backend, managed_allocate)
   allocator::deallocate(a);
 }
 
-#endif
+#endif // GTENSOR_HAVE_DEVICE
