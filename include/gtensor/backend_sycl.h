@@ -9,6 +9,16 @@
 
 #include <CL/sycl.hpp>
 
+#ifdef GTENSOR_DEVICE_SYCL_L0
+#include "level_zero/ze_api.h"
+
+#include "CL/sycl/backend/level_zero.hpp"
+#endif
+
+#ifdef GTENSOR_DEVICE_SYCL_OPENCL
+#include "CL/sycl/backend/opencl.hpp"
+#endif
+
 #include "pointer_traits.h"
 
 // ======================================================================
@@ -40,6 +50,47 @@ inline auto get_exception_handler()
   };
   return exception_handler;
 }
+
+template <cl::sycl::backend Backend>
+uint32_t get_unique_device_id(const cl::sycl::device& d);
+
+#ifdef GTENSOR_DEVICE_SYCL_OPENCL
+typedef struct _cl_device_pci_bus_info_khr
+{
+  cl_uint pci_domain;
+  cl_uint pci_bus;
+  cl_uint pci_device;
+  cl_uint pci_function;
+} cl_device_pci_bus_info_khr;
+#define CL_DEVICE_PCI_BUS_INFO_KHR 0x410F
+
+template <>
+inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
+  const cl::sycl::device& d)
+{
+  cl_device_id cl_dev = d.get_native<cl::sycl::backend::opencl>();
+  cl_device_pci_bus_info_khr pci_info;
+  uint32_t pci_id_packed = 0;
+  clGetDeviceInfo(cl_dev, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pci_info),
+                  &pci_info, NULL);
+  pci_id_packed |= (0x000000FF & (pci_info.pci_device));
+  pci_id_packed |= (0x0000FF00 & (pci_info.pci_bus << 8));
+  pci_id_packed |= (0xFFFF0000 & (pci_info.pci_domain << 16));
+  return pci_id_packed;
+}
+#endif
+
+#ifdef GTENSOR_DEVICE_SYCL_L0
+template <>
+inline uint32_t get_unique_device_id<cl::sycl::backend::level_zero>(
+  const cl::sycl::device& d)
+{
+  ze_device_handle_t ze_dev = d.get_native<cl::sycl::backend::level_zero>();
+  ze_device_properties_t ze_prop;
+  zeDeviceGetProperties(ze_dev, &ze_prop);
+  return ze_prop.deviceId;
+}
+#endif
 
 class SyclQueues
 {
@@ -78,11 +129,25 @@ public:
       throw std::runtime_error("No such device");
     }
 
-    // TODO: this will be unique, but is not useful for it's intended
-    // purpose of varifying the MPI -> GPU mapping, since it would work
-    // even if the runtime returned the same device multiple times.
-    return devices_[device_id].get_info<cl::sycl::info::device::vendor_id>() +
-           device_id;
+    const cl::sycl::device& sycl_dev = devices_[device_id];
+    const cl::sycl::platform& p = sycl_dev.get_platform();
+    std::string p_name = p.get_info<cl::sycl::info::platform::name>();
+    if (false) {
+#ifdef GTENSOR_DEVICE_SYCL_L0
+    } else if (p_name.find("Level-Zero") != std::string::npos) {
+      return get_unique_device_id<cl::sycl::backend::level_zero>(sycl_dev);
+#endif
+#ifdef GTENSOR_DEVICE_SYCL_OPENCL
+    } else if (p_name.find("OpenCL") != std::string::npos) {
+      return get_unique_device_id<cl::sycl::backend::opencl>(sycl_dev);
+#endif
+    } else {
+      // TODO: this will be unique, but is not useful for it's intended
+      // purpose of varifying the MPI -> GPU mapping, since it would work
+      // even if the runtime returned the same device multiple times.
+      return devices_[device_id].get_info<cl::sycl::info::device::vendor_id>() +
+             device_id;
+    }
   }
 
   int get_device_id() { return current_device_id_; }

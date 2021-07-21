@@ -207,6 +207,13 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   target_include_directories(gtensor_sycl INTERFACE ${DPCPP_INCDIR})
 
   if (GTENSOR_DEVICE_SYCL_INTEL)
+    # level zero headers should be available, even if different backend is
+    # used at runtime
+    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_L0)
+    target_compile_definitions(gtensor_sycl INTERFACE
+                               GTENSOR_DEVICE_SYCL_OPENCL)
+    target_link_libraries(gtensor_sycl INTERFACE ze_loader)
+    target_link_libraries(gtensor_sycl INTERFACE OpenCL)
     if (NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
         target_link_options(gtensor_sycl INTERFACE
                             -fsycl-device-lib=libm-fp32,libm-fp64)
