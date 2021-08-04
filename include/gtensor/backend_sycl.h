@@ -11,6 +11,7 @@
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
 #include "level_zero/ze_api.h"
+#include "level_zero/zes_api.h"
 
 #include "CL/sycl/backend/level_zero.hpp"
 #endif
@@ -85,10 +86,29 @@ template <>
 inline uint32_t get_unique_device_id<cl::sycl::backend::level_zero>(
   const cl::sycl::device& d)
 {
+  uint32_t unique_id = 0;
   ze_device_handle_t ze_dev = d.get_native<cl::sycl::backend::level_zero>();
-  ze_device_properties_t ze_prop;
-  zeDeviceGetProperties(ze_dev, &ze_prop);
-  return ze_prop.deviceId;
+  zes_device_handle_t zes_dev = reinterpret_cast<zes_device_handle_t>(ze_dev);
+  zes_pci_properties_t pci_props;
+  if (zesDevicePciGetProperties(zes_dev, &pci_props) == ZE_RESULT_SUCCESS) {
+    unique_id |= (0x000000FF & (pci_props.address.device));
+    unique_id |= (0x0000FF00 & (pci_props.address.bus << 8));
+    unique_id |= (0xFFFF0000 & (pci_props.address.domain << 16));
+  } else {
+    // fallback to level zero device id
+    // std::cout << "failed to get pci props " << std::endl;
+    ze_device_properties_t ze_prop;
+    zeDeviceGetProperties(ze_dev, &ze_prop);
+    unique_id = ze_prop.deviceId;
+    /*
+    unique_id |= (0x000000FF & ze_prop.uuid.id[3]);
+    unique_id |= (0x0000FF00 & ze_prop.uuid.id[2]);
+    unique_id |= (0x00FF0000 & ze_prop.uuid.id[1]);
+    unique_id |= (0xFF000000 & ze_prop.uuid.id[0]);
+    return unique_id;
+    */
+  }
+  return unique_id;
 }
 #endif
 
