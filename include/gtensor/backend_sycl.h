@@ -52,8 +52,18 @@ inline auto get_exception_handler()
   return exception_handler;
 }
 
+// fallback if none of the backend specific methods succeed
+inline uint32_t get_unique_device_id_sycl(int device_index,
+                                          const cl::sycl::device& d)
+{
+  // TODO: this will be unique, but is not useful for it's intended
+  // purpose of varifying the MPI -> GPU mapping, since it would work
+  // even if the runtime returned the same device multiple times.
+  return d.get_info<cl::sycl::info::device::vendor_id>() + device_index;
+}
+
 template <cl::sycl::backend Backend>
-uint32_t get_unique_device_id(const cl::sycl::device& d);
+uint32_t get_unique_device_id(int device_index, const cl::sycl::device& d);
 
 #ifdef GTENSOR_DEVICE_SYCL_OPENCL
 typedef struct _cl_device_pci_bus_info_khr
@@ -67,47 +77,71 @@ typedef struct _cl_device_pci_bus_info_khr
 
 template <>
 inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
-  const cl::sycl::device& d)
+  int device_index, const cl::sycl::device& d)
 {
+  uint32_t unique_id = 0;
   cl_device_id cl_dev = d.get_native<cl::sycl::backend::opencl>();
   cl_device_pci_bus_info_khr pci_info;
-  uint32_t pci_id_packed = 0;
-  clGetDeviceInfo(cl_dev, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pci_info),
-                  &pci_info, NULL);
-  pci_id_packed |= (0x000000FF & (pci_info.pci_device));
-  pci_id_packed |= (0x0000FF00 & (pci_info.pci_bus << 8));
-  pci_id_packed |= (0xFFFF0000 & (pci_info.pci_domain << 16));
-  return pci_id_packed;
+  cl_int rval = clGetDeviceInfo(cl_dev, CL_DEVICE_PCI_BUS_INFO_KHR,
+                                sizeof(pci_info), &pci_info, NULL);
+  if (rval == CL_SUCCESS) {
+    unique_id |= (0x000000FF & (pci_info.pci_device));
+    unique_id |= (0x0000FF00 & (pci_info.pci_bus << 8));
+    unique_id |= (0xFFFF0000 & (pci_info.pci_domain << 16));
+    // std::cout << "opencl (pci_bus_info ext) " << unique_id << std::endl;
+  }
+  if (unique_id == 0) {
+    unique_id = get_unique_device_id_sycl(device_index, d);
+    // std::cout << "opencl (sycl fallback) " << unique_id << std::endl;
+  }
+  return unique_id;
 }
 #endif
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
 template <>
 inline uint32_t get_unique_device_id<cl::sycl::backend::level_zero>(
-  const cl::sycl::device& d)
+  int device_index, const cl::sycl::device& d)
 {
   uint32_t unique_id = 0;
+
   ze_device_handle_t ze_dev = d.get_native<cl::sycl::backend::level_zero>();
+  ze_device_properties_t ze_prop;
+  zeDeviceGetProperties(ze_dev, &ze_prop);
+
+  // Try to use Level Zero Sysman API to get PCI id. Requires setting
+  // ZES_ENABLE_SYSMAN=1 in the environment to enable.
   zes_device_handle_t zes_dev = reinterpret_cast<zes_device_handle_t>(ze_dev);
   zes_pci_properties_t pci_props;
   if (zesDevicePciGetProperties(zes_dev, &pci_props) == ZE_RESULT_SUCCESS) {
     unique_id |= (0x000000FF & (pci_props.address.device));
     unique_id |= (0x0000FF00 & (pci_props.address.bus << 8));
     unique_id |= (0xFFFF0000 & (pci_props.address.domain << 16));
-  } else {
-    // fallback to level zero device id
-    // std::cout << "failed to get pci props " << std::endl;
-    ze_device_properties_t ze_prop;
-    zeDeviceGetProperties(ze_dev, &ze_prop);
-    unique_id = ze_prop.deviceId;
-    /*
+    // std::cout << "level zero (sysman): " << unique_id << std::endl;
+  }
+
+  // try device uuid first 4 bytes
+  if (unique_id == 0) {
     unique_id |= (0x000000FF & ze_prop.uuid.id[3]);
     unique_id |= (0x0000FF00 & ze_prop.uuid.id[2]);
     unique_id |= (0x00FF0000 & ze_prop.uuid.id[1]);
     unique_id |= (0xFF000000 & ze_prop.uuid.id[0]);
-    return unique_id;
-    */
+    // std::cout << "level zero (uuid): " << unique_id << std::endl;
   }
+
+  // if sysman and uuid fails, try the vendorId and deviceid. This is not
+  // unique yet in intel implementation, so add device index.
+  if (unique_id == 0) {
+    unique_id = (ze_prop.vendorId << 16) + ze_prop.deviceId + device_index;
+    // std::cout << "level zero (deviceId + idx): " << unique_id << std::endl;
+  }
+
+  // last resort, fallback to pure SYCL method
+  if (unique_id == 0) {
+    unique_id = get_unique_device_id_sycl(device_index, d);
+    // std::cout << "level zero (sycl fallback): " << unique_id << std::endl;
+  }
+
   return unique_id;
 }
 #endif
@@ -155,18 +189,16 @@ public:
     if (false) {
 #ifdef GTENSOR_DEVICE_SYCL_L0
     } else if (p_name.find("Level-Zero") != std::string::npos) {
-      return get_unique_device_id<cl::sycl::backend::level_zero>(sycl_dev);
+      return get_unique_device_id<cl::sycl::backend::level_zero>(device_id,
+                                                                 sycl_dev);
 #endif
 #ifdef GTENSOR_DEVICE_SYCL_OPENCL
     } else if (p_name.find("OpenCL") != std::string::npos) {
-      return get_unique_device_id<cl::sycl::backend::opencl>(sycl_dev);
+      return get_unique_device_id<cl::sycl::backend::opencl>(device_id,
+                                                             sycl_dev);
 #endif
     } else {
-      // TODO: this will be unique, but is not useful for it's intended
-      // purpose of varifying the MPI -> GPU mapping, since it would work
-      // even if the runtime returned the same device multiple times.
-      return devices_[device_id].get_info<cl::sycl::info::device::vendor_id>() +
-             device_id;
+      return get_unique_device_id_sycl(device_id, sycl_dev);
     }
   }
 
