@@ -11,6 +11,22 @@
 #include <cufft.h>
 #endif
 
+// ======================================================================
+// error handling helper
+
+#define gtFFTCheck(what)                                                       \
+  {                                                                            \
+    gtFFTCheckImpl(what, __FILE__, __LINE__);                                  \
+  }
+
+inline void gtFFTCheckImpl(cufftResult_t code, const char* file, int line)
+{
+  if (code != CUFFT_SUCCESS) {
+    fprintf(stderr, "gtFFTCheck: status %d at %s:%d\n", code, file, line);
+    abort();
+  }
+}
+
 namespace gt
 {
 
@@ -102,13 +118,10 @@ public:
                                 1, std::multiplies<int>());
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto type_inverse = detail::fft_config<D, R>::type_inverse;
-    auto result = cufftPlanMany(&plan_forward_, rank, nreal, nreal, 1, idist,
-                                ncomplex, 1, odist, type_forward, batch_size);
-    assert(result == CUFFT_SUCCESS);
-    auto result2 =
-      cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, 1, odist, nreal, 1,
-                    idist, type_inverse, batch_size);
-    assert(result2 == CUFFT_SUCCESS);
+    gtFFTCheck(cufftPlanMany(&plan_forward_, rank, nreal, nreal, 1, idist,
+                             ncomplex, 1, odist, type_forward, batch_size));
+    gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, 1, odist,
+                             nreal, 1, idist, type_inverse, batch_size));
   }
 
   // move only
@@ -151,8 +164,7 @@ public:
     auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
-    auto result = fn(plan_forward_, bin, bout);
-    assert(result == CUFFT_SUCCESS);
+    gtFFTCheck(fn(plan_forward_, bin, bout));
   }
 
   void inverse(typename detail::fft_config<D, R>::Tout* indata,
@@ -166,8 +178,7 @@ public:
     auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
-    auto result = fn(plan_inverse_, bin, bout);
-    assert(result == CUFFT_SUCCESS);
+    gtFFTCheck(fn(plan_inverse_, bin, bout));
   }
 
 private:
@@ -188,10 +199,8 @@ public:
     auto type_forward = detail::fft_config<D, R>::type_forward;
     int dist = std::accumulate(lengths.begin(), lengths.end(), 1,
                                std::multiplies<int>());
-    auto result =
-      cufftPlanMany(&plan_, lengths.size(), lengths.data(), nullptr, 1, dist,
-                    nullptr, 1, dist, type_forward, batch_size);
-    assert(result == CUFFT_SUCCESS);
+    gtFFTCheck(cufftPlanMany(&plan_, lengths.size(), lengths.data(), nullptr, 1,
+                             dist, nullptr, 1, dist, type_forward, batch_size));
   }
 
   // move only
@@ -231,8 +240,7 @@ public:
     auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_forward;
-    auto result = fn(plan_, bin, bout, CUFFT_FORWARD);
-    assert(result == CUFFT_SUCCESS);
+    gtFFTCheck(fn(plan_, bin, bout, CUFFT_FORWARD));
   }
 
   void inverse(typename detail::fft_config<D, R>::Tout* indata,
@@ -246,8 +254,7 @@ public:
     auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
-    auto result = fn(plan_, bin, bout, CUFFT_INVERSE);
-    assert(result == CUFFT_SUCCESS);
+    gtFFTCheck(fn(plan_, bin, bout, CUFFT_INVERSE));
   }
 
 private:

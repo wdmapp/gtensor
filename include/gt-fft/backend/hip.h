@@ -19,6 +19,7 @@
 using cufftHandle = hipfftHandle;
 using cufftType = hipfftType;
 using cudaStream_t = hipStream_t;
+using cufftResult_t = hipfftResult_t;
 
 using cufftDoubleComplex = hipfftDoubleComplex;
 using cufftComplex = hipfftComplex;
