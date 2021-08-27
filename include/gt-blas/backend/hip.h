@@ -4,6 +4,23 @@
 #include "rocblas.h"
 #include "rocsolver.h"
 
+// ======================================================================
+// error handling helper
+
+#define gtBlasCheck(what)                                                      \
+  {                                                                            \
+    gtBlasCheckImpl(what, __FILE__, __LINE__);                                 \
+  }
+
+inline void gtBlasCheckImpl(rocblas_status code, const char* file, int line)
+{
+  if (code != rocblas_status_success) {
+    fprintf(stderr, "gtBlasCheck: rocblas status %d at %s:%d\n", code, file,
+            line);
+    abort();
+  }
+}
+
 namespace gt
 {
 
@@ -27,24 +44,24 @@ using index_t = int;
 inline handle_t* create()
 {
   handle_t* h = new handle_t();
-  gtGpuCheck((hipError_t)rocblas_create_handle(&(h->handle)));
+  gtBlasCheck(rocblas_create_handle(&(h->handle)));
   return h;
 }
 
 inline void destroy(handle_t* h)
 {
-  gtGpuCheck((hipError_t)rocblas_destroy_handle(h->handle));
+  gtBlasCheck(rocblas_destroy_handle(h->handle));
   delete h;
 }
 
 inline void set_stream(handle_t* h, stream_t stream_id)
 {
-  gtGpuCheck((hipError_t)rocblas_set_stream(h->handle, stream_id));
+  gtBlasCheck(rocblas_set_stream(h->handle, stream_id));
 }
 
 inline void get_stream(handle_t* h, stream_t* stream_id)
 {
-  gtGpuCheck((hipError_t)rocblas_get_stream(h->handle, stream_id));
+  gtBlasCheck(rocblas_get_stream(h->handle, stream_id));
 }
 
 // ======================================================================
@@ -58,10 +75,9 @@ inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy);
   inline void axpy<GTTYPE>(handle_t * h, int n, GTTYPE a, const GTTYPE* x,     \
                            int incx, GTTYPE* y, int incy)                      \
   {                                                                            \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
-                                  reinterpret_cast<BLASTYPE*>(&a),             \
-                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
-                                  reinterpret_cast<BLASTYPE*>(y), incy));      \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<BLASTYPE*>(&a),          \
+                       reinterpret_cast<const BLASTYPE*>(x), incx,             \
+                       reinterpret_cast<BLASTYPE*>(y), incy));                 \
   }
 
 CREATE_AXPY(rocblas_zaxpy, gt::complex<double>, rocblas_double_complex)
@@ -82,9 +98,8 @@ inline void scal(handle_t* h, int n, S fac, T* arr, const int incx);
   inline void scal<GTTYPE, GTTYPE>(handle_t * h, int n, GTTYPE fac,            \
                                    GTTYPE* arr, const int incx)                \
   {                                                                            \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
-                                  reinterpret_cast<BLASTYPE*>(&fac),           \
-                                  reinterpret_cast<BLASTYPE*>(arr), incx));    \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<BLASTYPE*>(&fac),        \
+                       reinterpret_cast<BLASTYPE*>(arr), incx));               \
   }
 
 CREATE_SCAL(rocblas_zscal, gt::complex<double>, rocblas_double_complex)
@@ -102,7 +117,7 @@ inline void scal<double, gt::complex<double>>(handle_t* h, int n, double fac,
                                               gt::complex<double>* arr,
                                               const int incx)
 {
-  gtGpuCheck((hipError_t)rocblas_zdscal(
+  gtBlasCheck(rocblas_zdscal(
     h->handle, n, &fac, reinterpret_cast<rocblas_double_complex*>(arr), incx));
 }
 
@@ -111,7 +126,7 @@ inline void scal<float, gt::complex<float>>(handle_t* h, int n, float fac,
                                             gt::complex<float>* arr,
                                             const int incx)
 {
-  gtGpuCheck((hipError_t)rocblas_csscal(
+  gtBlasCheck(rocblas_csscal(
     h->handle, n, &fac, reinterpret_cast<rocblas_float_complex*>(arr), incx));
 }
 
@@ -126,9 +141,8 @@ inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy);
   inline void copy<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,     \
                            GTTYPE* y, int incy)                                \
   {                                                                            \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
-                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
-                                  reinterpret_cast<BLASTYPE*>(y), incy));      \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
+                       incx, reinterpret_cast<BLASTYPE*>(y), incy));           \
   }
 
 CREATE_COPY(rocblas_zcopy, gt::complex<double>, rocblas_double_complex)
@@ -150,10 +164,9 @@ inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
                             const GTTYPE* y, int incy)                         \
   {                                                                            \
     GTTYPE result;                                                             \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
-                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
-                                  reinterpret_cast<const BLASTYPE*>(y), incy,  \
-                                  reinterpret_cast<BLASTYPE*>(&result)));      \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
+                       incx, reinterpret_cast<const BLASTYPE*>(y), incy,       \
+                       reinterpret_cast<BLASTYPE*>(&result)));                 \
     return result;                                                             \
   }
 
@@ -171,10 +184,9 @@ inline T dotu(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     GTTYPE result;                                                             \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
-                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
-                                  reinterpret_cast<const BLASTYPE*>(y), incy,  \
-                                  reinterpret_cast<BLASTYPE*>(&result)));      \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
+                       incx, reinterpret_cast<const BLASTYPE*>(y), incy,       \
+                       reinterpret_cast<BLASTYPE*>(&result)));                 \
     return result;                                                             \
   }
 
@@ -192,10 +204,9 @@ inline T dotc(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     GTTYPE result;                                                             \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n,                                \
-                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
-                                  reinterpret_cast<const BLASTYPE*>(y), incy,  \
-                                  reinterpret_cast<BLASTYPE*>(&result)));      \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
+                       incx, reinterpret_cast<const BLASTYPE*>(y), incy,       \
+                       reinterpret_cast<BLASTYPE*>(&result)));                 \
     return result;                                                             \
   }
 
@@ -217,12 +228,12 @@ inline void gemv(handle_t* h, int m, int n, T alpha, const T* A, int lda,
                            const GTTYPE* A, int lda, const GTTYPE* x,          \
                            int incx, GTTYPE beta, GTTYPE* y, int incy)         \
   {                                                                            \
-    gtGpuCheck((hipError_t)METHOD(h->handle, rocblas_operation_none, m, n,     \
-                                  reinterpret_cast<BLASTYPE*>(&alpha),         \
-                                  reinterpret_cast<const BLASTYPE*>(A), lda,   \
-                                  reinterpret_cast<const BLASTYPE*>(x), incx,  \
-                                  reinterpret_cast<BLASTYPE*>(&beta),          \
-                                  reinterpret_cast<BLASTYPE*>(y), incy));      \
+    gtBlasCheck(METHOD(h->handle, rocblas_operation_none, m, n,                \
+                       reinterpret_cast<BLASTYPE*>(&alpha),                    \
+                       reinterpret_cast<const BLASTYPE*>(A), lda,              \
+                       reinterpret_cast<const BLASTYPE*>(x), incx,             \
+                       reinterpret_cast<BLASTYPE*>(&beta),                     \
+                       reinterpret_cast<BLASTYPE*>(y), incy));                 \
   }
 
 CREATE_GEMV(rocblas_zgemv, gt::complex<double>, rocblas_double_complex)
@@ -246,9 +257,9 @@ inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
                                     int lda, gt::blas::index_t* d_PivotArray,  \
                                     int* d_infoArray, int batchSize)           \
   {                                                                            \
-    gtGpuCheck((hipError_t)METHOD(h->handle, n, n,                             \
-                                  reinterpret_cast<BLASTYPE**>(d_Aarray), lda, \
-                                  d_PivotArray, n, d_infoArray, batchSize));   \
+    gtBlasCheck(METHOD(h->handle, n, n,                                        \
+                       reinterpret_cast<BLASTYPE**>(d_Aarray), lda,            \
+                       d_PivotArray, n, d_infoArray, batchSize));              \
   }
 
 CREATE_GETRF_BATCHED(rocsolver_zgetrf_batched, gt::complex<double>,
@@ -271,10 +282,10 @@ inline void getrs_batched(handle_t* h, int n, int nrhs, T* const* d_Aarray,
     handle_t * h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,           \
     gt::blas::index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)     \
   {                                                                            \
-    gtGpuCheck((hipError_t)METHOD(                                             \
-      h->handle, rocblas_operation_none, n, nrhs,                              \
-      reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda, devIpiv, n,           \
-      reinterpret_cast<BLASTYPE**>(d_Barray), ldb, batchSize));                \
+    gtBlasCheck(METHOD(h->handle, rocblas_operation_none, n, nrhs,             \
+                       reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda,      \
+                       devIpiv, n, reinterpret_cast<BLASTYPE**>(d_Barray),     \
+                       ldb, batchSize));                                       \
   }
 
 CREATE_GETRS_BATCHED(rocsolver_zgetrs_batched, gt::complex<double>,
