@@ -70,6 +70,31 @@ void fft_r2c_1d()
   expect_complex_near(h_B(0, 1), T(-2, 0));
   expect_complex_near(h_B(1, 1), T(-4, 22));
   expect_complex_near(h_B(2, 1), T(38, 0));
+
+  // reset input and output arrays and repeat with alternate ctor
+  gt::copy(h_A, d_A);
+  gt::fill(d_B.data(), d_B.data() + batch_size * Nout, 0);
+  gt::fill(d_A2.data(), d_A2.data() + batch_size * N, 0);
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan2({N}, 1, N, 1, Nout,
+                                                       batch_size);
+
+  plan2(d_A, d_B);
+
+  // test roundtripping data
+  plan2.inverse(d_B, d_A2);
+
+  gt::copy(d_B, h_B);
+  gt::copy(d_A2, h_A2);
+
+  EXPECT_EQ(h_A, h_A2 / N);
+
+  expect_complex_near(h_B(0, 0), T(8, 0));
+  expect_complex_near(h_B(1, 0), T(3, 1));
+  expect_complex_near(h_B(2, 0), T(-6, 0));
+
+  expect_complex_near(h_B(0, 1), T(-2, 0));
+  expect_complex_near(h_B(1, 1), T(-4, 22));
+  expect_complex_near(h_B(2, 1), T(38, 0));
 }
 
 TEST(fft, d2z_1d)

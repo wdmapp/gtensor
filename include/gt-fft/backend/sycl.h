@@ -93,47 +93,13 @@ public:
       bwd_distance = fwd_distance;
     }
 
-    try {
-      if (rank > 1) {
-        plan_ = std::make_unique<Desc>(lengths);
-      } else {
-        plan_ = std::make_unique<Desc>(lengths[0]);
-      }
+    init(lengths, 1, fwd_distance, 1, bwd_distance, batch_size);
+  }
 
-      // set up strides arrays
-      std::int64_t rstrides[rank + 1];
-      std::int64_t cstrides[rank + 1];
-      rstrides[0] = 0;
-      cstrides[0] = 0;
-      std::int64_t rs = 1;
-      std::int64_t cs = 1;
-      for (int i = 1; i <= rank; i++) {
-        rstrides[i] = rs;
-        cstrides[i] = cs;
-        rs *= lengths[i - 1];
-        cs *= lengths[i - 1];
-      }
-
-      plan_->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
-                       batch_size);
-      plan_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, rstrides);
-      plan_->set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES,
-                       cstrides);
-      plan_->set_value(oneapi::mkl::dft::config_param::FWD_DISTANCE,
-                       fwd_distance);
-      plan_->set_value(oneapi::mkl::dft::config_param::BWD_DISTANCE,
-                       bwd_distance);
-      plan_->set_value(oneapi::mkl::dft::config_param::PLACEMENT,
-                       DFTI_NOT_INPLACE);
-      plan_->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
-                       DFTI_COMPLEX_COMPLEX);
-      plan_->set_value(oneapi::mkl::dft::config_param::FORWARD_SCALE, R(1));
-      plan_->set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, R(1));
-      plan_->commit(gt::backend::sycl::get_queue());
-    } catch (std::exception const& e) {
-      std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
-      abort();
-    }
+  FFTPlanManySYCL(std::vector<MKL_FFT_LONG> lengths, int istride, int idist,
+                  int ostride, int odist, int batch_size = 1)
+  {
+    init(lengths, istride, idist, ostride, odist, batch_size);
   }
 
   // move only
@@ -174,6 +140,52 @@ public:
   }
 
 private:
+  void init(std::vector<MKL_FFT_LONG> lengths, int istride, int idist,
+            int ostride, int odist, int batch_size = 1)
+  {
+    int rank = lengths.size();
+
+    try {
+      if (rank > 1) {
+        plan_ = std::make_unique<Desc>(lengths);
+      } else {
+        plan_ = std::make_unique<Desc>(lengths[0]);
+      }
+
+      // set up strides arrays
+      std::int64_t rstrides[rank + 1];
+      std::int64_t cstrides[rank + 1];
+      rstrides[0] = 0;
+      cstrides[0] = 0;
+      std::int64_t rs = istride;
+      std::int64_t cs = ostride;
+      for (int i = 1; i <= rank; i++) {
+        rstrides[i] = rs;
+        cstrides[i] = cs;
+        rs *= lengths[i - 1];
+        cs *= lengths[i - 1];
+      }
+
+      plan_->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
+                       batch_size);
+      plan_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, rstrides);
+      plan_->set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES,
+                       cstrides);
+      plan_->set_value(oneapi::mkl::dft::config_param::FWD_DISTANCE, idist);
+      plan_->set_value(oneapi::mkl::dft::config_param::BWD_DISTANCE, odist);
+      plan_->set_value(oneapi::mkl::dft::config_param::PLACEMENT,
+                       DFTI_NOT_INPLACE);
+      plan_->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
+                       DFTI_COMPLEX_COMPLEX);
+      plan_->set_value(oneapi::mkl::dft::config_param::FORWARD_SCALE, R(1));
+      plan_->set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, R(1));
+      plan_->commit(gt::backend::sycl::get_queue());
+    } catch (std::exception const& e) {
+      std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
+      abort();
+    }
+  }
+
   std::unique_ptr<Desc> plan_;
 };
 
