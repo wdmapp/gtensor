@@ -106,52 +106,18 @@ public:
     : is_valid_(true)
   {
     int rank = real_lengths.size();
-    int* nreal = real_lengths.data();
-
-    std::vector<int> complex_lengths = real_lengths;
-    complex_lengths[rank - 1] = real_lengths[rank - 1] / 2 + 1;
-    int* ncomplex = complex_lengths.data();
-
     int idist = std::accumulate(real_lengths.begin(), real_lengths.end(), 1,
                                 std::multiplies<int>());
-    int odist = std::accumulate(complex_lengths.begin(), complex_lengths.end(),
-                                1, std::multiplies<int>());
-    auto type_forward = detail::fft_config<D, R>::type_forward;
-    auto type_inverse = detail::fft_config<D, R>::type_inverse;
-    gtFFTCheck(cufftPlanMany(&plan_forward_, rank, nreal, nreal, 1, idist,
-                             ncomplex, 1, odist, type_forward, batch_size));
-    gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, 1, odist,
-                             nreal, 1, idist, type_inverse, batch_size));
+    int odist =
+      idist / real_lengths[rank - 1] * (real_lengths[rank - 1] / 2 + 1);
+    init(real_lengths, 1, idist, 1, odist, batch_size);
   }
 
   FFTPlanManyCUDA(std::vector<int> real_lengths, int istride, int idist,
                   int ostride, int odist, int batch_size = 1)
     : is_valid_(true)
   {
-    int rank = real_lengths.size();
-    int* nreal = real_lengths.data();
-
-    std::vector<int> complex_lengths = real_lengths;
-    complex_lengths[rank - 1] = real_lengths[rank - 1] / 2 + 1;
-    int* ncomplex = complex_lengths.data();
-
-    /*int idist = std::accumulate(real_lengths.begin(), real_lengths.end(), 1,
-                                std::multiplies<int>());
-    int odist = std::accumulate(complex_lengths.begin(), complex_lengths.end(),
-                                1, std::multiplies<int>());
-    */
-    auto type_forward = detail::fft_config<D, R>::type_forward;
-    auto type_inverse = detail::fft_config<D, R>::type_inverse;
-
-    auto result =
-      cufftPlanMany(&plan_forward_, rank, nreal, nreal, ostride, odist,
-                    ncomplex, istride, idist, type_forward, batch_size);
-    assert(result == CUFFT_SUCCESS);
-    /* c2r is the inverse transform */
-    auto result2 =
-      cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, istride, idist,
-                    nreal, ostride, odist, type_inverse, batch_size);
-    assert(result2 == CUFFT_SUCCESS);
+    init(real_lengths, istride, idist, ostride, odist, batch_size);
   }
 
   // move only
@@ -212,6 +178,26 @@ public:
   }
 
 private:
+  void init(std::vector<int> real_lengths, int istride, int idist, int ostride,
+            int odist, int batch_size)
+  {
+    int rank = real_lengths.size();
+    int* nreal = real_lengths.data();
+
+    std::vector<int> complex_lengths = real_lengths;
+    complex_lengths[rank - 1] = real_lengths[rank - 1] / 2 + 1;
+    int* ncomplex = complex_lengths.data();
+
+    auto type_forward = detail::fft_config<D, R>::type_forward;
+    auto type_inverse = detail::fft_config<D, R>::type_inverse;
+    gtFFTCheck(cufftPlanMany(&plan_forward_, rank, nreal, nreal, istride, idist,
+                             ncomplex, ostride, odist, type_forward,
+                             batch_size));
+    gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, ostride,
+                             odist, nreal, istride, idist, type_inverse,
+                             batch_size));
+  }
+
   cufftHandle plan_forward_;
   cufftHandle plan_inverse_;
   bool is_valid_;
@@ -226,11 +212,16 @@ public:
   FFTPlanManyCUDA(std::vector<int> lengths, int batch_size = 1)
     : is_valid_(true)
   {
-    auto type_forward = detail::fft_config<D, R>::type_forward;
     int dist = std::accumulate(lengths.begin(), lengths.end(), 1,
                                std::multiplies<int>());
-    gtFFTCheck(cufftPlanMany(&plan_, lengths.size(), lengths.data(), nullptr, 1,
-                             dist, nullptr, 1, dist, type_forward, batch_size));
+    init(lengths, 1, dist, 1, dist, batch_size);
+  }
+
+  FFTPlanManyCUDA(std::vector<int> lengths, int istride, int idist, int ostride,
+                  int odist, int batch_size = 1)
+    : is_valid_(true)
+  {
+    init(lengths, istride, idist, ostride, odist, batch_size);
   }
 
   // move only
@@ -288,6 +279,15 @@ public:
   }
 
 private:
+  void init(std::vector<int> lengths, int istride, int idist, int ostride,
+            int odist, int batch_size)
+  {
+    int* n = lengths.data();
+    auto type_forward = detail::fft_config<D, R>::type_forward;
+    gtFFTCheck(cufftPlanMany(&plan_, lengths.size(), n, n, istride, idist, n,
+                             ostride, odist, type_forward, batch_size));
+  }
+
   cufftHandle plan_;
   bool is_valid_;
 };

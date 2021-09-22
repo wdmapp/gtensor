@@ -41,9 +41,9 @@ void fft_r2c_1d()
   h_A(2, 1) = 11;
   h_A(3, 1) = 1;
 
-  // zero output array, rocfft at least does not zero padding elements
-  // for real to complex transform
+  // zero output arrays
   gt::fill(d_B.data(), d_B.data() + batch_size * Nout, 0);
+  gt::fill(d_A2.data(), d_A2.data() + batch_size * N, 0);
 
   gt::copy(h_A, d_A);
 
@@ -54,11 +54,10 @@ void fft_r2c_1d()
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
   //                  gt::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
+  gt::copy(d_B, h_B);
 
   // test roundtripping data
   plan.inverse(d_B, d_A2);
-
-  gt::copy(d_B, h_B);
   gt::copy(d_A2, h_A2);
 
   EXPECT_EQ(h_A, h_A2 / N);
@@ -79,11 +78,10 @@ void fft_r2c_1d()
                                                        batch_size);
 
   plan2(d_A, d_B);
+  gt::copy(d_B, h_B);
 
   // test roundtripping data
   plan2.inverse(d_B, d_A2);
-
-  gt::copy(d_B, h_B);
   gt::copy(d_A2, h_A2);
 
   EXPECT_EQ(h_A, h_A2 / N);
@@ -105,6 +103,84 @@ TEST(fft, d2z_1d)
 TEST(fft, r2c_1d)
 {
   fft_r2c_1d<float>();
+}
+
+template <typename E>
+void fft_r2c_1d_strided()
+{
+  constexpr int N = 4;
+  constexpr int Nout = N / 2 + 1;
+  constexpr int rstride = 2;
+  constexpr int cstride = 3;
+  constexpr int rdist = N * rstride;
+  constexpr int cdist = Nout * cstride;
+  constexpr int batch_size = 2;
+  using T = gt::complex<E>;
+
+  gt::gtensor<E, 2> h_A(gt::shape(rdist, batch_size));
+  gt::gtensor_device<E, 2> d_A(gt::shape(rdist, batch_size));
+
+  gt::gtensor<E, 2> h_A2(gt::shape(rdist, batch_size));
+  gt::gtensor_device<E, 2> d_A2(gt::shape(rdist, batch_size));
+
+  gt::gtensor<T, 2> h_B(gt::shape(cdist, batch_size));
+  gt::gtensor_device<T, 2> d_B(gt::shape(cdist, batch_size));
+
+  // zero input and output arrays since data will be non-unit strided and
+  // gaps need to be initialized for easier comparison
+  gt::fill(h_A.data(), h_A.data() + batch_size * rdist, 0);
+  gt::fill(d_A2.data(), d_A2.data() + batch_size * rdist, 0);
+  gt::fill(d_B.data(), d_B.data() + batch_size * cdist, 0);
+
+  // x = [2 3 -1 4];
+  h_A(0 * rstride, 0) = 2;
+  h_A(1 * rstride, 0) = 3;
+  h_A(2 * rstride, 0) = -1;
+  h_A(3 * rstride, 0) = 4;
+
+  // y = [7 -21 11 1];
+  h_A(0 * rstride, 1) = 7;
+  h_A(1 * rstride, 1) = -21;
+  h_A(2 * rstride, 1) = 11;
+  h_A(3 * rstride, 1) = 1;
+
+  // zero output arrays
+
+  gt::copy(h_A, d_A);
+
+  // fft(x) -> [8+0i 3+1i -6+0i 3-1i]
+  // but with fftw convention for real transforms, the last term is
+  // conjugate of second and set to 0 to save storage / computation
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(
+    {N}, rstride, rdist, cstride, cdist, batch_size);
+  // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
+  plan(d_A, d_B);
+  gt::copy(d_B, h_B);
+
+  // test roundtripping data
+  plan.inverse(d_B, d_A2);
+  gt::copy(d_A2, h_A2);
+
+  EXPECT_EQ(h_A, h_A2 / N);
+
+  expect_complex_near(h_B(0 * cstride, 0), T(8, 0));
+  expect_complex_near(h_B(1 * cstride, 0), T(3, 1));
+  expect_complex_near(h_B(2 * cstride, 0), T(-6, 0));
+
+  expect_complex_near(h_B(0 * cstride, 1), T(-2, 0));
+  expect_complex_near(h_B(1 * cstride, 1), T(-4, 22));
+  expect_complex_near(h_B(2 * cstride, 1), T(38, 0));
+}
+
+TEST(fft, d2z_1d_strided)
+{
+  fft_r2c_1d_strided<double>();
+}
+
+TEST(fft, r2c_1d_strided)
+{
+  fft_r2c_1d_strided<float>();
 }
 
 template <typename E>
@@ -159,6 +235,7 @@ TEST(fft, c2r_1d)
 {
   fft_c2r_1d<float>();
 }
+
 template <typename E>
 void fft_c2c_1d_forward()
 {
@@ -227,6 +304,81 @@ TEST(fft, z2z_1d_forward)
 TEST(fft, c2c_1d_forward)
 {
   fft_c2c_1d_forward<float>();
+}
+
+template <typename E>
+void fft_c2c_1d_forward_strided()
+{
+  constexpr int N = 4;
+  constexpr int istride = 2;
+  constexpr int ostride = 3;
+  constexpr int idist = N * istride;
+  constexpr int odist = N * ostride;
+  constexpr int batch_size = 2;
+  using T = gt::complex<E>;
+
+  auto h_A = gt::zeros<T>({idist, batch_size});
+  auto d_A = gt::empty_device<T>(h_A.shape());
+
+  auto h_A2 = gt::empty<T>(h_A.shape());
+  auto d_A2 = gt::zeros_device<T>(h_A.shape());
+
+  auto d_B = gt::zeros_device<T>({odist, batch_size});
+  auto h_B = gt::empty<T>(d_B.shape());
+
+  // x = [2 3 -1 4];
+  h_A(0 * istride, 0) = 2;
+  h_A(1 * istride, 0) = 3;
+  h_A(2 * istride, 0) = -1;
+  h_A(3 * istride, 0) = 4;
+
+  // y = [7 -21 11 1];
+  h_A(0 * istride, 1) = 7;
+  h_A(1 * istride, 1) = -21;
+  h_A(2 * istride, 1) = 11;
+  h_A(3 * istride, 1) = 1;
+
+  gt::copy(h_A, d_A);
+
+  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(
+    {N}, istride, idist, ostride, odist, batch_size);
+
+  // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
+  // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
+  plan(d_A, d_B);
+
+  gt::copy(d_B, h_B);
+
+  expect_complex_near(h_B(0 * ostride, 0), T(8, 0));
+  expect_complex_near(h_B(1 * ostride, 0), T(3, 1));
+  expect_complex_near(h_B(2 * ostride, 0), T(-6, 0));
+  expect_complex_near(h_B(3 * ostride, 0), T(3, -1));
+
+  expect_complex_near(h_B(0 * ostride, 1), T(-2, 0));
+  expect_complex_near(h_B(1 * ostride, 1), T(-4, 22));
+  expect_complex_near(h_B(2 * ostride, 1), T(38, 0));
+  expect_complex_near(h_B(3 * ostride, 1), T(-4, -22));
+
+  // test round trip
+  plan.inverse(d_B, d_A2);
+  gt::copy(d_A2, h_A2);
+
+  for (int i = 0; i < h_A.shape(1); i++) {
+    for (int j = 0; j < h_A.shape(0); j++) {
+      expect_complex_near(h_A(j, i), h_A2(j, i) / T(N, 0));
+    }
+  }
+}
+
+TEST(fft, z2z_1d_forward_strided)
+{
+  fft_c2c_1d_forward_strided<double>();
+}
+
+TEST(fft, c2c_1d_forward_strided)
+{
+  fft_c2c_1d_forward_strided<float>();
 }
 
 template <typename E>
