@@ -117,20 +117,15 @@ void fft_r2c_1d_strided()
   constexpr int batch_size = 2;
   using T = gt::complex<E>;
 
-  gt::gtensor<E, 2> h_A(gt::shape(rdist, batch_size));
-  gt::gtensor_device<E, 2> d_A(gt::shape(rdist, batch_size));
+  auto h_A = gt::zeros<E>({rdist, batch_size});
+  auto d_A = gt::empty_device<E>(h_A.shape());
 
-  gt::gtensor<E, 2> h_A2(gt::shape(rdist, batch_size));
-  gt::gtensor_device<E, 2> d_A2(gt::shape(rdist, batch_size));
+  auto h_A2 = gt::empty<E>(h_A.shape());
+  auto d_A2 = gt::empty_device<E>(h_A.shape());
 
-  gt::gtensor<T, 2> h_B(gt::shape(cdist, batch_size));
-  gt::gtensor_device<T, 2> d_B(gt::shape(cdist, batch_size));
-
-  // zero input and output arrays since data will be non-unit strided and
-  // gaps need to be initialized for easier comparison
-  gt::fill(h_A.data(), h_A.data() + batch_size * rdist, 0);
-  gt::fill(d_A2.data(), d_A2.data() + batch_size * rdist, 0);
-  gt::fill(d_B.data(), d_B.data() + batch_size * cdist, 0);
+  auto h_B = gt::empty<T>({cdist, batch_size});
+  auto h_B_expected = gt::zeros<T>(h_B.shape());
+  auto d_B = gt::zeros_device<T>(h_B.shape());
 
   // x = [2 3 -1 4];
   h_A(0 * rstride, 0) = 2;
@@ -143,6 +138,14 @@ void fft_r2c_1d_strided()
   h_A(1 * rstride, 1) = -21;
   h_A(2 * rstride, 1) = 11;
   h_A(3 * rstride, 1) = 1;
+
+  h_B_expected(0 * cstride, 0) = T(8, 0);
+  h_B_expected(1 * cstride, 0) = T(3, 1);
+  h_B_expected(2 * cstride, 0) = T(-6, 0);
+
+  h_B_expected(0 * cstride, 1) = T(-2, 0);
+  h_B_expected(1 * cstride, 1) = T(-4, 22);
+  h_B_expected(2 * cstride, 1) = T(38, 0);
 
   // zero output arrays
 
@@ -162,15 +165,8 @@ void fft_r2c_1d_strided()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  EXPECT_EQ(h_A, h_A2 / N);
-
-  expect_complex_near(h_B(0 * cstride, 0), T(8, 0));
-  expect_complex_near(h_B(1 * cstride, 0), T(3, 1));
-  expect_complex_near(h_B(2 * cstride, 0), T(-6, 0));
-
-  expect_complex_near(h_B(0 * cstride, 1), T(-2, 0));
-  expect_complex_near(h_B(1 * cstride, 1), T(-4, 22));
-  expect_complex_near(h_B(2 * cstride, 1), T(38, 0));
+  GT_EXPECT_NEAR_ARRAY(h_B_expected, h_B);
+  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / N);
 }
 
 TEST(fft, d2z_1d_strided)
@@ -325,6 +321,7 @@ void fft_c2c_1d_forward_strided()
 
   auto d_B = gt::zeros_device<T>({odist, batch_size});
   auto h_B = gt::empty<T>(d_B.shape());
+  auto h_B_expected = gt::zeros<T>(d_B.shape());
 
   // x = [2 3 -1 4];
   h_A(0 * istride, 0) = 2;
@@ -338,6 +335,16 @@ void fft_c2c_1d_forward_strided()
   h_A(2 * istride, 1) = 11;
   h_A(3 * istride, 1) = 1;
 
+  h_B_expected(0 * ostride, 0) = T(8, 0);
+  h_B_expected(1 * ostride, 0) = T(3, 1);
+  h_B_expected(2 * ostride, 0) = T(-6, 0);
+  h_B_expected(3 * ostride, 0) = T(3, -1);
+
+  h_B_expected(0 * ostride, 1) = T(-2, 0);
+  h_B_expected(1 * ostride, 1) = T(-4, 22);
+  h_B_expected(2 * ostride, 1) = T(38, 0);
+  h_B_expected(3 * ostride, 1) = T(-4, -22);
+
   gt::copy(h_A, d_A);
 
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(
@@ -350,25 +357,12 @@ void fft_c2c_1d_forward_strided()
 
   gt::copy(d_B, h_B);
 
-  expect_complex_near(h_B(0 * ostride, 0), T(8, 0));
-  expect_complex_near(h_B(1 * ostride, 0), T(3, 1));
-  expect_complex_near(h_B(2 * ostride, 0), T(-6, 0));
-  expect_complex_near(h_B(3 * ostride, 0), T(3, -1));
-
-  expect_complex_near(h_B(0 * ostride, 1), T(-2, 0));
-  expect_complex_near(h_B(1 * ostride, 1), T(-4, 22));
-  expect_complex_near(h_B(2 * ostride, 1), T(38, 0));
-  expect_complex_near(h_B(3 * ostride, 1), T(-4, -22));
-
   // test round trip
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  for (int i = 0; i < h_A.shape(1); i++) {
-    for (int j = 0; j < h_A.shape(0); j++) {
-      expect_complex_near(h_A(j, i), h_A2(j, i) / T(N, 0));
-    }
-  }
+  GT_EXPECT_NEAR_ARRAY(h_B_expected, h_B);
+  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / T(N, 0));
 }
 
 TEST(fft, z2z_1d_forward_strided)
