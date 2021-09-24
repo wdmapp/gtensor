@@ -36,6 +36,32 @@ namespace fft
 namespace detail
 {
 
+inline cufftResult_t cufftExecC2C_forward(cufftHandle plan, cufftComplex* idata,
+                                          cufftComplex* odata)
+{
+  return cufftExecC2C(plan, idata, odata, CUFFT_FORWARD);
+}
+
+inline cufftResult_t cufftExecC2C_inverse(cufftHandle plan, cufftComplex* idata,
+                                          cufftComplex* odata)
+{
+  return cufftExecC2C(plan, idata, odata, CUFFT_INVERSE);
+}
+
+inline cufftResult_t cufftExecZ2Z_forward(cufftHandle plan,
+                                          cufftDoubleComplex* idata,
+                                          cufftDoubleComplex* odata)
+{
+  return cufftExecZ2Z(plan, idata, odata, CUFFT_FORWARD);
+}
+
+inline cufftResult_t cufftExecZ2Z_inverse(cufftHandle plan,
+                                          cufftDoubleComplex* idata,
+                                          cufftDoubleComplex* odata)
+{
+  return cufftExecZ2Z(plan, idata, odata, CUFFT_INVERSE);
+}
+
 template <gt::fft::Domain D, typename R>
 struct fft_config;
 
@@ -44,8 +70,8 @@ struct fft_config<gt::fft::Domain::COMPLEX, double>
 {
   constexpr static cufftType type_forward = CUFFT_Z2Z;
   constexpr static cufftType type_inverse = CUFFT_Z2Z;
-  constexpr static auto exec_fn_forward = &cufftExecZ2Z;
-  constexpr static auto exec_fn_inverse = &cufftExecZ2Z;
+  constexpr static auto exec_fn_forward = &cufftExecZ2Z_forward;
+  constexpr static auto exec_fn_inverse = &cufftExecZ2Z_inverse;
   using Tin = gt::complex<double>;
   using Tout = gt::complex<double>;
   using Bin = cufftDoubleComplex;
@@ -57,8 +83,8 @@ struct fft_config<gt::fft::Domain::COMPLEX, float>
 {
   constexpr static cufftType type_forward = CUFFT_C2C;
   constexpr static cufftType type_inverse = CUFFT_C2C;
-  constexpr static auto exec_fn_forward = &cufftExecC2C;
-  constexpr static auto exec_fn_inverse = &cufftExecC2C;
+  constexpr static auto exec_fn_forward = &cufftExecC2C_forward;
+  constexpr static auto exec_fn_inverse = &cufftExecC2C_inverse;
   using Tin = gt::complex<float>;
   using Tout = gt::complex<float>;
   using Bin = cufftComplex;
@@ -94,30 +120,29 @@ struct fft_config<gt::fft::Domain::REAL, float>
 } // namespace detail
 
 template <gt::fft::Domain D, typename R>
-class FFTPlanManyCUDA;
-
-template <typename R>
-class FFTPlanManyCUDA<gt::fft::Domain::REAL, R>
+class FFTPlanManyCUDA
 {
-  constexpr static gt::fft::Domain D = gt::fft::Domain::REAL;
-
 public:
-  FFTPlanManyCUDA(std::vector<int> real_lengths, int batch_size = 1)
+  FFTPlanManyCUDA(std::vector<int> lengths, int batch_size = 1)
     : is_valid_(true)
   {
-    int rank = real_lengths.size();
-    int idist = std::accumulate(real_lengths.begin(), real_lengths.end(), 1,
-                                std::multiplies<int>());
-    int odist =
-      idist / real_lengths[rank - 1] * (real_lengths[rank - 1] / 2 + 1);
-    init(real_lengths, 1, idist, 1, odist, batch_size);
+    int rank = lengths.size();
+    int idist, odist;
+    idist = std::accumulate(lengths.begin(), lengths.end(), 1,
+                            std::multiplies<int>());
+    if (D == gt::fft::Domain::REAL) {
+      odist = idist / lengths[rank - 1] * (lengths[rank - 1] / 2 + 1);
+    } else {
+      odist = idist;
+    }
+    init(lengths, 1, idist, 1, odist, batch_size);
   }
 
-  FFTPlanManyCUDA(std::vector<int> real_lengths, int istride, int idist,
-                  int ostride, int odist, int batch_size = 1)
+  FFTPlanManyCUDA(std::vector<int> lengths, int istride, int idist, int ostride,
+                  int odist, int batch_size = 1)
     : is_valid_(true)
   {
-    init(real_lengths, istride, idist, ostride, odist, batch_size);
+    init(lengths, istride, idist, ostride, odist, batch_size);
   }
 
   // move only
@@ -130,6 +155,7 @@ public:
   {
     plan_forward_ = other.plan_forward_;
     plan_inverse_ = other.plan_inverse_;
+    is_layout_asymmetric_ = other.is_layout_asymmetric_;
     other.is_valid_ = false;
   }
 
@@ -137,6 +163,7 @@ public:
   {
     plan_forward_ = other.plan_forward_;
     plan_inverse_ = other.plan_inverse_;
+    is_layout_asymmetric_ = other.is_layout_asymmetric_;
     other.is_valid_ = false;
     return *this;
   }
@@ -145,7 +172,9 @@ public:
   {
     if (is_valid_) {
       cufftDestroy(plan_forward_);
-      cufftDestroy(plan_inverse_);
+      if (is_layout_asymmetric_) {
+        cufftDestroy(plan_inverse_);
+      }
     }
   }
 
@@ -174,122 +203,50 @@ public:
     auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     auto fn = detail::fft_config<D, R>::exec_fn_inverse;
-    gtFFTCheck(fn(plan_inverse_, bin, bout));
-  }
-
-private:
-  void init(std::vector<int> real_lengths, int istride, int idist, int ostride,
-            int odist, int batch_size)
-  {
-    int rank = real_lengths.size();
-    int* nreal = real_lengths.data();
-
-    std::vector<int> complex_lengths = real_lengths;
-    complex_lengths[rank - 1] = real_lengths[rank - 1] / 2 + 1;
-    int* ncomplex = complex_lengths.data();
-
-    auto type_forward = detail::fft_config<D, R>::type_forward;
-    auto type_inverse = detail::fft_config<D, R>::type_inverse;
-    gtFFTCheck(cufftPlanMany(&plan_forward_, rank, nreal, nreal, istride, idist,
-                             ncomplex, ostride, odist, type_forward,
-                             batch_size));
-    gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, nreal, ncomplex, ostride,
-                             odist, nreal, istride, idist, type_inverse,
-                             batch_size));
-  }
-
-  cufftHandle plan_forward_;
-  cufftHandle plan_inverse_;
-  bool is_valid_;
-};
-
-template <typename R>
-class FFTPlanManyCUDA<gt::fft::Domain::COMPLEX, R>
-{
-  constexpr static gt::fft::Domain D = gt::fft::Domain::COMPLEX;
-
-public:
-  FFTPlanManyCUDA(std::vector<int> lengths, int batch_size = 1)
-    : is_valid_(true)
-  {
-    int dist = std::accumulate(lengths.begin(), lengths.end(), 1,
-                               std::multiplies<int>());
-    init(lengths, 1, dist, 1, dist, batch_size);
-  }
-
-  FFTPlanManyCUDA(std::vector<int> lengths, int istride, int idist, int ostride,
-                  int odist, int batch_size = 1)
-    : is_valid_(true)
-  {
-    init(lengths, istride, idist, ostride, odist, batch_size);
-  }
-
-  // move only
-  // delete copy ctor/assign
-  FFTPlanManyCUDA(const FFTPlanManyCUDA& other) = delete;
-  FFTPlanManyCUDA& operator=(const FFTPlanManyCUDA& other) = delete;
-
-  // custom move to avoid double destroy in moved-from object
-  FFTPlanManyCUDA(FFTPlanManyCUDA&& other) : is_valid_(true)
-  {
-    plan_ = other.plan_;
-    other.is_valid_ = false;
-  }
-
-  FFTPlanManyCUDA& operator=(FFTPlanManyCUDA&& other)
-  {
-    plan_ = other.plan_;
-    other.is_valid_ = false;
-    return *this;
-  }
-
-  virtual ~FFTPlanManyCUDA()
-  {
-    if (is_valid_) {
-      cufftDestroy(plan_);
+    if (D == gt::fft::Domain::REAL) {
+      gtFFTCheck(fn(plan_inverse_, bin, bout));
+    } else if (is_layout_asymmetric_) {
+      gtFFTCheck(fn(plan_inverse_, bin, bout));
+    } else {
+      gtFFTCheck(fn(plan_forward_, bin, bout));
     }
-  }
-
-  void operator()(typename detail::fft_config<D, R>::Tin* indata,
-                  typename detail::fft_config<D, R>::Tout* outdata) const
-  {
-    if (!is_valid_) {
-      throw std::runtime_error("can't use a moved-from plan");
-    }
-    using Bin = typename detail::fft_config<D, R>::Bin;
-    using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bin*>(indata);
-    auto bout = reinterpret_cast<Bout*>(outdata);
-    auto fn = detail::fft_config<D, R>::exec_fn_forward;
-    gtFFTCheck(fn(plan_, bin, bout, CUFFT_FORWARD));
-  }
-
-  void inverse(typename detail::fft_config<D, R>::Tout* indata,
-               typename detail::fft_config<D, R>::Tin* outdata) const
-  {
-    if (!is_valid_) {
-      throw std::runtime_error("can't use a moved-from plan");
-    }
-    using Bin = typename detail::fft_config<D, R>::Bin;
-    using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bout*>(indata);
-    auto bout = reinterpret_cast<Bin*>(outdata);
-    auto fn = detail::fft_config<D, R>::exec_fn_inverse;
-    gtFFTCheck(fn(plan_, bin, bout, CUFFT_INVERSE));
   }
 
 private:
   void init(std::vector<int> lengths, int istride, int idist, int ostride,
             int odist, int batch_size)
   {
+    int rank = lengths.size();
     int* n = lengths.data();
+
+    std::vector<int> freq_lengths = lengths;
+    if (D == gt::fft::Domain::REAL) {
+      freq_lengths[rank - 1] = lengths[rank - 1] / 2 + 1;
+      is_layout_asymmetric_ = true;
+    } else if (istride != ostride || idist != odist) {
+      is_layout_asymmetric_ = true;
+    } else {
+      is_layout_asymmetric_ = false;
+    }
+    int* nfreq = freq_lengths.data();
+
     auto type_forward = detail::fft_config<D, R>::type_forward;
-    gtFFTCheck(cufftPlanMany(&plan_, lengths.size(), n, n, istride, idist, n,
+    auto type_inverse = detail::fft_config<D, R>::type_inverse;
+    gtFFTCheck(cufftPlanMany(&plan_forward_, rank, n, n, istride, idist, nfreq,
                              ostride, odist, type_forward, batch_size));
+    if (is_layout_asymmetric_) {
+      gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, n, nfreq, ostride, odist,
+                               n, istride, idist, type_inverse, batch_size));
+    }
   }
 
-  cufftHandle plan_;
+  cufftHandle plan_forward_;
+  cufftHandle plan_inverse_;
   bool is_valid_;
+  // flag to keep track of whether an inverse plan is required - it is needed
+  // when the input and output layout are different, which is always true for
+  // REAL domain and sometimes for COMPLEX
+  bool is_layout_asymmetric_;
 };
 
 template <gt::fft::Domain D, typename R>
