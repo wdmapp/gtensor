@@ -178,8 +178,8 @@ void device_double_add_6d(gt::gtensor_device<double, 6>& a,
   auto k_b = b.to_kernel();
 
   gt::launch<6>(
-		a.shape(), GT_LAMBDA(int i, int j, int k, int l, int m, int n) {
-		  k_b(i, j, k, l, m, n) = k_a(i, j, k, l, m, n) + k_a(i, j, k, l, m, n);
+    a.shape(), GT_LAMBDA(int i, int j, int k, int l, int m, int n) {
+      k_b(i, j, k, l, m, n) = k_a(i, j, k, l, m, n) + k_a(i, j, k, l, m, n);
     });
   gt::copy(b, out);
 }
@@ -224,9 +224,9 @@ TEST(gtensor, device_launch_6d)
       for (int k = 0; k < h_a.shape(2); k++) {
         for (int l = 0; l < h_a.shape(3); l++) {
           for (int m = 0; m < h_a.shape(4); m++) {
-	    for (int n = 0; n < h_a.shape(5); n++) {
-	      h_a(i, j, k, l, m, n) = i + j + k + l + m + n;
-	    }
+            for (int n = 0; n < h_a.shape(5); n++) {
+              h_a(i, j, k, l, m, n) = i + j + k + l + m + n;
+            }
           }
         }
       }
