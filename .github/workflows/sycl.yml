@@ -10,7 +10,7 @@ on:
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-20.04:latest
+    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-20.04:20211004
     env:
       CXX: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
       DPCPP_ROOT: /opt/intel/oneapi

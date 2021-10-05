@@ -515,8 +515,8 @@ struct launch<1, space::device>
     sycl::queue& q = gt::backend::sycl::get_queue();
     auto range = sycl::range<1>(shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
-      using kname = gt::backend::sycl::Launch1<decltype(f)>;
-      cgh.parallel_for<kname>(range, [=](sycl::item<1> item) {
+      // using kname = gt::backend::sycl::Launch1<decltype(f)>;
+      cgh.parallel_for(range, [=](sycl::item<1> item) {
         int i = item.get_id(0);
         f(i);
       });
@@ -534,8 +534,8 @@ struct launch<2, space::device>
     sycl::queue& q = gt::backend::sycl::get_queue();
     auto range = sycl::range<2>(shape[0], shape[1]);
     auto e = q.submit([&](sycl::handler& cgh) {
-      using kname = gt::backend::sycl::Launch2<decltype(f)>;
-      cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
+      // using kname = gt::backend::sycl::Launch2<decltype(f)>;
+      cgh.parallel_for(range, [=](sycl::item<2> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
         f(i, j);
@@ -554,8 +554,8 @@ struct launch<3, space::device>
     sycl::queue& q = gt::backend::sycl::get_queue();
     auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
     auto e = q.submit([&](sycl::handler& cgh) {
-      using kname = gt::backend::sycl::Launch3<decltype(f)>;
-      cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
+      // using kname = gt::backend::sycl::Launch3<decltype(f)>;
+      cgh.parallel_for(range, [=](sycl::item<3> item) {
         int i = item.get_id(0);
         int j = item.get_id(1);
         int k = item.get_id(2);
@@ -580,8 +580,8 @@ struct launch<N, space::device>
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto e = q.submit([&](sycl::handler& cgh) {
-      using kname = gt::backend::sycl::LaunchN<decltype(f)>;
-      cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
+      // using kname = gt::backend::sycl::LaunchN<decltype(f)>;
+      cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
         int i = item.get_global_id(0);
         auto idx = unravel(i, strides);
         index_expression(f, idx);
