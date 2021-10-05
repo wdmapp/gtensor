@@ -278,6 +278,25 @@ __global__ void kernel_launch(gt::shape_type<5> shape, F f)
   }
 }
 
+template <typename F>
+__global__ void kernel_launch(gt::shape_type<6> shape, F f)
+{
+  int i = threadIdx.x + blockIdx.x * BS_X;
+  int j = threadIdx.y + blockIdx.y * BS_Y;
+  int b = blockIdx.z;
+  int n = b / (shape[2] * shape[3] * shape[4]);
+  b -= n * (shape[2] * shape[3] * shape[4]);
+  int m = b / (shape[2] * shape[3]);
+  b -= m * (shape[2] * shape[3]);
+  int l = b / shape[2];
+  b -= l * shape[2];
+  int k = b;
+
+  if (i < shape[0] && j < shape[1]) {
+    f(i, j, k, l, m, n);
+  }
+}
+
 #endif // CUDA or HIP
 
 namespace detail
@@ -464,6 +483,21 @@ struct launch<5, space::device>
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3] * shape[4]);
+
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
+                   std::forward<F>(f));
+  }
+};
+
+template <>
+struct launch<6, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<6>& shape, F&& f)
+  {
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
+                   shape[2] * shape[3] * shape[4] * shape[5]);
 
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
                    std::forward<F>(f));
