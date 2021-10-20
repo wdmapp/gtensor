@@ -3,7 +3,8 @@
 
 #include "rocblas.h"
 #include "rocsolver.h"
-
+#include "rocsparse.h"
+#include <stdio.h>
 // ======================================================================
 // error handling helper
 
@@ -257,7 +258,7 @@ inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
                                     int lda, gt::blas::index_t* d_PivotArray,  \
                                     int* d_infoArray, int batchSize)           \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, n, n,                                        \
+  gtBlasCheck(METHOD(h->handle, n, n,					       \
                        reinterpret_cast<BLASTYPE**>(d_Aarray), lda,            \
                        d_PivotArray, n, d_infoArray, batchSize));              \
   }
@@ -296,6 +297,32 @@ CREATE_GETRS_BATCHED(rocsolver_dgetrs_batched, double, double)
 CREATE_GETRS_BATCHED(rocsolver_sgetrs_batched, float, float)
 
 #undef CREATE_GETRS_BATCHED
+
+// ======================================================================
+// getrf/getrs batched without pivoting
+
+template <typename T>
+inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
+                               int* d_infoArray, int batchSize);
+
+#define CREATE_GETRF_NPVT_BATCHED(METHOD, GTTYPE, BLASTYPE)                      \
+  template <>                                                                    \
+  inline void getrf_npvt_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray, \
+                                    int lda, int* d_infoArray, int batchSize)    \
+  {                                                                              \
+  std::cout<<"inside hip backend"<<std::endl;								\
+  gtBlasCheck(METHOD(h->handle, n, n,					\
+                       reinterpret_cast<BLASTYPE**>(d_Aarray), lda,              \
+                       d_infoArray, batchSize));                                 \
+  }
+
+CREATE_GETRF_NPVT_BATCHED(rocsolver_zgetrf_npvt_batched, gt::complex<double>,
+                     rocblas_double_complex)
+CREATE_GETRF_NPVT_BATCHED(rocsolver_cgetrf_npvt_batched, gt::complex<float>,
+                     rocblas_float_complex)
+
+#undef CREATE_GETRF_NPVT_BATCHED
+
 
 } // namespace blas
 
