@@ -3,7 +3,6 @@
 
 #include "rocblas.h"
 #include "rocsolver.h"
-#include "rocsparse.h"
 #include <stdio.h>
 // ======================================================================
 // error handling helper
