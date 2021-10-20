@@ -43,7 +43,7 @@ void set_A0_nopiv(T&& h_A)
   h_A(2, 1) = 0.;
   // third column
   h_A(0, 2) = 0.;
-  h_A(1, 2) = 0.;
+  h_A(1, 2) = 2.;
   h_A(2, 2) = 3.;
 }
 
