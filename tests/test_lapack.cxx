@@ -436,7 +436,7 @@ void test_getrf_npvt_batch_complex()
   expect_complex_near(h_A(2, 1, 0), 0.0);
   // third column factored
   expect_complex_near(h_A(0, 2, 0), 0.0);
-  expect_complex_near(h_A(1, 2, 0), 1.0);
+  expect_complex_near(h_A(1, 2, 0), 2.0);
   expect_complex_near(h_A(2, 2, 0), 3.0);
 
   // second batch matrix result
@@ -450,7 +450,7 @@ void test_getrf_npvt_batch_complex()
   expect_complex_near(h_A(2, 1, 1), T(0, 0));
   // third column factored
   expect_complex_near(h_A(0, 2, 1), T(0, 0));
-  expect_complex_near(h_A(1, 2, 1), T(1, 0));
+  expect_complex_near(h_A(1, 2, 1), T(2, 0));
   expect_complex_near(h_A(2, 2, 1), T(3, 0));
 
   for (int b = 0; b < batch_size; b++) {
