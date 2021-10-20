@@ -99,9 +99,9 @@ void gtblas_zgetrs_batched(int n, int nrhs, f2c_complex<double>** d_Aarray,
                            int batchSize);
 #ifndef GTENSOR_DEVICE_SYCL
 void gtblas_cgetrf_npvt_batched(int n, f2c_complex<float>** d_Aarray, int lda,
-                           int* d_infoArray, int batchSize);
+                                int* d_infoArray, int batchSize);
 void gtblas_zgetrf_npvt_batched(int n, f2c_complex<double>** d_Aarray, int lda,
-                           int* d_infoArray, int batchSize);
+                                int* d_infoArray, int batchSize);
 #endif
 
 #ifdef __cplusplus
