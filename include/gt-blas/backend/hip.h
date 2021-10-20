@@ -309,8 +309,7 @@ inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
   inline void getrf_npvt_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray, \
                                     int lda, int* d_infoArray, int batchSize)    \
   {                                                                              \
-  std::cout<<"inside hip backend"<<std::endl;								\
-  gtBlasCheck(METHOD(h->handle, n, n,					\
+  gtBlasCheck(METHOD(h->handle, n, n,					         \
                        reinterpret_cast<BLASTYPE**>(d_Aarray), lda,              \
                        d_infoArray, batchSize));                                 \
   }
