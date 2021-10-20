@@ -27,6 +27,67 @@ void set_A0(T&& h_A)
 }
 
 template <typename T>
+void set_A0(T&& h_A)
+{
+  // matlab/octave:
+  //  A = [1 2 2; 4 4 2; 4 6 4];
+  //  L,U,p = lu(A)
+  // first column
+  h_A(0, 0) = 1;
+  h_A(1, 0) = 4;
+  h_A(2, 0) = 4;
+  // second column
+  h_A(0, 1) = 2;
+  h_A(1, 1) = 4;
+  h_A(2, 1) = 6;
+  // third column
+  h_A(0, 2) = 2;
+  h_A(1, 2) = 2;
+  h_A(2, 2) = 4;
+}
+
+template <typename T>
+void set_A0(T&& h_A)
+{
+  // matlab/octave:
+  //  A = [1 2 2; 4 4 2; 4 6 4];
+  //  L,U,p = lu(A)
+  // first column
+  h_A(0, 0) = 1;
+  h_A(1, 0) = 4;
+  h_A(2, 0) = 4;
+  // second column
+  h_A(0, 1) = 2;
+  h_A(1, 1) = 4;
+  h_A(2, 1) = 6;
+  // third column
+  h_A(0, 2) = 2;
+  h_A(1, 2) = 2;
+  h_A(2, 2) = 4;
+}
+
+template <typename T>
+void set_A0_nopiv(T&& h_A)
+{
+  // matlab/octave:
+  // does not require pivoting even if pivoting is possible
+  //  A = [1 0 0; 1 2 0; 0 2 3];
+  //  L,U,p = lu(A)
+  // first column
+  h_A(0, 0) = 1.;
+  h_A(1, 0) = 0.;
+  h_A(2, 0) = 0.;
+  // second column
+  h_A(0, 1) = 1.;
+  h_A(1, 1) = 2.;
+  h_A(2, 1) = 0.;
+  // third column
+  h_A(0, 2) = 0.;
+  h_A(1, 2) = 0.;
+  h_A(2, 2) = 3.;
+}
+
+template <typename T>
 void set_A0_LU(T&& h_A)
 {
   // first column factored
@@ -72,6 +133,29 @@ void set_A1_complex(C&& h_A1)
   h_A1(0, 2) = T(2, 0);
   h_A1(1, 2) = T(2, 0);
   h_A1(2, 2) = T(4, 0);
+}
+
+template <typename C>
+void set_A1_complex_nopiv(C&& h_A1)
+{
+  using T = typename C::value_type;
+
+  // second matrix, complex
+  // matlab/octave:
+  //  B = [1+i 2-i 2; 4i 4 2; 4 6i 4];
+  //  L,U,p = lu(A2);
+  // first column
+  h_A1(0, 0) = T(1, 0);
+  h_A1(1, 0) = T(0, 0);
+  h_A1(2, 0) = T(0, 0);
+  // second column
+  h_A1(0, 1) = T(1, 0);
+  h_A1(1, 1) = T(2, 0);
+  h_A1(2, 1) = T(0, 0);
+  // third column
+  h_A1(0, 2) = T(0, 0);
+  h_A1(1, 2) = T(2, 0);
+  h_A1(2, 2) = T(3, 0);
 }
 
 template <typename C>
@@ -341,6 +425,87 @@ TEST(lapack, cgetrf_batch)
 TEST(lapack, zgetrf_batch)
 {
   test_getrf_batch_complex<double>();
+}
+
+template <typename R>
+void test_getrf_npvt_batch_complex()
+{
+  constexpr int N = 3;
+  constexpr int batch_size = 2;
+  using T = gt::complex<R>;
+
+  gt::gtensor<T*, 1> h_Aptr(batch_size);
+  gt::gtensor_device<T*, 1> d_Aptr(batch_size);
+  gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
+  gt::gtensor_device<T, 3> d_A(gt::shape(N, N, batch_size));
+  gt::gtensor<int, 1> h_info(batch_size);
+  gt::gtensor_device<int, 1> d_info(batch_size);
+
+  // setup first batch matrix input
+  set_A0_nopiv(h_A.view(gt::all, gt::all, 0));
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
+
+  // setup second batch matrix input
+  set_A1_complex_nopiv(h_A.view(gt::all, gt::all, 1));
+  // TODO: better notation for this, i.e. the ability to get a pointer from a
+  // view if it is wrapping a gcontainer or gtensor_span?
+  h_Aptr(1) = h_Aptr(0) + N * N;
+
+  gt::copy(h_A, d_A);
+  gt::copy(h_Aptr, d_Aptr);
+
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::getrf_npvt_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                               gt::raw_pointer_cast(d_info.data()), batch_size);
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_A, h_A);
+  gt::copy(d_info, h_info);
+
+  // first batch matrix result
+  // first column factored
+  expect_complex_near(h_A(0, 0, 0), 1.0);
+  expect_complex_near(h_A(1, 0, 0), 0.0);
+  expect_complex_near(h_A(2, 0, 0), 0.0);
+  // second column factored
+  expect_complex_near(h_A(0, 1, 0), 1.0);
+  expect_complex_near(h_A(1, 1, 0), 2.0);
+  expect_complex_near(h_A(2, 1, 0), 0.0);
+  // third column factored
+  expect_complex_near(h_A(0, 2, 0), 0.0);
+  expect_complex_near(h_A(1, 2, 0), 1.0);
+  expect_complex_near(h_A(2, 2, 0), 3.0);
+
+  // second batch matrix result
+  // first column factored
+  expect_complex_near(h_A(0, 0, 1), T(1, 0));
+  expect_complex_near(h_A(1, 0, 1), T(0, 0));
+  expect_complex_near(h_A(2, 0, 1), T(0, 0));
+  // second column factored
+  expect_complex_near(h_A(0, 1, 1), T(1, 0));
+  expect_complex_near(h_A(1, 1, 1), T(2, 0));
+  expect_complex_near(h_A(2, 1, 1), T(0, 0));
+  // third column factored
+  expect_complex_near(h_A(0, 2, 1), T(0, 0));
+  expect_complex_near(h_A(1, 2, 1), T(1, 0));
+  expect_complex_near(h_A(2, 2, 1), T(3, 0));
+
+  for (int b = 0; b < batch_size; b++) {
+    // A_i factored successfully
+    EXPECT_EQ(h_info(b), 0);
+  }
+}
+
+TEST(lapack, cgetrf_npvt_batch)
+{
+  test_getrf_batch_npvt_complex<float>();
+}
+
+TEST(lapack, zgetrf_batch)
+{
+  test_getrf_batch_npvt_complex<double>();
 }
 
 template <typename R>
