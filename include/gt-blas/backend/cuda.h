@@ -298,6 +298,28 @@ CREATE_GETRS_BATCHED(cublasSgetrsBatched, float, float)
 
 #undef CREATE_GETRS_BATCHED
 
+// ======================================================================
+// getrf/getrs batched
+
+template <typename T>
+inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
+                          int* d_infoArray, int batchSize);
+
+#define CREATE_GETRF_NPVT_BATCHED(METHOD, GTTYPE, BLASTYPE)                    \
+  template <>                                                                  \
+  inline void getrf_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray,    \
+                                    int lda, int* d_infoArray, int batchSize)  \
+  {                                                                            \
+    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<BLASTYPE**>(d_Aarray),   \
+                       lda, NULL, d_infoArray, batchSize));                    \
+  }
+
+CREATE_GETRF_NPVT_BATCHED(cublasZgetrfBatched, gt::complex<double>, cuDoubleComplex)
+CREATE_GETRF_NPVT_BATCHED(cublasCgetrfBatched, gt::complex<float>, cuComplex)
+
+#undef CREATE_GETRF_NPVT_BATCHED
+
+
 } // namespace blas
 
 } // namespace gt
