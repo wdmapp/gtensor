@@ -463,7 +463,7 @@ TEST(lapack, cgetrf_npvt_batch)
   test_getrf_batch_npvt_complex<float>();
 }
 
-TEST(lapack, zgetrf_batch)
+TEST(lapack, zgetrf_npvt_batch)
 {
   test_getrf_batch_npvt_complex<double>();
 }
