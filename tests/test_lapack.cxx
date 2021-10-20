@@ -27,46 +27,6 @@ void set_A0(T&& h_A)
 }
 
 template <typename T>
-void set_A0(T&& h_A)
-{
-  // matlab/octave:
-  //  A = [1 2 2; 4 4 2; 4 6 4];
-  //  L,U,p = lu(A)
-  // first column
-  h_A(0, 0) = 1;
-  h_A(1, 0) = 4;
-  h_A(2, 0) = 4;
-  // second column
-  h_A(0, 1) = 2;
-  h_A(1, 1) = 4;
-  h_A(2, 1) = 6;
-  // third column
-  h_A(0, 2) = 2;
-  h_A(1, 2) = 2;
-  h_A(2, 2) = 4;
-}
-
-template <typename T>
-void set_A0(T&& h_A)
-{
-  // matlab/octave:
-  //  A = [1 2 2; 4 4 2; 4 6 4];
-  //  L,U,p = lu(A)
-  // first column
-  h_A(0, 0) = 1;
-  h_A(1, 0) = 4;
-  h_A(2, 0) = 4;
-  // second column
-  h_A(0, 1) = 2;
-  h_A(1, 1) = 4;
-  h_A(2, 1) = 6;
-  // third column
-  h_A(0, 2) = 2;
-  h_A(1, 2) = 2;
-  h_A(2, 2) = 4;
-}
-
-template <typename T>
 void set_A0_nopiv(T&& h_A)
 {
   // matlab/octave:

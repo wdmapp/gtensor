@@ -3,7 +3,7 @@
 
 #include "rocblas.h"
 #include "rocsolver.h"
-#include <stdio.h>
+
 // ======================================================================
 // error handling helper
 
