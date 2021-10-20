@@ -42,7 +42,7 @@ struct gallocator<gt::space::hip_managed>
   static T* allocate(size_t n)
   {
     T* p;
-    gtGpuCheck(hipMalloc(&p, sizeof(T) * n));
+    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
     return p;
   }
 
