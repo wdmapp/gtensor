@@ -460,12 +460,12 @@ void test_getrf_npvt_batch_complex()
 
 TEST(lapack, cgetrf_npvt_batch)
 {
-  test_getrf_batch_npvt_complex<float>();
+  test_getrf_npvt_batch_complex<float>();
 }
 
 TEST(lapack, zgetrf_npvt_batch)
 {
-  test_getrf_batch_npvt_complex<double>();
+  test_getrf_npvt_batch_complex<double>();
 }
 
 template <typename R>
