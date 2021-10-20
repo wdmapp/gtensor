@@ -255,3 +255,20 @@ CREATE_C_GETRS_BATCHED(gtblas_cgetrs_batched, f2c_complex<float>)
 CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, f2c_complex<double>)
 
 #undef CREATE_C_GETRS_BATCHED
+
+// ======================================================================
+// gtblas_Xgetrf_npvt_batched
+#ifndef GTENSOR_DEVICE_SYCL
+#define CREATE_C_GETRF_NPVT_BATCHED(CNAME, CPPTYPE)                            \
+  void CNAME(int n, CPPTYPE** d_Aarray, int lda, int* d_infoArray,             \
+             int batchSize)                                                    \
+  {                                                                            \
+    gt::blas::getrf_npvt_batched(g_handle, n, detail::cast_aligned(d_Aarray),  \
+                                 lda, d_infoArray, batchSize);                 \
+  }
+
+CREATE_C_GETRF_NPVT_BATCHED(gtblas_cgetrf_npvt_batched, f2c_complex<float>)
+CREATE_C_GETRF_NPVT_BATCHED(gtblas_zgetrf_npvt_batched, f2c_complex<double>)
+
+#undef CREATE_C_GETRF_NPVT_BATCHED
+#endif

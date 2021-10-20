@@ -297,6 +297,31 @@ CREATE_GETRS_BATCHED(rocsolver_sgetrs_batched, float, float)
 
 #undef CREATE_GETRS_BATCHED
 
+// ======================================================================
+// getrf/getrs batched without pivoting
+
+template <typename T>
+inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
+                               int* d_infoArray, int batchSize);
+
+#define CREATE_GETRF_NPVT_BATCHED(METHOD, GTTYPE, BLASTYPE)                    \
+  template <>                                                                  \
+  inline void getrf_npvt_batched<GTTYPE>(handle_t * h, int n,                  \
+                                         GTTYPE** d_Aarray, int lda,           \
+                                         int* d_infoArray, int batchSize)      \
+  {                                                                            \
+    gtBlasCheck(METHOD(h->handle, n, n,                                        \
+                       reinterpret_cast<BLASTYPE**>(d_Aarray), lda,            \
+                       d_infoArray, batchSize));                               \
+  }
+
+CREATE_GETRF_NPVT_BATCHED(rocsolver_zgetrf_npvt_batched, gt::complex<double>,
+                          rocblas_double_complex)
+CREATE_GETRF_NPVT_BATCHED(rocsolver_cgetrf_npvt_batched, gt::complex<float>,
+                          rocblas_float_complex)
+
+#undef CREATE_GETRF_NPVT_BATCHED
+
 } // namespace blas
 
 } // namespace gt
