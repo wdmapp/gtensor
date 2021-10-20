@@ -153,7 +153,7 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
 
   add_library(rocsparse INTERFACE IMPORTED)
-  target_link_libraries(rocssparse INTERFACE
+  target_link_libraries(rocsparse INTERFACE
                         "${ROCM_PATH}/lib/librocsparse.so")
   target_include_directories(rocsparse INTERFACE "${ROCM_PATH}/include")
 

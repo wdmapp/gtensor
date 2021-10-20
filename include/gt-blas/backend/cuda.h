@@ -305,9 +305,9 @@ template <typename T>
 inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
                           int* d_infoArray, int batchSize);
 
-#define CREATE_GETRF_NPVT_BATCHED(METHOD, GTTYPE, BLASTYPE)                    \
-  template <>                                                                  \
-  inline void getrf_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray,    \
+#define CREATE_GETRF_NPVT_BATCHED(METHOD, GTTYPE, BLASTYPE)                      \
+  template <>                                                                    \
+  inline void getrf_npvt_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray, \
                                     int lda, int* d_infoArray, int batchSize)  \
   {                                                                            \
     gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<BLASTYPE**>(d_Aarray),   \
