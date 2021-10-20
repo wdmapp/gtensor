@@ -105,7 +105,7 @@ inline auto sum(const Container& a)
       auto sum_acc =
         sum_buf.template get_access<sycl::access::mode::read_write>(cgh);
       auto sum_reducer =
-        sycl::ONEAPI::reduction(sum_acc, sycl::ONEAPI::plus<T>{});
+        sycl::ext::oneapi::reduction(sum_acc, sycl::ext::oneapi::plus<T>{});
       using kname = gt::backend::sycl::Sum<Container>;
       cgh.parallel_for<kname>(range, sum_reducer,
                               [=](sycl::nd_item<1> item, auto& sum) {
@@ -138,7 +138,7 @@ inline auto max(const Container& a)
       auto max_acc =
         max_buf.template get_access<sycl::access::mode::read_write>(cgh);
       auto max_reducer =
-        sycl::ONEAPI::reduction(max_acc, sycl::ONEAPI::maximum<T>{});
+        sycl::ext::oneapi::reduction(max_acc, sycl::ext::oneapi::maximum<T>{});
       using kname = gt::backend::sycl::Max<Container>;
       cgh.parallel_for<kname>(range, max_reducer,
                               [=](sycl::nd_item<1> item, auto& max) {
@@ -177,7 +177,7 @@ inline auto min(const Container& a)
       auto min_acc =
         min_buf.template get_access<sycl::access::mode::read_write>(cgh);
       auto min_reducer =
-        sycl::ONEAPI::reduction(min_acc, sycl::ONEAPI::minimum<T>{});
+        sycl::ext::oneapi::reduction(min_acc, sycl::ext::oneapi::minimum<T>{});
       using kname = gt::backend::sycl::Min<Container>;
       cgh.parallel_for<kname>(range, min_reducer,
                               [=](sycl::nd_item<1> item, auto& min) {
