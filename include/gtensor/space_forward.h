@@ -15,6 +15,8 @@ struct host_only
 #ifdef GTENSOR_USE_THRUST
 struct thrust
 {};
+struct thrust_managed
+{};
 struct thrust_host
 {};
 #endif
@@ -52,7 +54,7 @@ struct sycl_host
 using device = thrust;
 using host = thrust_host;
 #if GTENSOR_DEVICE_CUDA
-using managed = cuda_managed;
+using managed = thrust_managed;
 #else
 using managed = hip_managed;
 #endif

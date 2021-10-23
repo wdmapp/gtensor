@@ -16,6 +16,7 @@
 #include "macros.h"
 
 #include <thrust/device_ptr.h>
+#include <thrust/system_error.h>
 
 namespace thrust // need to put it here for ADL to work
 {
@@ -62,6 +63,96 @@ template <typename T>
 using remove_device_reference_t =
   typename detail::remove_device_reference<T>::type;
 
+// ======================================================================
+// managed allocator
+
+#ifdef GTENSOR_DEVICE_CUDA
+
+#include <thrust/system/cuda/error.h>
+
+namespace detail
+{
+#if THRUST_VERSION <= 100903
+template <typename T>
+using device_allocator = ::thrust::device_malloc_allocator<T>;
+#else
+template <typename T>
+using device_allocator = ::thrust::device_allocator<T>;
+#endif
+} // end namespace detail
+
+template <class T>
+class managed_allocator : public detail::device_allocator<T>
+{
+public:
+  using value_type = T;
+
+  typedef thrust::device_ptr<T> pointer;
+  inline pointer allocate(size_t n)
+  {
+    value_type* result = nullptr;
+
+    cudaError_t error =
+      cudaMallocManaged(&result, n * sizeof(T), cudaMemAttachGlobal);
+
+    if (error != cudaSuccess) {
+      throw thrust::system_error(
+        error, thrust::cuda_category(),
+        "managed_allocator::allocate(): cudaMallocManaged");
+    }
+
+    return thrust::device_pointer_cast(result);
+  }
+
+  inline void deallocate(pointer ptr, size_t)
+  {
+    cudaError_t error = cudaFree(thrust::raw_pointer_cast(ptr));
+
+    if (error != cudaSuccess) {
+      throw thrust::system_error(error, thrust::cuda_category(),
+                                 "managed_allocator::deallocate(): cudaFree");
+    }
+  }
+};
+
+#elif defined(GTENSOR_DEVICE_HIP)
+
+template <class T>
+class managed_allocator : public thrust::device_allocator<T>
+{
+public:
+  using value_type = T;
+
+  typedef thrust::device_ptr<T> pointer;
+  inline pointer allocate(size_t n)
+  {
+    value_type* result = nullptr;
+
+    hipError_t error =
+      hipMallocManaged(&result, n * sizeof(T), hipMemAttachGlobal);
+
+    if (error != hipSuccess) {
+      throw thrust::system_error(
+        error, thrust::hip_category(),
+        "managed_allocator::allocate(): hipMallocManaged");
+    }
+
+    return thrust::device_pointer_cast(result);
+  }
+
+  inline void deallocate(pointer ptr, size_t)
+  {
+    hipError_t error = hipFree(thrust::raw_pointer_cast(ptr));
+
+    if (error != hipSuccess) {
+      throw thrust::system_error(error, thrust::hip_category(),
+                                 "managed_allocator::deallocate(): hipFree");
+    }
+  }
+};
+
+#endif
+
 } // namespace ext
 
 // ======================================================================
@@ -102,6 +193,7 @@ GT_INLINE auto operator/(T a, U b)
   return ext::remove_device_reference_t<T>(a) /
          ext::remove_device_reference_t<U>(b);
 }
+
 
 } // namespace thrust
 

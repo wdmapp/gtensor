@@ -3,6 +3,7 @@
 #define GTENSOR_BACKEND_THRUST_H
 
 #include "pointer_traits.h"
+#include "thrust_ext.h"
 
 #include <thrust/copy.h>
 #include <thrust/device_allocator.h>
@@ -36,6 +37,13 @@ struct selector<T, gt::space::thrust_host>
 {
   using type = std::allocator<T>;
 };
+
+template <typename T>
+struct selector<T, gt::space::thrust_managed>
+{
+  using type = thrust::ext::managed_allocator<T>;
+};
+
 } // namespace allocator_impl
 
 namespace copy_impl
