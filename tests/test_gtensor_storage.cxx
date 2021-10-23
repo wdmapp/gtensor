@@ -346,4 +346,37 @@ TEST(gtensor_storage, device_resize_shrink)
   }
 }
 
+template <typename GS>
+void test_raii(int size, int ntrials)
+{
+  for (int i = 0; i < ntrials; i++) {
+    {
+      GS storage(size);
+      gt::fill(storage.data(), storage.data() + size, 0);
+    }
+  }
+}
+
+TEST(gtensor_storage, host_raii)
+{
+  test_raii<gt::backend::host_storage<double>>(100, 100);
+  test_raii<gt::backend::host_storage<gt::complex<float>>>(100, 100);
+}
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(gtensor_storage, device_raii)
+{
+  test_raii<gt::backend::device_storage<double>>(100, 100);
+  test_raii<gt::backend::device_storage<gt::complex<float>>>(100, 100);
+}
+
+TEST(gtensor_storage, managed_raii)
+{
+  test_raii<gt::backend::managed_storage<double>>(100, 100);
+  test_raii<gt::backend::managed_storage<gt::complex<float>>>(100, 100);
+}
+
+#endif
+
 #endif // GTENSOR_HAVE_DEVICE

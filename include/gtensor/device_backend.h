@@ -167,6 +167,10 @@ using device_allocator = typename backend::allocator_impl::selector<T, S>::type;
 template <typename T, typename S = gt::space::host>
 using host_allocator = typename backend::allocator_impl::selector<T, S>::type;
 
+template <typename T, typename S = gt::space::managed>
+using managed_allocator =
+  typename backend::allocator_impl::selector<T, S>::type;
+
 // ======================================================================
 // fill
 
