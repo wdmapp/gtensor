@@ -53,11 +53,7 @@ struct sycl_host
 #if GTENSOR_USE_THRUST
 using device = thrust;
 using host = thrust_host;
-#if GTENSOR_DEVICE_CUDA
 using managed = thrust_managed;
-#else
-using managed = hip_managed;
-#endif
 #elif GTENSOR_DEVICE_CUDA
 using device = cuda;
 using host = cuda_host;
