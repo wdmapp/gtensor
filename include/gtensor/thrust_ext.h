@@ -194,7 +194,6 @@ GT_INLINE auto operator/(T a, U b)
          ext::remove_device_reference_t<U>(b);
 }
 
-
 } // namespace thrust
 
 #endif
