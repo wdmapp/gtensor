@@ -173,6 +173,16 @@ public:
     return queue_map_[device_id];
   }
 
+  cl::sycl::queue new_queue(int device_id)
+  {
+    if (device_id >= devices_.size()) {
+      throw std::runtime_error("No such device");
+    }
+    return cl::sycl::queue{devices_[device_id], get_exception_handler()};
+  }
+
+  cl::sycl::queue new_queue() { return new_queue(current_device_id_); }
+
   int get_device_count() { return devices_.size(); }
 
   void set_device_id(int device_id) { current_device_id_ = device_id; }
@@ -224,6 +234,13 @@ inline SyclQueues& get_sycl_queues_instance()
 inline cl::sycl::queue& get_queue()
 {
   return detail::get_sycl_queues_instance().get_queue();
+}
+
+/*! Get a new queue different from the default, for use like alternate streams.
+ */
+inline cl::sycl::queue new_queue()
+{
+  return detail::get_sycl_queues_instance().new_queue();
 }
 
 inline void device_synchronize()
@@ -425,6 +442,40 @@ inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
 } // namespace fill_impl
 
 } // namespace backend
+
+class stream_view
+{
+public:
+  stream_view() : stream_(gt::backend::sycl::get_queue()) {}
+  stream_view(cl::sycl::queue q) : stream_(q) {}
+
+  auto get_backend_stream() { return stream_; }
+
+  bool is_default() { return stream_ == gt::backend::sycl::get_queue(); }
+
+  void synchronize() { stream_.wait(); }
+
+private:
+  cl::sycl::queue stream_;
+};
+
+class stream_wrapper
+{
+public:
+  stream_wrapper() { stream_ = gt::backend::sycl::new_queue(); }
+
+  auto get_backend_stream() { return stream_; }
+
+  bool is_default() { return stream_ == gt::backend::sycl::get_queue(); }
+
+  auto get_view() { return stream_view(stream_); }
+
+  void synchronize() { stream_.wait(); }
+
+private:
+  cl::sycl::queue stream_;
+};
+
 } // namespace gt
 
 #endif // GTENSOR_BACKEND_SYCL_H

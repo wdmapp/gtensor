@@ -510,9 +510,9 @@ template <>
 struct launch<1, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<1>& shape, F&& f)
+  static void run(const gt::shape_type<1>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<1>(shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch1<decltype(f)>;
@@ -529,9 +529,9 @@ template <>
 struct launch<2, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<2>& shape, F&& f)
+  static void run(const gt::shape_type<2>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<2>(shape[0], shape[1]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch2<decltype(f)>;
@@ -549,9 +549,9 @@ template <>
 struct launch<3, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<3>& shape, F&& f)
+  static void run(const gt::shape_type<3>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch3<decltype(f)>;
@@ -570,9 +570,9 @@ template <size_type N>
 struct launch<N, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<N>& shape, F&& f)
+  static void run(const gt::shape_type<N>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     int size = calc_size(shape);
     // use linear indexing for simplicity
     auto block_size = std::min(size, BS_LINEAR);
