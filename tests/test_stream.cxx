@@ -9,7 +9,7 @@ TEST(stream, assign_gtensor_6d)
   gt::gtensor<int, 6> a(gt::shape(2, 3, 4, 5, 6, 7));
   gt::gtensor<int, 6> b(a.shape());
 
-  gt::stream_wrapper stream;
+  gt::stream stream;
 
   int* adata = a.data();
 
@@ -38,12 +38,12 @@ void device_double_add_2d_stream(gt::gtensor_device<double, 2>& a,
   gt::copy(b, out);
 }
 
-TEST(gtensor, device_launch_2d)
+TEST(stream, stream_device_launch_2d)
 {
   gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
   gt::gtensor<double, 2> h_b(a.shape());
 
-  gt::stream_wrapper stream;
+  gt::stream stream;
 
   device_double_add_2d_stream(a, h_b, stream.get_view());
 

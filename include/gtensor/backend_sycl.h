@@ -161,11 +161,16 @@ public:
     devices_ = p.get_devices();
   }
 
-  cl::sycl::queue& get_queue_by_id(int device_id)
+  void valid_device_id_or_throw(int device_id)
   {
-    if (device_id >= devices_.size()) {
+    if (device_id >= devices_.size() || device_id < 0) {
       throw std::runtime_error("No such device");
     }
+  }
+
+  cl::sycl::queue& get_queue_by_id(int device_id)
+  {
+    valid_device_id_or_throw(device_id);
     if (queue_map_.count(device_id) == 0) {
       queue_map_[device_id] =
         cl::sycl::queue{devices_[device_id], get_exception_handler()};
@@ -175,9 +180,7 @@ public:
 
   cl::sycl::queue new_queue(int device_id)
   {
-    if (device_id >= devices_.size()) {
-      throw std::runtime_error("No such device");
-    }
+    valid_device_id_or_throw(device_id);
     return cl::sycl::queue{devices_[device_id], get_exception_handler()};
   }
 
@@ -185,14 +188,15 @@ public:
 
   int get_device_count() { return devices_.size(); }
 
-  void set_device_id(int device_id) { current_device_id_ = device_id; }
+  void set_device_id(int device_id)
+  {
+    valid_device_id_or_throw(device_id);
+    current_device_id_ = device_id;
+  }
 
   uint32_t get_device_vendor_id(int device_id)
   {
-    if (device_id >= devices_.size()) {
-      throw std::runtime_error("No such device");
-    }
-
+    valid_device_id_or_throw(device_id);
     const cl::sycl::device& sycl_dev = devices_[device_id];
     const cl::sycl::platform& p = sycl_dev.get_platform();
     std::string p_name = p.get_info<cl::sycl::info::platform::name>();
@@ -459,10 +463,10 @@ private:
   cl::sycl::queue stream_;
 };
 
-class stream_wrapper
+class stream
 {
 public:
-  stream_wrapper() { stream_ = gt::backend::sycl::new_queue(); }
+  stream() { stream_ = gt::backend::sycl::new_queue(); }
 
   auto get_backend_stream() { return stream_; }
 

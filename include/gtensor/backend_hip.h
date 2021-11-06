@@ -205,12 +205,12 @@ private:
   hipStream_t stream_;
 };
 
-class stream_wrapper
+class stream
 {
 public:
-  stream_wrapper() { gtGpuCheck(hipStreamCreate(&stream_)); }
+  stream() { gtGpuCheck(hipStreamCreate(&stream_)); }
 
-  ~stream_wrapper()
+  ~stream()
   {
     gtGpuCheck(hipStreamSynchronize(stream_));
     gtGpuCheck(hipStreamDestroy(stream_));

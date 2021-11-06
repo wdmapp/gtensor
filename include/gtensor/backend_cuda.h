@@ -206,12 +206,12 @@ private:
   cudaStream_t stream_;
 };
 
-class stream_wrapper
+class stream
 {
 public:
-  stream_wrapper() { gtGpuCheck(cudaStreamCreate(&stream_)); }
+  stream() { gtGpuCheck(cudaStreamCreate(&stream_)); }
 
-  ~stream_wrapper()
+  ~stream()
   {
     gtGpuCheck(cudaStreamSynchronize(stream_));
     gtGpuCheck(cudaStreamDestroy(stream_));

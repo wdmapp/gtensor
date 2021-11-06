@@ -60,34 +60,27 @@ inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 class stream_view
 {
 public:
-  stream_view() : stream_(nullptr) {}
-  stream_view(void* s) : stream_(s) {}
+  stream_view() {}
 
-  auto get_backend_stream() { return stream_; }
+  auto get_backend_stream() { return nullptr; }
 
-  bool is_default() { return stream_ == nullptr; }
+  bool is_default() { return true; }
 
   void synchronize() {}
-
-private:
-  void* stream_;
 };
 
-class stream_wrapper
+class stream
 {
 public:
-  stream_wrapper() : stream_(nullptr) {}
+  stream() {}
 
-  auto get_backend_stream() { return stream_; }
+  auto get_backend_stream() { return nullptr; }
 
-  bool is_default() { return stream_ == nullptr; }
+  bool is_default() { return true; }
 
-  auto get_view() { return stream_view(this->stream_); }
+  auto get_view() { return stream_view(); }
 
   void synchronize() {}
-
-private:
-  void* stream_;
 };
 
 #endif

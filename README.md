@@ -429,3 +429,20 @@ auto k_a_const_copy = a_const_copy.to_kernel(); // gtensor_span<const int, 1>
 k_a_const_copy(0) = 10; // won't compile, type of LHS is const int&
 
 ```
+
+# Streams (experimental)
+
+To facilitate interoperability with existing libraries and allow
+experimentation with some advanced multi-stream use cases, there are classes
+`gt::stream` and `gt::stream_view`. The `gt::stream` will create a new stream
+in the default device backend and destroy the stream when the object is
+destructed. The `gt::stream_view` is constructed with an existing native stream
+object in the default backend (e.g. a `cudaStream\_t` for the CUDA backend).
+They can be used as optional arguments to `gt::launch` and `gt::assign`, in
+which case they will execute asynchronously with the default stream on device.
+Note that the equals operator form of assign does not work with alternate
+streams - it will always use the default stream. For the SYCL backend, the
+native stream object is a `sycl::queue`.
+
+See also `tests/test_stream.cxx`. Note that this API is likely to change; in
+particular, the stream objects will become templated on space type.
