@@ -596,37 +596,24 @@ struct launch<N, space::device>
 } // namespace detail
 
 template <int N, typename F>
-inline void launch_host(const gt::shape_type<N>& shape, F&& f)
+inline void launch_host(const gt::shape_type<N>& shape, F&& f,
+                        gt::stream_view stream = gt::stream_view{})
 {
-  detail::launch<N, space::host>::run(shape, std::forward<F>(f),
-                                      gt::stream_view{});
+  detail::launch<N, space::host>::run(shape, std::forward<F>(f), stream);
 }
 
 template <int N, typename F>
 inline void launch(const gt::shape_type<N>& shape, F&& f,
-                   gt::stream_view stream)
+                   gt::stream_view stream = gt::stream_view{})
 {
   detail::launch<N, space::device>::run(shape, std::forward<F>(f), stream);
 }
 
-template <int N, typename F>
-inline void launch(const gt::shape_type<N>& shape, F&& f)
-{
-  detail::launch<N, space::device>::run(shape, std::forward<F>(f),
-                                        gt::stream_view{});
-}
-
 template <int N, typename S, typename F>
 inline void launch(const gt::shape_type<N>& shape, F&& f,
-                   gt::stream_view stream)
+                   gt::stream_view stream = gt::stream_view{})
 {
   detail::launch<N, S>::run(shape, std::forward<F>(f), stream);
-}
-
-template <int N, typename S, typename F>
-inline void launch(const gt::shape_type<N>& shape, F&& f)
-{
-  detail::launch<N, S>::run(shape, std::forward<F>(f), gt::stream_view{});
 }
 
 // ======================================================================

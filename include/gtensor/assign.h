@@ -445,13 +445,7 @@ struct assigner<N, space::device>
 } // namespace detail
 
 template <typename E1, typename E2>
-void assign(E1& lhs, const E2& rhs)
-{
-  assign(lhs, rhs, gt::stream_view());
-}
-
-template <typename E1, typename E2>
-void assign(E1& lhs, const E2& rhs, gt::stream_view stream)
+void assign(E1& lhs, const E2& rhs, gt::stream_view stream = gt::stream_view())
 {
   static_assert(expr_dimension<E1>() == expr_dimension<E2>(),
                 "cannot assign expressions of different dimension");
@@ -468,13 +462,8 @@ void assign(E1& lhs, const E2& rhs, gt::stream_view stream)
 }
 
 template <typename E1, typename T>
-void assign(E1& lhs, const gscalar<T>& val)
-{
-  assign(lhs, val, gt::stream_view());
-}
-
-template <typename E1, typename T>
-void assign(E1& lhs, const gscalar<T>& val, gt::stream_view stream)
+void assign(E1& lhs, const gscalar<T>& val,
+            gt::stream_view stream = gt::stream_view())
 {
   // FIXME, make more efficient
   detail::assigner<
