@@ -27,7 +27,7 @@ template <>
 struct assigner<1, space::host>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<1, host>\n");
     for (int i = 0; i < lhs.shape(0); i++) {
@@ -40,7 +40,7 @@ template <>
 struct assigner<2, space::host>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<2, host>\n");
     for (int j = 0; j < lhs.shape(1); j++) {
@@ -55,7 +55,7 @@ template <>
 struct assigner<3, space::host>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<3, host>\n");
     for (int k = 0; k < lhs.shape(2); k++) {
@@ -72,7 +72,7 @@ template <>
 struct assigner<4, space::host>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<4, host>\n");
     for (int l = 0; l < lhs.shape(3); l++) {
@@ -91,7 +91,7 @@ template <>
 struct assigner<5, space::host>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<5, host>\n");
     for (int m = 0; m < lhs.shape(4); m++) {
@@ -112,7 +112,7 @@ template <>
 struct assigner<6, space::host>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<6, host>\n");
     for (int n = 0; n < lhs.shape(5); n++) {
@@ -222,7 +222,7 @@ template <>
 struct assigner<1, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<1, device>\n");
     const int BS_1D = 256;
@@ -230,8 +230,9 @@ struct assigner<1, space::device>
     dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0, 0,
-                   lhs.to_kernel(), rhs.to_kernel());
+    gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
     gpuSyncIfEnabled();
   }
 };
@@ -240,7 +241,7 @@ template <>
 struct assigner<2, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<2, device>\n");
     dim3 numThreads(BS_X, BS_Y);
@@ -248,8 +249,9 @@ struct assigner<2, space::device>
                    (lhs.shape(1) + BS_Y - 1) / BS_Y);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_assign_2, numBlocks, numThreads, 0, 0,
-                   lhs.to_kernel(), rhs.to_kernel());
+    gtLaunchKernel(kernel_assign_2, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
     gpuSyncIfEnabled();
   }
 };
@@ -258,7 +260,7 @@ template <>
 struct assigner<3, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<3, device>\n");
     dim3 numThreads(BS_X, BS_Y);
@@ -269,8 +271,9 @@ struct assigner<3, space::device>
     /*std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     std::cout << "numBlocks="<<numBlocks.x<<" "<<numBlocks.y<<" "<<numBlocks.z<<
     ", numThreads="<<numThreads.x<<" "<<numThreads.y<<" "<<numThreads.z<<"\n";*/
-    gtLaunchKernel(kernel_assign_3, numBlocks, numThreads, 0, 0,
-                   lhs.to_kernel(), rhs.to_kernel());
+    gtLaunchKernel(kernel_assign_3, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
     gpuSyncIfEnabled();
   }
 };
@@ -279,7 +282,7 @@ template <>
 struct assigner<4, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<4, device>\n");
     dim3 numThreads(256);
@@ -287,8 +290,9 @@ struct assigner<4, space::device>
 
     gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
-    gtLaunchKernel(kernel_assign_4, numBlocks, numThreads, 0, 0,
-                   lhs.to_kernel(), rhs.to_kernel());
+    gtLaunchKernel(kernel_assign_4, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
     gpuSyncIfEnabled();
   }
 };
@@ -297,7 +301,7 @@ template <>
 struct assigner<5, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<6, device>\n");
     dim3 numThreads(BS_X, BS_Y);
@@ -307,8 +311,9 @@ struct assigner<5, space::device>
 
     gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
-    gtLaunchKernel(kernel_assign_5, numBlocks, numThreads, 0, 0,
-                   lhs.to_kernel(), rhs.to_kernel());
+    gtLaunchKernel(kernel_assign_5, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
     gpuSyncIfEnabled();
   }
 };
@@ -317,7 +322,7 @@ template <>
 struct assigner<6, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<6, device>\n");
     dim3 numThreads(BS_X, BS_Y);
@@ -327,8 +332,9 @@ struct assigner<6, space::device>
 
     gpuSyncIfEnabled();
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
-    gtLaunchKernel(kernel_assign_6, numBlocks, numThreads, 0, 0,
-                   lhs.to_kernel(), rhs.to_kernel());
+    gtLaunchKernel(kernel_assign_6, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
     gpuSyncIfEnabled();
   }
 };
@@ -339,9 +345,9 @@ template <>
 struct assigner<1, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<1>(lhs.shape(0));
@@ -362,9 +368,9 @@ template <>
 struct assigner<2, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<2>(lhs.shape(0), lhs.shape(1));
@@ -386,9 +392,9 @@ template <>
 struct assigner<3, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<3>(lhs.shape(0), lhs.shape(1), lhs.shape(2));
@@ -411,9 +417,9 @@ template <size_type N>
 struct assigner<N, space::device>
 {
   template <typename E1, typename E2>
-  static void run(E1& lhs, const E2& rhs)
+  static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     // use linear indexing for simplicity
     auto size = calc_size(lhs.shape());
     auto k_lhs = flatten(lhs).to_kernel();
@@ -439,7 +445,7 @@ struct assigner<N, space::device>
 } // namespace detail
 
 template <typename E1, typename E2>
-void assign(E1& lhs, const E2& rhs)
+void assign(E1& lhs, const E2& rhs, gt::stream_view stream = gt::stream_view())
 {
   static_assert(expr_dimension<E1>() == expr_dimension<E2>(),
                 "cannot assign expressions of different dimension");
@@ -450,18 +456,20 @@ void assign(E1& lhs, const E2& rhs)
   }
   assert(lhs.shape() == rhs.shape());
 #endif
-  detail::assigner<expr_dimension<E1>(),
-                   space_t<expr_space_type<E1>, expr_space_type<E2>>>::run(lhs,
-                                                                           rhs);
+  detail::assigner<
+    expr_dimension<E1>(),
+    space_t<expr_space_type<E1>, expr_space_type<E2>>>::run(lhs, rhs, stream);
 }
 
 template <typename E1, typename T>
-void assign(E1& lhs, const gscalar<T>& val)
+void assign(E1& lhs, const gscalar<T>& val,
+            gt::stream_view stream = gt::stream_view())
 {
   // FIXME, make more efficient
   detail::assigner<
     expr_dimension<E1>(),
-    space_t<expr_space_type<E1>, expr_space_type<gscalar<T>>>>::run(lhs, val);
+    space_t<expr_space_type<E1>, expr_space_type<gscalar<T>>>>::run(lhs, val,
+                                                                    stream);
 }
 
 } // namespace gt

@@ -308,7 +308,7 @@ template <>
 struct launch<1, space::host>
 {
   template <typename F>
-  static void run(const gt::shape_type<1>& shape, F&& f)
+  static void run(const gt::shape_type<1>& shape, F&& f, gt::stream_view stream)
   {
     for (int i = 0; i < shape[0]; i++) {
       std::forward<F>(f)(i);
@@ -320,7 +320,7 @@ template <>
 struct launch<2, space::host>
 {
   template <typename F>
-  static void run(const gt::shape_type<2>& shape, F&& f)
+  static void run(const gt::shape_type<2>& shape, F&& f, gt::stream_view stream)
   {
     for (int j = 0; j < shape[1]; j++) {
       for (int i = 0; i < shape[0]; i++) {
@@ -334,7 +334,7 @@ template <>
 struct launch<3, space::host>
 {
   template <typename F>
-  static void run(const gt::shape_type<3>& shape, F&& f)
+  static void run(const gt::shape_type<3>& shape, F&& f, gt::stream_view stream)
   {
     for (int k = 0; k < shape[2]; k++) {
       for (int j = 0; j < shape[1]; j++) {
@@ -350,7 +350,7 @@ template <>
 struct launch<4, space::host>
 {
   template <typename F>
-  static void run(const gt::shape_type<4>& shape, F&& f)
+  static void run(const gt::shape_type<4>& shape, F&& f, gt::stream_view stream)
   {
     for (int l = 0; l < shape[3]; l++) {
       for (int k = 0; k < shape[2]; k++) {
@@ -368,7 +368,7 @@ template <>
 struct launch<5, space::host>
 {
   template <typename F>
-  static void run(const gt::shape_type<5>& shape, F&& f)
+  static void run(const gt::shape_type<5>& shape, F&& f, gt::stream_view stream)
   {
     for (int m = 0; m < shape[4]; m++) {
       for (int l = 0; l < shape[3]; l++) {
@@ -388,7 +388,7 @@ template <>
 struct launch<6, space::host>
 {
   template <typename F>
-  static void run(const gt::shape_type<6>& shape, F&& f)
+  static void run(const gt::shape_type<6>& shape, F&& f, gt::stream_view stream)
   {
     for (int n = 0; n < shape[5]; n++) {
       for (int m = 0; m < shape[4]; m++) {
@@ -411,15 +411,15 @@ template <>
 struct launch<1, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<1>& shape, F&& f)
+  static void run(const gt::shape_type<1>& shape, F&& f, gt::stream_view stream)
   {
     const int BS_1D = 256;
     dim3 numThreads(BS_1D);
     dim3 numBlocks((shape[0] + BS_1D - 1) / BS_1D);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
-                   std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -428,14 +428,14 @@ template <>
 struct launch<2, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<2>& shape, F&& f)
+  static void run(const gt::shape_type<2>& shape, F&& f, gt::stream_view stream)
   {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
-                   std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -444,15 +444,15 @@ template <>
 struct launch<3, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<3>& shape, F&& f)
+  static void run(const gt::shape_type<3>& shape, F&& f, gt::stream_view stream)
   {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2]);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
-                   std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -461,15 +461,15 @@ template <>
 struct launch<4, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<4>& shape, F&& f)
+  static void run(const gt::shape_type<4>& shape, F&& f, gt::stream_view stream)
   {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3]);
 
     gpuSyncIfEnabled();
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
-                   std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
     gpuSyncIfEnabled();
   }
 };
@@ -478,14 +478,14 @@ template <>
 struct launch<5, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<5>& shape, F&& f)
+  static void run(const gt::shape_type<5>& shape, F&& f, gt::stream_view stream)
   {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3] * shape[4]);
 
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
-                   std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
   }
 };
 
@@ -493,14 +493,14 @@ template <>
 struct launch<6, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<6>& shape, F&& f)
+  static void run(const gt::shape_type<6>& shape, F&& f, gt::stream_view stream)
   {
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3] * shape[4] * shape[5]);
 
-    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0, 0, shape,
-                   std::forward<F>(f));
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
   }
 };
 
@@ -510,9 +510,9 @@ template <>
 struct launch<1, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<1>& shape, F&& f)
+  static void run(const gt::shape_type<1>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<1>(shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch1<decltype(f)>;
@@ -529,9 +529,9 @@ template <>
 struct launch<2, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<2>& shape, F&& f)
+  static void run(const gt::shape_type<2>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<2>(shape[0], shape[1]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch2<decltype(f)>;
@@ -549,9 +549,9 @@ template <>
 struct launch<3, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<3>& shape, F&& f)
+  static void run(const gt::shape_type<3>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch3<decltype(f)>;
@@ -570,9 +570,9 @@ template <size_type N>
 struct launch<N, space::device>
 {
   template <typename F>
-  static void run(const gt::shape_type<N>& shape, F&& f)
+  static void run(const gt::shape_type<N>& shape, F&& f, gt::stream_view stream)
   {
-    sycl::queue& q = gt::backend::sycl::get_queue();
+    sycl::queue q = stream.get_backend_stream();
     int size = calc_size(shape);
     // use linear indexing for simplicity
     auto block_size = std::min(size, BS_LINEAR);
@@ -596,21 +596,24 @@ struct launch<N, space::device>
 } // namespace detail
 
 template <int N, typename F>
-inline void launch_host(const gt::shape_type<N>& shape, F&& f)
+inline void launch_host(const gt::shape_type<N>& shape, F&& f,
+                        gt::stream_view stream = gt::stream_view{})
 {
-  detail::launch<N, space::host>::run(shape, std::forward<F>(f));
+  detail::launch<N, space::host>::run(shape, std::forward<F>(f), stream);
 }
 
 template <int N, typename F>
-inline void launch(const gt::shape_type<N>& shape, F&& f)
+inline void launch(const gt::shape_type<N>& shape, F&& f,
+                   gt::stream_view stream = gt::stream_view{})
 {
-  detail::launch<N, space::device>::run(shape, std::forward<F>(f));
+  detail::launch<N, space::device>::run(shape, std::forward<F>(f), stream);
 }
 
 template <int N, typename S, typename F>
-inline void launch(const gt::shape_type<N>& shape, F&& f)
+inline void launch(const gt::shape_type<N>& shape, F&& f,
+                   gt::stream_view stream = gt::stream_view{})
 {
-  detail::launch<N, S>::run(shape, std::forward<F>(f));
+  detail::launch<N, S>::run(shape, std::forward<F>(f), stream);
 }
 
 // ======================================================================

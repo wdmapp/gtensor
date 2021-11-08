@@ -26,6 +26,9 @@
 namespace gt
 {
 
+class stream_view;
+class stream_wrapper;
+
 namespace backend
 {
 

@@ -188,6 +188,46 @@ inline void fill(gt::space::hip tag, Ptr first, Ptr last, const T& value)
 } // namespace fill_impl
 
 } // namespace backend
+
+class stream_view
+{
+public:
+  stream_view() : stream_(nullptr) {}
+  stream_view(hipStream_t s) : stream_(s) {}
+
+  auto get_backend_stream() { return stream_; }
+
+  bool is_default() { return stream_ == nullptr; }
+
+  void synchronize() { gtGpuCheck(hipStreamSynchronize(stream_)); }
+
+private:
+  hipStream_t stream_;
+};
+
+class stream
+{
+public:
+  stream() { gtGpuCheck(hipStreamCreate(&stream_)); }
+
+  ~stream()
+  {
+    gtGpuCheck(hipStreamSynchronize(stream_));
+    gtGpuCheck(hipStreamDestroy(stream_));
+  }
+
+  auto get_backend_stream() { return stream_; }
+
+  bool is_default() { return stream_ == nullptr; }
+
+  auto get_view() { return stream_view(this->stream_); }
+
+  void synchronize() { gtGpuCheck(hipStreamSynchronize(stream_)); }
+
+private:
+  hipStream_t stream_;
+};
+
 } // namespace gt
 
 #endif // GTENSOR_BACKEND_HIP_H

@@ -53,6 +53,38 @@ inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 } // namespace fill_impl
 
 } // namespace backend
+
+#ifndef GTENSOR_HAVE_DEVICE
+
+// streams are no-op on host (could use threads in the future)
+class stream_view
+{
+public:
+  stream_view() {}
+
+  auto get_backend_stream() { return nullptr; }
+
+  bool is_default() { return true; }
+
+  void synchronize() {}
+};
+
+class stream
+{
+public:
+  stream() {}
+
+  auto get_backend_stream() { return nullptr; }
+
+  bool is_default() { return true; }
+
+  auto get_view() { return stream_view(); }
+
+  void synchronize() {}
+};
+
+#endif
+
 } // namespace gt
 
 #endif // GTENSOR_BACKEND_HOST_H
