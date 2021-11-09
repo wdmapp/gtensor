@@ -315,7 +315,7 @@ struct gallocator<gt::space::sycl>
   template <typename T>
   static T* allocate(size_type n)
   {
-    return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
+    return cl::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
   }
 
   template <typename T>
