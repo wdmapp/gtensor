@@ -532,12 +532,12 @@ struct launch<2, space::device>
   static void run(const gt::shape_type<2>& shape, F&& f, gt::stream_view stream)
   {
     sycl::queue q = stream.get_backend_stream();
-    auto range = sycl::range<2>(shape[0], shape[1]);
+    auto range = sycl::range<2>(shape[1], shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch2<decltype(f)>;
       cgh.parallel_for(range, [=](sycl::item<2> item) {
-        int i = item.get_id(0);
-        int j = item.get_id(1);
+        int i = item.get_id(1);
+        int j = item.get_id(0);
         f(i, j);
       });
     });
@@ -552,13 +552,13 @@ struct launch<3, space::device>
   static void run(const gt::shape_type<3>& shape, F&& f, gt::stream_view stream)
   {
     sycl::queue q = stream.get_backend_stream();
-    auto range = sycl::range<3>(shape[0], shape[1], shape[2]);
+    auto range = sycl::range<3>(shape[2], shape[1], shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch3<decltype(f)>;
       cgh.parallel_for(range, [=](sycl::item<3> item) {
-        int i = item.get_id(0);
+        int i = item.get_id(2);
         int j = item.get_id(1);
-        int k = item.get_id(2);
+        int k = item.get_id(0);
         f(i, j, k);
       });
     });

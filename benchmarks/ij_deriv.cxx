@@ -329,16 +329,16 @@ void ij_deriv_gpu(const int len1, // 16-1024
   sycl::queue& q = gt::backend::sycl::get_queue();
 
   auto e = q.submit([&](sycl::handler& cgh) {
-    cgh.parallel_for(sycl::range<3>(len1, len2, len3), [=](sycl::id<3> idx3) {
+    cgh.parallel_for(sycl::range<3>(len3, len2, len1), [=](sycl::id<3> idx3) {
       int idx, didx1, didx2;
       int wblen1 = len1 + ncoeff - 1;
       int nb = (ncoeff - 1) / 2;
       gt::complex<Real> tmp;
 
       int sten;
-      int i = idx3[0];
+      int i = idx3[2];
       int j = idx3[1];
-      int k = idx3[2];
+      int k = idx3[0];
       idx = k * len2 * wblen1 + j * wblen1 + i;
       didx1 = k * 2 * len2 * len1 + j * len1 + i;
       didx2 = didx1 + len2 * len1;

@@ -373,14 +373,14 @@ struct assigner<2, space::device>
     sycl::queue q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
-    auto range = sycl::range<2>(lhs.shape(0), lhs.shape(1));
+    auto range = sycl::range<2>(lhs.shape(1), lhs.shape(0));
     auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign2<E1, E2, ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
-        int i = item.get_id(0);
-        int j = item.get_id(1);
+        int i = item.get_id(1);
+        int j = item.get_id(0);
         k_lhs(i, j) = k_rhs(i, j);
       });
     });
@@ -397,15 +397,15 @@ struct assigner<3, space::device>
     sycl::queue q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
-    auto range = sycl::range<3>(lhs.shape(0), lhs.shape(1), lhs.shape(2));
+    auto range = sycl::range<3>(lhs.shape(2), lhs.shape(1), lhs.shape(0));
     auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign3<E1, E2, ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
-        int i = item.get_id(0);
+        int i = item.get_id(2);
         int j = item.get_id(1);
-        int k = item.get_id(2);
+        int k = item.get_id(0);
         k_lhs(i, j, k) = k_rhs(i, j, k);
       });
     });
