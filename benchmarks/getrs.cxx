@@ -114,17 +114,10 @@ void test()
 
   for (int i = 0; i < NRUNS; i++) {
     clock_gettime(CLOCK_MONOTONIC, &start);
-#ifdef GTENSOR_DEVICE_SYCL
-    gt::blas::getrs_batched(h, n, nrhs, gt::raw_pointer_cast(h_Aptr.data()),
-                            lda, gt::raw_pointer_cast(d_piv.data()),
-                            gt::raw_pointer_cast(h_Bptr.data()), ldb,
-                            batch_size);
-#else
     gt::blas::getrs_batched(h, n, nrhs, gt::raw_pointer_cast(d_Aptr.data()),
                             lda, gt::raw_pointer_cast(d_piv.data()),
                             gt::raw_pointer_cast(d_Bptr.data()), ldb,
                             batch_size);
-#endif
     gt::synchronize();
     clock_gettime(CLOCK_MONOTONIC, &end);
     elapsed =
