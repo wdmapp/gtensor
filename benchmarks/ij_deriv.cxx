@@ -562,7 +562,6 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
          maxError, relError, maxRelError);
 #endif
 
-
 #ifdef GTENSOR_HAVE_DEVICE
   // native GPU api (note: coefficents on device)
   for (int i = 0; i < time_warmup_count; i++) {
@@ -659,7 +658,6 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("gt gpuf diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
 #endif
-
 
 #endif // GTENSOR_HAVE_DEVICE
 }
