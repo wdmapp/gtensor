@@ -223,10 +223,11 @@ void ij_deriv_gt(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
 }
 
 template <typename Real, typename Space>
-void ij_deriv_gt_fused(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
-                       const gt::gtensor_span<const Real, 1, gt::space::host>& coeff,
-                       const gt::gtensor_span<const gt::complex<Real>, 1, Space>& ikj,
-                       gt::gtensor_span<gt::complex<Real>, 4, Space>& darr)
+void ij_deriv_gt_fused(
+  const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
+  const gt::gtensor_span<const Real, 1, gt::space::host>& coeff,
+  const gt::gtensor_span<const gt::complex<Real>, 1, Space>& ikj,
+  gt::gtensor_span<gt::complex<Real>, 4, Space>& darr)
 {
   assert(coeff.shape(0) == 5);
   assert(arr.shape(0) - darr.shape(0) == 4);
@@ -234,20 +235,21 @@ void ij_deriv_gt_fused(const gt::gtensor_span<const gt::complex<Real>, 3, Space>
   int ncoeff = coeff.shape(0);
   int nb = (ncoeff - 1) / 2;
 
-  auto arr_shape_nohalo = gt::shape(arr.shape(0)-ncoeff+1, arr.shape(1),
-                                    arr.shape(2));
+  auto arr_shape_nohalo =
+    gt::shape(arr.shape(0) - ncoeff + 1, arr.shape(1), arr.shape(2));
   auto k_arr = arr.to_kernel();
   auto k_darr = darr.to_kernel();
   auto k_coeff = coeff.to_kernel();
   auto k_ikj = ikj.to_kernel();
-  gt::launch<3>(arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
-     k_darr(i,j,0,klmn) = k_coeff(0) * k_arr(i+0, j, klmn)
-                        + k_coeff(1) * k_arr(i+1, j, klmn)
-                        + k_coeff(2) * k_arr(i+2, j, klmn)
-                        + k_coeff(3) * k_arr(i+3, j, klmn)
-                        + k_coeff(4) * k_arr(i+4, j, klmn);
-     k_darr(i,j,1,klmn) = ikj(j) * k_arr(i+nb, j, klmn);
-  });
+  gt::launch<3>(
+    arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
+      k_darr(i, j, 0, klmn) = k_coeff(0) * k_arr(i + 0, j, klmn) +
+                              k_coeff(1) * k_arr(i + 1, j, klmn) +
+                              k_coeff(2) * k_arr(i + 2, j, klmn) +
+                              k_coeff(3) * k_arr(i + 3, j, klmn) +
+                              k_coeff(4) * k_arr(i + 4, j, klmn);
+      k_darr(i, j, 1, klmn) = ikj(j) * k_arr(i + nb, j, klmn);
+    });
 }
 
 /* Compute the i and j derivative of arr and write it to darr(:,:,1:2,:)
