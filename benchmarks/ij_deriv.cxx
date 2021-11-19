@@ -14,8 +14,11 @@ using namespace gt::placeholders;
 
 template <typename T>
 using host_vector = gt::backend::host_storage<T>;
+
+#ifdef GTENSOR_HAVE_DEVICE
 template <typename T>
 using device_vector = gt::backend::device_storage<T>;
+#endif
 
 template <typename Real>
 void compare_deriv(Real* error, Real* maxError, Real* relError,
@@ -225,7 +228,7 @@ void ij_deriv_gt(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
 template <typename Real, typename Space>
 void ij_deriv_gt_fused(
   const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
-  const gt::gtensor_span<const Real, 1, gt::space::host>& coeff,
+  const gt::gtensor_span<const Real, 1, Space>& coeff,
   const gt::gtensor_span<const gt::complex<Real>, 1, Space>& ikj,
   gt::gtensor_span<gt::complex<Real>, 4, Space>& darr)
 {
@@ -241,7 +244,7 @@ void ij_deriv_gt_fused(
   auto k_darr = darr.to_kernel();
   auto k_coeff = coeff.to_kernel();
   auto k_ikj = ikj.to_kernel();
-  gt::launch<3>(
+  gt::launch<3, Space>(
     arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
       k_darr(i, j, 0, klmn) = k_coeff(0) * k_arr(i + 0, j, klmn) +
                               k_coeff(1) * k_arr(i + 1, j, klmn) +
@@ -251,6 +254,8 @@ void ij_deriv_gt_fused(
       k_darr(i, j, 1, klmn) = ikj(j) * k_arr(i + nb, j, klmn);
     });
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 /* Compute the i and j derivative of arr and write it to darr(:,:,1:2,:)
    arr has nb boundary points in the first dimension which has to match the
@@ -265,39 +270,44 @@ template <typename Real>
 void ij_deriv_gt_device(const int dim1, const int dim2, const int dim3,
                         const gt::complex<Real>* arr_, const int ncoeff,
                         const Real* coeff_, const gt::complex<Real>* ikj_,
-                        gt::complex<Real>* darr_)
+                        gt::complex<Real>* darr_, bool use_fused)
 {
   int nb = (ncoeff - 1) / 2;
-
-  // Note: use host array for coeffecients, so they will be copied in to
-  // the kernel lambda as constants
-  auto coeff = gt::adapt<1>(coeff_, gt::shape(ncoeff));
 
   auto arr = gt::adapt_device<3>(arr_, gt::shape(dim1 + 2 * nb, dim2, dim3));
   auto ikj = gt::adapt_device<1>(ikj_, gt::shape(dim2));
   auto darr = gt::adapt_device<4>(darr_, gt::shape(dim1, dim2, 2, dim3));
 
-  ij_deriv_gt_fused(arr, coeff, ikj, darr);
+  if (use_fused) {
+    auto coeff = gt::adapt_device<1>(coeff_, gt::shape(ncoeff));
+    ij_deriv_gt_fused(arr, coeff, ikj, darr);
+  } else {
+    auto coeff = gt::adapt<1>(coeff_, gt::shape(ncoeff));
+    ij_deriv_gt(arr, coeff, ikj, darr);
+  }
   gt::synchronize();
 }
+
+#endif
 
 template <typename Real>
 void ij_deriv_gt_host(const int dim1, const int dim2, const int dim3,
                       const gt::complex<Real>* arr_, const int ncoeff,
                       const Real* coeff_, const gt::complex<Real>* ikj_,
-                      gt::complex<Real>* darr_)
+                      gt::complex<Real>* darr_, bool use_fused)
 {
   int nb = (ncoeff - 1) / 2;
 
-  // Note: use host array for coeffecients, so they will be copied in to
-  // the kernel lambda as constants
   auto coeff = gt::adapt<1>(coeff_, gt::shape(ncoeff));
-
   auto arr = gt::adapt<3>(arr_, gt::shape(dim1 + 2 * nb, dim2, dim3));
   auto ikj = gt::adapt<1>(ikj_, gt::shape(dim2));
   auto darr = gt::adapt<4>(darr_, gt::shape(dim1, dim2, 2, dim3));
 
-  ij_deriv_gt_fused(arr, coeff, ikj, darr);
+  if (use_fused) {
+    ij_deriv_gt_fused(arr, coeff, ikj, darr);
+  } else {
+    ij_deriv_gt(arr, coeff, ikj, darr);
+  }
 }
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
@@ -392,8 +402,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 {
   using Complex = gt::complex<Real>;
 
-  constexpr int time_warmup_count = 20;
-  constexpr int time_run_count = 20;
+  constexpr int time_warmup_count = 5;
+  constexpr int time_run_count = 5;
   struct timespec start, end;
   double seconds_per_run = 0.0;
 
@@ -416,18 +426,17 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("== %dx%dx%d ==\n", li0, lj0, lbg0);
 
   host_vector<Complex> h_arr(arr_size);
-  device_vector<Complex> d_arr(arr_size);
-
   host_vector<Complex> h_darr(darr_size);
-  device_vector<Complex> d_darr(darr_size);
-
   host_vector<Complex> ref_darr(darr_size);
-
   host_vector<Complex> h_ikj(ikj_size);
-  device_vector<Complex> d_ikj(ikj_size);
-
   host_vector<Real> h_coeff(ncoeff);
+
+#ifdef GTENSOR_HAVE_DEVICE
+  device_vector<Complex> d_arr(arr_size);
+  device_vector<Complex> d_darr(darr_size);
+  device_vector<Complex> d_ikj(ikj_size);
   device_vector<Real> d_coeff(ncoeff);
+#endif
 
   // initialize the input arrays
   // 4th order centered difference
@@ -437,7 +446,9 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   h_coeff[3] = 2.0 / 3.0;
   h_coeff[4] = -1.0 / 12.0;
 
+#ifdef GTENSOR_HAVE_DEVICE
   gt::backend::copy(h_coeff, d_coeff);
+#endif
 
 #define ARRIDX(a, b, c) (c * lj0 * lx0 + b * lx0 + a)
 
@@ -458,13 +469,17 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
     }
   }
 
+#ifdef GTENSOR_HAVE_DEVICE
   gt::backend::copy(h_arr, d_arr);
+#endif
 
   for (j = 0; j < lj0; j++) {
     h_ikj[j] = Complex(0.0, (2.0 * j * pi));
   }
 
+#ifdef GTENSOR_HAVE_DEVICE
   gt::backend::copy(h_ikj, d_ikj);
+#endif
 
   // cpu reference
   for (int i = 0; i < time_warmup_count; i++) {
@@ -496,12 +511,12 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   // gtensor cpu
   for (int i = 0; i < time_warmup_count; i++) {
     ij_deriv_gt_host(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff.data(),
-                     h_ikj.data(), h_darr.data());
+                     h_ikj.data(), h_darr.data(), false);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
     ij_deriv_gt_host(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff.data(),
-                     h_ikj.data(), h_darr.data());
+                     h_ikj.data(), h_darr.data(), false);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -520,7 +535,36 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
          maxError, relError, maxRelError);
 #endif
 
-  // native GPU api
+  // gtensor cpu fused
+  for (int i = 0; i < time_warmup_count; i++) {
+    ij_deriv_gt_host(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff.data(),
+                     h_ikj.data(), h_darr.data(), true);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  for (int i = 0; i < time_run_count; i++) {
+    ij_deriv_gt_host(li0, lj0, lbg0, h_arr.data(), ncoeff, h_coeff.data(),
+                     h_ikj.data(), h_darr.data(), true);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  seconds_per_run =
+    ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
+    time_run_count;
+  printf("gt hf   seconds/run: %0.6f\n", seconds_per_run);
+
+#ifdef DEBUG_COMPARE
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
+                h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
+  printf("gt hf   diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+         maxError, relError, maxRelError);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
+                h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
+  printf("gt hf   diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+         maxError, relError, maxRelError);
+#endif
+
+
+#ifdef GTENSOR_HAVE_DEVICE
+  // native GPU api (note: coefficents on device)
   for (int i = 0; i < time_warmup_count; i++) {
     ij_deriv_gpu(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()), ncoeff,
                  gt::raw_pointer_cast(d_coeff.data()),
@@ -552,19 +596,19 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
          maxError, relError, maxRelError);
 #endif
 
-  // gtensor gpu
+  // gtensor gpu (note: coefficients on host)
   for (int i = 0; i < time_warmup_count; i++) {
     ij_deriv_gt_device(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()),
                        ncoeff, h_coeff.data(),
                        gt::raw_pointer_cast(d_ikj.data()),
-                       gt::raw_pointer_cast(d_darr.data()));
+                       gt::raw_pointer_cast(d_darr.data()), false);
   }
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (int i = 0; i < time_run_count; i++) {
     ij_deriv_gt_device(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()),
                        ncoeff, h_coeff.data(),
                        gt::raw_pointer_cast(d_ikj.data()),
-                       gt::raw_pointer_cast(d_darr.data()));
+                       gt::raw_pointer_cast(d_darr.data()), false);
   }
   clock_gettime(CLOCK_MONOTONIC, &end);
   seconds_per_run =
@@ -576,13 +620,48 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   gt::backend::copy(d_darr, h_darr);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
                 h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
-  printf("gt  diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+  printf("gt gpu  diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
                 h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
-  printf("gt  diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+  printf("gt gpu  diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
          maxError, relError, maxRelError);
 #endif
+
+  // gtensor gpu fused (note: coefficients on device)
+  for (int i = 0; i < time_warmup_count; i++) {
+    ij_deriv_gt_device(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()),
+                       ncoeff, gt::raw_pointer_cast(d_coeff.data()),
+                       gt::raw_pointer_cast(d_ikj.data()),
+                       gt::raw_pointer_cast(d_darr.data()), true);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  for (int i = 0; i < time_run_count; i++) {
+    ij_deriv_gt_device(li0, lj0, lbg0, gt::raw_pointer_cast(d_arr.data()),
+                       ncoeff, gt::raw_pointer_cast(d_coeff.data()),
+                       gt::raw_pointer_cast(d_ikj.data()),
+                       gt::raw_pointer_cast(d_darr.data()), true);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  seconds_per_run =
+    ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
+    time_run_count;
+  printf("gt gpuf seconds/run: %0.6f\n", seconds_per_run);
+
+#ifdef DEBUG_COMPARE
+  gt::backend::copy(d_darr, h_darr);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
+                h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
+  printf("gt gpuf diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+         maxError, relError, maxRelError);
+  compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
+                h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 1, li0, lj0, lbg0, 2);
+  printf("gt gpuf diff[y]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
+         maxError, relError, maxRelError);
+#endif
+
+
+#endif // GTENSOR_HAVE_DEVICE
 }
 
 int main(int argc, char** argv)
