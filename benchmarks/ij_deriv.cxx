@@ -8,6 +8,8 @@
 
 #include <gtensor/gtensor.h>
 
+//#define DEBUG_COMPARE
+
 using namespace gt::placeholders;
 
 template <typename T>
@@ -220,6 +222,34 @@ void ij_deriv_gt(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
     ikj.view(_newaxis, _all, _newaxis) * arr.view(_s(nb, -nb), _all, _all);
 }
 
+template <typename Real, typename Space>
+void ij_deriv_gt_fused(const gt::gtensor_span<const gt::complex<Real>, 3, Space>& arr,
+                       const gt::gtensor_span<const Real, 1, gt::space::host>& coeff,
+                       const gt::gtensor_span<const gt::complex<Real>, 1, Space>& ikj,
+                       gt::gtensor_span<gt::complex<Real>, 4, Space>& darr)
+{
+  assert(coeff.shape(0) == 5);
+  assert(arr.shape(0) - darr.shape(0) == 4);
+
+  int ncoeff = coeff.shape(0);
+  int nb = (ncoeff - 1) / 2;
+
+  auto arr_shape_nohalo = gt::shape(arr.shape(0)-ncoeff+1, arr.shape(1),
+                                    arr.shape(2));
+  auto k_arr = arr.to_kernel();
+  auto k_darr = darr.to_kernel();
+  auto k_coeff = coeff.to_kernel();
+  auto k_ikj = ikj.to_kernel();
+  gt::launch<3>(arr_shape_nohalo, GT_LAMBDA(int i, int j, int klmn) {
+     k_darr(i,j,0,klmn) = k_coeff(0) * k_arr(i+0, j, klmn)
+                        + k_coeff(1) * k_arr(i+1, j, klmn)
+                        + k_coeff(2) * k_arr(i+2, j, klmn)
+                        + k_coeff(3) * k_arr(i+3, j, klmn)
+                        + k_coeff(4) * k_arr(i+4, j, klmn);
+     k_darr(i,j,1,klmn) = ikj(j) * k_arr(i+nb, j, klmn);
+  });
+}
+
 /* Compute the i and j derivative of arr and write it to darr(:,:,1:2,:)
    arr has nb boundary points in the first dimension which has to match the
    number of coefficients: nb=(ncoeff-1)/2
@@ -245,7 +275,7 @@ void ij_deriv_gt_device(const int dim1, const int dim2, const int dim3,
   auto ikj = gt::adapt_device<1>(ikj_, gt::shape(dim2));
   auto darr = gt::adapt_device<4>(darr_, gt::shape(dim1, dim2, 2, dim3));
 
-  ij_deriv_gt(arr, coeff, ikj, darr);
+  ij_deriv_gt_fused(arr, coeff, ikj, darr);
   gt::synchronize();
 }
 
@@ -265,7 +295,7 @@ void ij_deriv_gt_host(const int dim1, const int dim2, const int dim3,
   auto ikj = gt::adapt<1>(ikj_, gt::shape(dim2));
   auto darr = gt::adapt<4>(darr_, gt::shape(dim1, dim2, 2, dim3));
 
-  ij_deriv_gt(arr, coeff, ikj, darr);
+  ij_deriv_gt_fused(arr, coeff, ikj, darr);
 }
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
@@ -478,7 +508,6 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   printf("gt host seconds/run: %0.6f\n", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
-  gt::backend::copy(d_darr, h_darr);
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
                 h_darr.data(), 0, li0, 0, lj0, 0, lbg0, 0, li0, lj0, lbg0, 2);
   printf("gt host diff[x]: %0.4e (max %0.4e) | rel %0.4e (max %0.4e)\n", error,
