@@ -3,6 +3,12 @@ add_executable(ij_deriv)
 target_gtensor_sources(ij_deriv PRIVATE ij_deriv.cxx)
 target_link_libraries(ij_deriv gtensor::gtensor)
 
+if (GTENSOR_ENABLE_BLAS)
+  add_executable(getrs)
+  target_gtensor_sources(getrs PRIVATE getrs.cxx)
+  target_link_libraries(getrs gtensor::gtensor gtensor::blas)
+endif()
+
 add_executable(bench_assign)
 target_gtensor_sources(bench_assign PRIVATE bench_assign.cxx)
 target_link_libraries(bench_assign PRIVATE gtensor::gtensor benchmark::benchmark)
