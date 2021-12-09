@@ -96,8 +96,8 @@ public:
     init(lengths, 1, fwd_distance, 1, bwd_distance, batch_size);
   }
 
-  FFTPlanManySYCL(std::vector<int> lengths, int istride, int idist,
-                  int ostride, int odist, int batch_size = 1)
+  FFTPlanManySYCL(std::vector<int> lengths, int istride, int idist, int ostride,
+                  int odist, int batch_size = 1)
   {
     init(lengths, istride, idist, ostride, odist, batch_size);
   }
@@ -140,8 +140,8 @@ public:
   }
 
 private:
-  void init(std::vector<int> lengths_, int istride, int idist,
-            int ostride, int odist, int batch_size = 1)
+  void init(std::vector<int> lengths_, int istride, int idist, int ostride,
+            int odist, int batch_size = 1)
   {
     int rank = lengths_.size();
 

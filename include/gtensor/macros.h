@@ -116,7 +116,6 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
   } while (0)
 #endif // NDEBUG
 
-
 #endif // end GTENSOR_HAVE_DEVICE
 
 #endif // GTENSORS_MACROS_H
