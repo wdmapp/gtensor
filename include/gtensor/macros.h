@@ -19,6 +19,10 @@
 #include <hip/hip_runtime.h>
 #endif
 
+#ifdef GTENSOR_DEVICE_SYCL
+#include <CL/sycl.hpp>
+#endif
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 #define GT_INLINE inline __host__ __device__
@@ -99,6 +103,19 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
     gtGpuCheck(hipGetLastError());                                             \
   } while (0)
 #endif // NDEBUG
+
+#elif defined(GTENSOR_DEVICE_SYCL)
+
+#ifndef NDEBUG
+#define gpuSyncIfEnabled()                                                     \
+  do {                                                                         \
+  } while (0)
+#else // NDEBUG defined
+#define gpuSyncIfEnabled()                                                     \
+  do {                                                                         \
+  } while (0)
+#endif // NDEBUG
+
 
 #endif // end GTENSOR_HAVE_DEVICE
 
