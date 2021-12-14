@@ -11,13 +11,7 @@
 
 #include <cstdio>
 
-#ifdef GTENSOR_DEVICE_CUDA
-#include <cuda_runtime_api.h>
-#endif
-
-#ifdef GTENSOR_DEVICE_HIP
-#include <hip/hip_runtime.h>
-#endif
+#include "gtensor/device_runtime.h"
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
@@ -97,6 +91,19 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
 #define gpuSyncIfEnabled()                                                     \
   do {                                                                         \
     gtGpuCheck(hipGetLastError());                                             \
+  } while (0)
+#endif // NDEBUG
+
+#elif defined(GTENSOR_DEVICE_SYCL)
+
+#ifndef NDEBUG
+#define gpuSyncIfEnabled()                                                     \
+  do {                                                                         \
+    gt::backend::sycl::get_queue().wait();                                     \
+  } while (0)
+#else // NDEBUG defined
+#define gpuSyncIfEnabled()                                                     \
+  do {                                                                         \
   } while (0)
 #endif // NDEBUG
 

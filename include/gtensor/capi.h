@@ -23,14 +23,10 @@ void gt_synchronize();
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-#ifndef GTENSOR_DEVICE_SYCL
-
 int gt_backend_device_get_count();
 void gt_backend_device_set(int device_id);
 int gt_backend_device_get();
 uint32_t gt_backend_device_get_vendor_id(int device_id);
-
-#endif // not GTENSOR_DEVICE_SYCL
 
 void* gt_backend_host_allocate(size_t nbytes);
 void* gt_backend_device_allocate(size_t nbytes);
