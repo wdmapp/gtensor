@@ -15,6 +15,7 @@
 #include "gtl.h"
 #include "macros.h"
 
+#include <thrust/device_allocator.h>
 #include <thrust/device_ptr.h>
 #include <thrust/system_error.h>
 
@@ -70,19 +71,8 @@ using remove_device_reference_t =
 
 #include <thrust/system/cuda/error.h>
 
-namespace detail
-{
-#if THRUST_VERSION <= 100903
-template <typename T>
-using device_allocator = ::thrust::device_malloc_allocator<T>;
-#else
-template <typename T>
-using device_allocator = ::thrust::device_allocator<T>;
-#endif
-} // end namespace detail
-
 template <class T>
-class managed_allocator : public detail::device_allocator<T>
+class managed_allocator : public ::thrust::device_allocator<T>
 {
 public:
   using value_type = T;
