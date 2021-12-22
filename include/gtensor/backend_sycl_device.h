@@ -77,7 +77,7 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
   int device_index, const cl::sycl::device& d)
 {
   uint32_t unique_id = 0;
-  cl_device_id cl_dev = d.get_native<cl::sycl::backend::opencl>();
+  cl_device_id cl_dev = cl::sycl::get_native<cl::sycl::backend::opencl>(d);
   cl_device_pci_bus_info_khr pci_info;
   cl_int rval = clGetDeviceInfo(cl_dev, CL_DEVICE_PCI_BUS_INFO_KHR,
                                 sizeof(pci_info), &pci_info, NULL);
@@ -97,12 +97,13 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
 template <>
-inline uint32_t get_unique_device_id<cl::sycl::backend::level_zero>(
+inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
   int device_index, const cl::sycl::device& d)
 {
   uint32_t unique_id = 0;
 
-  ze_device_handle_t ze_dev = d.get_native<cl::sycl::backend::level_zero>();
+  ze_device_handle_t ze_dev =
+    cl::sycl::get_native<cl::sycl::backend::ext_oneapi_level_zero>(d);
   ze_device_properties_t ze_prop;
   zeDeviceGetProperties(ze_dev, &ze_prop);
 
@@ -200,8 +201,8 @@ public:
     if (false) {
 #ifdef GTENSOR_DEVICE_SYCL_L0
     } else if (p_name.find("Level-Zero") != std::string::npos) {
-      return get_unique_device_id<cl::sycl::backend::level_zero>(device_id,
-                                                                 sycl_dev);
+      return get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
+        device_id, sycl_dev);
 #endif
 #ifdef GTENSOR_DEVICE_SYCL_OPENCL
     } else if (p_name.find("OpenCL") != std::string::npos) {
