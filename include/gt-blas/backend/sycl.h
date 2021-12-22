@@ -206,13 +206,13 @@ inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
   sycl::queue& q = *(h->handle);
 
   auto scratch_count = oneapi::mkl::lapack::getrfnp_batch_scratchpad_size<T>(
-    q, n, n, lda, 1, batchSize);
+    q, n, n, lda, n * n, batchSize);
   gt::backend::device_storage<T> scratch(scratch_count);
 
   // TODO: hack until getrfnp group API is available, this won't work
   // for non-contiguous batches
   auto e = oneapi::mkl::lapack::getrfnp_batch(
-    q, n, n, d_Aarray[0], lda, 1, batchSize,
+    q, n, n, d_Aarray[0], lda, n * n, batchSize,
     gt::raw_pointer_cast(scratch.data()), scratch_count);
   e.wait();
 
