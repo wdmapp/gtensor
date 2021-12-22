@@ -17,7 +17,8 @@ jobs:
       SYCL_DEVICE_FILTER: host
       DEBIAN_FRONTEND: noninteractive
       GTENSOR_TEST_EXCLUDE: test_fft test_reductions
-
+      LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.5.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mkl/2022.0.1/lib/intel64:/opt/intel/oneapi/debugger/2021.5.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2021.5.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2021.5.0/dep/lib:/opt/intel/oneapi/compiler/2022.0.1/linux/lib:/opt/intel/oneapi/compiler/2022.0.1/linux/lib/x64:/opt/intel/oneapi/compiler/2022.0.1/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2022.0.1/linux/compiler/lib/intel64_lin
+      PATH: /opt/intel/oneapi/mkl/2022.0.1/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.5.1/bin:/opt/intel/oneapi/debugger/2021.5.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2022.0.1/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2022.0.1/linux/bin/intel64:/opt/intel/oneapi/compiler/2022.0.1/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     steps:
     - uses: actions/checkout@v2
     - name: clinfo
@@ -25,15 +26,13 @@ jobs:
         mkdir -p /etc/OpenCL/vendors
         echo "libintelocl.so" > /etc/OpenCL/vendors/intel-cpu.icd
         clinfo
-    - name: setup env
-      run: |
-        sed -e 's/^export //' /root/.oneapi_env_vars >> $GITHUB_ENV
     - name: setup compiler env
       run: |
         which dpcpp
         echo "CXX=$(which dpcpp)" >> $GITHUB_ENV
-    - name: env heck
-      run: env | grep oneapi
+    - name: env check
+      run: |
+        env | grep oneapi
     - name: install googletest
       run: |
         mkdir -p ${{ env.GTEST_ROOT }}
