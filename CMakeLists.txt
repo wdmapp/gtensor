@@ -39,6 +39,8 @@ set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING
     "Use specified sycl device selector ('default', 'gpu', 'cpu',  or 'host')")
 set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL
     "Using Intel OneAPI SYCL implementation")
+set(GTENSOR_DEVICE_SYCL_ILP64 OFF CACHE BOOL
+    "Link to ILP64 MKL; typically required for host/cpu backends")
 set(ONEAPI_PATH "/opt/intel/oneapi" CACHE STRING "path to oneAPI installation")
 set(DPCPP_PATH "${ONEAPI_PATH}/compiler/latest/linux" CACHE STRING
     "Path to DPCPP compiler")
@@ -220,14 +222,19 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
     endif()
 
     add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
-    target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
     target_include_directories(oneapi_mkl_sycl INTERFACE "${MKL_PATH}/include")
     target_link_libraries(oneapi_mkl_sycl INTERFACE
                           "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sycl.so")
     # NOTE: we could support gnu here to, but when using DPCPP it must be intel,
     # and that is the expected case here.
-    target_link_libraries(oneapi_mkl_sycl INTERFACE
-                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
+    if (GTENSOR_DEVICE_SYCL_ILP64)
+      target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
+      target_link_libraries(oneapi_mkl_sycl INTERFACE
+                            "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
+    else()
+      target_link_libraries(oneapi_mkl_sycl INTERFACE
+                            "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_lp64.so")
+    endif()
     target_link_libraries(oneapi_mkl_sycl INTERFACE
                           "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sequential.so")
     target_link_libraries(oneapi_mkl_sycl INTERFACE

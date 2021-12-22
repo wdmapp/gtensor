@@ -10,18 +10,15 @@ on:
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-20.04:20211004
+    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-20.04:latest
     env:
-      CXX: /opt/intel/oneapi/compiler/latest/linux/bin/dpcpp
-      DPCPP_ROOT: /opt/intel/oneapi
-      INTEL_LICENSE_FILE: /opt/intel/oneapi/compiler/latest/licensing
-      LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
-      SYCL_DEVICE_TYPE: host
+      SYCL_DEVICE_FILTER: host
       DEBIAN_FRONTEND: noninteractive
       GTENSOR_TEST_EXCLUDE: test_fft test_reductions
-
+      LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.5.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mkl/2022.0.1/lib/intel64:/opt/intel/oneapi/debugger/2021.5.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2021.5.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2021.5.0/dep/lib:/opt/intel/oneapi/compiler/2022.0.1/linux/lib:/opt/intel/oneapi/compiler/2022.0.1/linux/lib/x64:/opt/intel/oneapi/compiler/2022.0.1/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2022.0.1/linux/compiler/lib/intel64_lin
+      PATH: /opt/intel/oneapi/mkl/2022.0.1/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.5.1/bin:/opt/intel/oneapi/debugger/2021.5.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2022.0.1/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2022.0.1/linux/bin/intel64:/opt/intel/oneapi/compiler/2022.0.1/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     steps:
     - uses: actions/checkout@v2
     - name: clinfo
@@ -29,10 +26,13 @@ jobs:
         mkdir -p /etc/OpenCL/vendors
         echo "libintelocl.so" > /etc/OpenCL/vendors/intel-cpu.icd
         clinfo
-    - name: sycl-ls
+    - name: setup compiler env
       run: |
-        /opt/intel/oneapi/compiler/latest/linux/bin/sycl-ls
-        /opt/intel/oneapi/compiler/latest/linux/bin/sycl-ls --verbose
+        which dpcpp
+        echo "CXX=$(which dpcpp)" >> $GITHUB_ENV
+    - name: env check
+      run: |
+        env | grep oneapi
     - name: install googletest
       run: |
         mkdir -p ${{ env.GTEST_ROOT }}
@@ -44,11 +44,11 @@ jobs:
       env:
         CXX: clang++-9
     - name: cmake host
-      run: cmake -S . -B build-sycl-host -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=On -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON
+      run: cmake -S . -B build-sycl-host -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=On -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON -DGTENSOR_DEVICE_SYCL_ILP64=ON
     - name: cmake host build
       run: cmake --build build-sycl-host -v
     - name: cmake debug
-      run: cmake -S . -B build-sycl-debug -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON
+      run: cmake -S . -B build-sycl-debug -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_DEVICE_SYCL_SELECTOR=host -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON -DGTENSOR_DEVICE_SYCL_ILP64=ON
     - name: cmake debug build
       run: cmake --build build-sycl-debug -v
     - name: cmake host run tests
