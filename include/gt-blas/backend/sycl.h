@@ -209,8 +209,13 @@ inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
     q, n, n, lda, n * n, batchSize);
   gt::backend::device_storage<T> scratch(scratch_count);
 
-  // TODO: hack until getrfnp group API is available, this won't work
-  // for non-contiguous batches
+  // NB: check that input is contiguous, until the group API is available
+  gt::backend::host_storage<T*> h_Aarray(batchSize);
+  gt::copy_n(d_Aarray, batchSize, h_Aarray.data());
+  for (int i = 0; i < batchSize - 1; i++) {
+    assert(h_Aarray[i + 1] == h_Aarray[i] + n * n);
+  }
+
   auto e = oneapi::mkl::lapack::getrfnp_batch(
     q, n, n, d_Aarray[0], lda, n * n, batchSize,
     gt::raw_pointer_cast(scratch.data()), scratch_count);
