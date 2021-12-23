@@ -107,6 +107,9 @@ private:
 template <typename T, typename A = gt::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
+template <typename T, typename A = gt::managed_allocator<T>>
+using managed_storage = gtensor_storage<T, A, space::managed>;
+
 #endif
 
 template <typename T, typename A = gt::host_allocator<T>>

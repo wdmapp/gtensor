@@ -387,7 +387,6 @@ TEST(lapack, zgetrf_batch)
   test_getrf_batch_complex<double>();
 }
 
-#ifndef GTENSOR_DEVICE_SYCL
 template <typename R>
 void test_getrf_npvt_batch_complex()
 {
@@ -468,7 +467,6 @@ TEST(lapack, zgetrf_npvt_batch)
 {
   test_getrf_npvt_batch_complex<double>();
 }
-#endif
 
 template <typename R>
 void test_getrs_batch_complex()
