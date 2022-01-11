@@ -8,6 +8,7 @@
 #endif
 
 #include <assert.h>
+#include <functional>
 #include <numeric>
 #include <type_traits>
 
@@ -435,6 +436,45 @@ auto norm_linf(const E& e)
 {
   // FIXME, the gt::eval is a workaround for gt::max only handling containers
   return gt::max(gt::eval(gt::abs(e)));
+}
+
+namespace detail
+{
+
+template <typename Tin, typename Tout = Tin, typename Enable = void>
+struct UnaryOpNorm
+{
+  GT_INLINE Tout operator()(Tin a) const { return a * a; }
+};
+
+template <typename Tin, typename Tout>
+struct UnaryOpNorm<Tin, Tout,
+                   gt::meta::void_t<std::enable_if_t<gt::is_complex_v<Tin>>>>
+{
+  GT_INLINE Tout operator()(Tin a) const { return gt::norm(a); }
+};
+
+} // namespace detail
+
+/*! Reduction helper implementing sum of squares on arbitrary expressions. For
+ * complex valued arrays, uses `gt::norm` instead of square, so it calculates
+ * the L2 norm squared.
+ *
+ * If e is not a container type, it will be evaluated into a temporary array, so
+ * this may not be the most efficient approach in some cases. This is a
+ * limitation of the current reduction implementations using low level pointers,
+ * passed down to thrust backend instead of logical gtensor expression index
+ * pointers.
+ */
+template <typename E>
+auto sum_squares(const E& e)
+{
+  // FIXME, the gt::eval is a workaround for gt::transform_reduce only handling
+  // containers
+  using ValueType = expr_value_type<E>;
+  using Real = gt::complex_subtype_t<ValueType>;
+  return gt::transform_reduce(gt::eval(e), 0.0, std::plus<>{},
+                              detail::UnaryOpNorm<ValueType, Real>{});
 }
 
 } // namespace gt

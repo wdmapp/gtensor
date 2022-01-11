@@ -265,14 +265,19 @@ void test_transform_reduce_sum_sq(int n)
     a(i) = i + 1;
   }
   T asum = 0.0;
+  T asum2 = 0.0;
+  T expected_sum = static_cast<Real>(n) * (n + 1) * (2 * n + 1) / 6;
   if (std::is_same<S, gt::space::host>::value) {
     asum = gt::transform_reduce(a, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{});
+    asum2 = gt::sum_squares(a);
   } else {
     gt::gtensor<T, 1, S> a2(gt::shape(n));
     gt::copy(a, a2);
     asum = gt::transform_reduce(a2, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{});
+    asum2 = gt::sum_squares(a2);
   }
-  EXPECT_EQ(asum, static_cast<Real>(n) * (n + 1) * (2 * n + 1) / 6);
+  EXPECT_EQ(asum, expected_sum);
+  EXPECT_EQ(asum2, expected_sum);
 }
 
 TEST(reductions, reduce_sum_sq_1d)
