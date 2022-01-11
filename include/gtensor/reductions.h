@@ -8,6 +8,7 @@
 #endif
 
 #include <assert.h>
+#include <numeric>
 #include <type_traits>
 
 //#include <iostream>
@@ -76,6 +77,42 @@ inline auto min(const Container& a)
   return *min_element;
 }
 
+template <typename Container, typename OutputType, typename BinaryReductionOp,
+          typename = std::enable_if_t<has_data_method_v<Container>>>
+inline OutputType reduce(const Container& a, OutputType init,
+                         BinaryReductionOp reduction_op)
+{
+  using T = typename Container::value_type;
+  using P = typename detail::thrust_const_pointer<Container>::type;
+  // Note: wrapping in device_ptr before passing to reduce is necessary
+  // when using the non-thrust storage backend, for HIP and CUDA 10.2.
+  // Not necessary in CUDA 11.2. For thrust backend and newer CUDA,
+  // this only entails an extra device_ptr copy construct, so performance
+  // impact will be minimal.
+  P begin(gt::raw_pointer_cast(a.data()));
+  P end(gt::raw_pointer_cast(a.data()) + a.size());
+  return thrust::reduce(begin, end, init, reduction_op);
+}
+
+template <typename Container, typename OutputType, typename BinaryReductionOp,
+          typename UnaryTransformOp,
+          typename = std::enable_if_t<has_data_method_v<Container>>>
+inline OutputType transform_reduce(const Container& a, OutputType init,
+                                   BinaryReductionOp reduction_op,
+                                   UnaryTransformOp transform_op)
+{
+  using T = typename Container::value_type;
+  using P = typename detail::thrust_const_pointer<Container>::type;
+  // Note: wrapping in device_ptr before passing to reduce is necessary
+  // when using the non-thrust storage backend, for HIP and CUDA 10.2.
+  // Not necessary in CUDA 11.2. For thrust backend and newer CUDA,
+  // this only entails an extra device_ptr copy construct, so performance
+  // impact will be minimal.
+  P begin(gt::raw_pointer_cast(a.data()));
+  P end(gt::raw_pointer_cast(a.data()) + a.size());
+  return thrust::transform_reduce(begin, end, transform_op, init, reduction_op);
+}
+
 #elif defined(GTENSOR_DEVICE_SYCL)
 
 #ifdef GTENSOR_DEVICE_SYCL_HOST
@@ -92,7 +129,6 @@ inline auto sum(const Container& a)
 {
   using T = typename Container::value_type;
   sycl::queue& q = gt::backend::sycl::get_queue();
-  std::array<T, 1> result;
   T sum_result = 0;
   sycl::buffer<T> sum_buf{&sum_result, 1};
   {
@@ -158,7 +194,6 @@ inline auto min(const Container& a)
 {
   using T = typename Container::value_type;
   sycl::queue& q = gt::backend::sycl::get_queue();
-  std::array<T, 1> result;
   T min_result;
   sycl::buffer<T> min_buf{&min_result, 1};
   {
@@ -187,6 +222,61 @@ inline auto min(const Container& a)
     e.wait();
   }
   return min_buf.get_host_access()[0];
+}
+
+namespace detail
+{
+
+template <typename T>
+struct UnaryOpIdentity
+{
+  GT_INLINE T operator()(T a) const { return a; }
+};
+
+} // namespace detail
+
+template <typename Container, typename OutputType, typename BinaryReductionOp,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
+inline OutputType reduce(const Container& a, OutputType init,
+                         BinaryReductionOp reduction_op)
+{
+  using ValueType = typename Container::value_type;
+  auto identity_op = detail::UnaryOpIdentity<ValueType>{};
+  return transform_reduce(a, init, reduction_op, identity_op);
+}
+
+template <typename Container, typename OutputType, typename BinaryReductionOp,
+          typename UnaryTransformOp,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
+inline OutputType transform_reduce(const Container& a, OutputType init,
+                                   BinaryReductionOp reduction_op,
+                                   UnaryTransformOp transform_op)
+{
+  sycl::queue& q = gt::backend::sycl::get_queue();
+  OutputType result = init;
+  sycl::buffer<OutputType> result_buf{&result, 1};
+  {
+    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
+    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
+      range = sycl::nd_range<1>(a.size(), a.size());
+    }
+    auto data = a.data();
+    auto e = q.submit([&](sycl::handler& cgh) {
+      auto result_acc =
+        result_buf.template get_access<sycl::access::mode::read_write>(cgh);
+      auto reducer =
+        sycl::ext::oneapi::reduction(result_acc, init, reduction_op);
+      cgh.parallel_for(range, reducer, [=](sycl::nd_item<1> item, auto& r) {
+        r.combine(transform_op(data[item.get_global_id(0)]));
+      });
+    });
+    e.wait();
+  }
+  return result_buf.get_host_access()[0];
 }
 
 #endif // device implementations
@@ -247,6 +337,43 @@ inline auto min(const Container& a)
       min_value = current_value;
   }
   return min_value;
+}
+
+template <typename Container, typename OutputType, typename BinaryReductionOp,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::host>::value>,
+          typename = int>
+inline OutputType reduce(const Container& a, OutputType init,
+                         BinaryReductionOp reduction_op)
+{
+  using P = const typename Container::value_type*;
+  P begin(a.data());
+  P end(a.data() + a.size());
+  return std::accumulate(begin, end, init, reduction_op);
+}
+
+template <typename Container, typename OutputType, typename BinaryReductionOp,
+          typename UnaryTransformOp,
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::host>::value>,
+          typename = int>
+inline OutputType transform_reduce(const Container& a, OutputType init,
+                                   BinaryReductionOp reduction_op,
+                                   UnaryTransformOp transform_op)
+{
+  using P = const typename Container::value_type*;
+  P begin(a.data());
+  P end(a.data() + a.size());
+#if __cplusplus >= 201703L
+  return std::transform_reduce(begin, end, init, reduction_op, transform_op);
+#else
+  for (P dp = begin; dp < end; dp++) {
+    init = reduction_op(init, transform_op(*dp));
+  }
+  return init;
+#endif
 }
 
 #endif // HOST / SYCL host implementation

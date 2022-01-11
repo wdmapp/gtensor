@@ -3,6 +3,7 @@
 #include <gtensor/gtensor.h>
 #include <gtensor/reductions.h>
 
+#include <functional>
 #include <type_traits>
 
 #include "test_debug.h"
@@ -206,6 +207,94 @@ TEST(reductions, device_max_1d)
 TEST(reductions, device_min_1d)
 {
   test_min<gt::space::device>(2048);
+}
+
+#endif // GTENSOR_HAVE_DEVICE
+
+template <typename S, typename T>
+void test_reduce_sum(int n)
+{
+  gt::gtensor<T, 1> a(gt::shape(n));
+  for (int i = 0; i < n; i++) {
+    a(i) = i + 1;
+  }
+  T asum = 0.0;
+  if (std::is_same<S, gt::space::host>::value) {
+    asum = gt::reduce(a, (T)0.0, std::plus<T>{});
+  } else {
+    gt::gtensor<T, 1, S> a2(gt::shape(n));
+    gt::copy(a, a2);
+    asum = gt::reduce(a2, (T)0.0, std::plus<T>{});
+  }
+  EXPECT_EQ(asum, (T)n * (n + 1) / 2);
+}
+
+TEST(reductions, reduce_sum_1d)
+{
+  test_reduce_sum<gt::space::host, double>(2048);
+}
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(reductions, device_reduce_sum_1d)
+{
+  test_reduce_sum<gt::space::device, double>(2048);
+}
+
+#endif // GTENSOR_HAVE_DEVICE
+
+template <typename Tin, typename Tout = Tin, typename Enable = void>
+struct UnaryOpNorm
+{
+  GT_INLINE Tout operator()(Tin a) const { return a * a; }
+};
+
+template <typename Tin, typename Tout>
+struct UnaryOpNorm<Tin, Tout,
+                   gt::meta::void_t<std::enable_if_t<gt::is_complex_v<Tin>>>>
+{
+  GT_INLINE Tout operator()(Tin a) const { return gt::norm(a); }
+};
+
+template <typename S, typename T>
+void test_transform_reduce_sum_sq(int n)
+{
+  using Real = gt::complex_subtype_t<T>;
+  gt::gtensor<T, 1> a(gt::shape(n));
+  for (int i = 0; i < n; i++) {
+    a(i) = i + 1;
+  }
+  T asum = 0.0;
+  if (std::is_same<S, gt::space::host>::value) {
+    asum = gt::transform_reduce(a, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{});
+  } else {
+    gt::gtensor<T, 1, S> a2(gt::shape(n));
+    gt::copy(a, a2);
+    asum = gt::transform_reduce(a2, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{});
+  }
+  EXPECT_EQ(asum, static_cast<Real>(n) * (n + 1) * (2 * n + 1) / 6);
+}
+
+TEST(reductions, reduce_sum_sq_1d)
+{
+  test_transform_reduce_sum_sq<gt::space::host, double>(2048);
+}
+
+TEST(reductions, reduce_sum_sq_1d_comlex)
+{
+  test_transform_reduce_sum_sq<gt::space::host, gt::complex<double>>(2048);
+}
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(reductions, device_reduce_sum_sq_1d)
+{
+  test_transform_reduce_sum_sq<gt::space::device, double>(2048);
+}
+
+TEST(reductions, device_reduce_sum_sq_1d_complex)
+{
+  test_transform_reduce_sum_sq<gt::space::device, gt::complex<double>>(2048);
 }
 
 #endif // GTENSOR_HAVE_DEVICE
