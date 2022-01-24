@@ -37,6 +37,8 @@ set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908" CACHE
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING
     "Use specified sycl device selector ('default', 'gpu', 'cpu',  or 'host')")
+set(GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES "" CACHE STRING
+    "AOT with specified sycl architecture")
 set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL
     "Using Intel OneAPI SYCL implementation")
 set(GTENSOR_DEVICE_SYCL_ILP64 OFF CACHE BOOL
@@ -219,6 +221,13 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
     if (NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
         target_link_options(gtensor_sycl INTERFACE
                             -fsycl-device-lib=libm-fp32,libm-fp64)
+    endif()
+
+    if (GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES)
+      target_compile_options(gtensor_sycl INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-fsycl-targets=spir64_gen
+          -Xsycl-target-backend
+            "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}">)
     endif()
 
     add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
