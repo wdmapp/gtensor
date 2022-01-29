@@ -36,7 +36,20 @@
                        streamId, ...)                                          \
   do {                                                                         \
     kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__); \
+    gtLaunchCheck(numblocks, numthreads, __FILE__, __LINE__);                  \
   } while (0)
+inline void gtLaunchCheck(dim3 numblocks, dim3 numthreads, const char* file,
+                          int line)
+{
+  if (cudaGetLastError() != cudaSuccess) {
+    fprintf(stderr, "launch failed %s %d\n", file, line);
+    fprintf(stderr, "blocks was [%d, %d, %d]\n", numblocks.x, numblocks.y,
+            numblocks.z);
+    fprintf(stderr, "threads was [%d, %d, %d]\n", numthreads.x, numthreads.y,
+            numthreads.z);
+    abort();
+  }
+}
 
 #define gtGpuCheck(what)                                                       \
   {                                                                            \
@@ -66,7 +79,23 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
-#define gtLaunchKernel(...) hipLaunchKernelGGL(__VA_ARGS__)
+#define gtLaunchKernel(kernelName, numblocks, numthreads, ...)                 \
+  {                                                                            \
+    hipLaunchKernelGGL(kernelName, numblocks, numthreads, __VA_ARGS__);        \
+    gtLaunchCheck(numblocks, numthreads, _FILE__, __LINE__);                   \
+  }
+inline void gtLaunchCheck(dim3 numblocks, dim3 numthreads, const char* file,
+                          int line)
+{
+  if (hipGetLastError() != hipSuccess) {
+    fprintf(stderr, "launch failed %s %d\n", file, line);
+    fprintf(stderr, "blocks was [%d, %d, %d]\n", numblocks.x, numblocks.y,
+            numblocks.z);
+    fprintf(stderr, "threads was [%d, %d, %d]\n", numthreads.x, numthreads.y,
+            numthreads.z);
+    abort();
+  }
+}
 
 #define gtGpuCheck(what)                                                       \
   {                                                                            \
