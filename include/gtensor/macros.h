@@ -82,7 +82,7 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
 #define gtLaunchKernel(kernelName, numblocks, numthreads, ...)                 \
   {                                                                            \
     hipLaunchKernelGGL(kernelName, numblocks, numthreads, __VA_ARGS__);        \
-    gtLaunchCheck(numblocks, numthreads, _FILE__, __LINE__);                   \
+    gtLaunchCheck(numblocks, numthreads, __FILE__, __LINE__);                  \
   }
 inline void gtLaunchCheck(dim3 numblocks, dim3 numthreads, const char* file,
                           int line)
