@@ -31,7 +31,7 @@ option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
-set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908" CACHE
+set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
 
 # SYCL specific configuration
@@ -139,6 +139,9 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
+  if ($ENV{MACHINE} STREQUAL "crusher")
+     target_compile_definitions(gtensor_hip INTERFACE __HIP_ROCclr__ __HIP_ARCH_GFX90A__=1)
+  endif()
   # Note: always link thrust, used for reductions even when the gtensor
   # internal data backend is used instead of thrust::device_vector
   add_library(rocthrust INTERFACE IMPORTED)
@@ -170,6 +173,8 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_link_libraries(gtensor_hip INTERFACE rocthrust)
   target_compile_options(gtensor_hip INTERFACE
     $<$<COMPILE_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+  target_compile_options(gtensor_hip INTERFACE
+    $<$<COMPILE_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
   target_link_options(gtensor_hip INTERFACE
     $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
 
