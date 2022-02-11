@@ -80,20 +80,7 @@ class FFTPlanManySYCL
 public:
   FFTPlanManySYCL(std::vector<int> lengths, int batch_size = 1)
   {
-    MKL_FFT_LONG fwd_distance, bwd_distance;
-
-    int rank = lengths.size();
-
-    fwd_distance = std::accumulate(lengths.begin(), lengths.end(), 1,
-                                   std::multiplies<MKL_FFT_LONG>());
-    if (D == gt::fft::Domain::REAL) {
-      bwd_distance =
-        fwd_distance / lengths[rank - 1] * (lengths[rank - 1] / 2 + 1);
-    } else {
-      bwd_distance = fwd_distance;
-    }
-
-    init(lengths, 1, fwd_distance, 1, bwd_distance, batch_size);
+    init(lengths, 1, 0, 1, 0, batch_size);
   }
 
   FFTPlanManySYCL(std::vector<int> lengths, int istride, int idist, int ostride,
@@ -154,6 +141,15 @@ private:
       } else {
         freq_lengths[i] = lengths_[i];
       }
+    }
+
+    if (idist == 0) {
+      idist = std::accumulate(lengths.begin(), lengths.end(), 1,
+                              std::multiplies<MKL_FFT_LONG>());
+    }
+    if (odist == 0) {
+      odist = std::accumulate(freq_lengths.begin(), freq_lengths.end(), 1,
+                              std::multiplies<MKL_FFT_LONG>());
     }
 
     try {
