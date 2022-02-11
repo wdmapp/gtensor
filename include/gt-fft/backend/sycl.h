@@ -146,8 +146,14 @@ private:
     int rank = lengths_.size();
 
     std::vector<MKL_FFT_LONG> lengths(rank);
+    std::vector<MKL_FFT_LONG> freq_lengths(rank);
     for (int i = 0; i < rank; i++) {
       lengths[i] = lengths_[i];
+      if (D == gt::fft::Domain::REAL && i == rank - 1) {
+        freq_lengths[i] = lengths_[i] / 2 + 1;
+      } else {
+        freq_lengths[i] = lengths_[i];
+      }
     }
 
     try {
@@ -157,18 +163,20 @@ private:
         plan_ = std::make_unique<Desc>(lengths[0]);
       }
 
-      // set up strides arrays
+      // Set up strides arrays used to map multi-d indexing
+      // to 1d. Fastest changing index is in right most
+      // position.
       std::int64_t rstrides[rank + 1];
       std::int64_t cstrides[rank + 1];
       rstrides[0] = 0;
       cstrides[0] = 0;
       std::int64_t rs = istride;
       std::int64_t cs = ostride;
-      for (int i = 1; i <= rank; i++) {
+      for (int i = rank; i > 0; i--) {
         rstrides[i] = rs;
         cstrides[i] = cs;
         rs *= lengths[i - 1];
-        cs *= lengths[i - 1];
+        cs *= freq_lengths[i - 1];
       }
 
       plan_->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
