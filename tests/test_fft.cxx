@@ -485,7 +485,6 @@ TEST(fft, move_only)
 template <typename E>
 void fft_r2c_2d()
 {
-  // sin(2*pi*x + 4*pi*y) x=-2:1/16:2-1/16, y=0:1/16:1-1/16
   constexpr int Nx = 64;
   constexpr int Ny = 16;
   constexpr int batch_size = 1;
@@ -498,9 +497,11 @@ void fft_r2c_2d()
   auto d_A2 = gt::empty_device<E>(h_A.shape());
 
   auto h_B = gt::empty<T>({Nx / 2 + 1, Ny, batch_size});
+  auto h_B_expected = gt::empty<T>(h_B.shape());
   auto d_B = gt::empty_device<T>(h_B.shape());
 
-  // origin at center of domain has value 1, to model delta function
+  // Set up periodic domain with frequencies 4 and 2
+  // m = [sin(2*pi*x+4*pi*y) for x in -2:1/16:2-1/16, y in 0:1/16:1-1/16]
   double x, y;
   for (int j = 0; j < Ny; j++) {
     for (int i = 0; i < Nx; i++) {
@@ -516,34 +517,26 @@ void fft_r2c_2d()
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
-  /*
-  std::cout << "h_A.shape() = " << h_A.shape() << std::endl;
-  std::cout << "h_B.shape() = " << h_B.shape() << std::endl;
-  std::cout << "h_A = " << h_A << std::endl;
-  std::cout << "h_B = " << h_B << std::endl;
-  */
-
-  // sin over our domain has frequency 4 in x and 2 in y
   // NB: allow greater error than for other tests
   double max_err = 20.0 * gt::test::detail::max_err<E>::value;
+
+  // Expect denormalized -5i at (4,2) and 0 elsewhere
   for (int j = 0; j < h_B.shape(1); j++) {
     for (int i = 0; i < h_B.shape(0); i++) {
       if (i == 4 && j == 2) {
-        expect_complex_near(h_B(i, j, 0) / T(Nx * Ny, 0), T(0, -0.5), max_err);
+        h_B_expected(i, j, 0) = T(0, -0.5) * T(Nx * Ny, 0);
       } else {
-        expect_complex_near(h_B(i, j, 0), T(0, 0), max_err);
+        h_B_expected(i, j, 0) = T(0, 0);
       }
     }
   }
 
+  GT_EXPECT_NEAR_ARRAY_ERR(h_B_expected, h_B, max_err);
+
   // test roundtripping data, with normalization
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
-  for (int i = 0; i < h_A.shape(0); i++) {
-    for (int j = 0; j < h_A.shape(1); j++) {
-      ASSERT_NEAR(h_A(i, j, 0), h_A2(i, j, 0) / (Nx * Ny), max_err);
-    }
-  }
+  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / T(Nx * Ny, 0));
 }
 
 TEST(fft, r2c_2d)

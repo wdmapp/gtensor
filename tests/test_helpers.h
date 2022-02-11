@@ -105,3 +105,6 @@ inline void _expect_near_array(const char* file, int line, const char* xname,
 
 #define GT_EXPECT_NEAR_ARRAY(x, y)                                             \
   _expect_near_array(__FILE__, __LINE__, #x, x, #y, y)
+
+#define GT_EXPECT_NEAR_ARRAY_ERR(x, y, max_err)                                \
+  _expect_near_array(__FILE__, __LINE__, #x, x, #y, y, max_err)
