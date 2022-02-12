@@ -536,7 +536,7 @@ void fft_r2c_2d()
   // test roundtripping data, with normalization
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
-  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / T(Nx * Ny, 0));
+  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / (Nx * Ny));
 }
 
 TEST(fft, r2c_2d)
@@ -630,23 +630,12 @@ void fft_r2c_3d()
   gt::copy(d_B, h_B);
 
   // FFT of delta function is all ones in magnitude
-  auto h_B_flat = gt::flatten(h_B);
-  double max_err = gt::test::detail::max_err<E>::value;
-  for (int i = 0; i < h_B_flat.shape(0); i++) {
-    ASSERT_NEAR(gt::abs(h_B_flat(i)), 1.0, max_err);
-  }
+  GT_EXPECT_NEAR_ARRAY_ABS(h_B, 1.0);
 
   // test roundtripping data, with normalization
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
-  for (int i = 0; i < h_A.shape(0); i++) {
-    for (int j = 0; j < h_A.shape(1); j++) {
-      for (int k = 0; k < h_A.shape(2); k++) {
-        ASSERT_NEAR(h_A(i, j, k, 0), h_A2(i, j, k, 0) / (Nx * Ny * Nz),
-                    max_err);
-      }
-    }
-  }
+  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / (Nx * Ny * Nz));
 }
 
 TEST(fft, r2c_3d)
