@@ -429,6 +429,7 @@ TEST(gview, reshape_reshape)
             (gt::gtensor<double, 2>{{11., 21.}, {31., 12.}, {22., 32.}}));
 
   auto aview2 = gt::reshape(aview, gt::shape(6, 1));
+  EXPECT_EQ(std::addressof(aview(0, 0)), std::addressof(aview2(0, 0)));
   EXPECT_EQ(aview2, (gt::gtensor<double, 2>{{11., 21., 31., 12., 22., 32.}}));
 }
 
@@ -438,6 +439,9 @@ TEST(gview, flatten_gtensor)
   auto aflat = gt::flatten(a);
 
   EXPECT_EQ(aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+
+  // make sure that no data was copied
+  EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(aflat(0)));
 }
 
 TEST(gview, flatten_view)
@@ -449,6 +453,23 @@ TEST(gview, flatten_view)
 
   auto aflat = gt::flatten(aview);
   EXPECT_EQ(aflat, (gt::gtensor<double, 1>{21., 31., 22., 32.}));
+
+  // make sure that no data was copied
+  EXPECT_EQ(std::addressof(aview(0, 0)), std::addressof(aflat(0)));
+}
+
+TEST(gview, flatten_scalar)
+{
+  auto a = gt::empty<int>({2});
+  auto aview = a.view(gt::all);
+  auto s7 = gt::scalar(7);
+  auto s7flat = gt::flatten(s7);
+
+  GT_DEBUG_TYPE(s7flat);
+
+  aview = s7flat;
+
+  EXPECT_EQ(a, (gt::gtensor<double, 1>{7, 7}));
 }
 
 TEST(gview, flatten_gtensor_to_kernel)
@@ -460,6 +481,24 @@ TEST(gview, flatten_gtensor_to_kernel)
   GT_DEBUG_TYPE(aflat);
   GT_DEBUG_TYPE(k_aflat);
   EXPECT_EQ(k_aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+  EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(aflat(0)));
+  EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(k_aflat(0)));
+}
+
+TEST(gview, flatten_gview_to_kernel)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aview = a.view(_s(1, 3), _all);
+  auto aflat = gt::flatten(aview);
+  auto k_aflat = aflat.to_kernel();
+  GT_DEBUG_TYPE(a);
+  GT_DEBUG_TYPE(aview);
+  GT_DEBUG_TYPE(aflat);
+  GT_DEBUG_TYPE(k_aflat);
+  EXPECT_EQ(k_aflat, (gt::gtensor<double, 1>{21., 31., 22., 32.}));
+  EXPECT_EQ(std::addressof(a(1, 0)), std::addressof(aview(0, 0)));
+  EXPECT_EQ(std::addressof(aview(0, 0)), std::addressof(aflat(0)));
+  EXPECT_EQ(std::addressof(aview(0, 0)), std::addressof(k_aflat(0)));
 }
 
 TEST(gview, flatten_gfunction_to_kernel)
@@ -600,6 +639,23 @@ TEST(gview, device_eval_view)
   gt::copy(c, h_c);
 
   EXPECT_EQ(h_c, h_a);
+}
+
+TEST(gview, device_flatten_scalar)
+{
+  auto a = gt::empty_device<int>({2});
+  auto h_a = gt::empty_like(a);
+  auto aview = a.view(gt::all);
+  auto s7 = gt::scalar(7);
+  auto s7flat = gt::flatten(s7);
+
+  GT_DEBUG_TYPE(s7flat);
+
+  aview = s7flat;
+
+  gt::copy(a, h_a);
+
+  EXPECT_EQ(h_a, (gt::gtensor<double, 1>{7, 7}));
 }
 
 #endif

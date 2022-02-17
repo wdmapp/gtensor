@@ -20,6 +20,16 @@ TEST(assign, gtensor_6d)
   EXPECT_EQ(a, b);
 }
 
+TEST(assign, gview_1d_scalar)
+{
+  auto a = gt::empty<int>(gt::shape(5));
+  auto aview = a.view(gt::all);
+
+  aview = gt::scalar(5);
+
+  EXPECT_EQ(a, (gt::gtensor<int, 1>{5, 5, 5, 5, 5}));
+}
+
 TEST(assign, gtensor_fill)
 {
   gt::gtensor<float, 2> a(gt::shape(2, 3));
@@ -110,6 +120,19 @@ TEST(assign, device_span_fill)
   gt::copy(a, h_a);
   EXPECT_EQ(h_a,
             (gt::gtensor<float, 2>{{9001, 9001}, {9001, 9001}, {9001, 9001}}));
+}
+
+TEST(assign, device_gview_1d_scalar)
+{
+  auto a = gt::empty_device<int>(gt::shape(5));
+  auto h_a = gt::empty_like(a);
+  auto aview = a.view(gt::all);
+
+  aview = gt::scalar(5);
+
+  gt::copy(a, h_a);
+
+  EXPECT_EQ(h_a, (gt::gtensor<int, 1>{5, 5, 5, 5, 5}));
 }
 
 #endif // GTENSOR_HAVE_DEVICE
