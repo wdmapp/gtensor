@@ -19,6 +19,12 @@ class sarray;
 template <size_type N>
 using shape_type = sarray<int, N>;
 
+template <typename T>
+T div_ceil(const T n, const T d)
+{
+  return (n - 1) / d + 1;
+}
+
 } // namespace gt
 
 #endif

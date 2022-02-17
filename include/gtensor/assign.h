@@ -218,6 +218,8 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
   }
 }
 
+#ifdef GTENSOR_PER_DIM_KERNELS
+
 template <>
 struct assigner<1, space::device>
 {
@@ -225,9 +227,8 @@ struct assigner<1, space::device>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<1, device>\n");
-    const int BS_1D = 256;
-    dim3 numThreads(BS_1D);
-    dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
+    dim3 numThreads(BS_LINEAR);
+    dim3 numBlocks(gt::div_ceil(lhs.shape(0), BS_LINEAR));
 
     gpuSyncIfEnabled();
     gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0,
@@ -339,7 +340,31 @@ struct assigner<6, space::device>
   }
 };
 
+#endif
+
+template <size_type N>
+struct assigner<N, space::device>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
+  {
+    auto k_lhs = flatten(lhs).to_kernel();
+    auto k_rhs = flatten(rhs).to_kernel();
+    int size = k_lhs.shape(0);
+
+    dim3 numThreads(BS_LINEAR);
+    dim3 numBlocks(gt::div_ceil(size, BS_LINEAR));
+
+    gpuSyncIfEnabled();
+    gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), k_lhs, k_rhs);
+    gpuSyncIfEnabled();
+  }
+};
+
 #elif defined(GTENSOR_DEVICE_SYCL)
+
+#ifdef GTENSOR_PER_DIM_KERNELS
 
 template <>
 struct assigner<1, space::device>
@@ -413,6 +438,8 @@ struct assigner<3, space::device>
   }
 };
 
+#endif
+
 template <size_type N>
 struct assigner<N, space::device>
 {
@@ -421,9 +448,9 @@ struct assigner<N, space::device>
   {
     sycl::queue q = stream.get_backend_stream();
     // use linear indexing for simplicity
-    auto size = calc_size(lhs.shape());
     auto k_lhs = flatten(lhs).to_kernel();
     auto k_rhs = flatten(rhs).to_kernel();
+    auto size = k_lhs.shape(0);
     auto block_size = std::min(size_type(size), size_type(BS_LINEAR));
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
