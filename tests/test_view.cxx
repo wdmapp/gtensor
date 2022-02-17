@@ -444,6 +444,21 @@ TEST(gview, flatten_gtensor)
   EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(aflat(0)));
 }
 
+TEST(gview, flatten_gtensor_lhs)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  gt::gtensor<double, 2> a2{{0., 21., 31.}, {12., 22., 32.}};
+  auto aflat = gt::flatten(a);
+
+  aflat(0) = 0.;
+
+  EXPECT_EQ(a, a2);
+  EXPECT_EQ(aflat, (gt::gtensor<double, 1>{0., 21., 31., 12., 22., 32.}));
+
+  // make sure that no data was copied
+  EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(aflat(0)));
+}
+
 TEST(gview, flatten_view)
 {
   gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
@@ -656,6 +671,83 @@ TEST(gview, device_flatten_scalar)
   gt::copy(a, h_a);
 
   EXPECT_EQ(h_a, (gt::gtensor<double, 1>{7, 7}));
+}
+
+TEST(gview, device_flatten_gtensor)
+{
+  gt::gtensor_device<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto aflat_view = gt::flatten(a);
+  auto aflat_copy = gt::empty_like(aflat_view);
+  auto h_aflat = gt::empty<double>(aflat_view.shape());
+
+  // make sure that no data was copied
+  EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(aflat_view(0)));
+
+  // note: you can't copy a view to host directly
+  aflat_copy = aflat_view;
+
+  gt::copy(aflat_copy, h_aflat);
+  EXPECT_EQ(h_aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+}
+
+TEST(gview, device_flatten_gtensor_lhs)
+{
+  gt::gtensor_device<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto h_a = gt::empty<double>(a.shape());
+  gt::gtensor<double, 2> h_a2{{0., 1., 2.}, {3., 4., 5.}};
+  auto aflat_view = gt::flatten(a);
+  auto aflat_copy = gt::empty_like(aflat_view);
+  auto h_aflat = gt::empty<double>(aflat_view.shape());
+
+  // note: you can't copy a view to host directly
+  aflat_copy = aflat_view;
+
+  gt::copy(aflat_copy, h_aflat);
+  EXPECT_EQ(h_aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+
+  aflat_view = gt::scalar(6.);
+
+  aflat_copy = aflat_view;
+
+  gt::copy(aflat_copy, h_aflat);
+  EXPECT_EQ(h_aflat, (gt::gtensor<double, 1>{6., 6., 6., 6., 6., 6.}));
+
+  gt::copy(a, h_a);
+  EXPECT_EQ(h_a, (gt::gtensor<double, 2>{{6., 6., 6.}, {6., 6., 6.}}));
+}
+
+void test_flatten_lhs_launch()
+{
+  gt::gtensor_device<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  auto h_a = gt::empty<double>(a.shape());
+  gt::gtensor<double, 2> h_a2{{0., 1., 2.}, {3., 4., 5.}};
+  auto aflat_view = gt::flatten(a);
+  auto aflat_copy = gt::empty_like(aflat_view);
+  auto h_aflat = gt::empty<double>(aflat_view.shape());
+
+  // note: you can't copy a view to host directly
+  aflat_copy = aflat_view;
+
+  gt::copy(aflat_copy, h_aflat);
+  EXPECT_EQ(h_aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
+
+  auto k_aflat_view = aflat_view.to_kernel();
+  gt::launch<1>(
+    aflat_view.shape(), GT_LAMBDA(int i) { k_aflat_view(i) = 6.; });
+
+  aflat_copy = aflat_view;
+
+  gt::copy(aflat_copy, h_aflat);
+  EXPECT_EQ(h_aflat, (gt::gtensor<double, 1>{6., 6., 6., 6., 6., 6.}));
+
+  gt::copy(a, h_a);
+  EXPECT_EQ(h_a, (gt::gtensor<double, 2>{{6., 6., 6.}, {6., 6., 6.}}));
+}
+
+TEST(gview, device_flatten_gtensor_lhs_launch)
+{
+  // NB: can't define GT lambda's inside google tests
+  test_flatten_lhs_launch();
 }
 
 #endif
