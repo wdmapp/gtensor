@@ -28,7 +28,9 @@ public:
   using reference = typename inner_expression_type::reference;
   using const_reference = typename inner_expression_type::const_reference;
 
-  gview_adaptor(E&& e) : e_(e), strides_(calc_strides(e.shape())) {}
+  gview_adaptor(E&& e)
+    : e_(std::forward<E>(e)), strides_(calc_strides(e.shape()))
+  {}
 
   shape_type shape() const { return e_.shape(); }
   shape_type strides() const { return strides_; }
@@ -164,6 +166,8 @@ public:
   using typename base_type::shape_type;
   using typename base_type::strides_type;
 
+  using base_type::derived;
+
   // Note: important for const correctness. If the gview is const and owns
   // a gtensor object, rather than holding a reference, then the const
   // version of methods of the underlying object will be called. The const
@@ -287,29 +291,29 @@ GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 template <typename EC, size_type N>
 inline auto gview<EC, N>::operator=(const gview<EC, N>& o) -> gview&
 {
-  assign(*this, o);
-  return *this;
+  assign(derived(), o);
+  return derived();
 }
 
 template <typename EC, size_type N>
 template <typename E>
 inline auto gview<EC, N>::operator=(const expression<E>& e) -> gview&
 {
-  assign(*this, e.derived());
-  return *this;
+  assign(this->derived(), e.derived());
+  return this->derived();
 }
 
 template <typename EC, size_type N>
 inline auto gview<EC, N>::operator=(value_type val) -> gview&
 {
-  assign(*this, scalar(val));
-  return *this;
+  assign(derived(), scalar(val));
+  return derived();
 }
 
 template <typename EC, size_type N>
 inline void gview<EC, N>::fill(const value_type v)
 {
-  assign(*this, scalar(v));
+  assign(derived(), scalar(v));
 }
 
 // ======================================================================
@@ -466,7 +470,7 @@ struct flatten_impl
 template <typename E>
 struct flatten_impl<E, true>
 {
-  static inline auto run(E&& e)
+  static inline decltype(auto) run(E&& e)
   {
     return reshape(std::forward<E>(e), shape(e.size()));
   }
@@ -475,13 +479,13 @@ struct flatten_impl<E, true>
 template <typename E>
 struct flatten_impl<E, false>
 {
-  static inline auto run(E&& e) { return e; }
+  static inline decltype(auto) run(E&& e) { return std::forward<E>(e); }
 };
 
 } // end namespace detail
 
 template <typename E>
-inline auto flatten(E&& e)
+inline decltype(auto) flatten(E&& e)
 {
   return detail::flatten_impl<E, (expr_dimension<E>() > 1)>::run(
     std::forward<E>(e));
