@@ -463,7 +463,7 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
 namespace detail
 {
 
-template <typename E, bool DimGreaterThanOne>
+template <typename E, bool DimGreaterThanZero>
 struct flatten_impl
 {};
 
@@ -487,7 +487,7 @@ struct flatten_impl<E, false>
 template <typename E>
 inline decltype(auto) flatten(E&& e)
 {
-  return detail::flatten_impl<E, (expr_dimension<E>() > 1)>::run(
+  return detail::flatten_impl<E, (expr_dimension<E>() > 0)>::run(
     std::forward<E>(e));
 }
 
