@@ -135,4 +135,28 @@ TEST(assign, device_gview_1d_scalar)
   EXPECT_EQ(h_a, (gt::gtensor<int, 1>{5, 5, 5, 5, 5}));
 }
 
+TEST(assign, device_gtensor_large_2d)
+{
+  gt::gtensor_device<int, 2> a(gt::shape(2, 17920000));
+  gt::gtensor_device<int, 2> b(a.shape());
+  gt::gtensor<int, 2> h_a(a.shape());
+  gt::gtensor<int, 2> h_b(a.shape());
+
+  int* adata = h_a.data();
+
+  for (int i = 0; i < a.size(); i++) {
+    adata[i] = i;
+  }
+
+  gt::copy(h_a, a);
+  // NB: b = a calls the default operator= which ends up triggering
+  // and underlying storage vector copy, usually a device memcpy, so
+  // it doesn't launch the gtensor assign kernel. Call assign directly
+  // to exercise the code
+  assign(b, a);
+  gt::copy(b, h_b);
+
+  EXPECT_EQ(h_a, h_b);
+}
+
 #endif // GTENSOR_HAVE_DEVICE
