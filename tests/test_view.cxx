@@ -739,10 +739,7 @@ TEST(gview, device_flatten_gtensor_lhs_1d)
   gt::copy(aflat_copy, h_aflat);
   EXPECT_EQ(h_aflat, (gt::gtensor<double, 1>{11., 21., 31., 12., 22., 32.}));
 
-  // Hack: can't directly copy a scalar to a gcontainer, and because it's
-  // already flat aflat_view is a lie and a reference to a gcontainer, not
-  // a view
-  aflat_view.view() = gt::scalar(6.);
+  aflat_view = gt::scalar(6.);
 
   aflat_copy = aflat_view;
 

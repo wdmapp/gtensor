@@ -42,6 +42,9 @@ public:
   template <typename E>
   D& operator=(const expression<E>& e);
 
+  template <typename T>
+  D& operator=(const gscalar<T>& v);
+
   void resize(const shape_type& shape);
 
   template <typename... Args>
@@ -87,6 +90,14 @@ inline D& gcontainer<D>::operator=(const expression<E>& e)
 {
   resize(e.derived().shape());
   assign(derived(), e.derived());
+  return derived();
+}
+
+template <typename D>
+template <typename T>
+inline D& gcontainer<D>::operator=(const gt::gscalar<T>& v)
+{
+  assign(derived(), v);
   return derived();
 }
 

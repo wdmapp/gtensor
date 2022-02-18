@@ -175,6 +175,14 @@ TEST(gtensor, move_assign)
   EXPECT_EQ(adata, bdata);
 }
 
+TEST(gtensor, assign_scalar)
+{
+  auto a = gt::empty<double>({3});
+
+  a = gt::scalar(3.);
+  EXPECT_EQ(a, (gt::gtensor<double, 1>{3., 3., 3.}));
+}
+
 TEST(gtensor, assign_expression_1d)
 {
   gt::gtensor<double, 1> a{11., 12., 13.};
