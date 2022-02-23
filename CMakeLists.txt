@@ -230,7 +230,7 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
       target_compile_options(gtensor_sycl INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-fsycl-targets=spir64_gen
           -Xsycl-target-backend
-            "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}">)
+            "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}" >)
     endif()
 
     add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
