@@ -18,7 +18,7 @@ set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
-option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" ON)
+option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
 option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
 option(GTENSOR_BUILD_EXAMPLES "Build example programs" OFF)
 
