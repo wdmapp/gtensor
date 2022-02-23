@@ -139,7 +139,7 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
-  if ($ENV{MACHINE} STREQUAL "crusher")
+  if ("$ENV{MACHINE}" STREQUAL "crusher")
      target_compile_definitions(gtensor_hip INTERFACE __HIP_ROCclr__ __HIP_ARCH_GFX90A__=1)
   endif()
   # Note: always link thrust, used for reductions even when the gtensor
