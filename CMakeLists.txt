@@ -261,8 +261,11 @@ if ("host" IN_LIST GTENSOR_BUILD_DEVICES)
 endif()
 
 if (GTENSOR_PER_DIM_KERNELS)
+  message(STATUS "${PROJECT_NAME}: using per dim assign/launch kernels")
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
                              INTERFACE GTENSOR_PER_DIM_KERNELS)
+else()
+  message(STATUS "${PROJECT_NAME}: using N-d -> 1d assign/launch kernels")
 endif()
 
 # define aliases for use in tests and examples subdirs
