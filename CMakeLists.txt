@@ -34,7 +34,7 @@ option(GTENSOR_PER_DIM_KERNELS
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
-set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908" CACHE
+set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
 
 # SYCL specific configuration
