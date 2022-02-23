@@ -297,6 +297,17 @@ __global__ void kernel_launch(gt::shape_type<6> shape, F f)
   }
 }
 
+template <typename F, size_type N>
+__global__ void kernel_launch_N(F f, int size, gt::shape_type<N> strides)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (i < size) {
+    auto idx = unravel(i, strides);
+    index_expression(f, idx);
+  }
+}
+
 #endif // CUDA or HIP
 
 namespace detail
@@ -407,6 +418,9 @@ struct launch<6, space::host>
 };
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+
+#ifdef GTENSOR_PER_DIM_KERNELS
+
 template <>
 struct launch<1, space::device>
 {
@@ -504,7 +518,32 @@ struct launch<6, space::device>
   }
 };
 
+#endif
+
+template <int N>
+struct launch<N, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<N>& shape, F&& f, gt::stream_view stream)
+  {
+    int size = int(calc_size(shape));
+    auto strides = calc_strides(shape);
+    auto block_size = std::min(size, BS_LINEAR);
+
+    dim3 numThreads(block_size);
+    dim3 numBlocks(gt::div_ceil(size, block_size));
+
+    gpuSyncIfEnabled();
+    gtLaunchKernel(kernel_launch_N, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), std::forward<F>(f), size,
+                   strides);
+    gpuSyncIfEnabled();
+  }
+};
+
 #elif defined(GTENSOR_DEVICE_SYCL)
+
+#ifdef GTENSOR_PER_DIM_KERNELS
 
 template <>
 struct launch<1, space::device>
@@ -565,6 +604,8 @@ struct launch<3, space::device>
     e.wait();
   }
 };
+
+#endif
 
 template <size_type N>
 struct launch<N, space::device>

@@ -218,6 +218,20 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
   }
 }
 
+template <typename Elhs, typename Erhs, size_type N>
+__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, int size,
+                                gt::shape_type<N> strides)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (i < size) {
+    auto idx = unravel(i, strides);
+    index_expression(lhs, idx) = index_expression(rhs, idx);
+  }
+}
+
+#ifdef GTENSOR_PER_DIM_KERNELS
+
 template <>
 struct assigner<1, space::device>
 {
@@ -225,9 +239,8 @@ struct assigner<1, space::device>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<1, device>\n");
-    const int BS_1D = 256;
-    dim3 numThreads(BS_1D);
-    dim3 numBlocks((lhs.shape(0) + BS_1D - 1) / BS_1D);
+    dim3 numThreads(BS_LINEAR);
+    dim3 numBlocks(gt::div_ceil(lhs.shape(0), BS_LINEAR));
 
     gpuSyncIfEnabled();
     gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0,
@@ -339,7 +352,32 @@ struct assigner<6, space::device>
   }
 };
 
+#endif
+
+template <size_type N>
+struct assigner<N, space::device>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
+  {
+    int size = int(calc_size(lhs.shape()));
+    auto strides = calc_strides(lhs.shape());
+    auto block_size = std::min(size, BS_LINEAR);
+
+    dim3 numThreads(block_size);
+    dim3 numBlocks(gt::div_ceil(size, block_size));
+
+    gpuSyncIfEnabled();
+    gtLaunchKernel(kernel_assign_N, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel(), size, strides);
+    gpuSyncIfEnabled();
+  }
+};
+
 #elif defined(GTENSOR_DEVICE_SYCL)
+
+#ifdef GTENSOR_PER_DIM_KERNELS
 
 template <>
 struct assigner<1, space::device>
@@ -413,6 +451,8 @@ struct assigner<3, space::device>
   }
 };
 
+#endif
+
 template <size_type N>
 struct assigner<N, space::device>
 {
@@ -422,18 +462,20 @@ struct assigner<N, space::device>
     sycl::queue q = stream.get_backend_stream();
     // use linear indexing for simplicity
     auto size = calc_size(lhs.shape());
-    auto k_lhs = flatten(lhs).to_kernel();
-    auto k_rhs = flatten(rhs).to_kernel();
     auto block_size = std::min(size_type(size), size_type(BS_LINEAR));
+    auto strides = calc_strides(lhs.shape());
     auto range =
       sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
+    auto k_lhs = lhs.to_kernel();
+    auto k_rhs = rhs.to_kernel();
     auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
         int i = item.get_global_id(0);
-        k_lhs(i) = k_rhs(i);
+        auto idx = unravel(i, strides);
+        index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
       });
     });
     e.wait();

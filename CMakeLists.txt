@@ -27,6 +27,9 @@ option(GTENSOR_ENABLE_CLIB "Enable libcgtensor" OFF)
 option(GTENSOR_ENABLE_BLAS "Enable gtblas" OFF)
 option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 
+option(GTENSOR_PER_DIM_KERNELS
+       "Enable per dim kernels (may break for large arrays)" OFF)
+
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
@@ -255,6 +258,11 @@ if ("host" IN_LIST GTENSOR_BUILD_DEVICES)
   message(STATUS "${PROJECT_NAME}: adding gtensor_host target")
   add_gtensor_library(host)
   target_compile_definitions(gtensor_host INTERFACE GTENSOR_DEVICE_HOST)
+endif()
+
+if (GTENSOR_PER_DIM_KERNELS)
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_PER_DIM_KERNELS)
 endif()
 
 # define aliases for use in tests and examples subdirs
