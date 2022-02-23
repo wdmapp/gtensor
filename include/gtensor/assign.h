@@ -10,6 +10,7 @@ namespace gt
 constexpr const int BS_X = 16;
 constexpr const int BS_Y = 16;
 constexpr const int BS_LINEAR = 256;
+  constexpr const int MAXTHREADS_PER_BLOCK = 1024;
 
 // ======================================================================
 // assign
@@ -146,10 +147,14 @@ __global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_2(Elhs lhs, Erhs rhs)
 {
-  int i = threadIdx.x + blockIdx.x * BS_X;
+  /*int i = threadIdx.x + blockIdx.x * BS_X;
   int j = threadIdx.y + blockIdx.y * BS_Y;
+  */
+  long lind=blockIdx.x*blockDim.x + threadIdx.x;
+  int i = lind % lhs.shape(0);
+  int j = lind / lhs.shape(0);
 
-  if (i < lhs.shape(0) && j < lhs.shape(1)) {
+  if (j < lhs.shape(1)) {
     lhs(i, j) = rhs(i, j);
   }
 }
@@ -157,11 +162,17 @@ __global__ void kernel_assign_2(Elhs lhs, Erhs rhs)
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_3(Elhs lhs, Erhs rhs)
 {
-  int i = threadIdx.x + blockIdx.x * BS_X;
+  /*int i = threadIdx.x + blockIdx.x * BS_X;
   int j = threadIdx.y + blockIdx.y * BS_Y;
   int b = blockIdx.z;
+  */
+  long lind=blockIdx.x*blockDim.x + threadIdx.x;
+  int i = lind % lhs.shape(0);
+  int j = (lind / lhs.shape(0)) % lhs.shape(1);
+  int b = lind / (lhs.shape(0)*lhs.shape(1));
 
-  if (i < lhs.shape(0) && j < lhs.shape(1)) {
+
+  if (j < lhs.shape(1) && b < lhs.shape(2)) {
     lhs(i, j, b) = rhs(i, j, b);
   }
 }
@@ -237,6 +248,18 @@ struct assigner<1, space::device>
   }
 };
 
+static void get_launch_grid(int* shape, int dim, int& numThreads, int& numBlocks) {
+  long totalthreads=1;
+  for (int i=0; i<dim; ++i) {
+    totalthreads *= shape[i];
+  }
+  numThreads = 2*MAXTHREADS_PER_BLOCK;
+  do {
+    numThreads /= 2;
+    numBlocks=(totalthreads+numThreads-1)/numThreads;
+  } while (numThreads>16 && numBlocks<32);
+}
+
 template <>
 struct assigner<2, space::device>
 {
@@ -244,10 +267,14 @@ struct assigner<2, space::device>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<2, device>\n");
-    dim3 numThreads(BS_X, BS_Y);
+    int numThreads, numBlocks;
+    int shape[2];
+    shape[0]=lhs.shape(0); shape[1]=lhs.shape(1);
+    get_launch_grid(shape,2,numThreads,numBlocks);
+    /*dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
                    (lhs.shape(1) + BS_Y - 1) / BS_Y);
-
+    */
     gpuSyncIfEnabled();
     gtLaunchKernel(kernel_assign_2, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
@@ -263,10 +290,14 @@ struct assigner<3, space::device>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<3, device>\n");
-    dim3 numThreads(BS_X, BS_Y);
+    int numThreads, numBlocks;
+    int shape[3];
+    shape[0]=lhs.shape(0); shape[1]=lhs.shape(1); shape[2]=lhs.shape(2);
+    get_launch_grid(shape,3,numThreads,numBlocks);
+    /*dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
                    (lhs.shape(1) + BS_Y - 1) / BS_Y, lhs.shape(2));
-
+    */
     gpuSyncIfEnabled();
     /*std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     std::cout << "numBlocks="<<numBlocks.x<<" "<<numBlocks.y<<" "<<numBlocks.z<<
