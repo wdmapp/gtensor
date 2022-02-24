@@ -18,7 +18,7 @@ set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
-option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" ON)
+option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
 option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
 option(GTENSOR_BUILD_EXAMPLES "Build example programs" OFF)
 
@@ -34,7 +34,7 @@ option(GTENSOR_PER_DIM_KERNELS
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
-set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908" CACHE
+set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
 
 # SYCL specific configuration
@@ -230,7 +230,7 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
       target_compile_options(gtensor_sycl INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-fsycl-targets=spir64_gen
           -Xsycl-target-backend
-            "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}">)
+            "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}" >)
     endif()
 
     add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
@@ -261,8 +261,11 @@ if ("host" IN_LIST GTENSOR_BUILD_DEVICES)
 endif()
 
 if (GTENSOR_PER_DIM_KERNELS)
+  message(STATUS "${PROJECT_NAME}: using per dim assign/launch kernels")
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
                              INTERFACE GTENSOR_PER_DIM_KERNELS)
+else()
+  message(STATUS "${PROJECT_NAME}: using N-d -> 1d assign/launch kernels")
 endif()
 
 # define aliases for use in tests and examples subdirs
