@@ -615,15 +615,10 @@ struct launch<N, space::device>
   {
     sycl::queue q = stream.get_backend_stream();
     int size = calc_size(shape);
-    // use linear indexing for simplicity
-    auto block_size = std::min(size, BS_LINEAR);
     auto strides = calc_strides(shape);
-    auto range =
-      sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::LaunchN<decltype(f)>;
-      cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
-        int i = item.get_global_id(0);
+      cgh.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i) {
         auto idx = unravel(i, strides);
         index_expression(f, idx);
       });
