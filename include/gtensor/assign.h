@@ -462,20 +462,22 @@ struct assigner<N, space::device>
     sycl::queue q = stream.get_backend_stream();
     // use linear indexing for simplicity
     auto size = calc_size(lhs.shape());
-    auto block_size = std::min(size_type(size), size_type(BS_LINEAR));
     auto strides = calc_strides(lhs.shape());
-    auto range =
-      sycl::nd_range<1>(sycl::range<1>(size), sycl::range<1>(block_size));
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
+    using ltype = decltype(k_lhs);
+    using rtype = decltype(k_rhs);
+
+    // Note: handle RHS that may be greater than 2k parameter limit
+    gt::backend::device_storage<rtype> d_rhs(1);
+    decltype(auto) d_rhs_p = gt::raw_pointer_cast(d_rhs.data());
+    q.copy(&k_rhs, d_rhs_p, 1).wait();
+
     auto e = q.submit([&](sycl::handler& cgh) {
-      using ltype = decltype(k_lhs);
-      using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
-      cgh.parallel_for<kname>(range, [=](sycl::nd_item<1> item) {
-        int i = item.get_global_id(0);
+      cgh.parallel_for<kname>(sycl::range<1>(size), [=](sycl::id<1> i) {
         auto idx = unravel(i, strides);
-        index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
+        index_expression(k_lhs, idx) = index_expression(*d_rhs_p, idx);
       });
     });
     e.wait();
