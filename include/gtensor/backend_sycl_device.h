@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <exception>
+#include <forward_list>
 #include <iostream>
 #include <unordered_map>
 
@@ -166,23 +167,39 @@ public:
     }
   }
 
-  cl::sycl::queue& get_queue_by_id(int device_id)
+  cl::sycl::queue& get_queue(int device_id)
   {
     valid_device_id_or_throw(device_id);
-    if (queue_map_.count(device_id) == 0) {
-      queue_map_[device_id] =
+    if (default_queue_map_.count(device_id) == 0) {
+      default_queue_map_[device_id] =
         cl::sycl::queue{devices_[device_id], get_exception_handler()};
     }
-    return queue_map_[device_id];
+    return default_queue_map_[device_id];
   }
 
-  cl::sycl::queue new_queue(int device_id)
+  cl::sycl::queue& new_stream_queue(int device_id)
   {
     valid_device_id_or_throw(device_id);
-    return cl::sycl::queue{devices_[device_id], get_exception_handler()};
+    stream_queue_map_[device_id].emplace_front(devices_[device_id],
+                                               get_exception_handler());
+    return stream_queue_map_[device_id].front();
   }
 
-  cl::sycl::queue new_queue() { return new_queue(current_device_id_); }
+  cl::sycl::queue& new_stream_queue()
+  {
+    return new_stream_queue(current_device_id_);
+  }
+
+  void delete_stream_queue(int device_id, cl::sycl::queue& q)
+  {
+    valid_device_id_or_throw(device_id);
+    stream_queue_map_[device_id].remove(q);
+  }
+
+  void delete_stream_queue(cl::sycl::queue& q)
+  {
+    delete_stream_queue(current_device_id_, q);
+  }
 
   int get_device_count() { return devices_.size(); }
 
@@ -216,11 +233,22 @@ public:
 
   int get_device_id() { return current_device_id_; }
 
-  cl::sycl::queue& get_queue() { return get_queue_by_id(current_device_id_); }
+  bool has_open_stream_queues(int device_id)
+  {
+    return !stream_queue_map_[device_id].empty();
+  }
+
+  bool has_open_stream_queues()
+  {
+    return has_open_stream_queues(current_device_id_);
+  }
+
+  cl::sycl::queue& get_queue() { return get_queue(current_device_id_); }
 
 private:
   std::vector<cl::sycl::device> devices_;
-  std::unordered_map<int, cl::sycl::queue> queue_map_;
+  std::unordered_map<int, cl::sycl::queue> default_queue_map_;
+  std::unordered_map<int, std::forward_list<cl::sycl::queue>> stream_queue_map_;
   int current_device_id_;
 };
 
@@ -238,11 +266,45 @@ inline cl::sycl::queue& get_queue()
   return device::get_sycl_queues_instance().get_queue();
 }
 
+inline cl::sycl::queue& get_queue(int device_id)
+{
+  return device::get_sycl_queues_instance().get_queue(device_id);
+}
+
 /*! Get a new queue different from the default, for use like alternate streams.
  */
-inline cl::sycl::queue new_queue()
+inline cl::sycl::queue& new_stream_queue()
 {
-  return device::get_sycl_queues_instance().new_queue();
+  return device::get_sycl_queues_instance().new_stream_queue();
+}
+
+inline cl::sycl::queue& new_stream_queue(int device_id)
+{
+  return device::get_sycl_queues_instance().new_stream_queue(device_id);
+}
+
+/*! Get a new queue different from the default, for use like alternate streams.
+ */
+inline void delete_stream_queue(cl::sycl::queue& q)
+{
+  device::get_sycl_queues_instance().delete_stream_queue(q);
+}
+
+inline void delete_stream_queue(int device_id, cl::sycl::queue& q)
+{
+  device::get_sycl_queues_instance().delete_stream_queue(device_id, q);
+}
+
+/*! Get a new queue different from the default, for use like alternate streams.
+ */
+inline bool has_open_stream_queues(int device_id)
+{
+  return device::get_sycl_queues_instance().has_open_stream_queues(device_id);
+}
+
+inline bool has_open_stream_queues()
+{
+  return device::get_sycl_queues_instance().has_open_stream_queues();
 }
 
 } // namespace sycl

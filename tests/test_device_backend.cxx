@@ -45,4 +45,52 @@ TEST(device_backend, managed_allocate)
   allocator::deallocate(a);
 }
 
+#ifdef GTENSOR_DEVICE_SYCL
+
+TEST(device_backend, sycl_new_stream_queue)
+{
+  cl::sycl::queue& q0 = gt::backend::sycl::get_queue();
+  cl::sycl::queue& q1 = gt::backend::sycl::new_stream_queue();
+
+  EXPECT_NE(q0, q1);
+
+  auto q0_view = gt::stream_view(q0);
+  auto q1_view = gt::stream_view(q1);
+
+  EXPECT_TRUE(q0_view.is_default());
+  EXPECT_FALSE(q1_view.is_default());
+
+  auto a = gt::zeros_device<int>({5});
+  auto b = gt::full_like(a, 1);
+  auto c = gt::full_like(a, 2);
+  auto h_a = gt::empty<int>(a.shape());
+  auto h_b = gt::empty_like(h_a);
+  auto h_c = gt::empty_like(h_a);
+
+  gt::copy(a, h_a);
+  gt::copy(b, h_b);
+  gt::copy(c, h_c);
+
+  EXPECT_NE(h_b, h_a);
+  EXPECT_NE(h_c, h_a);
+
+  gt::assign(b, a, q1);
+  q1.wait();
+  gt::assign(c, b, q0);
+  q0.wait();
+
+  gt::copy(a, h_a);
+  gt::copy(b, h_b);
+  gt::copy(c, h_c);
+
+  EXPECT_EQ(h_b, h_a);
+  EXPECT_EQ(h_c, h_a);
+
+  gt::backend::sycl::delete_stream_queue(q1);
+
+  EXPECT_FALSE(gt::backend::sycl::has_open_stream_queues());
+}
+
+#endif // GTENSOR_DEVICE_SYCL
+
 #endif // GTENSOR_HAVE_DEVICE

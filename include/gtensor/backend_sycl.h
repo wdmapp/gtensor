@@ -240,24 +240,26 @@ class stream_view
 {
 public:
   stream_view() : stream_(gt::backend::sycl::get_queue()) {}
-  stream_view(cl::sycl::queue q) : stream_(q) {}
+  stream_view(cl::sycl::queue& q) : stream_(q) {}
 
-  auto get_backend_stream() { return stream_; }
+  auto& get_backend_stream() { return stream_; }
 
   bool is_default() { return stream_ == gt::backend::sycl::get_queue(); }
 
   void synchronize() { stream_.wait(); }
 
 private:
-  cl::sycl::queue stream_;
+  cl::sycl::queue& stream_;
 };
 
 class stream
 {
 public:
-  stream() { stream_ = gt::backend::sycl::new_queue(); }
+  stream() : stream_(gt::backend::sycl::new_stream_queue()) {}
 
-  auto get_backend_stream() { return stream_; }
+  ~stream() { gt::backend::sycl::delete_stream_queue(stream_); }
+
+  auto& get_backend_stream() { return stream_; }
 
   bool is_default() { return stream_ == gt::backend::sycl::get_queue(); }
 
@@ -266,7 +268,7 @@ public:
   void synchronize() { stream_.wait(); }
 
 private:
-  cl::sycl::queue stream_;
+  cl::sycl::queue& stream_;
 };
 
 } // namespace gt
