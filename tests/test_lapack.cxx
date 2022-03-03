@@ -481,8 +481,7 @@ struct gthelper
 template <typename T, gt::size_type N>
 struct gthelper<T, N, gt::space::managed>
 {
-  using gtensor = gt::gtensor_container<
-    gt::backend::device_storage<T, gt::managed_allocator<T>>, N>;
+  using gtensor = gt::gtensor_container<gt::space::managed_vector<T>, N>;
 };
 
 template <typename T, gt::size_type N, typename S = gt::space::device>
