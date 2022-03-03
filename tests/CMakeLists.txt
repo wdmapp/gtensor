@@ -6,7 +6,9 @@ macro(add_gtensor_test name)
   target_gtensor_sources(${name} PRIVATE ${name}.cxx)
   target_link_libraries(${name} gtensor GTest::gtest_main)
   if (USE_GTEST_DISCOVER_TESTS)
-    gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
+    # Note: workaround discovery timeout on some Intel systems
+    gtest_discover_tests(${name} EXEC_WRAPPER ${MPIEXEC_COMMAND}
+                         DISCOVERY_TIMEOUT 600)
   else()
     gtest_add_tests(TARGET ${name} EXEC_WRAPPER ${MPIEXEC_COMMAND})
   endif()

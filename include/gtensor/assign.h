@@ -385,7 +385,7 @@ struct assigner<1, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue q = stream.get_backend_stream();
+    sycl::queue& q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<1>(lhs.shape(0));
@@ -408,7 +408,7 @@ struct assigner<2, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue q = stream.get_backend_stream();
+    sycl::queue& q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<2>(lhs.shape(1), lhs.shape(0));
@@ -432,7 +432,7 @@ struct assigner<3, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue q = stream.get_backend_stream();
+    sycl::queue& q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
     auto range = sycl::range<3>(lhs.shape(2), lhs.shape(1), lhs.shape(0));
@@ -459,7 +459,7 @@ struct assigner<N, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
-    sycl::queue q = stream.get_backend_stream();
+    sycl::queue& q = stream.get_backend_stream();
     // use linear indexing for simplicity
     auto size = calc_size(lhs.shape());
     auto strides = calc_strides(lhs.shape());

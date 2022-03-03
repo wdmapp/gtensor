@@ -26,6 +26,11 @@
   gt::allocator::caching_allocator<T, gt::device_allocator<T>>
 #endif
 
+#ifndef GTENSOR_DEFAULT_MANAGED_ALLOCATOR
+#define GTENSOR_DEFAULT_MANAGED_ALLOCATOR(T)                                   \
+  gt::allocator::caching_allocator<T, gt::managed_allocator<T>>
+#endif
+
 namespace gt
 {
 
@@ -47,6 +52,10 @@ using host_vector = ::thrust::host_vector<T, A>;
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
 using device_vector = ::thrust::device_vector<T, A>;
+
+template <typename T>
+using managed_vector =
+  ::thrust::device_vector<T, GTENSOR_DEFAULT_MANAGED_ALLOCATOR(T)>;
 #endif
 
 #else
@@ -57,6 +66,9 @@ using host_vector = gt::backend::host_storage<T, A>;
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
 using device_vector = gt::backend::device_storage<T, A>;
+
+template <typename T>
+using managed_vector = gt::backend::managed_storage<T>;
 #endif
 
 #endif // GTENSOR_USE_THRUST

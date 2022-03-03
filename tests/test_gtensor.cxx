@@ -439,6 +439,25 @@ TEST(gtensor, device_assign_gtensor)
             (gt::gtensor_device<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
 }
 
+namespace test
+{
+template <typename T, gt::size_type N>
+using gtensor_managed = gt::gtensor_container<gt::space::managed_vector<T>, N>;
+} // namespace test
+
+TEST(gtensor, device_assign_gtensor_managed)
+{
+  test::gtensor_managed<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor_device<double, 2> b(a.shape());
+
+  a(0, 1) = -1 * a(0, 1);
+
+  b = a;
+
+  EXPECT_EQ(b,
+            (gt::gtensor_device<double, 2>{{11., 12., 13.}, {-21., 22., 23.}}));
+}
+
 TEST(gtensor, device_assign_gtensor2)
 {
   gt::gtensor_device<double, 2> a{{1., 2., 3.}, {2., 4., 6.}};

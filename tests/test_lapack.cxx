@@ -468,7 +468,27 @@ TEST(lapack, zgetrf_npvt_batch)
   test_getrf_npvt_batch_complex<double>();
 }
 
-template <typename R>
+namespace test
+{
+// little hack to make tests parameterizable on managed vs device memory
+
+template <typename T, gt::size_type N, typename S = gt::space::device>
+struct gthelper
+{
+  using gtensor = gt::gtensor<T, N, S>;
+};
+
+template <typename T, gt::size_type N>
+struct gthelper<T, N, gt::space::managed>
+{
+  using gtensor = gt::gtensor_container<gt::space::managed_vector<T>, N>;
+};
+
+template <typename T, gt::size_type N, typename S = gt::space::device>
+using gtensor2 = typename gthelper<T, N, S>::gtensor;
+} // namespace test
+
+template <typename R, typename S = gt::space::device>
 void test_getrs_batch_complex()
 {
   constexpr int N = 3;
@@ -477,17 +497,17 @@ void test_getrs_batch_complex()
   using T = gt::complex<R>;
 
   gt::gtensor<T*, 1> h_Aptr(batch_size);
-  gt::gtensor_device<T*, 1> d_Aptr(batch_size);
+  test::gtensor2<T*, 1, S> d_Aptr(batch_size);
   gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
-  gt::gtensor_device<T, 3> d_A(gt::shape(N, N, batch_size));
+  test::gtensor2<T, 3, S> d_A(gt::shape(N, N, batch_size));
 
   gt::gtensor<T*, 1> h_Bptr(batch_size);
-  gt::gtensor_device<T*, 1> d_Bptr(batch_size);
+  test::gtensor2<T*, 1, S> d_Bptr(batch_size);
   gt::gtensor<T, 3> h_B(gt::shape(N, NRHS, batch_size));
-  gt::gtensor_device<T, 3> d_B(gt::shape(N, NRHS, batch_size));
+  test::gtensor2<T, 3, S> d_B(gt::shape(N, NRHS, batch_size));
 
   gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
-  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
+  test::gtensor2<gt::blas::index_t, 2, S> d_p(gt::shape(N, batch_size));
 
   // setup input for first batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
@@ -562,4 +582,14 @@ TEST(lapack, cgetrs_batch)
 TEST(lapack, zgetrs_batch)
 {
   test_getrs_batch_complex<double>();
+}
+
+TEST(lapack, cgetrs_batch_managed)
+{
+  test_getrs_batch_complex<float, gt::space::managed>();
+}
+
+TEST(lapack, zgetrs_batch_managed)
+{
+  test_getrs_batch_complex<double, gt::space::managed>();
 }
