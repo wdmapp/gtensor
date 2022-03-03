@@ -118,10 +118,10 @@ public:
     if (plan_ == nullptr) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Bin = typename detail::fft_config<D, R>::Bin;
-    using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bout*>(indata);
-    auto bout = reinterpret_cast<Bin*>(outdata);
+    using Breal = typename detail::fft_config<D, R>::Bin;
+    using Bcmplx = typename detail::fft_config<D, R>::Bout;
+    auto bin = reinterpret_cast<Bcmplx*>(indata);
+    auto bout = reinterpret_cast<Breal*>(outdata);
     auto e = oneapi::mkl::dft::compute_backward(*plan_, bin, bout);
     e.wait();
   }
