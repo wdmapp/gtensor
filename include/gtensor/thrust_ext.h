@@ -75,10 +75,25 @@ template <class T>
 class managed_allocator : public ::thrust::device_allocator<T>
 {
 public:
-  using value_type = T;
+  using base = typename ::thrust::device_allocator<T>;
+  using typename base::const_pointer;
+  using typename base::const_reference;
+  using typename base::pointer;
+  using typename base::reference;
+  using typename base::value_type;
 
-  typedef thrust::device_ptr<T> pointer;
-  inline pointer allocate(size_t n)
+  // define ctors as host only, to match parent class
+  __host__ managed_allocator() {}
+
+  __host__ managed_allocator(const managed_allocator& other)
+    : thrust::device_allocator<T>(other)
+  {}
+
+  __host__ ~managed_allocator() {}
+
+  managed_allocator& operator=(const managed_allocator&) = default;
+
+  __host__ inline pointer allocate(size_t n)
   {
     value_type* result = nullptr;
 
@@ -91,10 +106,10 @@ public:
         "managed_allocator::allocate(): cudaMallocManaged");
     }
 
-    return thrust::device_pointer_cast(result);
+    return pointer(result);
   }
 
-  inline void deallocate(pointer ptr, size_t)
+  __host__ inline void deallocate(pointer ptr, size_t)
   {
     cudaError_t error = cudaFree(thrust::raw_pointer_cast(ptr));
 
@@ -103,18 +118,44 @@ public:
                                  "managed_allocator::deallocate(): cudaFree");
     }
   }
+
+  // Needed for correctness, see examples/uninizialized_allocator.cu in
+  // thrust/rocThrust distributions.
+  template <typename U>
+  struct rebind
+  {
+    typedef managed_allocator<U> other;
+  };
+
+  // no-op, to avoid zero init
+  __host__ __device__ void construct(T*) {}
 };
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
 template <class T>
-class managed_allocator : public thrust::device_allocator<T>
+class managed_allocator : public ::thrust::device_allocator<T>
 {
 public:
-  using value_type = T;
+  using base = typename ::thrust::device_allocator<T>;
+  using typename base::const_pointer;
+  using typename base::const_reference;
+  using typename base::pointer;
+  using typename base::reference;
+  using typename base::value_type;
 
-  typedef thrust::device_ptr<T> pointer;
-  inline pointer allocate(size_t n)
+  // define ctors as host only, to match parent class
+  __host__ managed_allocator() {}
+
+  __host__ managed_allocator(const managed_allocator& other)
+    : thrust::device_allocator<T>(other)
+  {}
+
+  __host__ ~managed_allocator() {}
+
+  managed_allocator& operator=(const managed_allocator&) = default;
+
+  __host__ inline pointer allocate(size_t n)
   {
     value_type* result = nullptr;
 
@@ -127,10 +168,10 @@ public:
         "managed_allocator::allocate(): hipMallocManaged");
     }
 
-    return thrust::device_pointer_cast(result);
+    return pointer(result);
   }
 
-  inline void deallocate(pointer ptr, size_t)
+  __host__ inline void deallocate(pointer ptr, size_t)
   {
     hipError_t error = hipFree(thrust::raw_pointer_cast(ptr));
 
@@ -139,6 +180,17 @@ public:
                                  "managed_allocator::deallocate(): hipFree");
     }
   }
+
+  // Needed for correctness, see examples/uninizialized_allocator in
+  // thrust/rocThrust distributions.
+  template <typename U>
+  struct rebind
+  {
+    typedef managed_allocator<U> other;
+  };
+
+  // no-op, to avoid zero init
+  __host__ __device__ void construct(T*) {}
 };
 
 #endif
