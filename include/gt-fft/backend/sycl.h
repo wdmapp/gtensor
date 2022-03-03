@@ -186,8 +186,6 @@ private:
                        DFTI_NOT_INPLACE);
       plan_->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
                        DFTI_COMPLEX_COMPLEX);
-      plan_->set_value(oneapi::mkl::dft::config_param::FORWARD_SCALE, R(1));
-      plan_->set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, R(1));
       plan_->commit(gt::backend::sycl::get_queue());
     } catch (std::exception const& e) {
       std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
