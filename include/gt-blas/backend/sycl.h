@@ -39,7 +39,12 @@ inline void destroy(handle_t* h)
 
 inline void set_stream(handle_t* h, stream_t stream_id)
 {
-  h->handle = stream_id;
+  if (stream_id == nullptr) {
+    // set back to default stream / queue
+    h->handle = &gt::backend::sycl::get_queue();
+  } else {
+    h->handle = stream_id;
+  }
 }
 
 inline void get_stream(handle_t* h, stream_t* stream_id)
