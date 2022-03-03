@@ -442,8 +442,8 @@ TEST(gtensor, device_assign_gtensor)
 namespace test
 {
 template <typename T, gt::size_type N>
-using gtensor_managed = gt::gtensor_container<
-  gt::backend::device_storage<T, gt::managed_allocator<T>>, N>;
+using gtensor_managed =
+  gt::gtensor_container<gt::backend::managed_storage<T>, N>;
 } // namespace test
 
 TEST(gtensor, device_assign_gtensor_managed)
