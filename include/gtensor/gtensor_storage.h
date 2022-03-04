@@ -108,9 +108,7 @@ template <typename T, typename A = gt::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
 template <typename T>
-using managed_storage =
-  device_storage<T,
-                 gt::allocator::caching_allocator<T, gt::managed_allocator<T>>>;
+using managed_storage = device_storage<T, gt::managed_allocator<T>>;
 
 #endif
 
