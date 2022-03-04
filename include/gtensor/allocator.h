@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 #include <thrust/device_ptr.h>
 #endif
 
@@ -26,7 +26,7 @@ bool is_valid(P p)
   return bool(p);
 }
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 template <typename T>
 bool is_valid(::thrust::device_ptr<T> p)
 {

@@ -12,7 +12,7 @@ namespace space
 struct host_only
 {};
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 struct thrust
 {};
 struct thrust_managed

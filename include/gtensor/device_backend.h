@@ -8,12 +8,9 @@
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-#ifdef GTENSOR_USE_THRUST
-#include <thrust/device_vector.h>
-#endif
-
-#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
+#ifdef GTENSOR_HAVE_THRUST
 #include "thrust_ext.h"
+#include <thrust/device_vector.h>
 #endif
 
 #endif // GTENSOR_HAVE_DEVICE
@@ -51,7 +48,7 @@ struct selector<gt::space::host>
   using pointer = T*;
 };
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 template <>
 struct selector<gt::space::thrust>
 {
@@ -131,7 +128,7 @@ struct selector
 #ifdef GTENSOR_DEVICE_SYCL
 #include "backend_sycl.h"
 #endif
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 #include "backend_thrust.h"
 #endif
 

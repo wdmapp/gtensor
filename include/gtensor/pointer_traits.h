@@ -5,7 +5,7 @@
 #include "device_ptr.h"
 #include "space_forward.h"
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 #include <thrust/device_ptr.h>
 #endif
 
@@ -47,7 +47,7 @@ struct pointer_traits<gt::backend::device_ptr<T>>
   GT_INLINE static T* get(pointer p) { return p.get(); }
 };
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 
 template <typename T>
 struct pointer_traits<::thrust::device_ptr<T>>

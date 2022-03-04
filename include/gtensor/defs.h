@@ -4,6 +4,12 @@
 
 #include <cstddef>
 
+// This really should be defined by the build system, but it'll cause
+// compatibility issues with plain old make, so let's be cautious.
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+#define GTENSOR_HAVE_THRUST
+#endif
+
 namespace gt
 {
 
