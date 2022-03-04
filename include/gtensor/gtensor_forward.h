@@ -26,10 +26,6 @@ struct space_traits2<device>
 {
   template <typename T>
   using storage_type = device_vector<T>;
-#ifdef GTENSOR_USE_THRUST
-  template <typename T>
-  using pointer = ::thrust::device_ptr<T>;
-#endif
 };
 #endif
 } // namespace space

@@ -11,8 +11,7 @@
 
 #include <vector>
 
-#ifdef GTENSOR_USE_THRUST
-#include <thrust/device_allocator.h>
+#ifdef GTENSOR_HAVE_THRUST
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #endif
@@ -95,7 +94,7 @@ struct storage_traits<gt::backend::device_storage<T, A>>
 
 #endif
 
-#ifdef GTENSOR_USE_THRUST
+#ifdef GTENSOR_HAVE_THRUST
 
 template <typename T, typename A>
 struct storage_traits<::thrust::host_vector<T, A>>
