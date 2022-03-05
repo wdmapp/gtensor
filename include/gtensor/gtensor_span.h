@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GTENSOR_VIEW_H
 #define GTENSOR_GTENSOR_VIEW_H
 
+#include <cassert>
+
 #include <type_traits>
 
 #include "device_backend.h"
@@ -129,21 +131,10 @@ GT_INLINE gtensor_span<T, N, S>::gtensor_span(pointer data,
                                               const strides_type& strides)
   : base_type(shape, strides), storage_(data, calc_size(shape))
 {
-#ifndef NDEBUG
-#if defined(GTENSOR_DEVICE_CUDA) && !defined(__CUDACC__)
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(NDEBUG)
   if (std::is_same<S, space::device>::value) {
-    cudaPointerAttributes attr;
-    gtGpuCheck(cudaPointerGetAttributes(&attr, gt::raw_pointer_cast(data)));
-    assert(attr.type == cudaMemoryTypeDevice ||
-           attr.type == cudaMemoryTypeManaged);
+    assert(gt::backend::is_device_address(gt::raw_pointer_cast(data)));
   }
-#elif defined(GTENSOR_DEVICE_HIP)
-  if (std::is_same<S, space::device>::value) {
-    hipPointerAttribute_t attr;
-    gtGpuCheck(hipPointerGetAttributes(&attr, gt::raw_pointer_cast(data)));
-    assert(attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
-  }
-#endif
 #endif
 }
 

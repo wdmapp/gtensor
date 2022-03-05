@@ -188,6 +188,24 @@ inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
 }
 } // namespace fill_impl
 
+template <typename Ptr>
+inline bool is_device_address(const Ptr p)
+{
+  // copied from check in gtensor_span, why is this needed?
+#if !defined(__CUDACC__)
+  cudaPointerAttributes attr;
+  cudaError_t rval = cudaPointerGetAttributes(&attr, p);
+  if (rval == cudaErrorInvalidValue) {
+    return false;
+  }
+  gtGpuCheck(rval);
+  return (attr.type == cudaMemoryTypeDevice ||
+          attr.type == cudaMemoryTypeManaged);
+#else
+  return true;
+#endif
+}
+
 } // namespace backend
 
 class stream_view
