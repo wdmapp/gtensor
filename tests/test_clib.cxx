@@ -113,4 +113,22 @@ TEST(clib, memset)
   gt_backend_device_deallocate((void*)d_a);
 }
 
+TEST(clib, is_device_address)
+{
+  uint8_t* d_a = (uint8_t*)gt_backend_device_allocate(N);
+  uint8_t* m_a = (uint8_t*)gt_backend_managed_allocate(N);
+  uint8_t* h_a = (uint8_t*)gt_backend_host_allocate(N);
+  uint8_t* a = (uint8_t*)malloc(N);
+
+  ASSERT_TRUE(gt_backend_is_device_address(d_a));
+  ASSERT_TRUE(gt_backend_is_device_address(m_a));
+  ASSERT_FALSE(gt_backend_is_device_address(h_a));
+  ASSERT_FALSE(gt_backend_is_device_address(a));
+
+  gt_backend_host_deallocate((void*)h_a);
+  gt_backend_managed_deallocate((void*)m_a);
+  gt_backend_device_deallocate((void*)d_a);
+  free(a);
+}
+
 #endif // GTENSOR_HAVE_DEVICE
