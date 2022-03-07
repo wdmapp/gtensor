@@ -132,9 +132,19 @@ GT_INLINE gtensor_span<T, N, S>::gtensor_span(pointer data,
   : base_type(shape, strides), storage_(data, calc_size(shape))
 {
 #if defined(GTENSOR_HAVE_DEVICE) && !defined(NDEBUG)
+#ifdef GTENSOR_DEVICE_SYCL
+  // special case SYCL to handle the host backend, which says that
+  // even device pointers are not device addresses (true from a hardware
+  // perspective, even if it's logically false in gtensor).
+  sycl::device d = gt::backend::sycl::get_queue().get_device();
+  if ((d.is_gpu() || d.is_cpu()) && std::is_same<S, space::device>::value) {
+    assert(gt::backend::is_device_address(gt::raw_pointer_cast(data)));
+  }
+#else  // not SYCL
   if (std::is_same<S, space::device>::value) {
     assert(gt::backend::is_device_address(gt::raw_pointer_cast(data)));
   }
+#endif // GTENSOR_DEVICE_SYCL
 #endif
 }
 

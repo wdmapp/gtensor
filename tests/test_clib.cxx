@@ -120,10 +120,37 @@ TEST(clib, is_device_address)
   uint8_t* h_a = (uint8_t*)gt_backend_host_allocate(N);
   uint8_t* a = (uint8_t*)malloc(N);
 
+#ifdef GTENSOR_DEVICE_SYCL
+  // special case SYCL to handle the host backend, which says that
+  // even device pointers are not device addresses (true from a hardware
+  // perspective, even if it's logically false in gtensor).
+  sycl::device d = gt::backend::sycl::get_queue().get_device();
+  if (d.is_gpu() || d.is_cpu()) {
+    ASSERT_TRUE(gt_backend_is_device_address(d_a));
+    ASSERT_TRUE(gt_backend_is_device_address(d_a + N / 2));
+    ASSERT_TRUE(gt_backend_is_device_address(m_a));
+    ASSERT_TRUE(gt_backend_is_device_address(m_a + N / 2));
+    ASSERT_FALSE(gt_backend_is_device_address(h_a));
+    ASSERT_FALSE(gt_backend_is_device_address(h_a + N / 2));
+    ASSERT_FALSE(gt_backend_is_device_address(a));
+    ASSERT_FALSE(gt_backend_is_device_address(a + N / 2));
+  } else {
+    // host backend
+    ASSERT_FALSE(gt_backend_is_device_address(d_a));
+    ASSERT_FALSE(gt_backend_is_device_address(m_a));
+    ASSERT_FALSE(gt_backend_is_device_address(h_a));
+    ASSERT_FALSE(gt_backend_is_device_address(a));
+  }
+#else
   ASSERT_TRUE(gt_backend_is_device_address(d_a));
+  ASSERT_TRUE(gt_backend_is_device_address(d_a + N / 2));
   ASSERT_TRUE(gt_backend_is_device_address(m_a));
+  ASSERT_TRUE(gt_backend_is_device_address(m_a + N / 2));
   ASSERT_FALSE(gt_backend_is_device_address(h_a));
+  ASSERT_FALSE(gt_backend_is_device_address(h_a + N / 2));
   ASSERT_FALSE(gt_backend_is_device_address(a));
+  ASSERT_FALSE(gt_backend_is_device_address(a + N / 2));
+#endif
 
   gt_backend_host_deallocate((void*)h_a);
   gt_backend_managed_deallocate((void*)m_a);
