@@ -80,20 +80,7 @@ class FFTPlanManySYCL
 public:
   FFTPlanManySYCL(std::vector<int> lengths, int batch_size = 1)
   {
-    MKL_FFT_LONG fwd_distance, bwd_distance;
-
-    int rank = lengths.size();
-
-    fwd_distance = std::accumulate(lengths.begin(), lengths.end(), 1,
-                                   std::multiplies<MKL_FFT_LONG>());
-    if (D == gt::fft::Domain::REAL) {
-      bwd_distance =
-        fwd_distance / lengths[rank - 1] * (lengths[rank - 1] / 2 + 1);
-    } else {
-      bwd_distance = fwd_distance;
-    }
-
-    init(lengths, 1, fwd_distance, 1, bwd_distance, batch_size);
+    init(lengths, 1, 0, 1, 0, batch_size);
   }
 
   FFTPlanManySYCL(std::vector<int> lengths, int istride, int idist, int ostride,
@@ -114,29 +101,32 @@ public:
   void operator()(typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
-    if (plan_ == nullptr) {
+    if (plan_forward_ == nullptr) {
       throw std::runtime_error("can't use a moved-from plan");
     }
     using Bin = typename detail::fft_config<D, R>::Bin;
     using Bout = typename detail::fft_config<D, R>::Bout;
     auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
-    auto e = oneapi::mkl::dft::compute_forward(*plan_, bin, bout);
+    auto e = oneapi::mkl::dft::compute_forward(*plan_forward_, bin, bout);
     e.wait();
   }
 
   void inverse(typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
-    if (plan_ == nullptr) {
+    if (plan_forward_ == nullptr) {
       throw std::runtime_error("can't use a moved-from plan");
     }
-    using Bin = typename detail::fft_config<D, R>::Bin;
-    using Bout = typename detail::fft_config<D, R>::Bout;
-    auto bin = reinterpret_cast<Bout*>(indata);
-    auto bout = reinterpret_cast<Bin*>(outdata);
-    auto e = oneapi::mkl::dft::compute_backward(*plan_, bin, bout);
-    e.wait();
+    using Breal = typename detail::fft_config<D, R>::Bin;
+    using Bcmplx = typename detail::fft_config<D, R>::Bout;
+    auto bin = reinterpret_cast<Bcmplx*>(indata);
+    auto bout = reinterpret_cast<Breal*>(outdata);
+    if (is_layout_asymmetric_) {
+      oneapi::mkl::dft::compute_backward(*plan_inverse_, bin, bout).wait();
+    } else {
+      oneapi::mkl::dft::compute_backward(*plan_forward_, bin, bout).wait();
+    }
   }
 
 private:
@@ -146,52 +136,115 @@ private:
     int rank = lengths_.size();
 
     std::vector<MKL_FFT_LONG> lengths(rank);
+    std::vector<MKL_FFT_LONG> freq_lengths(rank);
     for (int i = 0; i < rank; i++) {
       lengths[i] = lengths_[i];
+      if (D == gt::fft::Domain::REAL && i == rank - 1) {
+        freq_lengths[i] = lengths_[i] / 2 + 1;
+      } else {
+        freq_lengths[i] = lengths_[i];
+      }
+    }
+
+    if (idist == 0) {
+      idist = std::accumulate(lengths.begin(), lengths.end(), 1,
+                              std::multiplies<MKL_FFT_LONG>());
+    }
+    if (odist == 0) {
+      odist = std::accumulate(freq_lengths.begin(), freq_lengths.end(), 1,
+                              std::multiplies<MKL_FFT_LONG>());
+    }
+
+    // Note: oneMKL has an inconsistency, where 1d, even when asymetric
+    // (because of different non-unit strides or REAL domain), automatically
+    // swaps input/output strides for inverse transforms, while 2d and 3d do
+    // not. Not clear whether this is a bug in oneMKL or an unfortunate API
+    // design choice.
+    if (rank == 1) {
+      is_layout_asymmetric_ = false;
+    } else if (D == gt::fft::Domain::REAL) {
+      is_layout_asymmetric_ = true;
+    } else if (istride != ostride) {
+      is_layout_asymmetric_ = true;
+    } else {
+      is_layout_asymmetric_ = false;
     }
 
     try {
       if (rank > 1) {
-        plan_ = std::make_unique<Desc>(lengths);
+        plan_forward_ = std::make_unique<Desc>(lengths);
+        if (is_layout_asymmetric_) {
+          plan_inverse_ = std::make_unique<Desc>(lengths);
+        }
       } else {
-        plan_ = std::make_unique<Desc>(lengths[0]);
+        plan_forward_ = std::make_unique<Desc>(lengths[0]);
+        if (is_layout_asymmetric_) {
+          plan_inverse_ = std::make_unique<Desc>(lengths[0]);
+        }
       }
 
-      // set up strides arrays
+      // Set up strides arrays used to map multi-d indexing
+      // to 1d. Fastest changing index is in right most
+      // position.
       std::int64_t rstrides[rank + 1];
       std::int64_t cstrides[rank + 1];
       rstrides[0] = 0;
       cstrides[0] = 0;
       std::int64_t rs = istride;
       std::int64_t cs = ostride;
-      for (int i = 1; i <= rank; i++) {
+      for (int i = rank; i > 0; i--) {
         rstrides[i] = rs;
         cstrides[i] = cs;
         rs *= lengths[i - 1];
-        cs *= lengths[i - 1];
+        cs *= freq_lengths[i - 1];
       }
 
-      plan_->set_value(oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS,
-                       batch_size);
-      plan_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, rstrides);
-      plan_->set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES,
-                       cstrides);
-      plan_->set_value(oneapi::mkl::dft::config_param::FWD_DISTANCE, idist);
-      plan_->set_value(oneapi::mkl::dft::config_param::BWD_DISTANCE, odist);
-      plan_->set_value(oneapi::mkl::dft::config_param::PLACEMENT,
-                       DFTI_NOT_INPLACE);
-      plan_->set_value(oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
-                       DFTI_COMPLEX_COMPLEX);
-      plan_->set_value(oneapi::mkl::dft::config_param::FORWARD_SCALE, R(1));
-      plan_->set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, R(1));
-      plan_->commit(gt::backend::sycl::get_queue());
+      plan_forward_->set_value(
+        oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS, batch_size);
+      plan_forward_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES,
+                               rstrides);
+      plan_forward_->set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES,
+                               cstrides);
+      plan_forward_->set_value(oneapi::mkl::dft::config_param::FWD_DISTANCE,
+                               idist);
+      plan_forward_->set_value(oneapi::mkl::dft::config_param::BWD_DISTANCE,
+                               odist);
+      plan_forward_->set_value(oneapi::mkl::dft::config_param::PLACEMENT,
+                               DFTI_NOT_INPLACE);
+      plan_forward_->set_value(
+        oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
+        DFTI_COMPLEX_COMPLEX);
+      plan_forward_->commit(gt::backend::sycl::get_queue());
+
+      if (is_layout_asymmetric_) {
+        plan_inverse_->set_value(
+          oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS, batch_size);
+        plan_inverse_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES,
+                                 cstrides);
+        plan_inverse_->set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES,
+                                 rstrides);
+        plan_inverse_->set_value(oneapi::mkl::dft::config_param::FWD_DISTANCE,
+                                 idist);
+        plan_inverse_->set_value(oneapi::mkl::dft::config_param::BWD_DISTANCE,
+                                 odist);
+        plan_inverse_->set_value(oneapi::mkl::dft::config_param::PLACEMENT,
+                                 DFTI_NOT_INPLACE);
+        plan_inverse_->set_value(
+          oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
+          DFTI_COMPLEX_COMPLEX);
+        plan_inverse_->commit(gt::backend::sycl::get_queue());
+      }
     } catch (std::exception const& e) {
       std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
       abort();
     }
   }
 
-  std::unique_ptr<Desc> plan_;
+  std::unique_ptr<Desc> plan_forward_;
+  std::unique_ptr<Desc> plan_inverse_;
+
+  // flag to keep track of whether a separate inverse plan is required
+  bool is_layout_asymmetric_;
 };
 
 template <gt::fft::Domain D, typename R>

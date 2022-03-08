@@ -39,7 +39,12 @@ inline void destroy(handle_t* h)
 
 inline void set_stream(handle_t* h, stream_t stream_id)
 {
-  h->handle = stream_id;
+  if (stream_id == nullptr) {
+    // set back to default stream / queue
+    h->handle = &gt::backend::sycl::get_queue();
+  } else {
+    h->handle = stream_id;
+  }
 }
 
 inline void get_stream(handle_t* h, stream_t* stream_id)
@@ -85,7 +90,7 @@ inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy)
 {
   sycl::queue& q = *(h->handle);
 
-  gt::backend::device_storage<T> d_rp(1);
+  gt::space::device_vector<T> d_rp(1);
   T result;
   auto e = oneapi::mkl::blas::dot(*(h->handle), n, x, incx, y, incy,
                                   gt::raw_pointer_cast(d_rp.data()));
@@ -102,7 +107,7 @@ inline gt::complex<R> dotu(handle_t* h, int n, const gt::complex<R>* x,
   sycl::queue& q = *(h->handle);
   using T = gt::complex<R>;
 
-  gt::backend::device_storage<T> d_rp(1);
+  gt::space::device_vector<T> d_rp(1);
   T result;
   auto e = oneapi::mkl::blas::dotu(*(h->handle), n, x, incx, y, incy,
                                    gt::raw_pointer_cast(d_rp.data()));
@@ -119,7 +124,7 @@ inline gt::complex<R> dotc(handle_t* h, int n, const gt::complex<R>* x,
   sycl::queue& q = *(h->handle);
   using T = gt::complex<R>;
 
-  gt::backend::device_storage<T> d_rp(1);
+  gt::space::device_vector<T> d_rp(1);
   T result;
   auto e = oneapi::mkl::blas::dotc(*(h->handle), n, x, incx, y, incy,
                                    gt::raw_pointer_cast(d_rp.data()));
@@ -145,19 +150,6 @@ inline void gemv(handle_t* h, int m, int n, T alpha, const T* A, int lda,
 // ======================================================================
 // getrf/getrs batched
 
-/*
-namespace detail
-{
-template <typename T, typename S = space::sycl_managed>
-using managed_allocator =
-  typename backend::allocator_impl::selector<T, S>::type;
-
-template <typename T>
-using managed_storage =
-  backend::gtensor_storage<T, managed_allocator<T>, space::sycl_managed>;
-} // end namespace detail
-*/
-
 template <typename T>
 inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
                           gt::blas::index_t* d_PivotArray, int* d_infoArray,
@@ -171,21 +163,14 @@ inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
 
   // unlike cuBLAS/rocBLAS, the pivot array to getrf is expected to be
   // an array of pointer, just like d_Aarray.
-  /*
-  using pivot_alloc_shared_t =
-    sycl::usm_allocator<index_t*, sycl::usm::alloc::shared>;
-  pivot_alloc_shared_t pivot_alloc(q);
-  std::vector<index_t*, pivot_alloc_shared_t> d_PivotPtr(batchSize,
-                                                         pivot_alloc);
-                                                         */
-  gt::backend::managed_storage<index_t*> d_PivotPtr(batchSize);
+  gt::space::managed_vector<index_t*> d_PivotPtr(batchSize);
   for (int i = 0; i < batchSize; i++) {
     d_PivotPtr[i] = d_PivotArray + (i * n);
   }
 
   auto scratch_count = oneapi::mkl::lapack::getrf_batch_scratchpad_size<T>(
     q, &n64, &n64, &lda64, 1, &batchSize64);
-  gt::backend::device_storage<T> scratch(scratch_count);
+  gt::space::device_vector<T> scratch(scratch_count);
 
   auto e = oneapi::mkl::lapack::getrf_batch(
     q, &n64, &n64, d_Aarray, &lda64, gt::raw_pointer_cast(d_PivotPtr.data()), 1,
@@ -207,7 +192,7 @@ inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
 
   auto scratch_count = oneapi::mkl::lapack::getrfnp_batch_scratchpad_size<T>(
     q, n, n, lda, n * n, batchSize);
-  gt::backend::device_storage<T> scratch(scratch_count);
+  gt::space::device_vector<T> scratch(scratch_count);
 
   // NB: check that input is contiguous, until the group API is available
   gt::backend::host_storage<T*> h_Aarray(batchSize);
@@ -243,15 +228,7 @@ inline void getrs_batched(handle_t* h, int n, int nrhs, T** d_Aarray, int lda,
 
   // unlike cuBLAS/rocBLAS, the pivot array to getrf is expected to be
   // an array of pointer, just like d_Aarray.
-  /*
-  using pivot_alloc_shared_t =
-    sycl::usm_allocator<index_t*, sycl::usm::alloc::shared>;
-  pivot_alloc_shared_t pivot_alloc(q);
-  std::vector<index_t*, pivot_alloc_shared_t> d_PivotPtr(batchSize,
-                                                         pivot_alloc);
-  */
-
-  gt::backend::managed_storage<index_t*> d_PivotPtr(batchSize);
+  gt::space::managed_vector<index_t*> d_PivotPtr(batchSize);
   for (int i = 0; i < batchSize; i++) {
     d_PivotPtr[i] = d_PivotArray + (i * n);
   }
@@ -259,7 +236,7 @@ inline void getrs_batched(handle_t* h, int n, int nrhs, T** d_Aarray, int lda,
   auto trans_op = oneapi::mkl::transpose::nontrans;
   auto scratch_count = oneapi::mkl::lapack::getrs_batch_scratchpad_size<T>(
     q, &trans_op, &n64, &nrhs64, &lda64, &ldb64, 1, &batchSize64);
-  gt::backend::device_storage<T> scratch(scratch_count);
+  gt::space::device_vector<T> scratch(scratch_count);
 
   auto e = oneapi::mkl::lapack::getrs_batch(
     q, &trans_op, &n64, &nrhs64, d_Aarray, &lda64,

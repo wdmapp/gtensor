@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 
 #include <gtensor/complex.h>
@@ -92,16 +93,63 @@ inline void _expect_near_array(const char* file, int line, const char* xname,
   }
 
   if (!equal) {
+    const int max_view = 10;
+    auto xs = gt::slice(0, std::min(xflat.shape(0), max_view));
+    auto ys = gt::slice(0, std::min(yflat.shape(0), max_view));
     std::cerr << "Arrays not close (max " << max_err << ") at " << file << ":"
               << line << std::endl
               << " err " << err << " at [" << i << "]" << std::endl
               << " " << xname << ":" << std::endl
-              << x << std::endl
+              << xflat.view(xs) << std::endl
               << " " << yname << ":" << std::endl
-              << y << std::endl;
+              << yflat.view(ys) << std::endl;
   }
   EXPECT_TRUE(equal);
 }
 
 #define GT_EXPECT_NEAR_ARRAY(x, y)                                             \
   _expect_near_array(__FILE__, __LINE__, #x, x, #y, y)
+
+#define GT_EXPECT_NEAR_ARRAY_ERR(x, y, max_err)                                \
+  _expect_near_array(__FILE__, __LINE__, #x, x, #y, y, max_err)
+
+template <typename E1, typename T>
+inline void _expect_near_array_abs(const char* file, int line,
+                                   const char* xname, E1 x, T v,
+                                   double max_err = -1.0)
+{
+  using V = gt::expr_value_type<E1>;
+  bool equal = true;
+  int i;
+  double err;
+
+  if (max_err == -1.0) {
+    max_err = gt::test::detail::max_err<V>::value;
+  }
+  auto xflat = gt::flatten(x);
+
+  for (i = 0; i < xflat.shape(0); i++) {
+    err = std::abs(gt::abs(xflat(i)) - v);
+    if (err > max_err) {
+      equal = false;
+      break;
+    }
+  }
+
+  if (!equal) {
+    const int max_view = 10;
+    auto xs = gt::slice(0, std::min(xflat.shape(0), max_view));
+    std::cerr << "Array abs not close (max " << max_err << ") at " << file
+              << ":" << line << std::endl
+              << " err " << err << " at [" << i << "]" << std::endl
+              << " " << xname << ":" << std::endl
+              << xflat.view(xs) << std::endl;
+  }
+  EXPECT_TRUE(equal);
+}
+
+#define GT_EXPECT_NEAR_ARRAY_ABS(x, v)                                         \
+  _expect_near_array_abs(__FILE__, __LINE__, #x, x, v)
+
+#define GT_EXPECT_NEAR_ARRAY_ABS_ERR(x, v, max_err)                            \
+  _expect_near_array_abs(__FILE__, __LINE__, #x, x, v, max_err)

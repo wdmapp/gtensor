@@ -187,6 +187,18 @@ inline void fill(gt::space::hip tag, Ptr first, Ptr last, const T& value)
 }
 } // namespace fill_impl
 
+template <typename Ptr>
+inline bool is_device_address(const Ptr p)
+{
+  hipPointerAttribute_t attr;
+  hipError_t rval = hipPointerGetAttributes(&attr, p);
+  if (rval == hipErrorInvalidValue) {
+    return false;
+  }
+  gtGpuCheck(rval);
+  return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
+}
+
 } // namespace backend
 
 class stream_view
