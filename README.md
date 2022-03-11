@@ -79,10 +79,11 @@ location, add it to `CMAKE_PREFIX_PATH` when running cmake for the application.
 
 ### Intel SYCL requirements
 
-The current SYCL implementation requires Intel OneAPI/DPC++ Beta06 or later.
+The current SYCL implementation requires Intel OneAPI/DPC++ 2022.0 or later, with some known issues in
+gt-blas and gt-fft (npvt getrf/rs, 2d fft). Using the latest available release is recommended.
 When using the instructions at
-[install via package managers](https://software.intel.com/content/www/us/en/develop/articles/oneapi-repo-instructions.html), installing the
-`intel-oneapi-dpcpp-compiler` package will pull in all required packages
+[install via package managers](https://www.intel.com/content/www/us/en/develop/documentation/installation-guide-for-intel-oneapi-toolkits-linux/top/installation/install-using-package-managers.html),
+installing the `intel-oneapi-dpcpp-compiler` package will pull in all required packages
 (the rest of basekit is not required).
 
 The reason for the dependence on Intel OneAPI is that the implementation uses
@@ -90,13 +91,17 @@ the USM extension, which is not part of the current SYCL standard.
 CodePlay ComputeCpp 2.0.0 has an experimental implementation that is
 sufficiently different to require extra work to support.
 
-By default the SYCL GPU selector is used. To test on a machine without a
-GPU supported by the SYCL implementation, you can set
-`-DGTENSOR_DEVICE_SYCL_SELECTOR=host` or `-DGTENSOR_DEVICE_SYCL_SELECTOR=cpu`.
+The default device selector is always used. To control device section, set the `SYCL_DEVICE_FILTER`
+environment variable. See the
+[intel llvm documentation](https://github.com/intel/llvm/blob/sycl/sycl/doc/EnvironmentVariables.md#sycl_device_filter)
+for details.
 
 The port is tested with an Intel iGPU, specifically UHD Graphics 630. It
 may also work with the experimental CUDA backend for nVidia GPUs, but this
 is untested and it's recommended to use the gtensor CUDA backend instead.
+
+Better support for other SYCL implementations like hipSYCL and ComputCPP should be possible to add, with the
+possible exception of gt-blas and gt-fft sub-libraries which require oneMKL.
 
 ### HOST CPU (no device) requirements
 
