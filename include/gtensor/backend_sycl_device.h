@@ -94,6 +94,7 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
   }
   return unique_id;
 }
+
 #endif
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
@@ -116,6 +117,9 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
     unique_id |= (0x000000FF & (pci_props.address.device));
     unique_id |= (0x0000FF00 & (pci_props.address.bus << 8));
     unique_id |= (0xFFFF0000 & (pci_props.address.domain << 16));
+    if (ze_prop.flags & ZE_DEVICE_PROPERTY_FLAG_SUBDEVICE) {
+      unique_id += ze_prop.subdeviceId;
+    }
     // std::cout << "level zero (sysman): " << unique_id << std::endl;
   }
 
@@ -145,6 +149,42 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
 }
 #endif
 
+inline bool device_per_tile_enabled()
+{
+  static bool init = false;
+  static bool enabled;
+  if (!init) {
+    enabled =
+      (std::getenv("GTENSOR_DEVICE_SYCL_DISABLE_SUB_DEVICES") == nullptr);
+  }
+  return enabled;
+}
+
+inline std::vector<cl::sycl::device> get_devices_with_numa_sub(
+  const cl::sycl::platform& p)
+{
+  std::vector<cl::sycl::device> result;
+  for (auto root_dev : p.get_devices()) {
+    // Handle GPUs with multiple tiles, which can be partitioned based on numa
+    // domain
+    auto max_sub_devices =
+      root_dev.get_info<cl::sycl::info::device::partition_max_sub_devices>();
+    // NB: workaround bug in host backend, where max > 0 but it's not supported
+    if (device_per_tile_enabled() && max_sub_devices > 0 &&
+        (root_dev.is_gpu() || root_dev.is_cpu())) {
+      auto sub_devices = root_dev.create_sub_devices<
+        cl::sycl::info::partition_property::partition_by_affinity_domain>(
+        cl::sycl::info::partition_affinity_domain::numa);
+      for (auto sub_dev : sub_devices) {
+        result.push_back(sub_dev);
+      }
+    } else {
+      result.push_back(root_dev);
+    }
+  }
+  return result;
+}
+
 class SyclQueues
 {
 public:
@@ -157,7 +197,7 @@ public:
     // std::cout << p.get_info<cl::sycl::info::platform::name>()
     //          << " {" << p.get_info<cl::sycl::info::platform::vendor>() << "}"
     //          << std::endl;
-    devices_ = p.get_devices();
+    devices_ = get_devices_with_numa_sub(p);
   }
 
   void valid_device_id_or_throw(int device_id)
@@ -172,7 +212,8 @@ public:
     valid_device_id_or_throw(device_id);
     if (default_queue_map_.count(device_id) == 0) {
       default_queue_map_[device_id] =
-        cl::sycl::queue{devices_[device_id], get_exception_handler()};
+        cl::sycl::queue{devices_[device_id], get_exception_handler(),
+                        cl::sycl::property::queue::in_order()};
     }
     return default_queue_map_[device_id];
   }
