@@ -64,18 +64,10 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
   }
 }
 
-#ifndef NDEBUG
-#define gpuSyncIfEnabled()                                                     \
-  do {                                                                         \
-    gtGpuCheck(cudaGetLastError());                                            \
-    gtGpuCheck(cudaDeviceSynchronize());                                       \
-  } while (0)
-#else
-#define gpuSyncIfEnabled()                                                     \
-  do {                                                                         \
-    gtGpuCheck(cudaGetLastError());                                            \
-  } while (0)
-#endif
+inline auto gpuGetLastError()
+{
+  return cudaGetLastError();
+}
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
@@ -110,32 +102,43 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
   }
 }
 
-#ifndef NDEBUG
-#define gpuSyncIfEnabled()                                                     \
-  do {                                                                         \
-    gtGpuCheck(hipGetLastError());                                             \
-    gtGpuCheck(hipDeviceSynchronize());                                        \
-  } while (0)
-#else // NDEBUG defined
-#define gpuSyncIfEnabled()                                                     \
-  do {                                                                         \
-    gtGpuCheck(hipGetLastError());                                             \
-  } while (0)
-#endif // NDEBUG
+inline auto gpuGetLastError()
+{
+  return hipGetLastError();
+}
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
 #ifndef NDEBUG
-#define gpuSyncIfEnabled()                                                     \
+#define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
-    gt::backend::sycl::get_queue().wait();                                     \
+    a_stream_view.synchronize();                                               \
   } while (0)
 #else // NDEBUG defined
-#define gpuSyncIfEnabled()                                                     \
+#define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
   } while (0)
 #endif // NDEBUG
 
-#endif // end GTENSOR_HAVE_DEVICE
+#endif // end GTENSOR_DEVICE_SYCL
+
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+
+#ifndef NDEBUG
+#define gpuSyncIfEnabledStream(a_stream_view)                                  \
+  do {                                                                         \
+    gtGpuCheck(gpuGetLastError());                                             \
+    a_stream_view.synchronize();                                               \
+  } while (0)
+#else
+#define gpuSyncIfEnabledStream(a_stream_view)                                  \
+  do {                                                                         \
+    gtGpuCheck(gpuGetLastError());                                             \
+  } while (0)
+#endif
+
+#endif // end CUDA or HIP
+
+#define gpuSyncIfEnabled() gpuSyncIfEnabledStream(gt::stream_view{})
 
 #endif // GTENSORS_MACROS_H

@@ -242,11 +242,11 @@ struct assigner<1, space::device>
     dim3 numThreads(BS_LINEAR);
     dim3 numBlocks(gt::div_ceil(lhs.shape(0), BS_LINEAR));
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     gtLaunchKernel(kernel_assign_1, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -261,11 +261,11 @@ struct assigner<2, space::device>
     dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
                    (lhs.shape(1) + BS_Y - 1) / BS_Y);
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     gtLaunchKernel(kernel_assign_2, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -280,14 +280,14 @@ struct assigner<3, space::device>
     dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
                    (lhs.shape(1) + BS_Y - 1) / BS_Y, lhs.shape(2));
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     /*std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     std::cout << "numBlocks="<<numBlocks.x<<" "<<numBlocks.y<<" "<<numBlocks.z<<
     ", numThreads="<<numThreads.x<<" "<<numThreads.y<<" "<<numThreads.z<<"\n";*/
     gtLaunchKernel(kernel_assign_3, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -301,12 +301,12 @@ struct assigner<4, space::device>
     dim3 numThreads(256);
     dim3 numBlocks((lhs.size() + numThreads.x - 1) / numThreads.x);
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_4, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -322,12 +322,12 @@ struct assigner<5, space::device>
                    (lhs.shape(2) * lhs.shape(3) + BS_Y - 1) / BS_Y,
                    lhs.shape(4));
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_5, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -343,12 +343,12 @@ struct assigner<6, space::device>
                    (lhs.shape(2) * lhs.shape(3) + BS_Y - 1) / BS_Y,
                    lhs.shape(4) * lhs.shape(5));
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_6, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -367,11 +367,11 @@ struct assigner<N, space::device>
     dim3 numThreads(block_size);
     dim3 numBlocks(gt::div_ceil(size, block_size));
 
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
     gtLaunchKernel(kernel_assign_N, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel(), size, strides);
-    gpuSyncIfEnabled();
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -385,6 +385,8 @@ struct assigner<1, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue& q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
@@ -398,7 +400,8 @@ struct assigner<1, space::device>
         k_lhs(i) = k_rhs(i);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -408,6 +411,8 @@ struct assigner<2, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue& q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
@@ -422,7 +427,8 @@ struct assigner<2, space::device>
         k_lhs(i, j) = k_rhs(i, j);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -432,6 +438,8 @@ struct assigner<3, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue& q = stream.get_backend_stream();
     auto k_lhs = lhs.to_kernel();
     auto k_rhs = rhs.to_kernel();
@@ -447,7 +455,8 @@ struct assigner<3, space::device>
         k_lhs(i, j, k) = k_rhs(i, j, k);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -459,6 +468,8 @@ struct assigner<N, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue& q = stream.get_backend_stream();
     // use linear indexing for simplicity
     auto size = calc_size(lhs.shape());
@@ -480,7 +491,8 @@ struct assigner<N, space::device>
         index_expression(k_lhs, idx) = index_expression(*d_rhs_p, idx);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
