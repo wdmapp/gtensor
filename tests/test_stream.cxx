@@ -77,4 +77,66 @@ TEST(stream, assign_sync_if_enabled)
   EXPECT_EQ(h_a, h_b);
 }
 
+TEST(stream, device_assign_ordered_default)
+{
+  gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor_device<double, 2> b(a.shape());
+  gt::gtensor_device<double, 2> c(a.shape());
+  auto h_a = gt::empty<double>(a.shape());
+  auto h_b = gt::zeros<double>(a.shape());
+  auto h_c = gt::zeros<double>(a.shape());
+
+  double* adata = h_a.data();
+
+  for (int i = 0; i < a.size(); i++) {
+    adata[i] = i;
+  }
+
+  gt::copy(h_a, a);
+
+  EXPECT_NE(h_a, h_b);
+  gt::assign(b, a);
+  gt::assign(c, b);
+
+  gt::synchronize();
+
+  gt::copy(b, h_b);
+  EXPECT_EQ(h_b, h_a);
+
+  gt::copy(c, h_c);
+  EXPECT_EQ(h_c, h_a);
+}
+
+TEST(stream, device_assign_ordered_non_default)
+{
+  gt::gtensor_device<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  gt::gtensor_device<double, 2> b(a.shape());
+  gt::gtensor_device<double, 2> c(a.shape());
+  auto h_a = gt::empty<double>(a.shape());
+  auto h_b = gt::zeros<double>(a.shape());
+  auto h_c = gt::zeros<double>(a.shape());
+
+  gt::stream stream;
+
+  double* adata = h_a.data();
+
+  for (int i = 0; i < a.size(); i++) {
+    adata[i] = i;
+  }
+
+  gt::copy(h_a, a);
+
+  EXPECT_NE(h_a, h_b);
+  gt::assign(b, a, stream.get_view());
+  gt::assign(c, b, stream.get_view());
+
+  stream.synchronize();
+
+  gt::copy(b, h_b);
+  EXPECT_EQ(h_b, h_a);
+
+  gt::copy(c, h_c);
+  EXPECT_EQ(h_c, h_a);
+}
+
 #endif
