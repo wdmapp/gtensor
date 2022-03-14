@@ -552,6 +552,8 @@ struct launch<1, space::device>
   template <typename F>
   static void run(const gt::shape_type<1>& shape, F&& f, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<1>(shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
@@ -561,7 +563,8 @@ struct launch<1, space::device>
         f(i);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -571,6 +574,8 @@ struct launch<2, space::device>
   template <typename F>
   static void run(const gt::shape_type<2>& shape, F&& f, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<2>(shape[1], shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
@@ -581,7 +586,8 @@ struct launch<2, space::device>
         f(i, j);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -591,6 +597,8 @@ struct launch<3, space::device>
   template <typename F>
   static void run(const gt::shape_type<3>& shape, F&& f, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue q = stream.get_backend_stream();
     auto range = sycl::range<3>(shape[2], shape[1], shape[0]);
     auto e = q.submit([&](sycl::handler& cgh) {
@@ -602,7 +610,8 @@ struct launch<3, space::device>
         f(i, j, k);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
@@ -614,6 +623,8 @@ struct launch<N, space::device>
   template <typename F>
   static void run(const gt::shape_type<N>& shape, F&& f, gt::stream_view stream)
   {
+    gpuSyncIfEnabledStream(stream);
+
     sycl::queue q = stream.get_backend_stream();
     int size = calc_size(shape);
     auto strides = calc_strides(shape);
@@ -624,7 +635,8 @@ struct launch<N, space::device>
         index_expression(f, idx);
       });
     });
-    e.wait();
+
+    gpuSyncIfEnabledStream(stream);
   }
 };
 
