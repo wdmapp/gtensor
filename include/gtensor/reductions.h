@@ -7,7 +7,7 @@
 #include <thrust/reduce.h>
 #endif
 
-#include <assert.h>
+#include <cassert>
 #include <functional>
 #include <numeric>
 #include <type_traits>
