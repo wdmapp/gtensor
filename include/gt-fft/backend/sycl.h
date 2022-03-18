@@ -155,16 +155,11 @@ private:
                               std::multiplies<MKL_FFT_LONG>());
     }
 
-    // Note: oneMKL has an inconsistency, where 1d, even when asymetric
-    // (because of different non-unit strides or REAL domain), automatically
-    // swaps input/output strides for inverse transforms, while 2d and 3d do
-    // not. Not clear whether this is a bug in oneMKL or an unfortunate API
-    // design choice.
-    if (rank == 1) {
-      is_layout_asymmetric_ = false;
-    } else if (D == gt::fft::Domain::REAL) {
+    // Note: COMPLEX asymmetric transforms still auto switch in/out strides
+    // for rank 1, which is an inconsistency.
+    if (D == gt::fft::Domain::REAL) {
       is_layout_asymmetric_ = true;
-    } else if (istride != ostride) {
+    } else if (istride != ostride && rank > 1) {
       is_layout_asymmetric_ = true;
     } else {
       is_layout_asymmetric_ = false;
