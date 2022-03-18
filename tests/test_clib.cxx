@@ -158,4 +158,27 @@ TEST(clib, is_device_address)
   free(a);
 }
 
+TEST(clib, mix_managed_host)
+{
+  double* a = (double*)gt_backend_managed_allocate(N * sizeof(double));
+  double* result = (double*)gt_backend_managed_allocate(N * sizeof(double));
+  double* h_b = (double*)gt_backend_host_allocate(N * sizeof(double));
+  for (int i = 0; i < N; i++) {
+    a[i] = ((double)i) / N;
+    h_b[i] = 2 * N;
+  }
+
+  for (int i = 0; i < N; i++) {
+    result[i] = 0.5 * a[i] * h_b[i];
+  }
+
+  for (int i = 0; i < N; i++) {
+    EXPECT_NEAR(result[i], (double)i, 1e-14);
+  }
+
+  gt_backend_managed_deallocate((void*)a);
+  gt_backend_managed_deallocate((void*)result);
+  gt_backend_host_deallocate((void*)h_b);
+}
+
 #endif // GTENSOR_HAVE_DEVICE

@@ -458,6 +458,23 @@ TEST(gtensor, device_assign_gtensor_managed)
             (gt::gtensor_device<double, 2>{{11., 12., 13.}, {-21., 22., 23.}}));
 }
 
+TEST(gtensor, device_assign_mixed_managed_host)
+{
+  test::gtensor_managed<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  test::gtensor_managed<double, 2> result(a.shape());
+  gt::gtensor<double, 2> h_b(a.shape());
+
+  h_b = gt::scalar(4.0);
+
+  for (int i = 0; i < a.shape(1); i++) {
+    for (int j = 0; j < a.shape(0); j++) {
+      result(j, i) = a(j, i) * h_b(j, i) * 0.5;
+    }
+  }
+
+  EXPECT_EQ(result, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
+}
+
 TEST(gtensor, device_assign_gtensor2)
 {
   gt::gtensor_device<double, 2> a{{1., 2., 3.}, {2., 4., 6.}};
