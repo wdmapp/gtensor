@@ -50,6 +50,17 @@ inline auto get_exception_handler()
   return exception_handler;
 }
 
+inline bool device_per_tile_enabled()
+{
+  static bool init = false;
+  static bool enabled;
+  if (!init) {
+    enabled =
+      (std::getenv("GTENSOR_DEVICE_SYCL_DISABLE_SUB_DEVICES") == nullptr);
+  }
+  return enabled;
+}
+
 // fallback if none of the backend specific methods succeed
 inline uint32_t get_unique_device_id_sycl(int device_index,
                                           const cl::sycl::device& d)
@@ -87,6 +98,11 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
     unique_id |= (0x0000FF00 & (pci_info.pci_bus << 8));
     unique_id |= (0xFFFF0000 & (pci_info.pci_domain << 16));
     // std::cout << "opencl (pci_bus_info ext) " << unique_id << std::endl;
+
+    if (device_per_tile_enabled()) {
+      // make sure id is unique when subdevices are used
+      unique_id += device_index;
+    }
   }
   if (unique_id == 0) {
     unique_id = get_unique_device_id_sycl(device_index, d);
@@ -149,17 +165,6 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
 }
 #endif
 
-inline bool device_per_tile_enabled()
-{
-  static bool init = false;
-  static bool enabled;
-  if (!init) {
-    enabled =
-      (std::getenv("GTENSOR_DEVICE_SYCL_DISABLE_SUB_DEVICES") == nullptr);
-  }
-  return enabled;
-}
-
 inline std::vector<cl::sycl::device> get_devices_with_numa_sub(
   const cl::sycl::platform& p)
 {
@@ -194,10 +199,14 @@ public:
     // can be controlled with SYCL_DEVICE_FILTER env variable. This
     // allows flexible selection at runtime.
     cl::sycl::platform p{cl::sycl::default_selector()};
-    // std::cout << p.get_info<cl::sycl::info::platform::name>()
-    //          << " {" << p.get_info<cl::sycl::info::platform::vendor>() << "}"
-    //          << std::endl;
+
     devices_ = get_devices_with_numa_sub(p);
+
+    // Use global singleton context for all queues, to make sure memory
+    // allocated on different queues with same device work as expected (similar
+    // to CUDA). Note that l0 backend does not need this, but OpenCL does,
+    // so more portable to do it this way.
+    context_ = cl::sycl::context(devices_, get_exception_handler());
   }
 
   void valid_device_id_or_throw(int device_id)
@@ -211,9 +220,8 @@ public:
   {
     valid_device_id_or_throw(device_id);
     if (default_queue_map_.count(device_id) == 0) {
-      default_queue_map_[device_id] =
-        cl::sycl::queue{devices_[device_id], get_exception_handler(),
-                        cl::sycl::property::queue::in_order()};
+      default_queue_map_[device_id] = cl::sycl::queue{
+        context_, devices_[device_id], cl::sycl::property::queue::in_order()};
     }
     return default_queue_map_[device_id];
   }
@@ -221,8 +229,8 @@ public:
   cl::sycl::queue& new_stream_queue(int device_id)
   {
     valid_device_id_or_throw(device_id);
-    stream_queue_map_[device_id].emplace_front(devices_[device_id],
-                                               get_exception_handler());
+    stream_queue_map_[device_id].emplace_front(
+      context_, devices_[device_id], cl::sycl::property::queue::in_order());
     return stream_queue_map_[device_id].front();
   }
 
@@ -287,6 +295,7 @@ public:
   cl::sycl::queue& get_queue() { return get_queue(current_device_id_); }
 
 private:
+  cl::sycl::context context_;
   std::vector<cl::sycl::device> devices_;
   std::unordered_map<int, cl::sycl::queue> default_queue_map_;
   std::unordered_map<int, std::forward_list<cl::sycl::queue>> stream_queue_map_;

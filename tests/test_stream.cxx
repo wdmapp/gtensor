@@ -37,6 +37,7 @@ void device_double_add_2d_stream(gt::gtensor_device<double, 2>& a,
   gt::launch<2>(
     a.shape(), GT_LAMBDA(int i, int j) { k_b(i, j) = k_a(i, j) + k_a(i, j); },
     stream);
+  stream.synchronize();
   gt::copy(b, out);
 }
 

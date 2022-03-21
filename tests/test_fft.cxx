@@ -121,7 +121,7 @@ void fft_r2c_1d_strided()
   auto d_A = gt::empty_device<E>(h_A.shape());
 
   auto h_A2 = gt::empty<E>(h_A.shape());
-  auto d_A2 = gt::empty_device<E>(h_A.shape());
+  auto d_A2 = gt::zeros_device<E>(h_A.shape());
 
   auto h_B = gt::empty<T>({cdist, batch_size});
   auto h_B_expected = gt::zeros<T>(h_B.shape());
