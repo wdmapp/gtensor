@@ -194,10 +194,14 @@ public:
     // can be controlled with SYCL_DEVICE_FILTER env variable. This
     // allows flexible selection at runtime.
     cl::sycl::platform p{cl::sycl::default_selector()};
-    // std::cout << p.get_info<cl::sycl::info::platform::name>()
-    //          << " {" << p.get_info<cl::sycl::info::platform::vendor>() << "}"
-    //          << std::endl;
+
     devices_ = get_devices_with_numa_sub(p);
+
+    // Use global singleton context for all queues, to make sure memory
+    // allocated on different queues with same device work as expected (similar
+    // to CUDA). Note that l0 backend does not need this, but OpenCL does,
+    // so more portable to do it this way.
+    context_ = cl::sycl::context(devices_, get_exception_handler());
   }
 
   void valid_device_id_or_throw(int device_id)
@@ -211,9 +215,8 @@ public:
   {
     valid_device_id_or_throw(device_id);
     if (default_queue_map_.count(device_id) == 0) {
-      default_queue_map_[device_id] =
-        cl::sycl::queue{devices_[device_id], get_exception_handler(),
-                        cl::sycl::property::queue::in_order()};
+      default_queue_map_[device_id] = cl::sycl::queue{
+        context_, devices_[device_id], cl::sycl::property::queue::in_order()};
     }
     return default_queue_map_[device_id];
   }
@@ -222,8 +225,7 @@ public:
   {
     valid_device_id_or_throw(device_id);
     stream_queue_map_[device_id].emplace_front(
-      devices_[device_id], get_exception_handler(),
-      cl::sycl::property::queue::in_order());
+      context_, devices_[device_id], cl::sycl::property::queue::in_order());
     return stream_queue_map_[device_id].front();
   }
 
@@ -288,6 +290,7 @@ public:
   cl::sycl::queue& get_queue() { return get_queue(current_device_id_); }
 
 private:
+  cl::sycl::context context_;
   std::vector<cl::sycl::device> devices_;
   std::unordered_map<int, cl::sycl::queue> default_queue_map_;
   std::unordered_map<int, std::forward_list<cl::sycl::queue>> stream_queue_map_;
