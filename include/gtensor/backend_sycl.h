@@ -128,47 +128,23 @@ struct gallocator<gt::space::sycl_managed>
   {
     cl::sycl::free(p, gt::backend::sycl::get_queue());
   }
-}; // namespace allocator_impl
-
-// The host allocation type in SYCL allows device code to directly access
-// the data. This is generally not necessary or effecient for gtensor, so
-// we opt for the same implementation as for the HOST device below.
+};
 
 template <>
 struct gallocator<gt::space::sycl_host>
-
 {
   template <typename T>
-  static T* allocate(size_type n)
+  static T* allocate(size_t n)
   {
-    T* p = static_cast<T*>(malloc(sizeof(T) * n));
-    if (!p) {
-      std::cerr << "host allocate failed" << std::endl;
-      std::abort();
-    }
-    return p;
+    return cl::sycl::malloc_host<T>(n, gt::backend::sycl::get_queue());
   }
 
   template <typename T>
   static void deallocate(T* p)
   {
-    free(p);
+    cl::sycl::free(p, gt::backend::sycl::get_queue());
   }
 };
-
-// template <typename T>
-// struct host
-// {
-//   static T* allocate( : size_type count)
-//   {
-//     return cl::sycl::malloc_host<T>(count, gt::backend::sycl::get_queue());
-//   }
-
-//   static void deallocate(T* p)
-//   {
-//     cl::sycl::free(p, gt::backend::sycl::get_queue());
-//   }
-// };
 
 } // namespace allocator_impl
 
@@ -179,9 +155,21 @@ template <typename InputPtr, typename OutputPtr>
 inline void sycl_copy_n(InputPtr in, size_type count, OutputPtr out)
 {
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.memcpy(gt::raw_pointer_cast(out), gt::raw_pointer_cast(in),
-           sizeof(typename gt::pointer_traits<InputPtr>::element_type) * count);
-  q.wait();
+  auto in_raw = gt::raw_pointer_cast(in);
+  auto out_raw = gt::raw_pointer_cast(out);
+
+  auto e = q.copy(in_raw, out_raw, count);
+
+  // sync if in/out is host/managed to mimic CUDA sync behavior, see
+  // https://docs.nvidia.com/cuda/cuda-runtime-api/api-sync-behavior.html#api-sync-behavior
+  // TODO: use async everywhere and require developer to sync after copy when
+  // needed
+  auto in_alloc_type = ::sycl::get_pointer_type(in_raw, q.get_context());
+  auto out_alloc_type = ::sycl::get_pointer_type(out_raw, q.get_context());
+  if (in_alloc_type != ::sycl::usm::alloc::device ||
+      out_alloc_type != ::sycl::usm::alloc::device) {
+    e.wait();
+  }
 }
 
 template <typename InputPtr, typename OutputPtr>
@@ -223,15 +211,25 @@ inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
 {
   using element_type = typename gt::pointer_traits<Ptr>::element_type;
   cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  cl::sycl::event e;
+  auto first_raw = gt::raw_pointer_cast(first);
   if (element_type(value) == element_type()) {
-    q.memset(gt::raw_pointer_cast(first), 0,
-             (last - first) * sizeof(element_type));
+    e = q.memset(first_raw, 0, (last - first) * sizeof(element_type));
   } else {
     assert(sizeof(element_type) == 1);
-    q.memset(gt::raw_pointer_cast(first), value,
-             (last - first) * sizeof(element_type));
+    e = q.memset(first_raw, value, (last - first) * sizeof(element_type));
   }
-}
+
+  // sync if pointer is host/managed to mimic CUDA sync behavior, see
+  // https://docs.nvidia.com/cuda/cuda-runtime-api/api-sync-behavior.html#api-sync-behavior
+  // TODO: use async everywhere and require developer to sync after copy when
+  // needed
+  auto alloc_type = ::sycl::get_pointer_type(first_raw, q.get_context());
+  if (alloc_type != ::sycl::usm::alloc::device) {
+    e.wait();
+  }
+} // namespace fill_impl
+
 } // namespace fill_impl
 
 template <typename Ptr>
