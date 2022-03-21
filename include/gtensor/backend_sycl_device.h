@@ -221,8 +221,9 @@ public:
   cl::sycl::queue& new_stream_queue(int device_id)
   {
     valid_device_id_or_throw(device_id);
-    stream_queue_map_[device_id].emplace_front(devices_[device_id],
-                                               get_exception_handler());
+    stream_queue_map_[device_id].emplace_front(
+      devices_[device_id], get_exception_handler(),
+      cl::sycl::property::queue::in_order());
     return stream_queue_map_[device_id].front();
   }
 
