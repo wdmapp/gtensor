@@ -50,6 +50,17 @@ inline auto get_exception_handler()
   return exception_handler;
 }
 
+inline bool device_per_tile_enabled()
+{
+  static bool init = false;
+  static bool enabled;
+  if (!init) {
+    enabled =
+      (std::getenv("GTENSOR_DEVICE_SYCL_DISABLE_SUB_DEVICES") == nullptr);
+  }
+  return enabled;
+}
+
 // fallback if none of the backend specific methods succeed
 inline uint32_t get_unique_device_id_sycl(int device_index,
                                           const cl::sycl::device& d)
@@ -87,6 +98,11 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
     unique_id |= (0x0000FF00 & (pci_info.pci_bus << 8));
     unique_id |= (0xFFFF0000 & (pci_info.pci_domain << 16));
     // std::cout << "opencl (pci_bus_info ext) " << unique_id << std::endl;
+
+    if (device_per_tile_enabled()) {
+      // make sure id is unique when subdevices are used
+      unique_id += device_index;
+    }
   }
   if (unique_id == 0) {
     unique_id = get_unique_device_id_sycl(device_index, d);
@@ -148,17 +164,6 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
   return unique_id;
 }
 #endif
-
-inline bool device_per_tile_enabled()
-{
-  static bool init = false;
-  static bool enabled;
-  if (!init) {
-    enabled =
-      (std::getenv("GTENSOR_DEVICE_SYCL_DISABLE_SUB_DEVICES") == nullptr);
-  }
-  return enabled;
-}
 
 inline std::vector<cl::sycl::device> get_devices_with_numa_sub(
   const cl::sycl::platform& p)
