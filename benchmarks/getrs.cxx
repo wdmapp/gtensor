@@ -5,13 +5,16 @@
 #include <time.h>
 
 #include "gt-blas/blas.h"
+#include "gtensor/bandsolver.h"
 #include "gtensor/gtensor.h"
 #include "gtensor/reductions.h"
 
 #define NRUNS 10
 
+//#define READ_INPUT
+
 template <typename T>
-inline void read_carray(std::ifstream& f, int n, gt::gtensor_span<T, 1> Adata)
+inline void read_carray(std::ifstream& f, int n, T* Adata)
 {
   for (int i = 0; i < n; i++) {
     // std::cout << i << " " << std::endl;
@@ -19,7 +22,7 @@ inline void read_carray(std::ifstream& f, int n, gt::gtensor_span<T, 1> Adata)
   }
 }
 
-inline void read_iarray(std::ifstream& f, int n, gt::gtensor_span<int, 1> data)
+inline void read_iarray(std::ifstream& f, int n, gt::blas::index_t* data)
 {
   for (int i = 0; i < n; i++) {
     f >> data[i];
@@ -127,10 +130,32 @@ void test()
     info_sum = gt::sum(info);
     if (info_sum != 0)
       std::cout << "info sum: " << info_sum << std::endl;
-    std::cout << "run [" << i << "]: " << elapsed << std::endl;
+    std::cout << "run blas [" << i << "]: " << elapsed << std::endl;
   }
 
   std::cout << "zgetrs done (avg " << total / (NRUNS - 1) << ")" << std::endl;
+
+  auto bw = gt::bandsolver::get_max_bandwidth(
+    n, gt::raw_pointer_cast(d_Aptr.data()), lda, batch_size);
+  std::cout << "bw: " << bw.lower << " " << bw.upper << std::endl;
+
+  total = 0.0;
+  for (int i = 0; i < NRUNS; i++) {
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    gt::bandsolver::getrs_banded_batched(
+      n, nrhs, gt::raw_pointer_cast(d_Aptr.data()), lda,
+      gt::raw_pointer_cast(d_piv.data()), gt::raw_pointer_cast(d_Bptr.data()),
+      ldb, batch_size, bw.lower, bw.upper);
+    gt::synchronize();
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed =
+      (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9;
+    if (i > 0)
+      total += elapsed;
+    std::cout << "run band [" << i << "]: " << elapsed << std::endl;
+  }
+
+  std::cout << "band   done (avg " << total / (NRUNS - 1) << ")" << std::endl;
 
 #ifndef READ_INPUT
   // check result
