@@ -294,6 +294,12 @@ public:
 
   cl::sycl::queue& get_queue() { return get_queue(current_device_id_); }
 
+  bool is_host_backend()
+  {
+    return (devices_[0].get_info<cl::sycl::info::device::device_type>() ==
+            cl::sycl::info::device_type::host);
+  }
+
 private:
   cl::sycl::context context_;
   std::vector<cl::sycl::device> devices_;
@@ -355,6 +361,11 @@ inline bool has_open_stream_queues(int device_id)
 inline bool has_open_stream_queues()
 {
   return device::get_sycl_queues_instance().has_open_stream_queues();
+}
+
+inline bool is_host_backend()
+{
+  return device::get_sycl_queues_instance().is_host_backend();
 }
 
 } // namespace sycl

@@ -7,6 +7,7 @@
 #include <thrust/reduce.h>
 #endif
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <numeric>
@@ -129,6 +130,12 @@ template <typename Container,
 inline auto sum(const Container& a)
 {
   using T = typename Container::value_type;
+
+  if (gt::backend::sycl::is_host_backend()) {
+    const T* adata = gt::raw_pointer_cast(a.data());
+    return std::accumulate(adata, adata + a.size(), T(0));
+  }
+
   sycl::queue& q = gt::backend::sycl::get_queue();
   T sum_result = 0;
   sycl::buffer<T> sum_buf{&sum_result, 1};
@@ -161,6 +168,14 @@ template <typename Container,
 inline auto max(const Container& a)
 {
   using T = typename Container::value_type;
+
+  // Workaround for group algorithms not being supported with host backend,
+  // currently used for CI
+  if (gt::backend::sycl::is_host_backend()) {
+    const T* adata = gt::raw_pointer_cast(a.data());
+    return *std::max_element(adata, adata + a.size());
+  }
+
   sycl::queue& q = gt::backend::sycl::get_queue();
   std::array<T, 1> result;
   T max_result = 0;
@@ -194,6 +209,12 @@ template <typename Container,
 inline auto min(const Container& a)
 {
   using T = typename Container::value_type;
+
+  if (gt::backend::sycl::is_host_backend()) {
+    const T* adata = gt::raw_pointer_cast(a.data());
+    return *std::min_element(adata, adata + a.size());
+  }
+
   sycl::queue& q = gt::backend::sycl::get_queue();
   T min_result;
   sycl::buffer<T> min_buf{&min_result, 1};

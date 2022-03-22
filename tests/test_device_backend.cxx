@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <iostream>
 #include <stdint.h>
 
 #include <gtensor/gtensor.h>
@@ -16,6 +17,11 @@ TEST(device_backend, list_devices)
   uint32_t vendor_id[MAX_DEVICES];
 
   ASSERT_LE(n_devices, MAX_DEVICES);
+
+#ifdef GTENSOR_DEVICE_SYCL
+  std::cout << "sycl backend is host? " << gt::backend::sycl::is_host_backend()
+            << std::endl;
+#endif
 
   for (int i = 0; i < n_devices; i++) {
     vendor_id[i] = gt::backend::clib::device_get_vendor_id(i);
