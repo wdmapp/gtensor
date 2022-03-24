@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "gtensor/bandsolver.h"
+#include "gt-blas/blas.h"
 #include "gtensor/gtensor.h"
 
 #include "test_helpers.h"
@@ -163,8 +163,8 @@ void test_getrs_batch_real()
   gt::gtensor<T, 3> h_B(gt::shape(N, NRHS, batch_size));
   gt::gtensor_device<T, 3> d_B(gt::shape(N, NRHS, batch_size));
 
-  gt::gtensor<gt::bandsolver::index_t, 2> h_p(gt::shape(N, batch_size));
-  gt::gtensor_device<gt::bandsolver::index_t, 2> d_p(gt::shape(N, batch_size));
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
 
   // set up first (and only) batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
@@ -188,10 +188,10 @@ void test_getrs_batch_real()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::bandsolver::getrs_banded_batched(
-    N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
-    gt::raw_pointer_cast(d_p.data()), gt::raw_pointer_cast(d_Bptr.data()), N,
-    batch_size, N - 1, N - 1);
+  gt::blas::getrs_banded_batched(N, NRHS, gt::raw_pointer_cast(d_Aptr.data()),
+                                 N, gt::raw_pointer_cast(d_p.data()),
+                                 gt::raw_pointer_cast(d_Bptr.data()), N,
+                                 batch_size, N - 1, N - 1);
 
   gt::copy(d_B, h_B);
 
@@ -253,8 +253,8 @@ void test_getrs_batch_complex()
   gt::gtensor<T, 3> h_B(gt::shape(N, NRHS, batch_size));
   test::gtensor2<T, 3, S> d_B(gt::shape(N, NRHS, batch_size));
 
-  gt::gtensor<gt::bandsolver::index_t, 2> h_p(gt::shape(N, batch_size));
-  test::gtensor2<gt::bandsolver::index_t, 2, S> d_p(gt::shape(N, batch_size));
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  test::gtensor2<gt::blas::index_t, 2, S> d_p(gt::shape(N, batch_size));
 
   // setup input for first batch
   set_A0_LU(h_A.view(gt::all, gt::all, 0));
@@ -293,10 +293,10 @@ void test_getrs_batch_complex()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::bandsolver::getrs_banded_batched(
-    N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
-    gt::raw_pointer_cast(d_p.data()), gt::raw_pointer_cast(d_Bptr.data()), N,
-    batch_size, N - 1, N - 1);
+  gt::blas::getrs_banded_batched(N, NRHS, gt::raw_pointer_cast(d_Aptr.data()),
+                                 N, gt::raw_pointer_cast(d_p.data()),
+                                 gt::raw_pointer_cast(d_Bptr.data()), N,
+                                 batch_size, N - 1, N - 1);
 
   gt::copy(d_B, h_B);
 
@@ -363,18 +363,18 @@ void test_get_max_bandwidth()
   gt::copy(h_A, d_A);
   gt::copy(h_Aptr, d_Aptr);
 
-  auto bw0 = gt::bandsolver::get_max_bandwidth(
-    N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
+  auto bw0 =
+    gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
   EXPECT_EQ(bw0.lower, 0);
   EXPECT_EQ(bw0.upper, 0);
 
-  auto bw1 = gt::bandsolver::get_max_bandwidth(
+  auto bw1 = gt::blas::get_max_bandwidth(
     N, gt::raw_pointer_cast(d_Aptr.data()) + 1, N, 1);
   EXPECT_EQ(bw1.lower, N - 3);
   EXPECT_EQ(bw1.upper, 1);
 
-  auto bw = gt::bandsolver::get_max_bandwidth(
-    N, gt::raw_pointer_cast(d_Aptr.data()), N, batch_size);
+  auto bw = gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()),
+                                        N, batch_size);
   EXPECT_EQ(bw.lower, N - 3);
   EXPECT_EQ(bw.upper, 1);
 }

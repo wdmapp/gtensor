@@ -77,12 +77,18 @@ void gtblas_sgetrf_batched(int n, float** d_Aarray, int lda,
 void gtblas_sgetrs_batched(int n, int nrhs, float** d_Aarray, int lda,
                            gt::blas::index_t* devIpiv, float** d_Barray,
                            int ldb, int batchSize);
+void gtblas_banded_sgetrs_batched(int n, int nrhs, float** d_Aarray, int lda,
+                                  gt::blas::index_t* devIpiv, float** d_Barray,
+                                  int ldb, int batchSize, int lbw, int ubw);
 void gtblas_dgetrf_batched(int n, double** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
 void gtblas_dgetrs_batched(int n, int nrhs, double** d_Aarray, int lda,
                            gt::blas::index_t* devIpiv, double** d_Barray,
                            int ldb, int batchSize);
+void gtblas_banded_dgetrs_batched(int n, int nrhs, double** d_Aarray, int lda,
+                                  gt::blas::index_t* devIpiv, double** d_Barray,
+                                  int ldb, int batchSize, int lbw, int ubw);
 void gtblas_cgetrf_batched(int n, f2c_complex<float>** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
@@ -90,6 +96,11 @@ void gtblas_cgetrs_batched(int n, int nrhs, f2c_complex<float>** d_Aarray,
                            int lda, gt::blas::index_t* devIpiv,
                            f2c_complex<float>** d_Barray, int ldb,
                            int batchSize);
+void gtblas_banded_cgetrs_batched(int n, int nrhs,
+                                  f2c_complex<float>** d_Aarray, int lda,
+                                  gt::blas::index_t* devIpiv,
+                                  f2c_complex<float>** d_Barray, int ldb,
+                                  int batchSize, int lbw, int ubw);
 void gtblas_zgetrf_batched(int n, f2c_complex<double>** d_Aarray, int lda,
                            gt::blas::index_t* d_PivotArray, int* d_infoArray,
                            int batchSize);
@@ -97,10 +108,25 @@ void gtblas_zgetrs_batched(int n, int nrhs, f2c_complex<double>** d_Aarray,
                            int lda, gt::blas::index_t* devIpiv,
                            f2c_complex<double>** d_Barray, int ldb,
                            int batchSize);
+void gtblas_banded_zgetrs_batched(int n, int nrhs,
+                                  f2c_complex<double>** d_Aarray, int lda,
+                                  gt::blas::index_t* devIpiv,
+                                  f2c_complex<double>** d_Barray, int ldb,
+                                  int batchSize, int lbw, int ubw);
+
 void gtblas_cgetrf_npvt_batched(int n, f2c_complex<float>** d_Aarray, int lda,
                                 int* d_infoArray, int batchSize);
 void gtblas_zgetrf_npvt_batched(int n, f2c_complex<double>** d_Aarray, int lda,
                                 int* d_infoArray, int batchSize);
+
+void gtblas_sget_max_bandwidth(int n, float** d_Aarray, int lda, int batchSize,
+                               int* lbw, int* ubw);
+void gtblas_dget_max_bandwidth(int n, double** d_Aarray, int lda, int batchSize,
+                               int* lbw, int* ubw);
+void gtblas_cget_max_bandwidth(int n, f2c_complex<float>** d_Aarray, int lda,
+                               int batchSize, int* lbw, int* ubw);
+void gtblas_zget_max_bandwidth(int n, f2c_complex<double>** d_Aarray, int lda,
+                               int batchSize, int* lbw, int* ubw);
 
 #ifdef __cplusplus
 }

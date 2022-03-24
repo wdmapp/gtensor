@@ -5,7 +5,6 @@
 #include <time.h>
 
 #include "gt-blas/blas.h"
-#include "gtensor/bandsolver.h"
 #include "gtensor/gtensor.h"
 #include "gtensor/reductions.h"
 
@@ -135,17 +134,17 @@ void test()
 
   std::cout << "zgetrs done (avg " << total / (NRUNS - 1) << ")" << std::endl;
 
-  auto bw = gt::bandsolver::get_max_bandwidth(
-    n, gt::raw_pointer_cast(d_Aptr.data()), lda, batch_size);
+  auto bw = gt::blas::get_max_bandwidth(n, gt::raw_pointer_cast(d_Aptr.data()),
+                                        lda, batch_size);
   std::cout << "bw: " << bw.lower << " " << bw.upper << std::endl;
 
   total = 0.0;
   for (int i = 0; i < NRUNS; i++) {
     clock_gettime(CLOCK_MONOTONIC, &start);
-    gt::bandsolver::getrs_banded_batched(
-      n, nrhs, gt::raw_pointer_cast(d_Aptr.data()), lda,
-      gt::raw_pointer_cast(d_piv.data()), gt::raw_pointer_cast(d_Bptr.data()),
-      ldb, batch_size, bw.lower, bw.upper);
+    gt::blas::getrs_banded_batched(n, nrhs, gt::raw_pointer_cast(d_Aptr.data()),
+                                   lda, gt::raw_pointer_cast(d_piv.data()),
+                                   gt::raw_pointer_cast(d_Bptr.data()), ldb,
+                                   batch_size, bw.lower, bw.upper);
     gt::synchronize();
     clock_gettime(CLOCK_MONOTONIC, &end);
     elapsed =

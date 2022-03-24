@@ -1,20 +1,13 @@
 #ifndef GTENSOR_BANDSOLVE_H
 #define GTENSOR_BANDSOLVE_H
 
-#include "gtensor/gtensor.h"
 #include "gtensor/reductions.h"
 
 namespace gt
 {
 
-namespace bandsolver
+namespace blas
 {
-
-#ifdef GTENSOR_DEVICE_SYCL
-using index_t = std::int64_t;
-#else
-using index_t = std::int32_t;
-#endif
 
 struct matrix_bandwidth
 {
@@ -140,7 +133,7 @@ inline void getrs_banded_batched(int n, int nrhs, T** d_Aarray, int lda,
     });
 }
 
-} // namespace bandsolver
+} // namespace blas
 
 } // namespace gt
 

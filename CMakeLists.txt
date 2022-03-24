@@ -49,9 +49,9 @@ set(GTENSOR_DEVICE_SYCL_ILP64 OFF CACHE BOOL
 set(ONEAPI_PATH "/opt/intel/oneapi" CACHE STRING "path to oneAPI installation")
 set(DPCPP_PATH "${ONEAPI_PATH}/compiler/latest/linux" CACHE STRING
     "Path to DPCPP compiler")
-set(DPCPP_LIBDIR "${DPCPP_ROOT}/lib" CACHE STRING
+set(DPCPP_LIBDIR "${DPCPP_PATH}/lib" CACHE STRING
     "Path to DPCPP compiler lib dir")
-set(DPCPP_INCDIR "${DPCPP_ROOT}/include/sycl" CACHE STRING
+set(DPCPP_INCDIR "${DPCPP_PATH}/include/sycl" CACHE STRING
     "Path to DPCPP include dir")
 set(MKL_PATH "${ONEAPI_PATH}/mkl/latest" CACHE STRING "path to oneAPI MKL")
 set(MKL_ARCH "intel64" CACHE STRING "MKL architecture (lib subdir)")
