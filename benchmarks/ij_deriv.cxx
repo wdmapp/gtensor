@@ -397,10 +397,14 @@ void ij_deriv_gpu(const int len1, // 16-1024
 }
 #endif // end CUDA or HIP
 
+#define MAX_SIZE_STR_LEN 15
+
 template <typename Real>
 void test_ij_deriv(int li0, int lj0, int lbg0)
 {
   using Complex = gt::complex<Real>;
+
+  char size_str[MAX_SIZE_STR_LEN + 1];
 
   constexpr int time_warmup_count = 5;
   constexpr int time_run_count = 5;
@@ -415,6 +419,8 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   Real minNorm, maxNorm, minRe, maxRe, minIm, maxIm;
 #endif
 
+  const char* row_format = "%-14s\t%-12s\t%0.6f\n";
+
   ncoeff = 5;
   nxb = ncoeff / 2;
   lx0 = li0 + (2 * nxb);
@@ -423,7 +429,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   size_t darr_size = li0 * lj0 * 2 * lbg0;
   size_t ikj_size = lj0;
 
-  printf("== %dx%dx%d ==\n", li0, lj0, lbg0);
+  snprintf(size_str, MAX_SIZE_STR_LEN, "%dx%dx%d", li0, lj0, lbg0);
 
   host_vector<Complex> h_arr(arr_size);
   host_vector<Complex> h_darr(darr_size);
@@ -495,7 +501,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("cpu     seconds/run: %0.6f\n", seconds_per_run);
+  printf(row_format, size_str, "cpu", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   array_stats(&minNorm, &maxNorm, &minRe, &maxRe, &minIm, &maxIm, h_arr.data(),
@@ -522,7 +528,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gt host seconds/run: %0.6f\n", seconds_per_run);
+  printf(row_format, size_str, "cpu_gt", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
@@ -549,7 +555,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gt hf   seconds/run: %0.6f\n", seconds_per_run);
+  printf(row_format, size_str, "cpu_gt_fused", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   compare_deriv(&error, &maxError, &relError, &maxRelError, ref_darr.data(),
@@ -581,7 +587,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gpu     seconds/run: %0.6f\n", seconds_per_run);
+  printf(row_format, size_str, "gpu", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   gt::backend::copy(d_darr, h_darr);
@@ -613,7 +619,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gt gpu  seconds/run: %0.6f\n", seconds_per_run);
+  printf(row_format, size_str, "gpu_gt", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   gt::backend::copy(d_darr, h_darr);
@@ -645,7 +651,7 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
   seconds_per_run =
     ((end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9) /
     time_run_count;
-  printf("gt gpuf seconds/run: %0.6f\n", seconds_per_run);
+  printf(row_format, size_str, "gpu_gt_fused", seconds_per_run);
 
 #ifdef DEBUG_COMPARE
   gt::backend::copy(d_darr, h_darr);
