@@ -32,7 +32,7 @@ inline void read_iarray(std::ifstream& f, int n, gt::blas::index_t* data)
 #define MAX_SIZE_STR_LEN 15
 
 template <typename T>
-void test(int n, int nrhs, int batch_size)
+void test(int n, int nrhs, int batch_size, int bw)
 {
   int lda, ldb;
 
@@ -100,33 +100,36 @@ void test(int n, int nrhs, int batch_size)
   read_carray(f, n * nrhs * batch_size, h_Bdata.data());
   read_iarray(f, n * batch_size, h_piv.data());
   f.close();
+  std::cout << "INFO: read done" << std::endl;
 #else
-
   for (int b = 0; b < batch_size; b++) {
     for (int i = 0; i < n; i++) {
-      h_Adata(i, i, b) = CT(1.0, 0.0);
-      h_piv(i, b) = i + 1;
+      h_Adata(i, i, b) = CT(bw + 1.0, 0.0);
+      // set upper / lower diags at bw diagonal
+      if (i + bw < n) {
+        h_Adata(i, i + bw, b) = CT(-1.0, 0.0);
+        h_Adata(i + bw, i, b) = CT(0.0, -1.0);
+      }
       for (int j = 0; j < nrhs; j++) {
-        h_Bdata(i, j, b) = CT(i / (j + 1) * b, i * j / (b + 1));
+        // h_Bdata(i, j, b) = CT(i / (j + 1) * b, i * j / (b + 1));
+        h_Bdata(i, j, b) = CT(1.0, 0.0);
       }
     }
   }
+  std::cout << "INFO: init done" << std::endl;
 #endif
 
   for (int i = 0; i < batch_size; i++) {
     h_Aptr(i) = gt::raw_pointer_cast(d_Adata.data()) + (n * n * i);
     h_Bptr(i) = gt::raw_pointer_cast(d_Bdata.data()) + (n * nrhs * i);
   }
-
-  std::cout << "INFO: read/init done" << std::endl;
-
   gt::copy(h_Aptr, d_Aptr);
   gt::copy(h_Adata, d_Adata);
   gt::copy(h_Bptr, d_Bptr);
   gt::copy(h_Bdata, d_Bdata);
   gt::copy(h_piv, d_piv);
 
-  std::cout << "INFO: memcpy done" << std::endl;
+  std::cout << "INFO: memcpy to device done" << std::endl;
 
   gt::blas::handle_t* h = gt::blas::create();
 
@@ -134,10 +137,17 @@ void test(int n, int nrhs, int batch_size)
   double elapsed, total = 0.0;
   int info_sum;
 
-  auto bw = gt::blas::get_max_bandwidth(n, gt::raw_pointer_cast(d_Aptr.data()),
-                                        lda, batch_size);
+  auto bw2 = gt::blas::get_max_bandwidth(n, gt::raw_pointer_cast(d_Aptr.data()),
+                                         lda, batch_size);
+#ifndef READ_INPUT
+  if (bw2.lower != bw || bw2.upper != bw) {
+    std::cerr << "ERR: construct matrix bandwidht mismatch, expected " << bw
+              << " got " << bw2.lower << "_" << bw2.upper << std::endl;
+    std::exit(1);
+  }
+#endif
   ss.str("");
-  ss << bw.lower << "_" << bw.upper;
+  ss << bw2.lower << "_" << bw2.upper;
   bw_str = ss.str();
 
   for (int i = 0; i < NRUNS; i++) {
@@ -167,7 +177,7 @@ void test(int n, int nrhs, int batch_size)
     gt::blas::getrs_banded_batched(n, nrhs, gt::raw_pointer_cast(d_Aptr.data()),
                                    lda, gt::raw_pointer_cast(d_piv.data()),
                                    gt::raw_pointer_cast(d_Bptr.data()), ldb,
-                                   batch_size, bw.lower, bw.upper);
+                                   batch_size, bw2.lower, bw2.upper);
     gt::synchronize();
     clock_gettime(CLOCK_MONOTONIC, &end);
     elapsed =
@@ -180,7 +190,8 @@ void test(int n, int nrhs, int batch_size)
   std::cout << type_str << "\t" << size_str << "\t" << bw_str
             << "\tbanded_avg\t" << total / (NRUNS - 1) << std::endl;
 
-#ifndef READ_INPUT
+// needs update for change to use non-trivial input with specified bw
+#if 0
   // check result
   gt::copy(d_Bdata, h_Bdata);
   bool ok = true;
@@ -217,6 +228,6 @@ int main(int argc, char** argv)
   rocblas_initialize();
 #endif
   // size used for single GPU GENE run
-  test<float>(140, 1, 384);
-  test<double>(140, 1, 384);
+  test<float>(140, 1, 384, 32);
+  test<double>(140, 1, 384, 32);
 }
