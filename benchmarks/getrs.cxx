@@ -3,6 +3,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
+#include <string>
 #include <time.h>
 
 #include "gt-blas/blas.h"
@@ -227,7 +228,26 @@ int main(int argc, char** argv)
 #ifdef GTENSOR_DEVICE_HIP
   rocblas_initialize();
 #endif
+
+  int n = 140;
+  int nrhs = 1;
+  int batch_size = 384;
+  int bw = 32;
+
+  if (argc > 1) {
+    n = std::stoi(argv[1]);
+  }
+  if (argc > 2) {
+    nrhs = std::stoi(argv[2]);
+  }
+  if (argc > 3) {
+    batch_size = std::stoi(argv[3]);
+  }
+  if (argc > 4) {
+    bw = std::stoi(argv[4]);
+  }
+
   // size used for single GPU GENE run
-  test<float>(140, 1, 384, 32);
-  test<double>(140, 1, 384, 32);
+  test<float>(n, nrhs, batch_size, bw);
+  test<double>(n, nrhs, batch_size, bw);
 }

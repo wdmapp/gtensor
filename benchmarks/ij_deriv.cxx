@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include <type_traits>
@@ -670,10 +671,19 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
 
 int main(int argc, char** argv)
 {
-  test_ij_deriv<double>(1024, 16, 32);
-  test_ij_deriv<double>(1024, 32, 32);
-  test_ij_deriv<double>(1024, 64, 32);
-  test_ij_deriv<double>(1024, 128, 32);
-  test_ij_deriv<double>(1024, 256, 32);
-  test_ij_deriv<double>(1024, 256, 64);
+  int i = 128;
+  int j = 16;
+  int klmn = 4096;
+
+  if (argc > 1) {
+    i = std::stoi(argv[1]);
+  }
+  if (argc > 2) {
+    j = std::stoi(argv[2]);
+  }
+  if (argc > 3) {
+    klmn = std::stoi(argv[3]);
+  }
+
+  test_ij_deriv<double>(i, j, klmn);
 }
