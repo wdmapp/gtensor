@@ -28,6 +28,8 @@ struct handle_t;
 #include "backend/sycl.h"
 #endif
 
+#include "bandsolver.h"
+
 namespace gt
 {
 

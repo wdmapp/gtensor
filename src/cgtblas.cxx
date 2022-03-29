@@ -257,6 +257,44 @@ CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, f2c_complex<double>)
 #undef CREATE_C_GETRS_BATCHED
 
 // ======================================================================
+// gtblas_banded_Xgetrs_batched
+
+#define CREATE_C_BANDED_GETRS_BATCHED(CNAME, CPPTYPE)                          \
+  void CNAME(int n, int nrhs, CPPTYPE** d_Aarray, int lda,                     \
+             gt::blas::index_t* d_PivotArray, CPPTYPE** d_Barray, int ldb,     \
+             int batchSize, int lbw, int ubw)                                  \
+  {                                                                            \
+    gt::blas::getrs_banded_batched(                                            \
+      n, nrhs, detail::cast_aligned(d_Aarray), lda, d_PivotArray,              \
+      detail::cast_aligned(d_Barray), ldb, batchSize, lbw, ubw);               \
+  }
+
+CREATE_C_BANDED_GETRS_BATCHED(gtblas_banded_sgetrs_batched, float)
+CREATE_C_BANDED_GETRS_BATCHED(gtblas_banded_dgetrs_batched, double)
+CREATE_C_BANDED_GETRS_BATCHED(gtblas_banded_cgetrs_batched, f2c_complex<float>)
+CREATE_C_BANDED_GETRS_BATCHED(gtblas_banded_zgetrs_batched, f2c_complex<double>)
+
+#undef CREATE_C_BANDED_GETRS_BATCHED
+
+// ======================================================================
+// gtblas_Xget_max_bandwidth
+
+#define CREATE_C_GET_MAX_BANDWIDTH(CNAME, CPPTYPE)                             \
+  void CNAME(int n, CPPTYPE** d_Aarray, int lda, int batchSize, int* lbw,      \
+             int* ubw)                                                         \
+  {                                                                            \
+    auto bw = gt::blas::get_max_bandwidth(n, detail::cast_aligned(d_Aarray),   \
+                                          lda, batchSize);                     \
+    *lbw = bw.lower;                                                           \
+    *ubw = bw.upper;                                                           \
+  }
+
+CREATE_C_GET_MAX_BANDWIDTH(gtblas_sget_max_bandwidth, float)
+CREATE_C_GET_MAX_BANDWIDTH(gtblas_dget_max_bandwidth, double)
+CREATE_C_GET_MAX_BANDWIDTH(gtblas_cget_max_bandwidth, f2c_complex<float>)
+CREATE_C_GET_MAX_BANDWIDTH(gtblas_zget_max_bandwidth, f2c_complex<double>)
+
+// ======================================================================
 // gtblas_Xgetrf_npvt_batched
 #define CREATE_C_GETRF_NPVT_BATCHED(CNAME, CPPTYPE)                            \
   void CNAME(int n, CPPTYPE** d_Aarray, int lda, int* d_infoArray,             \

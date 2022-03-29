@@ -480,17 +480,27 @@ struct assigner<N, space::device>
     using rtype = decltype(k_rhs);
 
     // Note: handle RHS that may be greater than 2k parameter limit
-    gt::backend::device_storage<rtype> d_rhs(1);
-    decltype(auto) d_rhs_p = gt::raw_pointer_cast(d_rhs.data());
-    q.copy(&k_rhs, d_rhs_p, 1).wait();
+    if constexpr (sizeof(k_lhs) + sizeof(k_rhs) + sizeof(strides) >= 2048) {
+      gt::backend::device_storage<rtype> d_rhs(1);
+      decltype(auto) d_rhs_p = gt::raw_pointer_cast(d_rhs.data());
+      q.copy(&k_rhs, d_rhs_p, 1).wait();
 
-    auto e = q.submit([&](sycl::handler& cgh) {
-      using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
-      cgh.parallel_for<kname>(sycl::range<1>(size), [=](sycl::id<1> i) {
-        auto idx = unravel(i, strides);
-        index_expression(k_lhs, idx) = index_expression(*d_rhs_p, idx);
+      auto e = q.submit([&](sycl::handler& cgh) {
+        using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
+        cgh.parallel_for<kname>(sycl::range<1>(size), [=](sycl::id<1> i) {
+          auto idx = unravel(i, strides);
+          index_expression(k_lhs, idx) = index_expression(*d_rhs_p, idx);
+        });
       });
-    });
+    } else {
+      auto e = q.submit([&](sycl::handler& cgh) {
+        using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
+        cgh.parallel_for<kname>(sycl::range<1>(size), [=](sycl::id<1> i) {
+          auto idx = unravel(i, strides);
+          index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
+        });
+      });
+    }
 
     gpuSyncIfEnabledStream(stream);
   }

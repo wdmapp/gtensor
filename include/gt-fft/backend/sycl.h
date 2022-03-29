@@ -155,6 +155,7 @@ private:
                               std::multiplies<MKL_FFT_LONG>());
     }
 
+#if __INTEL_MKL_BUILD_DAT >= 20220312
     // Note: COMPLEX asymmetric transforms still auto switch in/out strides
     // for rank 1, which is an inconsistency.
     if (D == gt::fft::Domain::REAL) {
@@ -164,6 +165,18 @@ private:
     } else {
       is_layout_asymmetric_ = false;
     }
+#else
+    // For older MKL release, all 1d transforms auto switch in/out strides
+    if (rank == 1) {
+      is_layout_asymmetric_ = false;
+    } else if (D == gt::fft::Domain::REAL) {
+      is_layout_asymmetric_ = true;
+    } else if (istride != ostride) {
+      is_layout_asymmetric_ = true;
+    } else {
+      is_layout_asymmetric_ = false;
+    }
+#endif
 
     try {
       if (rank > 1) {
