@@ -303,13 +303,14 @@ endif()
 if (GTENSOR_BUILD_BENCHMARKS)
   CPMAddPackage(
     NAME benchmark
-    GITHUB_REPOSITORY germasch/benchmark
-    GIT_TAG kg
-    VERSION 1.5.3kg
+    GITHUB_REPOSITORY google/benchmark
+    GIT_TAG v1.6.1
+    VERSION v1.6.1
     GIT_SHALLOW TRUE
     OPTIONS
       "BENCHMARK_ENABLE_TESTING OFF"
       "BENCHMARK_ENABLE_INSTALL OFF"
+      "BENCHMARK_ENABLE_WERROR OFF"
   )
 endif()
 
