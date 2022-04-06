@@ -3,6 +3,10 @@ add_executable(ij_deriv)
 target_gtensor_sources(ij_deriv PRIVATE ij_deriv.cxx)
 target_link_libraries(ij_deriv gtensor::gtensor)
 
+add_executable(stencil)
+target_gtensor_sources(stencil PRIVATE stencil.cxx)
+target_link_libraries(stencil gtensor::gtensor)
+
 if (GTENSOR_ENABLE_BLAS)
   add_executable(getrs)
   target_gtensor_sources(getrs PRIVATE getrs.cxx)
