@@ -67,6 +67,10 @@ static void BM_stencil1d_3(benchmark::State& state)
 
   gt::copy(y, d_y);
 
+  // warm up, force compile
+  d_dydx_numeric = stencil1d_3<gt::space::device>(d_y, stencil3) * scale;
+  gt::synchronize();
+
   for (auto _ : state) {
     d_dydx_numeric = stencil1d_3<gt::space::device>(d_y, stencil3) * scale;
     gt::synchronize();
@@ -96,6 +100,10 @@ static void BM_stencil1d_5(benchmark::State& state)
 
   gt::copy(y, d_y);
 
+  // warm up, force compile
+  d_dydx_numeric = stencil1d_5<gt::space::device>(d_y, stencil5) * scale;
+  gt::synchronize();
+
   for (auto _ : state) {
     d_dydx_numeric = stencil1d_5<gt::space::device>(d_y, stencil5) * scale;
     gt::synchronize();
@@ -124,6 +132,10 @@ static void BM_stencil1d_7(benchmark::State& state)
   }
 
   gt::copy(y, d_y);
+
+  // warm up, force compile
+  d_dydx_numeric = stencil1d_7<gt::space::device>(d_y, stencil7) * scale;
+  gt::synchronize();
 
   for (auto _ : state) {
     d_dydx_numeric = stencil1d_7<gt::space::device>(d_y, stencil7) * scale;

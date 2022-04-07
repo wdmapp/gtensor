@@ -16,6 +16,10 @@ static void BM_device_assign_4d(benchmark::State& state)
   auto a = gt::zeros_device<real_t>(gt::shape(100, 100, 100, 100));
   auto b = gt::empty_like(a);
 
+  // warmup, device compile
+  b = a + 2 * a;
+  gt::synchronize();
+
   for (auto _ : state) {
     b = a + 2 * a;
     gt::synchronize();
@@ -52,13 +56,20 @@ static void BM_add_ij_sten(benchmark::State& state)
 
   real_t facj = 2.;
 
-  for (auto _ : state) {
+  auto fn = [&]() {
     rhs = rhs +
           facj *
             kj.view(_newaxis, _all, _newaxis, _newaxis, _newaxis, _newaxis) *
             dist.view(_s(bnd, -bnd)) +
           i_sten_6d_5(sten, dist, bnd);
     gt::synchronize();
+  };
+
+  // warmup, device compile
+  fn();
+
+  for (auto _ : state) {
+    fn();
   }
 }
 
@@ -103,13 +114,20 @@ static void BM_add_dgdxy(benchmark::State& state)
   auto dij =
     gt::empty_device<complex_t>({shape_rhs[0], shape_rhs[1], shape_rhs[2], 2});
 
-  for (auto _ : state) {
+  auto fn = [&]() {
     dij.view(_all, _all, _all, 0) = x_deriv_5(f, sten, bnd);
     dij.view(_all, _all, _all, 1) = y_deriv(f, ikj, bnd);
 
     rhs = rhs + p1.view(_all, _newaxis) * dij.view(_all, _all, _all, 0) +
           p2.view(_all, _newaxis) * dij.view(_all, _all, _all, 1);
     gt::synchronize();
+  };
+
+  // warm up, device compile
+  fn();
+
+  for (auto _ : state) {
+    fn();
   }
 }
 
@@ -134,12 +152,19 @@ static void BM_add_dgdxy_fused(benchmark::State& state)
   auto p1 = gt::zeros_device<complex_t>({shape_rhs[0], shape_rhs[2]});
   auto p2 = gt::zeros_device<complex_t>({shape_rhs[0], shape_rhs[2]});
 
-  for (auto _ : state) {
+  auto fn = [&]() {
     auto dx_f = x_deriv_5(f, sten, bnd);
     auto dy_f = y_deriv(f, ikj, bnd);
 
     rhs = rhs + p1.view(_all, _newaxis) * dx_f + p2.view(_all, _newaxis) * dy_f;
     gt::synchronize();
+  };
+
+  // warm up, device compile
+  fn();
+
+  for (auto _ : state) {
+    fn();
   }
 }
 
@@ -179,7 +204,7 @@ static void BM_add_dgdxy_6d(benchmark::State& state)
     gt::empty_device<complex_t>({shape_rhs[0], shape_rhs[1], shape_rhs[2],
                                  shape_rhs[3], shape_rhs[4], shape_rhs[5], 2});
 
-  for (auto _ : state) {
+  auto fn = [&]() {
     dij.view(_all, _all, _all, _all, _all, _all, 0) = x_deriv_5(f, sten, bnd);
     dij.view(_all, _all, _all, _all, _all, _all, 1) = y_deriv_6d(f, ikj, bnd);
 
@@ -189,6 +214,13 @@ static void BM_add_dgdxy_6d(benchmark::State& state)
         dij.view(_all, _all, _all, _all, _all, _all, 0) +
       p2.view(_all, _newaxis) * dij.view(_all, _all, _all, _all, _all, _all, 1);
     gt::synchronize();
+  };
+
+  // warm up, device compile
+  fn();
+
+  for (auto _ : state) {
+    fn();
   }
 }
 
@@ -215,13 +247,20 @@ static void BM_add_dgdxy_fused_6d(benchmark::State& state)
   auto p2 = gt::zeros_device<complex_t>(
     {shape_rhs[0], shape_rhs[2], shape_rhs[3], shape_rhs[4], shape_rhs[5]});
 
-  for (auto _ : state) {
+  auto fn = [&]() {
     auto dx_f = x_deriv_5(f, sten, bnd);
     auto dy_f = y_deriv_6d(f, ikj, bnd);
 
     rhs = rhs + p1.view(_all, _newaxis) * dx_f + p2.view(_all, _newaxis) * dy_f;
 
     gt::synchronize();
+  };
+
+  // warm up, device compile
+  fn();
+
+  for (auto _ : state) {
+    fn();
   }
 }
 
