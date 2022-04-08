@@ -67,6 +67,10 @@ static void BM_semi_arakawa_kl_13p_v1_idep(benchmark::State& state)
   auto f = gt::zeros_device<complex_t>(shape_f);
   auto sten = gt::zeros_device<real_t>(shape_sten);
 
+  // warmup, force compile
+  rhs = rhs + semi_arakawa_kl_13p_v1_idep(sten, f, bnd);
+  gt::synchronize();
+
   for (auto _ : state) {
     rhs = rhs + semi_arakawa_kl_13p_v1_idep(sten, f, bnd);
     gt::synchronize();

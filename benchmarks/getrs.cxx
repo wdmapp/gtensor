@@ -106,6 +106,7 @@ void test(int n, int nrhs, int batch_size, int bw)
   for (int b = 0; b < batch_size; b++) {
     for (int i = 0; i < n; i++) {
       h_Adata(i, i, b) = CT(bw + 1.0, 0.0);
+      h_piv(i, b) = i + 1;
       // set upper / lower diags at bw diagonal
       if (i + bw < n) {
         h_Adata(i, i + bw, b) = CT(-1.0, 0.0);

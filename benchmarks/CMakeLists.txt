@@ -16,3 +16,7 @@ target_link_libraries(bench_assign PRIVATE gtensor::gtensor benchmark::benchmark
 add_executable(bench_hypz)
 target_gtensor_sources(bench_hypz PRIVATE bench_hypz.cxx)
 target_link_libraries(bench_hypz PRIVATE gtensor::gtensor benchmark::benchmark)
+
+add_executable(bench_stencil1d)
+target_gtensor_sources(bench_stencil1d PRIVATE bench_stencil1d.cxx)
+target_link_libraries(bench_stencil1d gtensor::gtensor benchmark::benchmark)
