@@ -398,3 +398,103 @@ TEST(bandsolve, zget_max_bandwidth)
 {
   test_get_max_bandwidth<gt::complex<double>>();
 }
+
+template <typename R, typename S = gt::space::device>
+void test_invert_batch_complex()
+{
+  constexpr int N = 3;
+  constexpr int NRHS = N;
+  constexpr int batch_size = 2;
+  using T = gt::complex<R>;
+
+  gt::gtensor<T*, 1> h_Aptr(batch_size);
+  test::gtensor2<T*, 1, S> d_Aptr(batch_size);
+  gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
+  test::gtensor2<T, 3, S> d_A(gt::shape(N, N, batch_size));
+  gt::gtensor<T, 2> h_Ainv(gt::shape(N, N));
+
+  gt::gtensor<T*, 1> h_Bptr(batch_size);
+  test::gtensor2<T*, 1, S> d_Bptr(batch_size);
+  gt::gtensor<T, 3> h_B(gt::shape(N, N, batch_size));
+  test::gtensor2<T, 3, S> d_B(gt::shape(N, N, batch_size));
+
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  test::gtensor2<gt::blas::index_t, 2, S> d_p(gt::shape(N, batch_size));
+
+  // setup input for first batch
+  set_A0_LU(h_A.view(gt::all, gt::all, 0));
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
+  set_A0_piv(h_p.view(gt::all, 0));
+
+  // setup input for second batch
+  set_A1_LU_complex(h_A.view(gt::all, gt::all, 1));
+  h_Aptr[1] = h_Aptr(0) + N * N;
+  set_A1_piv(h_p.view(gt::all, 1));
+
+  h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
+  h_Bptr(1) = h_Bptr(0) + N * NRHS;
+
+  gt::copy(h_Aptr, d_Aptr);
+  gt::copy(h_A, d_A);
+  gt::copy(h_Bptr, d_Bptr);
+  gt::copy(h_B, d_B);
+  gt::copy(h_B, d_B);
+  gt::copy(h_p, d_p);
+
+  gt::blas::invert_banded_batched(
+    N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
+    gt::raw_pointer_cast(d_Bptr.data()), N, batch_size, N - 1, N - 1);
+
+  gt::copy(d_B, h_B);
+
+  // first batch, inverse
+  // A^-1 = [ 1.0  1.0 -1.0
+  //         -2.0 -1.0  1.5
+  //          2.0  0.5 -1.0]
+  // first col
+  h_Ainv(0, 0) = 1.0;
+  h_Ainv(1, 0) = -2.0;
+  h_Ainv(2, 0) = 2.0;
+  // second col
+  h_Ainv(0, 1) = 1.0;
+  h_Ainv(1, 1) = -1.0;
+  h_Ainv(2, 1) = 0.5;
+  // third col
+  h_Ainv(0, 2) = -1.0;
+  h_Ainv(1, 2) = 1.5;
+  h_Ainv(2, 2) = -1.0;
+
+  GT_EXPECT_NEAR_ARRAY(h_B.view(gt::all, gt::all, 0), h_Ainv);
+
+  // second batch, inverse
+  // A =    [ 1+i  2-i   2
+  //           4i  4     2
+  //          4     6i   4]
+  // A^-1 = [ -0.1 +0.3i  -0.04 -0.28i   0.07 -0.01i
+  //           0.04+0.28i  0.016-0.088i  0.028-0.096i
+  //           0.52-0.36i -0.092+0.256i  0.036+0.052i]
+  // first col
+  h_Ainv(0, 0) = T(-0.1, 0.3);
+  h_Ainv(1, 0) = T(0.04, 0.28);
+  h_Ainv(2, 0) = T(0.52, -0.36);
+  // second col
+  h_Ainv(0, 1) = T(-0.04, -0.28);
+  h_Ainv(1, 1) = T(0.016, -0.088);
+  h_Ainv(2, 1) = T(-0.092, 0.256);
+  // third col
+  h_Ainv(0, 2) = T(0.07, -0.01);
+  h_Ainv(1, 2) = T(-0.028, -0.096);
+  h_Ainv(2, 2) = T(0.036, 0.052);
+
+  GT_EXPECT_NEAR_ARRAY(h_B.view(gt::all, gt::all, 1), h_Ainv);
+}
+
+TEST(bandsolve, cinvert_batch)
+{
+  test_invert_batch_complex<float>();
+}
+
+TEST(bandsolve, zinvert_batch)
+{
+  test_invert_batch_complex<double>();
+}
