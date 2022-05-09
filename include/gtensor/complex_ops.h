@@ -7,7 +7,7 @@
 namespace gt
 {
 
-#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 template <typename T>
 GT_INLINE T norm(const complex<T>& a)

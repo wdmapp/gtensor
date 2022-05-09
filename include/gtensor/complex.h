@@ -2,7 +2,7 @@
 #ifndef GTENSOR_COMPLEX_H
 #define GTENSOR_COMPLEX_H
 
-#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 #include <thrust/complex.h>
 #else
 #include <complex>
@@ -13,15 +13,15 @@
 namespace gt
 {
 
-// NOTE: use thrust complex even when using CUDA with the internal
-// gtensor_storage, otherwise the complex operators are missing and the
-// header should be present in all cuda versions.
-#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_USE_THRUST)
+// NOTE: always use thrust complex for CUDA and HIP, regardless of storage
+// backend. Depending on ROCm and CUDA verison, using std::complex could
+// cause device versions of operators to not be defined properly.
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 template <typename T>
 using complex = thrust::complex<T>;
 
-#else // not CUDA and GTENSOR_USE_THRUST not defined
+#else // not CUDA or HIP
 
 template <typename T>
 using complex = std::complex<T>;
