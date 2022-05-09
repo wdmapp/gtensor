@@ -322,6 +322,39 @@ CREATE_GETRF_NPVT_BATCHED(rocsolver_cgetrf_npvt_batched, gt::complex<float>,
 
 #undef CREATE_GETRF_NPVT_BATCHED
 
+// ======================================================================
+// gemm batched
+
+template <typename T>
+inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
+                         T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
+                         T** d_Carray, int ldc, int batchSize);
+
+#define CREATE_GEMM_BATCHED(METHOD, GTTYPE, BLASTYPE)                          \
+  template <>                                                                  \
+  inline void gemm_batched<GTTYPE>(handle_t * h, int m, int n, int k,          \
+                                   GTTYPE alpha, GTTYPE** d_Aarray, int lda,   \
+                                   GTTYPE** d_Barray, int ldb, GTTYPE beta,    \
+                                   GTTYPE** d_Carray, int ldc, int batchSize)  \
+  {                                                                            \
+    gtBlasCheck(                                                               \
+      METHOD(h->handle, rocblas_operation_none, rocblas_operation_none, m, n,  \
+             k, reinterpret_cast<BLASTYPE*>(&alpha),                           \
+             reinterpret_cast<BLASTYPE**>(d_Aarray), lda,                      \
+             reinterpret_cast<BLASTYPE**>(d_Barray), ldb,                      \
+             reinterpret_cast<BLASTYPE*>(&beta),                               \
+             reinterpret_cast<BLASTYPE**>(d_Carray), ldc, batchSize));         \
+  }
+
+CREATE_GEMM_BATCHED(rocblas_zgemm_batched, gt::complex<double>,
+                    rocblas_double_complex)
+CREATE_GEMM_BATCHED(rocblas_cgemm_batched, gt::complex<float>,
+                    rocblas_float_complex)
+CREATE_GEMM_BATCHED(rocblas_dgemm_batched, double, double);
+CREATE_GEMM_BATCHED(rocblas_sgemm_batched, float, float);
+
+#undef CREATE_GEMM_BATCHED
+
 } // namespace blas
 
 } // namespace gt
