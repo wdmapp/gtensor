@@ -212,9 +212,9 @@ void test(int n, int nrhs, int batch_size, int bw)
   total = 0.0;
   for (int i = 0; i < NRUNS; i++) {
     clock_gettime(CLOCK_MONOTONIC, &start);
-    gt::blas::solve_inverted_batched(
-      n, nrhs, gt::raw_pointer_cast(d_Ainvptr.data()), lda,
-      gt::raw_pointer_cast(d_Bptr.data()), ldb,
+    gt::blas::gemm_batched<CT>(
+      h, n, nrhs, n, 1.0, gt::raw_pointer_cast(d_Ainvptr.data()), lda,
+      gt::raw_pointer_cast(d_Bptr.data()), ldb, 0.0,
       gt::raw_pointer_cast(d_Cptr.data()), ldb, batch_size);
     gt::synchronize();
     clock_gettime(CLOCK_MONOTONIC, &end);
