@@ -154,7 +154,7 @@ jobs:
 
   build-cuda:
     runs-on: ubuntu-latest
-    container: nvidia/cuda:10.0-devel
+    container: nvidia/cuda:10.2-devel-ubuntu18.04
     env:
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
