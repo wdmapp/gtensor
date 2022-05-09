@@ -1,6 +1,7 @@
 #ifndef GTENSOR_BANDSOLVE_H
 #define GTENSOR_BANDSOLVE_H
 
+#include "gtensor/complex.h"
 #include "gtensor/reductions.h"
 
 namespace gt
@@ -92,7 +93,7 @@ inline matrix_bandwidth get_max_bandwidth(int n, T** d_Aarray, int lda,
 /**
  * Solve a batch of banded square LU factored matrices and RHS vectors.
  *
- * @see gt::blas::getrf_batch()
+ * @see gt::blas::getrf_batched()
  * @see gt::blas::get_max_bandwidth()
  *
  * @param n size of each A_i and number of rows of each B_i
@@ -162,7 +163,7 @@ inline void getrs_banded_batched(int n, int nrhs, T** d_Aarray, int lda,
 /**
  * Invert a batch of square LU factored matrices.
  *
- * @see gt::blas::getrf_batch()
+ * @see gt::blas::getrf_batched()
  * @see gt::blas::get_max_bandwidth()
  *
  * @param n size of each A_i and B_i matrix in batch
@@ -230,6 +231,51 @@ inline void invert_banded_batched(int n, T** d_Aarray, int lda,
           tmp -= A[j * lda + i] * B[j];
         }
         B[i] = tmp / A[i * lda + i];
+      }
+    });
+}
+
+/**
+ * Naive batched matrix multiply for solving with inverted matrices C = A^-1 * B
+ *
+ * All matrices must be col-major
+ *
+ * @see gt::blas::get_max_bandwidth()
+ * @see gt::blas::getrf_batched()
+ * @see gt::blas::invert_banded_batched()
+ *
+ * @param n size of each A^-1_i and rows of each B_i and C_i
+ * @param nrhs number of RHS column vectors in each B_i and C_i
+ * @param d_Aarray Array of device pointers to each inverted input A_i
+ * @param lda leading distance of each A^-1_i, >=n
+ * @param d_Barray Array of device pointers to each RHS input B_i
+ * @param ldb leading distance of each B_i, >=n
+ * @param d_Carray Array of device pointers to each output C_i
+ * @param ldc leading distance of each C_i, >=n
+ * @param batchSize number of matrices [A^-1_i], [B_i], [C_i] in batch
+ */
+template <typename T>
+inline void solve_inverted_batched(int n, int nrhs, T** d_Aarray, int lda,
+                                   T** d_Barray, int ldb, T** d_Carray, int ldc,
+                                   int batchSize)
+{
+  auto launch_shape = gt::shape(nrhs, batchSize);
+  gt::launch<2>(
+    launch_shape, GT_LAMBDA(int rhs, int batch) {
+      T* A = d_Aarray[batch];
+      T* b = d_Barray[batch] + ldb * rhs;
+      T* c = d_Carray[batch] + ldc * rhs;
+      T* arow = nullptr; // track first element of row
+      T tmp;
+
+      // naive serial matrix-vector multiply (col major)
+      for (int i = 0; i < n; i++) {
+        tmp = T(0);
+        arow = A + i;
+        for (int k = 0; k < n; k++) {
+          tmp += arow[k * lda] * b[k];
+        }
+        c[i] = tmp;
       }
     });
 }
