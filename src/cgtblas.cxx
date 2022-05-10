@@ -308,3 +308,45 @@ CREATE_C_GETRF_NPVT_BATCHED(gtblas_cgetrf_npvt_batched, f2c_complex<float>)
 CREATE_C_GETRF_NPVT_BATCHED(gtblas_zgetrf_npvt_batched, f2c_complex<double>)
 
 #undef CREATE_C_GETRF_NPVT_BATCHED
+
+// ======================================================================
+// gtblas_Xgemm_batched
+#define CREATE_C_GEMM_BATCHED(CNAME, CPPTYPE)                                  \
+  void CNAME(int m, int n, int k, const CPPTYPE* alpha, CPPTYPE** d_Aarray,    \
+             int lda, CPPTYPE** d_Barray, int ldb, const CPPTYPE* beta,        \
+             CPPTYPE** d_Carray, int ldc, int batchSize)                       \
+  {                                                                            \
+    gt::blas::gemm_batched(g_handle, m, n, k, detail::fc2cpp_deref(alpha),     \
+                           detail::cast_aligned(d_Aarray), lda,                \
+                           detail::cast_aligned(d_Barray), ldb,                \
+                           detail::fc2cpp_deref(beta),                         \
+                           detail::cast_aligned(d_Carray), ldc, batchSize);    \
+  }
+
+CREATE_C_GEMM_BATCHED(gtblas_sgemm_batched, float)
+CREATE_C_GEMM_BATCHED(gtblas_dgemm_batched, double)
+CREATE_C_GEMM_BATCHED(gtblas_cgemm_batched, f2c_complex<float>)
+CREATE_C_GEMM_BATCHED(gtblas_zgemm_batched, f2c_complex<double>)
+
+#undef CREATE_C_GEMM_BATCHED
+
+// ======================================================================
+// gtblas_Xinvert_banded_batched
+#define CREATE_C_INVERT_BANDED_BATCHED(CNAME, CPPTYPE)                         \
+  void CNAME(int n, CPPTYPE** d_Aarray, int lda,                               \
+             gt::blas::index_t* d_PivotArray, CPPTYPE** d_Barray, int ldb,     \
+             int batchSize, int lbw, int ubw)                                  \
+  {                                                                            \
+    gt::blas::invert_banded_batched(                                           \
+      n, detail::cast_aligned(d_Aarray), lda, d_PivotArray,                    \
+      detail::cast_aligned(d_Barray), ldb, batchSize, lbw, ubw);               \
+  }
+
+CREATE_C_INVERT_BANDED_BATCHED(gtblas_sinvert_banded_batched, float)
+CREATE_C_INVERT_BANDED_BATCHED(gtblas_dinvert_banded_batched, double)
+CREATE_C_INVERT_BANDED_BATCHED(gtblas_cinvert_banded_batched,
+                               f2c_complex<float>)
+CREATE_C_INVERT_BANDED_BATCHED(gtblas_zinvert_banded_batched,
+                               f2c_complex<double>)
+
+#undef CREATE_C_INVERT_BANDED_BATCHED
