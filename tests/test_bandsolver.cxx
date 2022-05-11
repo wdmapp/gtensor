@@ -627,3 +627,114 @@ TEST(bandsolve, zsolve_inverted_batch)
 {
   test_solve_inverted_batch_complex<double>();
 }
+
+template <typename T>
+void test_full_solve_real()
+{
+
+  constexpr int N = 5;
+  constexpr int NRHS = 2;
+  constexpr int batch_size = 1;
+
+  gt::gtensor<T*, 1> h_Aptr(batch_size);
+  gt::gtensor_device<T*, 1> d_Aptr(batch_size);
+  gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
+  gt::gtensor_device<T, 3> d_A(gt::shape(N, N, batch_size));
+
+  gt::gtensor<T*, 1> h_Ainvptr(batch_size);
+  gt::gtensor_device<T*, 1> d_Ainvptr(batch_size);
+  gt::gtensor<T, 3> h_Ainv(gt::shape(N, N, batch_size));
+  gt::gtensor_device<T, 3> d_Ainv(gt::shape(N, N, batch_size));
+
+  gt::gtensor<T*, 1> h_Bptr(batch_size);
+  gt::gtensor_device<T*, 1> d_Bptr(batch_size);
+  gt::gtensor<T, 3> h_B(gt::shape(N, NRHS, batch_size));
+  gt::gtensor_device<T, 3> d_B(gt::shape(N, NRHS, batch_size));
+
+  gt::gtensor<T*, 1> h_Cptr(batch_size);
+  gt::gtensor_device<T*, 1> d_Cptr(batch_size);
+  gt::gtensor<T, 3> h_C(gt::shape(N, NRHS, batch_size));
+  gt::gtensor_device<T, 3> d_C(gt::shape(N, NRHS, batch_size));
+
+  gt::gtensor<T, 1> h_expected(gt::shape(N));
+
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
+
+  gt::gtensor<int, 1> h_info(batch_size);
+  gt::gtensor_device<int, 1> d_info(batch_size);
+
+  /*
+  A = [ 2 -1  0  0  0;
+     -1  2 -1  0  0;
+      0 -1  2 -1  0;
+      0  0 -1  2 -1;
+      0  0  0 -1  2]
+      */
+  for (int i = 0; i < N; i++) {
+    h_B(i, 0, 0) = 1.0;
+    h_B(i, 1, 0) = -2.0;
+    for (int j = 0; j < N; j++) {
+      if (i == j) {
+        h_A(j, i, 0) = 2.0;
+      } else if (std::abs(i - j) == 1) {
+        h_A(j, i, 0) = -1.0;
+      } else {
+        h_A(j, i, 0) = 0.0;
+      }
+    }
+  }
+
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
+  h_Ainvptr(0) = gt::raw_pointer_cast(d_Ainv.data());
+  h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
+  h_Cptr(0) = gt::raw_pointer_cast(d_C.data());
+
+  gt::copy(h_A, d_A);
+  gt::copy(h_B, d_B);
+
+  gt::copy(h_Aptr, d_Aptr);
+  gt::copy(h_Ainvptr, d_Ainvptr);
+  gt::copy(h_Bptr, d_Bptr);
+  gt::copy(h_Cptr, d_Cptr);
+
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                          gt::raw_pointer_cast(d_p.data()),
+                          gt::raw_pointer_cast(d_info.data()), batch_size);
+  gt::synchronize();
+
+  auto bw =
+    gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
+
+  gt::blas::invert_banded_batched(
+    N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
+    gt::raw_pointer_cast(d_Ainvptr.data()), N, batch_size, bw.lower, bw.upper);
+  gt::synchronize();
+
+  gt::blas::gemm_batched<T>(h, N, NRHS, N, 1.0,
+                            gt::raw_pointer_cast(d_Ainvptr.data()), N,
+                            gt::raw_pointer_cast(d_Bptr.data()), N, 0.0,
+                            gt::raw_pointer_cast(d_Cptr.data()), N, batch_size);
+  gt::synchronize();
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_C, h_C);
+
+  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 0, 0),
+                       (gt::gtensor<T, 1>{2.5, 4.0, 4.5, 4.0, 2.5}));
+  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0),
+                       (gt::gtensor<T, 1>{-5.0, -8.0, -9.0, -8.0, -5.0}));
+}
+
+TEST(bandsolve, sfull_invert_solve)
+{
+  test_full_solve_real<float>();
+}
+
+TEST(bandsolve, dfull_invert_solve)
+{
+  test_full_solve_real<double>();
+}
