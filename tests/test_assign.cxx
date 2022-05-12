@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <iostream>
+
 #include "gtensor/gtensor.h"
 
 #include "test_debug.h"
@@ -157,6 +159,143 @@ TEST(assign, device_gtensor_large_2d)
   gt::copy(b, h_b);
 
   EXPECT_EQ(h_a, h_b);
+}
+
+TEST(assign, device_view_noncontiguous_6d)
+{
+  using T = gt::complex<double>;
+
+  int nzb = 1;
+  int nvb = 2;
+  int nwb = 3;
+
+  // ijklmn, ghost in z, v, w
+  auto f_shape = gt::shape(5, 7, 9, 11, 13, 2);
+
+  // ijklmn, no ghost
+  auto g_shape =
+    gt::shape(f_shape[0], f_shape[1], f_shape[2] - 2 * nzb,
+              f_shape[3] - 2 * nvb, f_shape[4] - 2 * nwb, f_shape[5]);
+  // i klmn, no ghost
+  auto papbar_shape =
+    gt::shape(g_shape[0], g_shape[2], g_shape[3], g_shape[4], g_shape[5]);
+  // ijz mn, ghost in z
+  auto bar_apar_shape =
+    gt::shape(g_shape[0], g_shape[1], f_shape[2], g_shape[4], g_shape[5]);
+  auto h_g = gt::full(g_shape, T(2.0));
+  auto d_g = gt::empty_device<T>(g_shape);
+  auto h_papbar = gt::full(papbar_shape, T(1.5));
+  auto d_papbar = gt::empty_device<T>(papbar_shape);
+  auto h_bar_apar = gt::full(bar_apar_shape, T(0.0, -1.0));
+  auto d_bar_apar = gt::empty_device<T>(bar_apar_shape);
+  auto h_f = gt::full<T>(f_shape, T(100.0));
+  auto d_f = gt::empty_device<T>(f_shape);
+
+  gt::copy(h_g, d_g);
+  gt::copy(h_papbar, d_papbar);
+  gt::copy(h_bar_apar, d_bar_apar);
+  gt::copy(h_f, d_f);
+
+  auto lhs_view = d_f.view(gt::all, gt::all, gt::slice(nzb, -nzb),
+                           gt::slice(nvb, -nvb), gt::slice(nwb, -nwb), gt::all);
+  auto d_papbar_view =
+    d_papbar.view(gt::all, gt::newaxis, gt::all, gt::all, gt::all, gt::all);
+  auto d_bar_apar_view = d_bar_apar.view(gt::all, gt::all, gt::slice(nzb, -nzb),
+                                         gt::newaxis, gt::all, gt::all);
+  auto rhs_view = d_g + d_papbar_view * d_bar_apar_view;
+
+  GT_DEBUG_VAR(d_g.shape());
+  GT_DEBUG_VAR(d_papbar_view.shape());
+  GT_DEBUG_VAR(d_bar_apar_view.shape());
+  GT_DEBUG_VAR(lhs_view.shape());
+  GT_DEBUG_VAR(rhs_view.shape());
+
+  lhs_view = rhs_view;
+
+  /*
+  d_f.view(gt::all, gt::all, gt::slice(nzb, -nzb), gt::slice(nvb, -nvb),
+  gt::slice(nwb, -nwb), gt::all) = d_g + d_papbar.view(gt::all, gt::newaxis,
+  gt::all, gt::all, gt::all, gt::all) * d_bar_apar.view(gt::all, gt::all,
+  gt::slice(nzb, -nzb), gt::newaxis, gt::all, gt::all);
+  */
+
+  gt::copy(d_f, h_f);
+
+  // spot check boundary, not changed
+  EXPECT_EQ(h_f(3, 3, nzb - 1, nvb, nwb, 1), T(100.0));
+  EXPECT_EQ(h_f(3, 3, nzb, nvb - 1, nwb, 1), T(100.0));
+  EXPECT_EQ(h_f(3, 3, nzb, nvb, nwb - 1, 1), T(100.0));
+  EXPECT_EQ(
+    h_f(0, 1, f_shape[2] - nzb, f_shape[3] - nvb - 1, f_shape[4] - nwb - 1, 1),
+    T(100.0));
+  EXPECT_EQ(
+    h_f(0, 1, f_shape[2] - nzb - 1, f_shape[3] - nvb, f_shape[4] - nwb - 1, 1),
+    T(100.0));
+  EXPECT_EQ(
+    h_f(0, 1, f_shape[2] - nzb - 1, f_shape[3] - nvb - 1, f_shape[4] - nwb, 1),
+    T(100.0));
+
+  // spot check inside that was changed
+  EXPECT_EQ(h_f(0, 1, f_shape[2] - nzb - 1, f_shape[3] - nvb - 1,
+                f_shape[4] - nwb - 1, 1),
+            T(2.0, -1.5));
+  EXPECT_EQ(h_f(3, 3, nzb, nvb, nwb, 1), T(2.0, -1.5));
+
+  gt::synchronize();
+}
+
+TEST(assign, device_view_noncontiguous_6d_scalar)
+{
+  using T = gt::complex<double>;
+
+  int nzb = 2;
+  int nvb = 2;
+  int nwb = 0;
+
+  // ijklmn, ghost in z, v, w
+  auto f_shape = gt::shape(5, 7, 9, 11, 13, 2);
+
+  auto h_f = gt::full<T>(f_shape, T(100.0));
+  auto d_f = gt::empty_device<T>(f_shape);
+
+  gt::copy(h_f, d_f);
+
+  auto f_size = d_f.size();
+  GT_DEBUG_VAR(d_f.shape());
+  GT_DEBUG_VAR(f_size);
+
+  auto d_f_noghost =
+    d_f.view(gt::all, gt::all, gt::slice(nzb, -nzb), gt::slice(nvb, -nvb),
+             gt::slice(nwb, -nwb), gt::all);
+  auto f_noghost_size = d_f_noghost.size();
+  GT_DEBUG_TYPE(d_f_noghost);
+  GT_DEBUG_VAR(d_f_noghost.shape());
+  GT_DEBUG_VAR(f_noghost_size);
+
+  d_f_noghost = 1.0;
+
+  gt::copy(d_f, h_f);
+
+  // spot check boundary, not changed
+  EXPECT_EQ(h_f(3, 3, nzb - 1, nvb, nwb, 1), T(100.0));
+  EXPECT_EQ(h_f(3, 3, nzb, nvb - 1, nwb, 1), T(100.0));
+  EXPECT_EQ(
+    h_f(0, 1, f_shape[2] - nzb, f_shape[3] - nvb - 1, f_shape[4] - nwb - 1, 1),
+    T(100.0));
+  EXPECT_EQ(
+    h_f(0, 1, f_shape[2] - nzb - 1, f_shape[3] - nvb, f_shape[4] - nwb - 1, 1),
+    T(100.0));
+
+  // note: interior, since nwb == 0
+  EXPECT_EQ(h_f(3, 3, nzb, nvb, nwb, 1), T(1.0));
+  EXPECT_EQ(
+    h_f(0, 1, f_shape[2] - nzb - 1, f_shape[3] - nvb - 1, f_shape[4] - 1, 1),
+    T(1.0));
+
+  // spot check inside that was changed
+  EXPECT_EQ(h_f(3, 3, nzb, nvb, nwb, 1), T(1.0));
+
+  gt::synchronize();
 }
 
 #endif // GTENSOR_HAVE_DEVICE
