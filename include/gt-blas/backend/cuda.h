@@ -321,6 +321,37 @@ CREATE_GETRF_NPVT_BATCHED(cublasCgetrfBatched, gt::complex<float>, cuComplex)
 
 #undef CREATE_GETRF_NPVT_BATCHED
 
+// ======================================================================
+// gemm batched
+
+template <typename T>
+inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
+                         T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
+                         T** d_Carray, int ldc, int batchSize);
+
+#define CREATE_GEMM_BATCHED(METHOD, GTTYPE, BLASTYPE)                          \
+  template <>                                                                  \
+  inline void gemm_batched<GTTYPE>(handle_t * h, int m, int n, int k,          \
+                                   GTTYPE alpha, GTTYPE** d_Aarray, int lda,   \
+                                   GTTYPE** d_Barray, int ldb, GTTYPE beta,    \
+                                   GTTYPE** d_Carray, int ldc, int batchSize)  \
+  {                                                                            \
+    gtBlasCheck(METHOD(h->handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k,           \
+                       reinterpret_cast<BLASTYPE*>(&alpha),                    \
+                       reinterpret_cast<BLASTYPE**>(d_Aarray), lda,            \
+                       reinterpret_cast<BLASTYPE**>(d_Barray), ldb,            \
+                       reinterpret_cast<BLASTYPE*>(&beta),                     \
+                       reinterpret_cast<BLASTYPE**>(d_Carray), ldc,            \
+                       batchSize));                                            \
+  }
+
+CREATE_GEMM_BATCHED(cublasZgemmBatched, gt::complex<double>, cuDoubleComplex)
+CREATE_GEMM_BATCHED(cublasCgemmBatched, gt::complex<float>, cuComplex)
+CREATE_GEMM_BATCHED(cublasDgemmBatched, double, double);
+CREATE_GEMM_BATCHED(cublasSgemmBatched, float, float);
+
+#undef CREATE_GEMM_BATCHED
+
 } // namespace blas
 
 } // namespace gt

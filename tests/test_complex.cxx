@@ -103,7 +103,7 @@ TEST(complex, exp)
 {
   using namespace std::complex_literals;
   using T = gt::complex<double>;
-  T x = 1.i * M_PI / 2.;
+  T x = T(0.0, M_PI / 2.0);
 
   EXPECT_LT(gt::abs(gt::exp(x) - T(0., 1.)), 1e-14);
 }

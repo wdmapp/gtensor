@@ -128,6 +128,44 @@ void gtblas_cget_max_bandwidth(int n, f2c_complex<float>** d_Aarray, int lda,
 void gtblas_zget_max_bandwidth(int n, f2c_complex<double>** d_Aarray, int lda,
                                int batchSize, int* lbw, int* ubw);
 
+void gtblas_sgemm_batched(int m, int n, int k, const float* alpha,
+                          float** d_Aarray, int lda, float** d_Barray, int ldb,
+                          const float* beta, float** d_Carray, int ldc,
+                          int batchSize);
+void gtblas_dgemm_batched(int m, int n, int k, const double* alpha,
+                          double** d_Aarray, int lda, double** d_Barray,
+                          int ldb, const double* beta, double** d_Carray,
+                          int ldc, int batchSize);
+void gtblas_cgemm_batched(int m, int n, int k, const f2c_complex<float>* alpha,
+                          f2c_complex<float>** d_Aarray, int lda,
+                          f2c_complex<float>** d_Barray, int ldb,
+                          const f2c_complex<float>* beta,
+                          f2c_complex<float>** d_Carray, int ldc,
+                          int batchSize);
+void gtblas_zgemm_batched(int m, int n, int k, const f2c_complex<double>* alpha,
+                          f2c_complex<double>** d_Aarray, int lda,
+                          f2c_complex<double>** d_Barray, int ldb,
+                          const f2c_complex<double>* beta,
+                          f2c_complex<double>** d_Carray, int ldc,
+                          int batchSize);
+
+void gtblas_sinvert_banded_batched(int n, float** d_Aarray, int lda,
+                                   gt::blas::index_t* d_PivotArray,
+                                   float** d_Barray, int ldb, int batchSize,
+                                   int lbw, int ubw);
+void gtblas_dinvert_banded_batched(int n, double** d_Aarray, int lda,
+                                   gt::blas::index_t* d_PivotArray,
+                                   double** d_Barray, int ldb, int batchSize,
+                                   int lbw, int ubw);
+void gtblas_cinvert_banded_batched(int n, f2c_complex<float>** d_Aarray,
+                                   int lda, gt::blas::index_t* d_PivotArray,
+                                   f2c_complex<float>** d_Barray, int ldb,
+                                   int batchSize, int lbw, int ubw);
+void gtblas_zinvert_banded_batched(int n, f2c_complex<double>** d_Aarray,
+                                   int lda, gt::blas::index_t* d_PivotArray,
+                                   f2c_complex<double>** d_Barray, int ldb,
+                                   int batchSize, int lbw, int ubw);
+
 #ifdef __cplusplus
 }
 #endif

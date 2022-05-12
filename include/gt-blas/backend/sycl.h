@@ -248,6 +248,60 @@ inline void getrs_batched(handle_t* h, int n, int nrhs, T** d_Aarray, int lda,
   e.wait();
 }
 
+template <typename T>
+inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
+                         T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
+                         T* d_Carray[], int ldc, int batchSize)
+{
+  sycl::queue& q = *(h->handle);
+
+  index_t m64 = m;
+  index_t n64 = n;
+  index_t k64 = k;
+  index_t lda64 = lda;
+  index_t ldb64 = ldb;
+  index_t ldc64 = ldc;
+  size_t batchSize_size_t = batchSize;
+
+  // Note: one value per group
+  sycl::span<index_t> sm{&m64, 1};
+  sycl::span<index_t> sn{&n64, 1};
+  sycl::span<index_t> sk{&k64, 1};
+  sycl::span<index_t> slda{&lda64, 1};
+  sycl::span<index_t> sldb{&ldb64, 1};
+  sycl::span<index_t> sldc{&ldc64, 1};
+  sycl::span<size_t> sbatchSize{&batchSize_size_t, 1};
+
+  auto trans_op = oneapi::mkl::transpose::nontrans;
+  sycl::span<oneapi::mkl::transpose> strans{&trans_op, 1};
+
+  // Note: the arrays and alpha/beta have one value per matrix,
+  // i.e. product batch sizes. With only one group, this is batchSize
+  sycl::span salpha(sycl::malloc_shared<T>(batchSize_size_t, q),
+                    batchSize_size_t);
+  sycl::span sbeta(sycl::malloc_shared<T>(batchSize_size_t, q),
+                   batchSize_size_t);
+
+  for (int i = 0; i < batchSize; i++) {
+    salpha[i] = alpha;
+    sbeta[i] = beta;
+  }
+
+  sycl::span<const T*> sA{const_cast<const T**>(d_Aarray), batchSize_size_t};
+  sycl::span<const T*> sB{const_cast<const T**>(d_Barray), batchSize_size_t};
+  sycl::span<T*> sC{d_Carray, batchSize_size_t};
+
+  cl::sycl::event gemm_batch_done;
+
+  gemm_batch_done = oneapi::mkl::blas::gemm_batch(
+    q, strans, strans, sm, sn, sk, salpha, sA, slda, sB, sldb, sbeta, sC, sldc,
+    1, sbatchSize);
+  gemm_batch_done.wait();
+
+  sycl::free(salpha.data(), q);
+  sycl::free(sbeta.data(), q);
+}
+
 } // namespace blas
 
 } // namespace gt

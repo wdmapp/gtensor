@@ -80,14 +80,22 @@ void test(int n, int nrhs, int batch_size, int bw)
 #endif
 
   auto h_Aptr = gt::empty<CT*>({batch_size});
+  auto h_Ainvptr = gt::empty<CT*>({batch_size});
   auto h_Bptr = gt::empty<CT*>({batch_size});
+  auto h_Cptr = gt::empty<CT*>({batch_size});
   auto d_Aptr = gt::empty_device<CT*>({batch_size});
+  auto d_Ainvptr = gt::empty_device<CT*>({batch_size});
   auto d_Bptr = gt::empty_device<CT*>({batch_size});
+  auto d_Cptr = gt::empty_device<CT*>({batch_size});
 
   auto h_Adata = gt::zeros<CT>({n, n, batch_size});
+  auto h_Ainvdata = gt::zeros<CT>({n, n, batch_size});
   auto h_Bdata = gt::zeros<CT>({n, nrhs, batch_size});
+  auto h_Cdata = gt::zeros<CT>({n, nrhs, batch_size});
   auto d_Adata = gt::empty_device<CT>(h_Adata.shape());
+  auto d_Ainvdata = gt::empty_device<CT>(h_Adata.shape());
   auto d_Bdata = gt::empty_device<CT>(h_Bdata.shape());
+  auto d_Cdata = gt::empty_device<CT>(h_Cdata.shape());
 
   auto h_piv = gt::empty<gt::blas::index_t>({n, batch_size});
   auto d_piv = gt::empty_device<gt::blas::index_t>(h_piv.shape());
@@ -123,12 +131,16 @@ void test(int n, int nrhs, int batch_size, int bw)
 
   for (int i = 0; i < batch_size; i++) {
     h_Aptr(i) = gt::raw_pointer_cast(d_Adata.data()) + (n * n * i);
+    h_Ainvptr(i) = gt::raw_pointer_cast(d_Ainvdata.data()) + (n * n * i);
     h_Bptr(i) = gt::raw_pointer_cast(d_Bdata.data()) + (n * nrhs * i);
+    h_Cptr(i) = gt::raw_pointer_cast(d_Cdata.data()) + (n * nrhs * i);
   }
   gt::copy(h_Aptr, d_Aptr);
   gt::copy(h_Adata, d_Adata);
+  gt::copy(h_Ainvptr, d_Ainvptr);
   gt::copy(h_Bptr, d_Bptr);
   gt::copy(h_Bdata, d_Bdata);
+  gt::copy(h_Cptr, d_Cptr);
   gt::copy(h_piv, d_piv);
 
   std::cout << "INFO: memcpy to device done" << std::endl;
@@ -151,6 +163,11 @@ void test(int n, int nrhs, int batch_size, int bw)
   ss.str("");
   ss << bw2.lower << "_" << bw2.upper;
   bw_str = ss.str();
+
+  gt::blas::invert_banded_batched(n, gt::raw_pointer_cast(d_Aptr.data()), lda,
+                                  gt::raw_pointer_cast(d_piv.data()),
+                                  gt::raw_pointer_cast(d_Ainvptr.data()), lda,
+                                  batch_size, bw2.lower, bw2.upper);
 
   for (int i = 0; i < NRUNS; i++) {
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -191,6 +208,25 @@ void test(int n, int nrhs, int batch_size, int bw)
 
   std::cout << type_str << "\t" << size_str << "\t" << bw_str
             << "\tbanded_avg\t" << total / (NRUNS - 1) << std::endl;
+
+  total = 0.0;
+  for (int i = 0; i < NRUNS; i++) {
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    gt::blas::gemm_batched<CT>(
+      h, n, nrhs, n, 1.0, gt::raw_pointer_cast(d_Ainvptr.data()), lda,
+      gt::raw_pointer_cast(d_Bptr.data()), ldb, 0.0,
+      gt::raw_pointer_cast(d_Cptr.data()), ldb, batch_size);
+    gt::synchronize();
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed =
+      (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1.0e-9;
+    if (i > 0)
+      total += elapsed;
+    std::cout << "INFO: run invt [" << i << "]: " << elapsed << std::endl;
+  }
+
+  std::cout << type_str << "\t" << size_str << "\t" << bw_str
+            << "\tinverted_avg\t" << total / (NRUNS - 1) << std::endl;
 
 // needs update for change to use non-trivial input with specified bw
 #if 0
