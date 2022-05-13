@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GFUNCTION_H
 #define GTENSOR_GFUNCTION_H
 
+#include <cassert>
+
 #include "defs.h"
 #include "expression.h"
 #include "gscalar.h"
@@ -110,7 +112,8 @@ GT_INLINE void broadcast_shape(S& to, const S2& from)
     } else if (from[end_from - i] == 1) {
       // broadcasting, from, nothing to do
     } else {
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) ||               \
+  defined(__SYCL_DEVICE_ONLY__)
       assert(false);
 #else
       throw std::runtime_error("cannot broadcast to = " + to_string(to) +
@@ -210,7 +213,11 @@ public:
 
   using shape_type = gt::shape_type<dimension()>;
 
-  gfunction(F&& f, E&& e) : f_(std::forward<F>(f)), e_(std::forward<E>(e)) {}
+  gfunction(F&& f, E&& e) : f_(std::forward<F>(f)), e_(std::forward<E>(e))
+  {
+    // force shape check on host
+    shape();
+  }
 
   GT_INLINE shape_type shape() const;
   GT_INLINE int shape(int i) const;
@@ -251,7 +258,10 @@ public:
     : f_(std::forward<F>(f)),
       e1_(std::forward<E1>(e1)),
       e2_(std::forward<E2>(e2))
-  {}
+  {
+    // force shape check on host
+    shape();
+  }
 
   GT_INLINE shape_type shape() const;
   GT_INLINE int shape(int i) const;
