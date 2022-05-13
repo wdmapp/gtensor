@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include <stdexcept>
 
 #include "gtensor/gtensor.h"
 
@@ -296,6 +297,33 @@ TEST(assign, device_view_noncontiguous_6d_scalar)
   EXPECT_EQ(h_f(3, 3, nzb, nvb, nwb, 1), T(1.0));
 
   gt::synchronize();
+}
+
+TEST(assign, device_gfunction_mismatch_throw)
+{
+  using T = gt::complex<double>;
+
+  int nzb = 2;
+  int nvb = 2;
+  int nwb = 0;
+
+  // ijklmn, ghost in z, v, w
+  auto f_shape = gt::shape(5, 7, 9, 11, 13, 2);
+
+  auto g_shape =
+    gt::shape(f_shape[0], f_shape[1], f_shape[2] - 2 * nzb,
+              f_shape[3] - 2 * nvb, f_shape[4] - 2 * nwb, f_shape[5]);
+
+  auto h_f = gt::full<T>(f_shape, T(100.0));
+  auto d_f = gt::empty_device<T>(f_shape);
+  auto h_g = gt::full(g_shape, T(2.0));
+  auto d_g = gt::empty_device<T>(g_shape);
+
+  gt::copy(h_f, d_f);
+  gt::copy(h_g, d_g);
+
+  EXPECT_THROW(h_g + h_f, std::runtime_error);
+  EXPECT_THROW(d_g + d_f, std::runtime_error);
 }
 
 #endif // GTENSOR_HAVE_DEVICE
