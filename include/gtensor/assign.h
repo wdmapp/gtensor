@@ -133,6 +133,8 @@ struct assigner<6, space::host>
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
+#ifdef GTENSOR_PER_DIM_KERNELS
+
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
 {
@@ -217,20 +219,6 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
     lhs(i, j, k, l, m, n) = rhs(i, j, k, l, m, n);
   }
 }
-
-template <typename Elhs, typename Erhs, size_type N>
-__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, int size,
-                                gt::shape_type<N> strides)
-{
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if (i < size) {
-    auto idx = unravel(i, strides);
-    index_expression(lhs, idx) = index_expression(rhs, idx);
-  }
-}
-
-#ifdef GTENSOR_PER_DIM_KERNELS
 
 template <>
 struct assigner<1, space::device>
@@ -352,7 +340,19 @@ struct assigner<6, space::device>
   }
 };
 
-#endif
+#else // not defined GTENSOR_PER_DIM_KERNELS
+
+template <typename Elhs, typename Erhs, size_type N>
+__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, int size,
+                                gt::shape_type<N> strides)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (i < size) {
+    auto idx = unravel(i, strides);
+    index_expression(lhs, idx) = index_expression(rhs, idx);
+  }
+}
 
 template <size_type N>
 struct assigner<N, space::device>
@@ -374,6 +374,8 @@ struct assigner<N, space::device>
     gpuSyncIfEnabledStream(stream);
   }
 };
+
+#endif // GTENSOR_PER_DIM_KERNELS
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
@@ -460,7 +462,7 @@ struct assigner<3, space::device>
   }
 };
 
-#endif
+#else // not defined GTENSOR_PER_DIM_KERNELS
 
 template <size_type N>
 struct assigner<N, space::device>
@@ -506,7 +508,9 @@ struct assigner<N, space::device>
   }
 };
 
-#endif
+#endif // GTENSOR_PER_DIM_KERNELS
+
+#endif // GTENSOR_DEVICE_SYCL
 
 } // namespace detail
 
