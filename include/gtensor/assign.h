@@ -517,13 +517,10 @@ void assign(E1& lhs, const E2& rhs, gt::stream_view stream = gt::stream_view())
 {
   static_assert(expr_dimension<E1>() == expr_dimension<E2>(),
                 "cannot assign expressions of different dimension");
-  // FIXME, need to check for brodcasting
-#if 0
   if (lhs.shape() != rhs.shape()) {
-    std::cout << "not the same shape! " << lhs.shape() << rhs.shape() << "\n";
+    throw std::runtime_error("cannot assign lhs = " + to_string(lhs.shape()) +
+                             " rhs = " + to_string(rhs.shape()) + "\n");
   }
-  assert(lhs.shape() == rhs.shape());
-#endif
   detail::assigner<
     expr_dimension<E1>(),
     space_t<expr_space_type<E1>, expr_space_type<E2>>>::run(lhs, rhs, stream);
