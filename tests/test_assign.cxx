@@ -166,17 +166,17 @@ TEST(assign, device_view_noncontiguous_6d)
 {
   using T = gt::complex<double>;
 
-  int nzb = 1;
+  int nzb = 2;
   int nvb = 2;
-  int nwb = 3;
-
-  // ijklmn, ghost in z, v, w
-  auto f_shape = gt::shape(5, 7, 9, 11, 13, 2);
+  int nwb = 2;
 
   // ijklmn, no ghost
-  auto g_shape =
-    gt::shape(f_shape[0], f_shape[1], f_shape[2] - 2 * nzb,
-              f_shape[3] - 2 * nvb, f_shape[4] - 2 * nwb, f_shape[5]);
+  auto g_shape = gt::shape(32, 4, 48, 40, 30, 2);
+
+  // ijklmn, ghost in z, v, w
+  auto f_shape =
+    gt::shape(g_shape[0], g_shape[1], g_shape[2] + 2 * nzb,
+              g_shape[3] + 2 * nvb, g_shape[4] + 2 * nwb, g_shape[5]);
   // i klmn, no ghost
   auto papbar_shape =
     gt::shape(g_shape[0], g_shape[2], g_shape[3], g_shape[4], g_shape[5]);
