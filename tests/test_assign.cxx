@@ -326,4 +326,45 @@ TEST(assign, device_gfunction_mismatch_throw)
   EXPECT_THROW(d_g + d_f, std::runtime_error);
 }
 
+namespace test
+{
+template <typename T, gt::size_type N>
+using gtensor_managed = gt::gtensor_container<gt::space::managed_vector<T>, N>;
+} // end namespace test
+
+TEST(assign, device_gene_h_from_f)
+{
+  using T = gt::complex<double>;
+
+  const int nwb = 0;
+
+  // ijklmn, ghost in w
+  auto hdist_shape = gt::shape(32, 4, 48, 40, 30 + 2 * nwb, 2);
+  auto fdist_shape = gt::shape(32, 4, 48, 40, 30 + 2 * nwb, 2);
+
+  // ijklmn, no ghost
+  auto prefac_shape = gt::shape(32, 4, 48, 40, 30, 2);
+
+  // ijk + ? axis
+  auto phi_shape = gt::shape(32, 4, 48, 2);
+
+  test::gtensor_managed<T, 6> hdist(hdist_shape, T(2.0));
+  test::gtensor_managed<T, 6> fdist(fdist_shape, T(1.0));
+  test::gtensor_managed<T, 6> prefac(prefac_shape, T(-1.0));
+  test::gtensor_managed<T, 4> phi(phi_shape, T(-2.0));
+  gt::gtensor<T, 6> expected(hdist_shape, T(3.0));
+
+  hdist.view(gt::all, gt::all, gt::all, gt::all, gt::slice(nwb, -nwb),
+             gt::all) =
+    fdist.view(gt::all, gt::all, gt::all, gt::all, gt::slice(nwb, -nwb),
+               gt::all) +
+    prefac * phi.view(gt::all, gt::all, gt::all, 0, gt::newaxis, gt::newaxis,
+                      gt::newaxis);
+
+  gt::synchronize();
+
+  // spot check
+  EXPECT_EQ(hdist, expected);
+}
+
 #endif // GTENSOR_HAVE_DEVICE
