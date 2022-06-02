@@ -133,6 +133,8 @@ struct assigner<6, space::host>
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
+#ifdef GTENSOR_PER_DIM_KERNELS
+
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_1(Elhs lhs, Erhs rhs)
 {
@@ -169,18 +171,14 @@ __global__ void kernel_assign_3(Elhs lhs, Erhs rhs)
 template <typename Elhs, typename Erhs>
 __global__ void kernel_assign_4(Elhs lhs, Erhs rhs)
 {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  int i = threadIdx.x + blockIdx.x * BS_X;
+  int j = threadIdx.y + blockIdx.y * BS_Y;
+  int b = blockIdx.z;
+  int l = b / lhs.shape(2);
+  b -= l * lhs.shape(2);
+  int k = b;
 
-  if (idx < lhs.size()) {
-    int rem = idx;
-    int i = rem % lhs.shape(0);
-    rem /= lhs.shape(0);
-    int j = rem % lhs.shape(1);
-    rem /= lhs.shape(1);
-    int k = rem % lhs.shape(2);
-    rem /= lhs.shape(2);
-    int l = rem;
-
+  if (i < lhs.shape(0) && j < lhs.shape(1)) {
     lhs(i, j, k, l) = rhs(i, j, k, l);
   }
 }
@@ -217,20 +215,6 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
     lhs(i, j, k, l, m, n) = rhs(i, j, k, l, m, n);
   }
 }
-
-template <typename Elhs, typename Erhs, size_type N>
-__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, int size,
-                                gt::shape_type<N> strides)
-{
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if (i < size) {
-    auto idx = unravel(i, strides);
-    index_expression(lhs, idx) = index_expression(rhs, idx);
-  }
-}
-
-#ifdef GTENSOR_PER_DIM_KERNELS
 
 template <>
 struct assigner<1, space::device>
@@ -298,8 +282,10 @@ struct assigner<4, space::device>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
     // printf("assigner<4, device>\n");
-    dim3 numThreads(256);
-    dim3 numBlocks((lhs.size() + numThreads.x - 1) / numThreads.x);
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((lhs.shape(0) + BS_X - 1) / BS_X,
+                   (lhs.shape(1) + BS_Y - 1) / BS_Y,
+                   lhs.shape(2) * lhs.shape(3));
 
     gpuSyncIfEnabledStream(stream);
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
@@ -352,7 +338,19 @@ struct assigner<6, space::device>
   }
 };
 
-#endif
+#else // not defined GTENSOR_PER_DIM_KERNELS
+
+template <typename Elhs, typename Erhs, size_type N>
+__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, int size,
+                                gt::shape_type<N> strides)
+{
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (i < size) {
+    auto idx = unravel(i, strides);
+    index_expression(lhs, idx) = index_expression(rhs, idx);
+  }
+}
 
 template <size_type N>
 struct assigner<N, space::device>
@@ -374,6 +372,8 @@ struct assigner<N, space::device>
     gpuSyncIfEnabledStream(stream);
   }
 };
+
+#endif // GTENSOR_PER_DIM_KERNELS
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
@@ -460,7 +460,7 @@ struct assigner<3, space::device>
   }
 };
 
-#endif
+#endif // GTENSOR_PER_DIM_KERNELS
 
 template <size_type N>
 struct assigner<N, space::device>
@@ -506,7 +506,7 @@ struct assigner<N, space::device>
   }
 };
 
-#endif
+#endif // GTENSOR_DEVICE_SYCL
 
 } // namespace detail
 
@@ -515,13 +515,10 @@ void assign(E1& lhs, const E2& rhs, gt::stream_view stream = gt::stream_view())
 {
   static_assert(expr_dimension<E1>() == expr_dimension<E2>(),
                 "cannot assign expressions of different dimension");
-  // FIXME, need to check for brodcasting
-#if 0
   if (lhs.shape() != rhs.shape()) {
-    std::cout << "not the same shape! " << lhs.shape() << rhs.shape() << "\n";
+    throw std::runtime_error("cannot assign lhs = " + to_string(lhs.shape()) +
+                             " rhs = " + to_string(rhs.shape()) + "\n");
   }
-  assert(lhs.shape() == rhs.shape());
-#endif
   detail::assigner<
     expr_dimension<E1>(),
     space_t<expr_space_type<E1>, expr_space_type<E2>>>::run(lhs, rhs, stream);

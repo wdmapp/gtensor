@@ -215,6 +215,8 @@ void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
+#ifdef GTENSOR_PER_DIM_KERNELS
+
 template <typename F>
 __global__ void kernel_launch(gt::shape_type<1> shape, F f)
 {
@@ -298,6 +300,8 @@ __global__ void kernel_launch(gt::shape_type<6> shape, F f)
   }
 }
 
+#else // not GTENSOR_PER_DIM_KERNELS
+
 template <typename F, size_type N>
 __global__ void kernel_launch_N(F f, int size, gt::shape_type<N> strides)
 {
@@ -308,6 +312,8 @@ __global__ void kernel_launch_N(F f, int size, gt::shape_type<N> strides)
     index_expression(f, idx);
   }
 }
+
+#endif // GTENSOR_PER_DIM_KERNELS
 
 #endif // CUDA or HIP
 
@@ -519,7 +525,7 @@ struct launch<6, space::device>
   }
 };
 
-#endif
+#else // not GTENSOR_PER_DIM_KERNELS
 
 template <int N>
 struct launch<N, space::device>
@@ -541,6 +547,8 @@ struct launch<N, space::device>
     gpuSyncIfEnabledStream(stream);
   }
 };
+
+#endif // GTENSOR_PER_DIM_KERNELS
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 

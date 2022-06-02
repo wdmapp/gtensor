@@ -21,13 +21,21 @@
 #endif
 
 #ifndef GTENSOR_DEFAULT_DEVICE_ALLOCATOR
+#ifdef GTENSOR_ALLOCATOR_NO_CACHING
+#define GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T) gt::device_allocator<T>
+#else
 #define GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)                                    \
   gt::allocator::caching_allocator<T, gt::device_allocator<T>>
+#endif // GTENSOR_ALLOCATOR_NO_CACHING
 #endif
 
 #ifndef GTENSOR_DEFAULT_MANAGED_ALLOCATOR
+#ifdef GTENSOR_ALLOCATOR_NO_CACHING
+#define GTENSOR_DEFAULT_MANAGED_ALLOCATOR(T) gt::managed_allocator<T>
+#else
 #define GTENSOR_DEFAULT_MANAGED_ALLOCATOR(T)                                   \
   gt::allocator::caching_allocator<T, gt::managed_allocator<T>>
+#endif // GTENSOR_ALLOCATOR_NO_CACHING
 #endif
 
 namespace gt
