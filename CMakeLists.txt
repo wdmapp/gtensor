@@ -30,6 +30,8 @@ option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 option(GTENSOR_PER_DIM_KERNELS
        "Enable per dim kernels (may break for large arrays)" OFF)
 
+option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
+
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
@@ -266,6 +268,14 @@ if (GTENSOR_PER_DIM_KERNELS)
                              INTERFACE GTENSOR_PER_DIM_KERNELS)
 else()
   message(STATUS "${PROJECT_NAME}: using N-d -> 1d assign/launch kernels")
+endif()
+
+if (GTENSOR_ALLOCATOR_CACHING)
+  message(STATUS "${PROJECT_NAME}: caching allocator enabled")
+else()
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_ALLOCATOR_NO_CACHING)
+  message(STATUS "${PROJECT_NAME}: caching allocator disabled")
 endif()
 
 # define aliases for use in tests and examples subdirs
