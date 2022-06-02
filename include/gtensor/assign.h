@@ -460,7 +460,7 @@ struct assigner<3, space::device>
   }
 };
 
-#else // not defined GTENSOR_PER_DIM_KERNELS
+#endif // GTENSOR_PER_DIM_KERNELS
 
 template <size_type N>
 struct assigner<N, space::device>
@@ -505,8 +505,6 @@ struct assigner<N, space::device>
     gpuSyncIfEnabledStream(stream);
   }
 };
-
-#endif // GTENSOR_PER_DIM_KERNELS
 
 #endif // GTENSOR_DEVICE_SYCL
 
