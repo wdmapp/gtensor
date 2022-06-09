@@ -430,3 +430,77 @@ TEST(blas, zgemv)
 {
   test_gemv_complex<double>();
 }
+
+template <typename R>
+void test_gemm_batched_complex()
+{
+  constexpr int N = 32;
+  constexpr int batch_size = 5;
+  using T = gt::complex<R>;
+  gt::gtensor<T, 2> h_x({N, batch_size});
+  gt::gtensor_device<T, 2> d_x({N, batch_size});
+  gt::gtensor<T, 2> h_y({N, batch_size});
+  gt::gtensor_device<T, 2> d_y({N, batch_size});
+  gt::gtensor<T, 3> h_mat(gt::shape(N, N, batch_size));
+  gt::gtensor_device<T, 3> d_mat(gt::shape(N, N, batch_size));
+
+  gt::gtensor<T*, 1> h_yptr(batch_size);
+  gt::gtensor_device<T*, 1> d_yptr(batch_size);
+  gt::gtensor<T*, 1> h_xptr(batch_size);
+  gt::gtensor_device<T*, 1> d_xptr(batch_size);
+  gt::gtensor<T*, 1> h_matptr(batch_size);
+  gt::gtensor_device<T*, 1> d_matptr(batch_size);
+
+  T a = T(0.5, 1.0);
+  T b = T(-1.0, 2.0);
+
+  for (int t = 0; t < batch_size; t++) {
+    for (int i = 0; i < N; i++) {
+      h_x(i, t) = T(i, 0.0);
+      h_y(i, t) = T(0.0, i);
+      for (int j = 0; j < N; ++j) {
+        h_mat(i, j, t) = T(i, j);
+      }
+    }
+    h_xptr(t) = gt::raw_pointer_cast(d_x.data()) + t * N;
+    h_yptr(t) = gt::raw_pointer_cast(d_y.data()) + t * N;
+    h_matptr(t) = gt::raw_pointer_cast(d_mat.data()) + t * N * N;
+  }
+
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
+  gt::copy(h_mat, d_mat);
+  gt::copy(h_xptr, d_xptr);
+  gt::copy(h_yptr, d_yptr);
+  gt::copy(h_matptr, d_matptr);
+
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::gemm_batched<T>(h, N, 1, N, a,
+                            gt::raw_pointer_cast(d_matptr.data()), N,
+                            gt::raw_pointer_cast(d_xptr.data()), N, b,
+                            gt::raw_pointer_cast(d_yptr.data()), N, batch_size);
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_y, h_y);
+
+  for (int t = 0; t < batch_size; t++) {
+    for (int p = 0; p < N; p++) {
+      auto r = p * (N * (N + 1) / 2 - N);
+      auto s = (N * (N + 1) * (2 * N + 1) - 6 * N * N) / 6;
+      EXPECT_EQ(h_y(p, t), T(a.real() * r - a.imag() * s - b.imag() * p,
+                             a.imag() * r + a.real() * s + b.real() * p));
+    }
+  }
+}
+
+TEST(blas, cgemm_batched)
+{
+  test_gemm_batched_complex<float>();
+}
+
+TEST(blas, zgemm_batched)
+{
+  test_gemm_batched_complex<double>();
+}
