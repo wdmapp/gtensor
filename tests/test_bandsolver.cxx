@@ -784,3 +784,13 @@ TEST(bandsolve, dfull_invert_solve)
 {
   test_full_solve_real<double>();
 }
+
+TEST(bandsolve, cfull_invert_solve)
+{
+  test_full_solve_real<gt::complex<float>>();
+}
+
+TEST(bandsolve, zfull_invert_solve)
+{
+  test_full_solve_real<gt::complex<double>>();
+}
