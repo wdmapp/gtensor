@@ -508,6 +508,18 @@ struct assigner<N, space::device>
 
 #endif // GTENSOR_DEVICE_SYCL
 
+template <typename S>
+inline void valid_assign_broadcast_or_throw(const S& lhs_shape,
+                                            const S& rhs_shape)
+{
+  for (int i = 0; i < lhs_shape.size(); i++) {
+    if (lhs_shape[i] != rhs_shape[i] && rhs_shape[i] != 1) {
+      throw std::runtime_error("cannot assign lhs = " + to_string(lhs_shape) +
+                               " rhs = " + to_string(rhs_shape) + "\n");
+    }
+  }
+}
+
 } // namespace detail
 
 template <typename E1, typename E2>
@@ -515,10 +527,7 @@ void assign(E1& lhs, const E2& rhs, gt::stream_view stream = gt::stream_view())
 {
   static_assert(expr_dimension<E1>() == expr_dimension<E2>(),
                 "cannot assign expressions of different dimension");
-  if (lhs.shape() != rhs.shape()) {
-    throw std::runtime_error("cannot assign lhs = " + to_string(lhs.shape()) +
-                             " rhs = " + to_string(rhs.shape()) + "\n");
-  }
+  detail::valid_assign_broadcast_or_throw(lhs.shape(), rhs.shape());
   detail::assigner<
     expr_dimension<E1>(),
     space_t<expr_space_type<E1>, expr_space_type<E2>>>::run(lhs, rhs, stream);

@@ -65,6 +65,22 @@ TEST(assign, span_fill)
             (gt::gtensor<float, 2>{{9001, 9001}, {9001, 9001}, {9001, 9001}}));
 }
 
+TEST(assign, broadcast_6d)
+{
+  gt::gtensor<int, 6> a(gt::shape(8, 1, 2, 4, 1, 1), 0);
+  gt::gtensor<int, 6> b(gt::shape(8, 1, 2, 1, 1, 1), -7);
+
+  gt::assign(a, b);
+
+  for (int i = 0; i < a.shape(0); i++) {
+    for (int j = 0; j < a.shape(2); j++) {
+      for (int k = 0; k < a.shape(3); k++) {
+        EXPECT_EQ(a(i, 0, j, k, 0, 0), -7);
+      }
+    }
+  }
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(assign, device_gtensor_6d)
@@ -365,6 +381,26 @@ TEST(assign, device_gene_h_from_f)
 
   // spot check
   EXPECT_EQ(hdist, expected);
+}
+
+TEST(assign, device_broadcast_6d)
+{
+  gt::gtensor_device<int, 6> a(gt::shape(8, 1, 2, 4, 1, 1), 0);
+  gt::gtensor_device<int, 6> b(gt::shape(8, 1, 2, 1, 1, 1), -7);
+
+  gt::gtensor<int, 6> h_a(a.shape());
+
+  gt::assign(a, b);
+
+  gt::copy(a, h_a);
+
+  for (int i = 0; i < h_a.shape(0); i++) {
+    for (int j = 0; j < h_a.shape(2); j++) {
+      for (int k = 0; k < h_a.shape(3); k++) {
+        EXPECT_EQ(h_a(i, 0, j, k, 0, 0), -7);
+      }
+    }
+  }
 }
 
 #endif // GTENSOR_HAVE_DEVICE
