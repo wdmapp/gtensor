@@ -1,0 +1,72 @@
+
+#include <benchmark/benchmark.h>
+
+#include <gtensor/gtensor.h>
+
+#include <gt-fft/fft.h>
+
+using namespace gt::placeholders;
+
+using real_t = double;
+using complex_t = gt::complex<double>;
+
+constexpr double PI = 3.141592653589793;
+
+// ======================================================================
+// BM_fft_r2c_1d
+//
+
+template <typename E, int Nx, int batch_k>
+static void BM_fft_r2c_1d(benchmark::State& state)
+{
+  int batch_size = 1024 * batch_k;
+  using T = gt::complex<E>;
+
+  auto h_A = gt::zeros<E>({Nx, batch_size});
+  auto d_A = gt::empty_device<E>(h_A.shape());
+
+  auto h_A2 = gt::zeros<E>(h_A.shape());
+  auto d_A2 = gt::empty_device<E>(h_A.shape());
+
+  auto h_B = gt::empty<T>({Nx / 2 + 1, batch_size});
+  auto h_B_expected = gt::empty<T>(h_B.shape());
+  auto d_B = gt::empty_device<T>(h_B.shape());
+
+  // Set up periodic domain with frequency 4
+  // m = [sin(2*pi*x) for x in -2:1/16:2-1/16]
+  double x, fx;
+  for (int i = 0; i < Nx; i++) {
+    x = -2.0 + i / 16.0;
+    fx = sin(2 * PI * x);
+    for (int j = 0; j < batch_size; j++) {
+      h_A(i, j) = fx;
+    }
+  }
+
+  gt::copy(h_A, d_A);
+
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({Nx}, batch_size);
+
+  auto fn = [&]() {
+    plan(d_A, d_B);
+    gt::synchronize();
+  };
+
+  // warm up, device compile
+  fn();
+
+  for (auto _ : state) {
+    fn();
+  }
+}
+
+BENCHMARK(BM_fft_r2c_1d<float, 32, 200>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 32, 200>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<float, 64, 200>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 64, 200>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<float, 32, 500>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 32, 500>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<float, 64, 500>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 64, 500>)->Unit(benchmark::kMillisecond);
+
+BENCHMARK_MAIN();
