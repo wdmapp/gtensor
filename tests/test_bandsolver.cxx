@@ -779,7 +779,7 @@ void test_full_solve_real()
   GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 0, 0), h_C_expected);
 
   // second batch should be -2 times first batch
-  h_C_expected = -2.0 * h_C_expected;
+  h_C_expected = T(-2.0) * h_C_expected;
   GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0), h_C_expected);
 }
 
