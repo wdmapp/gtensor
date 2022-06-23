@@ -51,6 +51,42 @@ TEST(device_backend, managed_allocate)
   allocator::deallocate(a);
 }
 
+TEST(device_backend, is_device_address)
+{
+  using T = double;
+
+  gt::gtensor<T, 1> h_a(gt::shape(10));
+  gt::gtensor_device<T, 1> d_a(gt::shape(10));
+  gt::gtensor_container<gt::space::managed_vector<T>, 1> m_a(gt::shape(10));
+
+#ifdef GTENSOR_DEVICE_SYCL
+  // special case SYCL to handle the host backend, which says that
+  // even device pointers are not device addresses (true from a hardware
+  // perspective, even if it's logically false in gtensor).
+  sycl::device d = gt::backend::sycl::get_queue().get_device();
+  if (d.is_gpu() || d.is_cpu()) {
+    ASSERT_FALSE(
+      gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
+    ASSERT_TRUE(
+      gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
+    ASSERT_TRUE(
+      gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+  } else {
+    ASSERT_FALSE(
+      gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
+    ASSERT_FALSE(
+      gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
+    ASSERT_FALSE(
+      gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+  }
+#else
+  ASSERT_FALSE(
+    gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
+  ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
+  ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+#endif
+}
+
 #ifdef GTENSOR_DEVICE_SYCL
 
 TEST(device_backend, sycl_new_stream_queue)
