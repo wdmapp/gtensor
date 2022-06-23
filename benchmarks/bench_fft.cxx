@@ -5,6 +5,8 @@
 
 #include <gt-fft/fft.h>
 
+#include "gt-bm.h"
+
 using namespace gt::placeholders;
 
 using real_t = double;
@@ -16,21 +18,21 @@ constexpr double PI = 3.141592653589793;
 // BM_fft_r2c_1d
 //
 
-template <typename E, int Nx, int batch_k>
+template <typename E, int Nx, int batch_k, typename S = gt::space::device>
 static void BM_fft_r2c_1d(benchmark::State& state)
 {
   int batch_size = 1024 * batch_k;
   using T = gt::complex<E>;
 
   auto h_A = gt::zeros<E>({Nx, batch_size});
-  auto d_A = gt::empty_device<E>(h_A.shape());
+  gt::bm::gtensor2<E, 2, S> d_A(h_A.shape());
 
   auto h_A2 = gt::zeros<E>(h_A.shape());
-  auto d_A2 = gt::empty_device<E>(h_A.shape());
+  gt::bm::gtensor2<E, 2, S> d_A2(h_A.shape());
 
   auto h_B = gt::empty<T>({Nx / 2 + 1, batch_size});
   auto h_B_expected = gt::empty<T>(h_B.shape());
-  auto d_B = gt::empty_device<T>(h_B.shape());
+  gt::bm::gtensor2<T, 2, S> d_B(h_B.shape());
 
   // Set up periodic domain with frequency 4
   // m = [sin(2*pi*x) for x in -2:1/16:2-1/16]
@@ -68,5 +70,22 @@ BENCHMARK(BM_fft_r2c_1d<float, 32, 500>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_fft_r2c_1d<double, 32, 500>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_fft_r2c_1d<float, 64, 500>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_fft_r2c_1d<double, 64, 500>)->Unit(benchmark::kMillisecond);
+
+BENCHMARK(BM_fft_r2c_1d<float, 32, 200, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 32, 200, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<float, 64, 200, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 64, 200, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<float, 32, 500, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 32, 500, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<float, 64, 500, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_fft_r2c_1d<double, 64, 500, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();
