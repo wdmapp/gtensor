@@ -180,9 +180,9 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
 
   if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE
-      $<$<COMPILE_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
+      $<$<COMPILE_LANGUAGE:CXX>:--gcc-toolchain=${HIP_GCC_TOOLCHAIN}>)
     target_link_options(gtensor_hip INTERFACE
-      $<$<LINK_LANGUAGE:CXX>:-gcc-toolchain ${HIP_GCC_TOOLCHAIN}>)
+      $<$<LINK_LANGUAGE:CXX>:--gcc-toolchain=${HIP_GCC_TOOLCHAIN}>)
   endif()
 
   # Enable to see the full hcc command and include search paths
