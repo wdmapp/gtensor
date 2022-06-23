@@ -3,6 +3,8 @@
 
 #include <gtensor/gtensor.h>
 
+#include "gt-bm.h"
+
 using namespace gt::placeholders;
 
 using real_t = double;
@@ -52,6 +54,7 @@ auto semi_arakawa_kl_13p_v1_idep(const E1& sten, const E2& a,
 // ======================================================================
 // BM_semi_arakawa_kl_13p_v1_idep
 
+template <typename S>
 static void BM_semi_arakawa_kl_13p_v1_idep(benchmark::State& state)
 {
   auto shape_rhs = gt::shape(70, 32, 24, 24, 32, 2);
@@ -63,9 +66,9 @@ static void BM_semi_arakawa_kl_13p_v1_idep(benchmark::State& state)
     shape_f[d] = shape_rhs[d] + 2 * bnd[d];
   }
 
-  auto rhs = gt::zeros_device<complex_t>(shape_rhs);
-  auto f = gt::zeros_device<complex_t>(shape_f);
-  auto sten = gt::zeros_device<real_t>(shape_sten);
+  gt::bm::gtensor2<complex_t, 6, S> rhs(shape_rhs, 0.0);
+  gt::bm::gtensor2<complex_t, 6, S> f(shape_f, 0.0);
+  gt::bm::gtensor2<real_t, 6, S> sten(shape_sten, 0.0);
 
   // warmup, force compile
   rhs = rhs + semi_arakawa_kl_13p_v1_idep(sten, f, bnd);
@@ -77,6 +80,9 @@ static void BM_semi_arakawa_kl_13p_v1_idep(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_semi_arakawa_kl_13p_v1_idep)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_semi_arakawa_kl_13p_v1_idep<gt::space::device>)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_semi_arakawa_kl_13p_v1_idep<gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();
