@@ -5,6 +5,8 @@
 
 #include <gtensor/gtensor.h>
 
+#include "gt-bm.h"
+
 using namespace gt::placeholders;
 
 constexpr int KB = 1024;
@@ -30,7 +32,7 @@ static const gt::gtensor<double, 1> stencil13 = {
   6. / 7,    -15. / 56, 5. / 63, -1. / 56, 1. / 385, -1. / 5544};
 
 template <typename S>
-inline auto stencil1d_3(const gt::gtensor<double, 1, S>& y,
+inline auto stencil1d_3(const gt::bm::gtensor2<double, 1, S>& y,
                         const gt::gtensor<double, 1>& stencil)
 {
   return stencil(0) * y.view(_s(0, -2)) + stencil(1) * y.view(_s(1, -1)) +
@@ -38,7 +40,7 @@ inline auto stencil1d_3(const gt::gtensor<double, 1, S>& y,
 }
 
 template <typename S>
-inline auto stencil1d_5(const gt::gtensor<double, 1, S>& y,
+inline auto stencil1d_5(const gt::bm::gtensor2<double, 1, S>& y,
                         const gt::gtensor<double, 1>& stencil)
 {
   return stencil(0) * y.view(_s(0, -4)) + stencil(1) * y.view(_s(1, -3)) +
@@ -47,7 +49,7 @@ inline auto stencil1d_5(const gt::gtensor<double, 1, S>& y,
 }
 
 template <typename S>
-inline auto stencil1d_7(const gt::gtensor<double, 1, S>& y,
+inline auto stencil1d_7(const gt::bm::gtensor2<double, 1, S>& y,
                         const gt::gtensor<double, 1>& stencil)
 {
   return stencil(0) * y.view(_s(0, -6)) + stencil(1) * y.view(_s(1, -5)) +
@@ -57,7 +59,7 @@ inline auto stencil1d_7(const gt::gtensor<double, 1, S>& y,
 }
 
 template <typename S>
-inline auto stencil1d_9(const gt::gtensor<double, 1, S>& y,
+inline auto stencil1d_9(const gt::bm::gtensor2<double, 1, S>& y,
                         const gt::gtensor<double, 1>& stencil)
 {
   return stencil(0) * y.view(_s(0, -8)) + stencil(1) * y.view(_s(1, -7)) +
@@ -68,7 +70,7 @@ inline auto stencil1d_9(const gt::gtensor<double, 1, S>& y,
 }
 
 template <typename S>
-inline auto stencil1d_11(const gt::gtensor<double, 1, S>& y,
+inline auto stencil1d_11(const gt::bm::gtensor2<double, 1, S>& y,
                          const gt::gtensor<double, 1>& stencil)
 {
   return stencil(0) * y.view(_s(0, -10)) + stencil(1) * y.view(_s(1, -9)) +
@@ -80,7 +82,7 @@ inline auto stencil1d_11(const gt::gtensor<double, 1, S>& y,
 }
 
 template <typename S>
-inline auto stencil1d_13(const gt::gtensor<double, 1, S>& y,
+inline auto stencil1d_13(const gt::bm::gtensor2<double, 1, S>& y,
                          const gt::gtensor<double, 1>& stencil)
 {
   return stencil(0) * y.view(_s(0, -12)) + stencil(1) * y.view(_s(1, -11)) +
@@ -107,7 +109,7 @@ template <>
 struct stencil<3>
 {
   template <typename S>
-  static auto compute(const gt::gtensor<double, 1, S>& y)
+  static auto compute(const gt::bm::gtensor2<double, 1, S>& y)
   {
     return stencil1d_3<S>(y, stencil3);
   }
@@ -117,7 +119,7 @@ template <>
 struct stencil<5>
 {
   template <typename S>
-  static auto compute(const gt::gtensor<double, 1, S>& y)
+  static auto compute(const gt::bm::gtensor2<double, 1, S>& y)
   {
     return stencil1d_5<S>(y, stencil5);
   }
@@ -127,7 +129,7 @@ template <>
 struct stencil<7>
 {
   template <typename S>
-  static auto compute(const gt::gtensor<double, 1, S>& y)
+  static auto compute(const gt::bm::gtensor2<double, 1, S>& y)
   {
     return stencil1d_7<S>(y, stencil7);
   }
@@ -137,7 +139,7 @@ template <>
 struct stencil<9>
 {
   template <typename S>
-  static auto compute(const gt::gtensor<double, 1, S>& y)
+  static auto compute(const gt::bm::gtensor2<double, 1, S>& y)
   {
     return stencil1d_9<S>(y, stencil9);
   }
@@ -147,7 +149,7 @@ template <>
 struct stencil<11>
 {
   template <typename S>
-  static auto compute(const gt::gtensor<double, 1, S>& y)
+  static auto compute(const gt::bm::gtensor2<double, 1, S>& y)
   {
     return stencil1d_11<S>(y, stencil11);
   }
@@ -157,7 +159,7 @@ template <>
 struct stencil<13>
 {
   template <typename S>
-  static auto compute(const gt::gtensor<double, 1, S>& y)
+  static auto compute(const gt::bm::gtensor2<double, 1, S>& y)
   {
     return stencil1d_13<S>(y, stencil13);
   }
@@ -167,16 +169,16 @@ struct stencil<13>
 
 // template <typename...> struct WhichType;
 
-template <int N>
+template <typename S, int N>
 static void BM_stencil1d(benchmark::State& state)
 {
   int n = state.range(0) * MB;
 
   gt::gtensor<double, 1> x(gt::shape(n));
   gt::gtensor<double, 1> y = gt::empty_like(x);
-  gt::gtensor_device<double, 1> d_y(gt::shape(n));
+  gt::bm::gtensor2<double, 1, S> d_y(gt::shape(n));
   gt::gtensor<double, 1> dydx_numeric(gt::shape(n));
-  gt::gtensor_device<double, 1> d_dydx_numeric(gt::shape(n));
+  gt::bm::gtensor2<double, 1, S> d_dydx_numeric(gt::shape(n));
   double lx = 8;
   double dx = n / lx;
   double scale = lx / n;
@@ -190,10 +192,10 @@ static void BM_stencil1d(benchmark::State& state)
   }
 
   gt::copy(y, d_y);
+  gt::synchronize();
 
   // expression object, unevaluated until assigning to a container
-  auto&& stencil_expr =
-    detail::stencil<N>::template compute<gt::space::device>(d_y) * scale;
+  auto&& stencil_expr = detail::stencil<N>::template compute<S>(d_y) * scale;
 
   // Trick to print type in an error at compile time for debugging
   // auto&& k_stencil_expr = stencil_expr.to_kernel();
@@ -209,11 +211,42 @@ static void BM_stencil1d(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_stencil1d<3>)->Range(8, 256)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_stencil1d<5>)->Range(8, 256)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_stencil1d<7>)->Range(8, 256)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_stencil1d<9>)->Range(8, 256)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_stencil1d<11>)->Range(8, 256)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_stencil1d<13>)->Range(8, 256)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::device, 3>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::device, 5>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::device, 7>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::device, 9>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::device, 11>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::device, 13>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+
+BENCHMARK(BM_stencil1d<gt::space::managed, 3>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::managed, 5>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::managed, 7>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::managed, 9>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::managed, 11>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_stencil1d<gt::space::managed, 13>)
+  ->Range(8, 256)
+  ->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();
