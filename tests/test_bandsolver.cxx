@@ -769,10 +769,18 @@ void test_full_solve_real()
 
   gt::copy(d_C, h_C);
 
-  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 0, 0),
-                       (gt::gtensor<T, 1>{2.5, 4.0, 4.5, 4.0, 2.5}));
-  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0),
-                       (gt::gtensor<T, 1>{-5.0, -8.0, -9.0, -8.0, -5.0}));
+  gt::gtensor<T, 1> h_C_expected(gt::shape(N));
+
+  h_C_expected(0) = 2.5;
+  h_C_expected(1) = 4.0;
+  h_C_expected(2) = 4.5;
+  h_C_expected(3) = 4.0;
+  h_C_expected(4) = 2.5;
+  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 0, 0), h_C_expected);
+
+  // second batch should be -2 times first batch
+  h_C_expected = -2.0 * h_C_expected;
+  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0), h_C_expected);
 }
 
 TEST(bandsolve, sfull_invert_solve)
