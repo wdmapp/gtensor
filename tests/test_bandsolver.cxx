@@ -5,6 +5,7 @@
 #include "gt-blas/blas.h"
 #include "gtensor/gtensor.h"
 
+#include "test_debug.h"
 #include "test_helpers.h"
 
 template <typename T>
@@ -645,6 +646,7 @@ void test_full_solve_real()
   gt::gtensor_device<T*, 1> d_Ainvptr(batch_size);
   gt::gtensor<T, 3> h_Ainv(gt::shape(N, N, batch_size));
   gt::gtensor_device<T, 3> d_Ainv(gt::shape(N, N, batch_size));
+  gt::gtensor<T, 3> h_Ainv_expected(gt::shape(N, N, batch_size));
 
   gt::gtensor<T*, 1> h_Bptr(batch_size);
   gt::gtensor_device<T*, 1> d_Bptr(batch_size);
@@ -685,6 +687,44 @@ void test_full_solve_real()
     }
   }
 
+  /*
+  A^-1 = [ 0.833333  0.666667  0.5  0.333333  0.166667
+           0.666667  1.33333   1.0  0.666667  0.333333
+           0.5       1.0       1.5  1.0       0.5
+           0.333333  0.666667  1.0  1.33333   0.666667
+           0.166667  0.333333  0.5  0.666667  0.833333 ]
+  */
+  // col 1
+  h_Ainv_expected(0, 0, 0) = 5.0 / 6;
+  h_Ainv_expected(1, 0, 0) = 2.0 / 3;
+  h_Ainv_expected(2, 0, 0) = 1.0 / 2;
+  h_Ainv_expected(3, 0, 0) = 1.0 / 3;
+  h_Ainv_expected(4, 0, 0) = 1.0 / 6;
+  // col 2
+  h_Ainv_expected(0, 1, 0) = 2.0 / 3;
+  h_Ainv_expected(1, 1, 0) = 1.0 + 1.0 / 3;
+  h_Ainv_expected(2, 1, 0) = 1.0;
+  h_Ainv_expected(3, 1, 0) = 2.0 / 3;
+  h_Ainv_expected(4, 1, 0) = 1.0 / 3;
+  // col 3
+  h_Ainv_expected(0, 2, 0) = 1.0 / 2;
+  h_Ainv_expected(1, 2, 0) = 1.0;
+  h_Ainv_expected(2, 2, 0) = 1.5;
+  h_Ainv_expected(3, 2, 0) = 1.0;
+  h_Ainv_expected(4, 2, 0) = 1.0 / 2;
+  // col 4
+  h_Ainv_expected(0, 3, 0) = 1.0 / 3;
+  h_Ainv_expected(1, 3, 0) = 2.0 / 3;
+  h_Ainv_expected(2, 3, 0) = 1.0;
+  h_Ainv_expected(3, 3, 0) = 1.0 + 1.0 / 3;
+  h_Ainv_expected(4, 3, 0) = 2.0 / 3;
+  // col 5
+  h_Ainv_expected(0, 4, 0) = 1.0 / 6;
+  h_Ainv_expected(1, 4, 0) = 1.0 / 3;
+  h_Ainv_expected(2, 4, 0) = 1.0 / 2;
+  h_Ainv_expected(3, 4, 0) = 2.0 / 3;
+  h_Ainv_expected(4, 4, 0) = 5.0 / 6;
+
   h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Ainvptr(0) = gt::raw_pointer_cast(d_Ainv.data());
   h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
@@ -708,10 +748,16 @@ void test_full_solve_real()
   auto bw =
     gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
 
+  GT_DEBUG_VAR(bw.lower);
+  GT_DEBUG_VAR(bw.upper);
+
   gt::blas::invert_banded_batched(
     N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
     gt::raw_pointer_cast(d_Ainvptr.data()), N, batch_size, bw.lower, bw.upper);
   gt::synchronize();
+
+  gt::copy(d_Ainv, h_Ainv);
+  GT_EXPECT_NEAR_ARRAY(h_Ainv, h_Ainv_expected);
 
   gt::blas::gemm_batched<T>(h, N, NRHS, N, 1.0,
                             gt::raw_pointer_cast(d_Ainvptr.data()), N,
@@ -723,10 +769,18 @@ void test_full_solve_real()
 
   gt::copy(d_C, h_C);
 
-  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 0, 0),
-                       (gt::gtensor<T, 1>{2.5, 4.0, 4.5, 4.0, 2.5}));
-  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0),
-                       (gt::gtensor<T, 1>{-5.0, -8.0, -9.0, -8.0, -5.0}));
+  gt::gtensor<T, 1> h_C_expected(gt::shape(N));
+
+  h_C_expected(0) = 2.5;
+  h_C_expected(1) = 4.0;
+  h_C_expected(2) = 4.5;
+  h_C_expected(3) = 4.0;
+  h_C_expected(4) = 2.5;
+  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 0, 0), h_C_expected);
+
+  // second batch should be -2 times first batch
+  h_C_expected = T(-2.0) * h_C_expected;
+  GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0), h_C_expected);
 }
 
 TEST(bandsolve, sfull_invert_solve)
@@ -737,4 +791,14 @@ TEST(bandsolve, sfull_invert_solve)
 TEST(bandsolve, dfull_invert_solve)
 {
   test_full_solve_real<double>();
+}
+
+TEST(bandsolve, cfull_invert_solve)
+{
+  test_full_solve_real<gt::complex<float>>();
+}
+
+TEST(bandsolve, zfull_invert_solve)
+{
+  test_full_solve_real<gt::complex<double>>();
 }

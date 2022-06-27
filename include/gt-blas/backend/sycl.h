@@ -275,17 +275,19 @@ inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
   auto trans_op = oneapi::mkl::transpose::nontrans;
   sycl::span<oneapi::mkl::transpose> strans{&trans_op, 1};
 
-  // Note: the arrays and alpha/beta have one value per matrix,
-  // i.e. product batch sizes. With only one group, this is batchSize
-  sycl::span salpha(sycl::malloc_shared<T>(batchSize_size_t, q),
-                    batchSize_size_t);
-  sycl::span sbeta(sycl::malloc_shared<T>(batchSize_size_t, q),
-                   batchSize_size_t);
+  // Note: the spans for alpha/beta can have one value per matrix,
+  // or one for all (size 1). We use size 1 here since that is all the interface
+  // supports. Using a device accessible memory allocation still appears to be
+  // necessary in current MKL versions.
 
-  for (int i = 0; i < batchSize; i++) {
-    salpha[i] = alpha;
-    sbeta[i] = beta;
-  }
+  // Use RIAA to make sure it's cleaned up, in pure SYCL
+  sycl::usm_allocator<T, sycl::usm::alloc::shared> allocator(q);
+  std::vector<T, decltype(allocator)> alphabeta(2, allocator);
+
+  sycl::span salpha(alphabeta.data(), 1);
+  sycl::span sbeta(alphabeta.data() + 1, 1);
+  salpha[0] = alpha;
+  sbeta[0] = beta;
 
   sycl::span<const T*> sA{const_cast<const T**>(d_Aarray), batchSize_size_t};
   sycl::span<const T*> sB{const_cast<const T**>(d_Barray), batchSize_size_t};
@@ -297,9 +299,6 @@ inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
     q, strans, strans, sm, sn, sk, salpha, sA, slda, sB, sldb, sbeta, sC, sldc,
     1, sbatchSize);
   gemm_batch_done.wait();
-
-  sycl::free(salpha.data(), q);
-  sycl::free(sbeta.data(), q);
 }
 
 } // namespace blas
