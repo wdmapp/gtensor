@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <gtensor/complex.h>
 #include <gtensor/gtensor.h>
 #include <gtensor/reductions.h>
 
@@ -10,18 +11,44 @@
 
 using namespace gt::placeholders;
 
-TEST(reductions, sum_axis_to_2d)
+template <typename T, typename S>
+struct reductions_config
 {
-  gt::gtensor<double, 2> a({{11., 21., 31.}, {12., 22., 32.}});
+  using value_type = T;
+  using space_type = S;
+};
+
+template <typename C>
+class Reductions : public testing::Test
+{};
+
+// FIXME, would be nice to test gt::complex, too, but that doesn't
+// compile right now
+using reduction_configs =
+  ::testing::Types<reductions_config<double, gt::space::host>,
+                   reductions_config<float, gt::space::host>
+#ifdef GTENSOR_HAVE_DEVICE
+                   ,
+                   reductions_config<double, gt::space::device>,
+                   reductions_config<float, gt::space::device>
+#endif
+                   >;
+TYPED_TEST_SUITE(Reductions, reduction_configs);
+
+TYPED_TEST(Reductions, sum_axis_to_2d)
+{
+  using T = typename TypeParam::value_type;
+  using S = typename TypeParam::space_type;
+  gt::gtensor<T, 2, S> a({{11., 21., 31.}, {12., 22., 32.}});
   GT_DEBUG_VAR(a.shape());
 
-  gt::gtensor<double, 1> asum0(gt::shape(2));
-  gt::gtensor<double, 1> asum1(gt::shape(3));
+  gt::gtensor<T, 1, S> asum0(gt::shape(2));
+  gt::gtensor<T, 1, S> asum1(gt::shape(3));
 
   sum_axis_to(asum0, a, 0);
-  EXPECT_EQ(asum0, (gt::gtensor<double, 1>{63., 66.}));
+  EXPECT_EQ(asum0, (gt::gtensor<T, 1, S>{63., 66.}));
   sum_axis_to(asum1, a, 1);
-  EXPECT_EQ(asum1, (gt::gtensor<double, 1>{23., 43., 63.}));
+  EXPECT_EQ(asum1, (gt::gtensor<T, 1, S>{23., 43., 63.}));
 }
 
 TEST(reductions, sum_axis_to_2d_view)
@@ -62,24 +89,6 @@ TEST(reductions, sum_axis_to_3d_view_2d)
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
-
-TEST(reductions, device_sum_axis_to_2d)
-{
-  gt::gtensor_device<double, 2> a({{11., 21., 31.}, {12., 22., 32.}});
-  GT_DEBUG_VAR(a.shape());
-
-  gt::gtensor_device<double, 1> asum0(gt::shape(2));
-  gt::gtensor_device<double, 1> asum1(gt::shape(3));
-  gt::gtensor<double, 1> h_asum0(gt::shape(2));
-  gt::gtensor<double, 1> h_asum1(gt::shape(3));
-
-  sum_axis_to(asum0, a, 0);
-  gt::copy(asum0, h_asum0);
-  EXPECT_EQ(h_asum0, (gt::gtensor<double, 1>{63., 66.}));
-  sum_axis_to(asum1, a, 1);
-  gt::copy(asum1, h_asum1);
-  EXPECT_EQ(h_asum1, (gt::gtensor<double, 1>{23., 43., 63.}));
-}
 
 TEST(reductions, device_sum_axis_to_3d_view_2d)
 {
