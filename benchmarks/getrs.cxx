@@ -94,8 +94,8 @@ bool check(test_problem<CT> const& tp,
         for (std::size_t j = 0; j < i; ++j) {
           b_i += tp.h_Adata(i, j, b) * tmp(j);
         }
-        residual_L1 += std::abs(b_i - rhs(i));
-        b_L1 += std::abs(rhs(i));
+        residual_L1 += gt::abs(b_i - rhs(i));
+        b_L1 += gt::abs(rhs(i));
       }
       // check residual
       if (residual_L1 / b_L1 > tol) {
