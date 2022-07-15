@@ -89,7 +89,8 @@ template <typename CT>
 void lumm_batched(gt::gtensor_device<CT, 3>& d_Aout,
                   gt::gtensor_device<CT, 3>& d_LUin,
                   gt::gtensor_device<gt::blas::index_t, 2>& d_piv,
-                  gt::gtensor_device<gt::blas::index_t, 2>& d_perm)
+                  gt::gtensor_device<gt::blas::index_t, 2>& d_perm,
+                  bool use_pivot)
 {
   int n = d_LUin.shape(0);
   int nbatch = d_LUin.shape(2);
@@ -105,13 +106,16 @@ void lumm_batched(gt::gtensor_device<CT, 3>& d_Aout,
       for (gt::blas::index_t i = 0; i < n; i++) {
         k_perm(i, batch) = i;
       }
-      for (gt::blas::index_t i = 0; i < n; i++) {
-        // piv is one based, arrays are zero based
-        imapped = k_piv(i, batch) - 1;
-        if (imapped != i) {
-          itmp = k_perm(i, batch);
-          k_perm(i, batch) = k_perm(imapped, batch);
-          k_perm(imapped, batch) = itmp;
+
+      if (use_pivot) {
+        for (gt::blas::index_t i = 0; i < n; i++) {
+          // piv is one based, arrays are zero based
+          imapped = k_piv(i, batch) - 1;
+          if (imapped != i) {
+            itmp = k_perm(i, batch);
+            k_perm(i, batch) = k_perm(imapped, batch);
+            k_perm(imapped, batch) = itmp;
+          }
         }
       }
 
@@ -144,7 +148,8 @@ void lumm_batched(gt::gtensor_device<CT, 3>& d_Aout,
 template <typename T, typename CT = gt::complex<T>>
 bool check_lu_batched(gt::gtensor<CT, 3>& h_Aactual,
                       gt::gtensor_device<CT, 3>& d_LU,
-                      gt::gtensor_device<gt::blas::index_t, 2>& d_piv)
+                      gt::gtensor_device<gt::blas::index_t, 2>& d_piv,
+                      bool use_pivot)
 {
   int n = h_Aactual.shape(0);
   int nbatch = h_Aactual.shape(2);
@@ -153,7 +158,7 @@ bool check_lu_batched(gt::gtensor<CT, 3>& h_Aactual,
   gt::gtensor_device<gt::blas::index_t, 2> d_perm(gt::shape(n, nbatch));
   gt::gtensor_device<CT, 3> d_Acalc(h_Aactual.shape());
   gt::gtensor<CT, 3> h_Acalc(h_Aactual.shape());
-  lumm_batched(d_Acalc, d_LU, d_piv, d_perm);
+  lumm_batched(d_Acalc, d_LU, d_piv, d_perm, use_pivot);
   gt::copy(d_Acalc, h_Acalc);
   gt::synchronize();
 
@@ -214,15 +219,20 @@ static void BM_getrf(benchmark::State& state)
   gt::blas::handle_t* h = gt::blas::create();
 
   auto fn = [&]() {
-    gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
-                            gt::raw_pointer_cast(d_piv.data()),
-                            gt::raw_pointer_cast(d_info.data()), NBATCH);
+    if (PIVOT) {
+      gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                              gt::raw_pointer_cast(d_piv.data()),
+                              gt::raw_pointer_cast(d_info.data()), NBATCH);
+    } else {
+      gt::blas::getrf_npvt_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                                   gt::raw_pointer_cast(d_info.data()), NBATCH);
+    }
     gt::synchronize();
   };
 
   // warm up, device compile, check
   fn();
-  check_lu_batched<R>(h_Acopy, d_A, d_piv);
+  check_lu_batched<R>(h_Acopy, d_A, d_piv, PIVOT);
   gt::copy(d_A, h_A);
   gt::copy(d_piv, h_piv);
 
