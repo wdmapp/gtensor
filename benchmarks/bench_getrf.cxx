@@ -250,6 +250,11 @@ static void BM_getrf(benchmark::State& state)
 }
 
 // RealType, N, NBATCH, Pivot
+BENCHMARK(BM_getrf<float, 512, 128, true>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 512, 128, true>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<float, 512, 128, false>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 512, 128, false>)->Unit(benchmark::kMillisecond);
+
 BENCHMARK(BM_getrf<float, 210, 512, true>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getrf<double, 210, 512, true>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getrf<float, 210, 512, false>)->Unit(benchmark::kMillisecond);
