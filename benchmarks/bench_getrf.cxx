@@ -232,6 +232,8 @@ static void BM_getrf(benchmark::State& state)
 
   // warm up, device compile, check
   fn();
+
+#ifdef BENCH_GETRF_DEBUG
   check_lu_batched<R>(h_Acopy, d_A, d_piv, PIVOT);
   gt::copy(d_A, h_A);
   gt::copy(d_piv, h_piv);
@@ -241,6 +243,7 @@ static void BM_getrf(benchmark::State& state)
     debug_print_matrix("Alu", h_A.view(_all, _all, b));
     debug_print_vector("piv", h_piv.view(_all, b));
   }
+#endif
 
   for (auto _ : state) {
     fn();
@@ -250,15 +253,15 @@ static void BM_getrf(benchmark::State& state)
 }
 
 // RealType, N, NBATCH, Pivot
-BENCHMARK(BM_getrf<float, 512, 128, true>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<double, 512, 128, true>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<float, 512, 128, false>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<double, 512, 128, false>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<float, 512, 64, true>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 512, 64, true>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<float, 512, 64, false>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 512, 64, false>)->Unit(benchmark::kMillisecond);
 
-BENCHMARK(BM_getrf<float, 210, 512, true>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<double, 210, 512, true>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<float, 210, 512, false>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<double, 210, 512, false>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<float, 210, 256, true>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 210, 256, true>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<float, 210, 256, false>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 210, 256, false>)->Unit(benchmark::kMillisecond);
 
 // small cases for debugging
 /*
