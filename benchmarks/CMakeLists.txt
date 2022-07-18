@@ -7,6 +7,10 @@ if (GTENSOR_ENABLE_BLAS)
   add_executable(getrs)
   target_gtensor_sources(getrs PRIVATE getrs.cxx)
   target_link_libraries(getrs gtensor::gtensor gtensor::blas)
+
+  add_executable(bench_getrf)
+  target_gtensor_sources(bench_getrf PRIVATE bench_getrf.cxx)
+  target_link_libraries(bench_getrf gtensor::gtensor gtensor::blas benchmark::benchmark)
 endif()
 
 add_executable(bench_assign)
