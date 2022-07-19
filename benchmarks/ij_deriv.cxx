@@ -465,12 +465,12 @@ void test_ij_deriv(int li0, int lj0, int lbg0)
       for (i = 0; i < lx0; i++) {
         if (klmn < 3) {
           h_arr[ARRIDX(i, j, klmn)] =
-            (pow(0.1 * (i - nxb) - 0.5, (klmn + 1)) + 0.3 * (j + 1),
-             pow(0.2 * (i - nxb) - 0.5, (klmn + 1)) + 0.6 * (j + 1));
+            Complex(pow(0.1 * (i - nxb) - 0.5, (klmn + 1)) + 0.3 * (j + 1),
+                    pow(0.2 * (i - nxb) - 0.5, (klmn + 1)) + 0.6 * (j + 1));
         } else {
           h_arr[ARRIDX(i, j, klmn)] =
-            (5.0 * j * sin((klmn + 1) * i / li0 * 2.0 * pi),
-             2.5 * j * sin((klmn + 1) * i / li0 * 1.2 * pi));
+            Complex(5.0 * j * sin((klmn + 1) * i / li0 * 2.0 * pi),
+                    2.5 * j * sin((klmn + 1) * i / li0 * 1.2 * pi));
         }
       }
     }
