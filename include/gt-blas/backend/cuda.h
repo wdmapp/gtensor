@@ -299,7 +299,7 @@ CREATE_GETRS_BATCHED(cublasSgetrsBatched, float, float)
 #undef CREATE_GETRS_BATCHED
 
 // ======================================================================
-// getrf/getrs batched
+// getrf_npvt batched
 
 template <typename T>
 inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
