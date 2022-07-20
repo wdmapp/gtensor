@@ -74,6 +74,9 @@ public:
 
   gtensor_storage& operator=(gtensor_storage&& dv)
   {
+    if (capacity_ > 0) {
+      allocator_.deallocate(data_, capacity_);
+    }
     data_ = dv.data_;
     size_ = dv.size_;
     capacity_ = dv.capacity_;
