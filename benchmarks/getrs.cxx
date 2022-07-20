@@ -69,29 +69,29 @@ bool check(test_problem<CT> const& tp,
   std::size_t nrhs = tp.h_Bdata.shape(1);
   auto tmp = gt::zeros<CT>({static_cast<int>(n)});
   auto rhs = gt::zeros<CT>({static_cast<int>(n)});
-  for (std::size_t r = 0; r < nrhs; ++r) {
-    for (std::size_t b = 0; b < batch_size; ++b) {
+  for (gt::blas::index_t r = 0; r < nrhs; ++r) {
+    for (gt::blas::index_t b = 0; b < batch_size; ++b) {
       T residual_L1 = 0.0;
       T b_L1 = 0.0;
       rhs = tp.h_Bdata.view(gt::all, r, b);
       // swap rows in right-hand side, computes rhs = P^T b
-      for (std::size_t i = 0; i < n; ++i) {
+      for (gt::blas::index_t i = 0; i < n; ++i) {
         auto ip = tp.h_piv(i, b) - 1;
         if (i != ip) {
           std::swap(rhs(i), rhs(ip));
         }
       }
       // Compute tmp = U x
-      for (std::size_t i = 0; i < n; ++i) {
+      for (gt::blas::index_t i = 0; i < n; ++i) {
         tmp(i) = CT{};
-        for (std::size_t j = i; j < n; ++j) {
+        for (gt::blas::index_t j = i; j < n; ++j) {
           tmp(i) += tp.h_Adata(i, j, b) * h_sol(j, r, b);
         }
       }
       // Compute ||L tmp - rhs||_1 and ||rhs||_1
-      for (std::size_t i = 0; i < n; ++i) {
+      for (gt::blas::index_t i = 0; i < n; ++i) {
         auto b_i = tmp(i);
-        for (std::size_t j = 0; j < i; ++j) {
+        for (gt::blas::index_t j = 0; j < i; ++j) {
           b_i += tp.h_Adata(i, j, b) * tmp(j);
         }
         residual_L1 += gt::abs(b_i - rhs(i));

@@ -11,7 +11,6 @@ using namespace gt::placeholders;
 
 constexpr int KB = 1024;
 constexpr int MB = 1024 * KB;
-constexpr int GB = 1024 * MB;
 
 static const gt::gtensor<double, 1> stencil3 = {-0.5, 0.0, 0.5};
 static const gt::gtensor<double, 1> stencil5 = {1.0 / 12.0, -2.0 / 3.0, 0.0,
