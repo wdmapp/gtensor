@@ -91,12 +91,13 @@ void gtblas_destroy()
 
 void gtblas_set_stream(gt::blas::stream_t stream_id)
 {
-  gt::blas::set_stream(g_handle, stream_id);
+  gt::blas::set_stream(g_handle, gt::stream_view{stream_id});
 }
 
 void gtblas_get_stream(gt::blas::stream_t* stream_id)
 {
-  gt::blas::get_stream(g_handle, stream_id);
+  auto sview = gt::blas::get_stream(g_handle);
+  *stream_id = sview.get_backend_stream();
 }
 
 // ======================================================================
@@ -265,7 +266,7 @@ CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, f2c_complex<double>)
              int batchSize, int lbw, int ubw)                                  \
   {                                                                            \
     gt::blas::getrs_banded_batched(                                            \
-      n, nrhs, detail::cast_aligned(d_Aarray), lda, d_PivotArray,              \
+      g_handle, n, nrhs, detail::cast_aligned(d_Aarray), lda, d_PivotArray,    \
       detail::cast_aligned(d_Barray), ldb, batchSize, lbw, ubw);               \
   }
 
@@ -283,8 +284,8 @@ CREATE_C_BANDED_GETRS_BATCHED(gtblas_banded_zgetrs_batched, f2c_complex<double>)
   void CNAME(int n, CPPTYPE** d_Aarray, int lda, int batchSize, int* lbw,      \
              int* ubw)                                                         \
   {                                                                            \
-    auto bw = gt::blas::get_max_bandwidth(n, detail::cast_aligned(d_Aarray),   \
-                                          lda, batchSize);                     \
+    auto bw = gt::blas::get_max_bandwidth(                                     \
+      g_handle, n, detail::cast_aligned(d_Aarray), lda, batchSize);            \
     *lbw = bw.lower;                                                           \
     *ubw = bw.upper;                                                           \
   }
@@ -338,7 +339,7 @@ CREATE_C_GEMM_BATCHED(gtblas_zgemm_batched, f2c_complex<double>)
              int batchSize, int lbw, int ubw)                                  \
   {                                                                            \
     gt::blas::invert_banded_batched(                                           \
-      n, detail::cast_aligned(d_Aarray), lda, d_PivotArray,                    \
+      g_handle, n, detail::cast_aligned(d_Aarray), lda, d_PivotArray,          \
       detail::cast_aligned(d_Barray), ldb, batchSize, lbw, ubw);               \
   }
 

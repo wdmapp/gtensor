@@ -7,6 +7,9 @@
 
 #include <cuda_runtime_api.h>
 
+//#include "thrust/cuda/system/execution_policy.h"
+#include "thrust/execution_policy.h"
+
 // ======================================================================
 // gt::backend::cuda
 
@@ -211,6 +214,8 @@ public:
 
   auto get_backend_stream() { return stream_; }
 
+  auto get_execution_policy() { return thrust::cuda::par.on(stream_); }
+
   bool is_default() { return stream_ == nullptr; }
 
   void synchronize() { gtGpuCheck(cudaStreamSynchronize(stream_)); }
@@ -231,6 +236,8 @@ public:
   }
 
   auto get_backend_stream() { return stream_; }
+
+  auto get_execution_policy() { return thrust::cuda::par.on(stream_); }
 
   bool is_default() { return stream_ == nullptr; }
 

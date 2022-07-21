@@ -189,10 +189,14 @@ void test_getrs_batch_real()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::blas::getrs_banded_batched(N, NRHS, gt::raw_pointer_cast(d_Aptr.data()),
-                                 N, gt::raw_pointer_cast(d_p.data()),
-                                 gt::raw_pointer_cast(d_Bptr.data()), N,
-                                 batch_size, N - 1, N - 1);
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::getrs_banded_batched(
+    h, N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
+    gt::raw_pointer_cast(d_p.data()), gt::raw_pointer_cast(d_Bptr.data()), N,
+    batch_size, N - 1, N - 1);
+
+  gt::blas::destroy(h);
 
   gt::copy(d_B, h_B);
 
@@ -294,10 +298,14 @@ void test_getrs_batch_complex()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::blas::getrs_banded_batched(N, NRHS, gt::raw_pointer_cast(d_Aptr.data()),
-                                 N, gt::raw_pointer_cast(d_p.data()),
-                                 gt::raw_pointer_cast(d_Bptr.data()), N,
-                                 batch_size, N - 1, N - 1);
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::getrs_banded_batched(
+    h, N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
+    gt::raw_pointer_cast(d_p.data()), gt::raw_pointer_cast(d_Bptr.data()), N,
+    batch_size, N - 1, N - 1);
+
+  gt::blas::destroy(h);
 
   gt::copy(d_B, h_B);
 
@@ -364,20 +372,24 @@ void test_get_max_bandwidth()
   gt::copy(h_A, d_A);
   gt::copy(h_Aptr, d_Aptr);
 
-  auto bw0 =
-    gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
+  gt::blas::handle_t* h = gt::blas::create();
+
+  auto bw0 = gt::blas::get_max_bandwidth(
+    h, N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
   EXPECT_EQ(bw0.lower, 0);
   EXPECT_EQ(bw0.upper, 0);
 
   auto bw1 = gt::blas::get_max_bandwidth(
-    N, gt::raw_pointer_cast(d_Aptr.data()) + 1, N, 1);
+    h, N, gt::raw_pointer_cast(d_Aptr.data()) + 1, N, 1);
   EXPECT_EQ(bw1.lower, N - 3);
   EXPECT_EQ(bw1.upper, 1);
 
-  auto bw = gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()),
-                                        N, batch_size);
+  auto bw = gt::blas::get_max_bandwidth(
+    h, N, gt::raw_pointer_cast(d_Aptr.data()), N, batch_size);
   EXPECT_EQ(bw.lower, N - 3);
   EXPECT_EQ(bw.upper, 1);
+
+  gt::blas::destroy(h);
 }
 
 TEST(bandsolve, sget_max_bandwidth)
@@ -442,9 +454,14 @@ void test_invert_batch_complex()
   gt::copy(h_Ainv, d_Ainv);
   gt::copy(h_p, d_p);
 
-  gt::blas::invert_banded_batched(
-    N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
-    gt::raw_pointer_cast(d_Ainvptr.data()), N, batch_size, N - 1, N - 1);
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::invert_banded_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                                  gt::raw_pointer_cast(d_p.data()),
+                                  gt::raw_pointer_cast(d_Ainvptr.data()), N,
+                                  batch_size, N - 1, N - 1);
+
+  gt::blas::destroy(h);
 
   gt::copy(d_Ainv, h_Ainv);
 
@@ -594,10 +611,14 @@ void test_solve_inverted_batch_complex()
 
   gt::copy(h_Cptr, d_Cptr);
 
+  gt::blas::handle_t* h = gt::blas::create();
+
   gt::blas::solve_inverted_batched(
-    N, NRHS, gt::raw_pointer_cast(d_Ainvptr.data()), N,
+    h, N, NRHS, gt::raw_pointer_cast(d_Ainvptr.data()), N,
     gt::raw_pointer_cast(d_Bptr.data()), N, gt::raw_pointer_cast(d_Cptr.data()),
     N, batch_size);
+
+  gt::blas::destroy(h);
 
   gt::copy(d_C, h_C);
 
@@ -745,15 +766,16 @@ void test_full_solve_real()
                           gt::raw_pointer_cast(d_info.data()), batch_size);
   gt::synchronize();
 
-  auto bw =
-    gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
+  auto bw = gt::blas::get_max_bandwidth(
+    h, N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
 
   GT_DEBUG_VAR(bw.lower);
   GT_DEBUG_VAR(bw.upper);
 
-  gt::blas::invert_banded_batched(
-    N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
-    gt::raw_pointer_cast(d_Ainvptr.data()), N, batch_size, bw.lower, bw.upper);
+  gt::blas::invert_banded_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                                  gt::raw_pointer_cast(d_p.data()),
+                                  gt::raw_pointer_cast(d_Ainvptr.data()), N,
+                                  batch_size, bw.lower, bw.upper);
   gt::synchronize();
 
   gt::copy(d_Ainv, h_Ainv);

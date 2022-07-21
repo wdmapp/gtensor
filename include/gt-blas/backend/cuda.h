@@ -54,14 +54,16 @@ inline void destroy(handle_t* h)
   delete h;
 }
 
-inline void set_stream(handle_t* h, stream_t stream_id)
+inline void set_stream(handle_t* h, gt::stream_view sview)
 {
-  gtBlasCheck(cublasSetStream(h->handle, stream_id));
+  gtBlasCheck(cublasSetStream(h->handle, sview.get_backend_stream()));
 }
 
-inline void get_stream(handle_t* h, stream_t* stream_id)
+inline gt::stream_view get_stream(handle_t* h)
 {
-  gtBlasCheck(cublasGetStream(h->handle, stream_id));
+  stream_t s;
+  gtBlasCheck(cublasGetStream(h->handle, &s));
+  return gt::stream_view{s};
 }
 
 // ======================================================================

@@ -12,13 +12,13 @@ namespace blas
 
 struct handle_t
 {
-  cl::sycl::queue* handle;
+  cl::sycl::queue handle;
 };
 
 // ======================================================================
 // types aliases
 
-using stream_t = cl::sycl::queue*;
+using stream_t = cl::sycl::queue;
 using index_t = std::int64_t;
 
 // ======================================================================
@@ -27,29 +27,25 @@ using index_t = std::int64_t;
 inline handle_t* create()
 {
   handle_t* h = new handle_t();
-  h->handle = &gt::backend::sycl::get_queue();
+  h->handle = gt::backend::sycl::get_queue();
   return h;
 }
 
 inline void destroy(handle_t* h)
 {
-  h->handle = nullptr;
   delete h;
 }
 
-inline void set_stream(handle_t* h, stream_t stream_id)
+inline void set_stream(handle_t* h, gt::stream_view sview)
 {
-  if (stream_id == nullptr) {
-    // set back to default stream / queue
-    h->handle = &gt::backend::sycl::get_queue();
-  } else {
-    h->handle = stream_id;
-  }
+  // Note: SYCL queue objects have reference semantics, so
+  // a copy will behave the same as the original
+  h->handle = sview.get_backend_stream();
 }
 
-inline void get_stream(handle_t* h, stream_t* stream_id)
+inline gt::stream_view get_stream(handle_t* h)
 {
-  *stream_id = h->handle;
+  return gt::stream_view(h->handle);
 }
 
 // ======================================================================
@@ -58,7 +54,7 @@ inline void get_stream(handle_t* h, stream_t* stream_id)
 template <typename T>
 inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy)
 {
-  auto e = oneapi::mkl::blas::axpy(*(h->handle), n, a, x, incx, y, incy);
+  auto e = oneapi::mkl::blas::axpy(h->handle, n, a, x, incx, y, incy);
   e.wait();
 }
 
@@ -68,7 +64,7 @@ inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy)
 template <typename S, typename T>
 inline void scal(handle_t* h, int n, S a, T* x, const int incx)
 {
-  auto e = oneapi::mkl::blas::scal(*(h->handle), n, a, x, incx);
+  auto e = oneapi::mkl::blas::scal(h->handle, n, a, x, incx);
   e.wait();
 }
 
@@ -78,7 +74,7 @@ inline void scal(handle_t* h, int n, S a, T* x, const int incx)
 template <typename T>
 inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy)
 {
-  auto e = oneapi::mkl::blas::copy(*(h->handle), n, x, incx, y, incy);
+  auto e = oneapi::mkl::blas::copy(h->handle, n, x, incx, y, incy);
   e.wait();
 }
 
@@ -88,11 +84,11 @@ inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy)
 template <typename T>
 inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
 
   gt::space::device_vector<T> d_rp(1);
   T result;
-  auto e = oneapi::mkl::blas::dot(*(h->handle), n, x, incx, y, incy,
+  auto e = oneapi::mkl::blas::dot(q, n, x, incx, y, incy,
                                   gt::raw_pointer_cast(d_rp.data()));
   e.wait();
   auto e2 = q.memcpy(&result, gt::raw_pointer_cast(d_rp.data()), sizeof(T));
@@ -104,12 +100,12 @@ template <typename R>
 inline gt::complex<R> dotu(handle_t* h, int n, const gt::complex<R>* x,
                            int incx, const gt::complex<R>* y, int incy)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
   using T = gt::complex<R>;
 
   gt::space::device_vector<T> d_rp(1);
   T result;
-  auto e = oneapi::mkl::blas::dotu(*(h->handle), n, x, incx, y, incy,
+  auto e = oneapi::mkl::blas::dotu(q, n, x, incx, y, incy,
                                    gt::raw_pointer_cast(d_rp.data()));
   e.wait();
   auto e2 = q.memcpy(&result, gt::raw_pointer_cast(d_rp.data()), sizeof(T));
@@ -121,12 +117,12 @@ template <typename R>
 inline gt::complex<R> dotc(handle_t* h, int n, const gt::complex<R>* x,
                            int incx, const gt::complex<R>* y, int incy)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
   using T = gt::complex<R>;
 
   gt::space::device_vector<T> d_rp(1);
   T result;
-  auto e = oneapi::mkl::blas::dotc(*(h->handle), n, x, incx, y, incy,
+  auto e = oneapi::mkl::blas::dotc(q, n, x, incx, y, incy,
                                    gt::raw_pointer_cast(d_rp.data()));
   e.wait();
   auto e2 = q.memcpy(&result, gt::raw_pointer_cast(d_rp.data()), sizeof(T));
@@ -141,9 +137,8 @@ template <typename T>
 inline void gemv(handle_t* h, int m, int n, T alpha, const T* A, int lda,
                  const T* x, int incx, T beta, T* y, int incy)
 {
-  auto e =
-    oneapi::mkl::blas::gemv(*(h->handle), oneapi::mkl::transpose::nontrans, m,
-                            n, alpha, A, lda, x, incx, beta, y, incy);
+  auto e = oneapi::mkl::blas::gemv(h->handle, oneapi::mkl::transpose::nontrans,
+                                   m, n, alpha, A, lda, x, incx, beta, y, incy);
   e.wait();
 }
 
@@ -155,7 +150,7 @@ inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
                           gt::blas::index_t* d_PivotArray, int* d_infoArray,
                           int batchSize)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
 
   index_t n64 = n;
   index_t lda64 = lda;
@@ -188,7 +183,7 @@ template <typename T>
 inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
                                int* d_infoArray, int batchSize)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
 
   // TODO: This uses the strides batch API, which only works when batch
   // data is contiguous. Replace when group batch API is available in oneMKL
@@ -221,7 +216,7 @@ inline void getrs_batched(handle_t* h, int n, int nrhs, T** d_Aarray, int lda,
                           gt::blas::index_t* d_PivotArray, T** d_Barray,
                           int ldb, int batchSize)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
 
   index_t n64 = n;
   index_t nrhs64 = nrhs;
@@ -253,7 +248,7 @@ inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
                          T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
                          T* d_Carray[], int ldc, int batchSize)
 {
-  sycl::queue& q = *(h->handle);
+  sycl::queue& q = h->handle;
 
   index_t m64 = m;
   index_t n64 = n;

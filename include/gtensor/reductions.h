@@ -42,7 +42,7 @@ struct thrust_const_pointer<
 
 template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>
-inline auto sum(const Container& a)
+inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
@@ -53,36 +53,40 @@ inline auto sum(const Container& a)
   // impact will be minimal.
   P begin(gt::raw_pointer_cast(a.data()));
   P end(gt::raw_pointer_cast(a.data()) + a.size());
-  return thrust::reduce(begin, end, 0., thrust::plus<T>());
+  auto exec = stream.get_execution_policy();
+  return thrust::reduce(exec, begin, end, 0., thrust::plus<T>());
 }
 
 template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>
-inline auto max(const Container& a)
+inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
   P begin(gt::raw_pointer_cast(a.data()));
   P end(gt::raw_pointer_cast(a.data()) + a.size());
-  return thrust::reduce(begin, end, 0., thrust::maximum<T>());
+  auto exec = stream.get_execution_policy();
+  return thrust::reduce(exec, begin, end, 0., thrust::maximum<T>());
 }
 
 template <typename Container,
           typename = std::enable_if_t<has_data_method_v<Container>>>
-inline auto min(const Container& a)
+inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
   P begin(gt::raw_pointer_cast(a.data()));
   P end(gt::raw_pointer_cast(a.data()) + a.size());
-  auto min_element = thrust::min_element(begin, end);
+  auto exec = stream.get_execution_policy();
+  auto min_element = thrust::min_element(exec, begin, end);
   return *min_element;
 }
 
 template <typename Container, typename OutputType, typename BinaryReductionOp,
           typename = std::enable_if_t<has_data_method_v<Container>>>
 inline OutputType reduce(const Container& a, OutputType init,
-                         BinaryReductionOp reduction_op)
+                         BinaryReductionOp reduction_op,
+                         gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
@@ -93,7 +97,8 @@ inline OutputType reduce(const Container& a, OutputType init,
   // impact will be minimal.
   P begin(gt::raw_pointer_cast(a.data()));
   P end(gt::raw_pointer_cast(a.data()) + a.size());
-  return thrust::reduce(begin, end, init, reduction_op);
+  auto exec = stream.get_execution_policy();
+  return thrust::reduce(exec, begin, end, init, reduction_op);
 }
 
 template <typename Container, typename OutputType, typename BinaryReductionOp,
@@ -101,7 +106,8 @@ template <typename Container, typename OutputType, typename BinaryReductionOp,
           typename = std::enable_if_t<has_data_method_v<Container>>>
 inline OutputType transform_reduce(const Container& a, OutputType init,
                                    BinaryReductionOp reduction_op,
-                                   UnaryTransformOp transform_op)
+                                   UnaryTransformOp transform_op,
+                                   gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   using P = typename detail::thrust_const_pointer<Container>::type;
@@ -112,7 +118,9 @@ inline OutputType transform_reduce(const Container& a, OutputType init,
   // impact will be minimal.
   P begin(gt::raw_pointer_cast(a.data()));
   P end(gt::raw_pointer_cast(a.data()) + a.size());
-  return thrust::transform_reduce(begin, end, transform_op, init, reduction_op);
+  auto exec = stream.get_execution_policy();
+  return thrust::transform_reduce(exec, begin, end, transform_op, init,
+                                  reduction_op);
 }
 
 #elif defined(GTENSOR_DEVICE_SYCL)
@@ -127,7 +135,7 @@ template <typename Container,
           typename = std::enable_if_t<
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::device>::value>>
-inline auto sum(const Container& a)
+inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
 
@@ -136,7 +144,7 @@ inline auto sum(const Container& a)
     return std::accumulate(adata, adata + a.size(), T(0));
   }
 
-  sycl::queue& q = gt::backend::sycl::get_queue();
+  sycl::queue& q = stream.get_backend_stream();
   T sum_result = 0;
   sycl::buffer<T> sum_buf{&sum_result, 1};
   {
@@ -165,7 +173,7 @@ template <typename Container,
           typename = std::enable_if_t<
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::device>::value>>
-inline auto max(const Container& a)
+inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
 
@@ -176,7 +184,7 @@ inline auto max(const Container& a)
     return *std::max_element(adata, adata + a.size());
   }
 
-  sycl::queue& q = gt::backend::sycl::get_queue();
+  sycl::queue& q = stream.get_backend_stream();
   std::array<T, 1> result;
   T max_result = 0;
   sycl::buffer<T> max_buf{&max_result, 1};
@@ -206,7 +214,7 @@ template <typename Container,
           typename = std::enable_if_t<
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::device>::value>>
-inline auto min(const Container& a)
+inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
 
@@ -215,7 +223,7 @@ inline auto min(const Container& a)
     return *std::min_element(adata, adata + a.size());
   }
 
-  sycl::queue& q = gt::backend::sycl::get_queue();
+  sycl::queue& q = stream.get_backend_stream();
   T min_result;
   sycl::buffer<T> min_buf{&min_result, 1};
   {
@@ -262,11 +270,12 @@ template <typename Container, typename OutputType, typename BinaryReductionOp,
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::device>::value>>
 inline OutputType reduce(const Container& a, OutputType init,
-                         BinaryReductionOp reduction_op)
+                         BinaryReductionOp reduction_op,
+                         gt::stream_view stream = gt::stream_view{})
 {
   using ValueType = typename Container::value_type;
   auto identity_op = detail::UnaryOpIdentity<ValueType>{};
-  return transform_reduce(a, init, reduction_op, identity_op);
+  return transform_reduce(a, init, reduction_op, identity_op, stream);
 }
 
 template <typename Container, typename OutputType, typename BinaryReductionOp,
@@ -276,9 +285,10 @@ template <typename Container, typename OutputType, typename BinaryReductionOp,
             std::is_same<typename Container::space_type, space::device>::value>>
 inline OutputType transform_reduce(const Container& a, OutputType init,
                                    BinaryReductionOp reduction_op,
-                                   UnaryTransformOp transform_op)
+                                   UnaryTransformOp transform_op,
+                                   gt::stream_view stream = gt::stream_view{})
 {
-  sycl::queue& q = gt::backend::sycl::get_queue();
+  sycl::queue& q = stream.get_backend_stream();
   OutputType result = init;
   sycl::buffer<OutputType> result_buf{&result, 1};
   {
@@ -328,7 +338,7 @@ template <typename Container,
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::host>::value>,
           typename = int>
-inline auto max(const Container& a)
+inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   auto data = a.data();
@@ -401,7 +411,8 @@ inline OutputType transform_reduce(const Container& a, OutputType init,
 #endif // HOST / SYCL host implementation
 
 template <typename Eout, typename Ein>
-inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
+inline void sum_axis_to(Eout&& out, Ein&& in, int axis,
+                        gt::stream_view stream = gt::stream_view{})
 {
   using Sout = expr_space_type<Eout>;
   using Tout = expr_value_type<Eout>;
@@ -439,7 +450,8 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
   int reduction_length = in.shape(axis);
 
   gt::launch<1, Sout>(
-    flat_out_shape, GT_LAMBDA(int i) {
+    flat_out_shape,
+    GT_LAMBDA(int i) {
       auto idx_out = unravel(i, strides_out);
       auto idx_in = insert(idx_out, axis, 0);
       Tin tmp = k_in[idx_in];
@@ -449,14 +461,15 @@ inline void sum_axis_to(Eout&& out, Ein&& in, int axis)
         idx_in[axis]++;
       }
       k_out[idx_out] = tmp;
-    });
+    },
+    stream);
 }
 
 template <typename E>
-auto norm_linf(const E& e)
+auto norm_linf(const E& e, gt::stream_view stream = gt::stream_view{})
 {
   // FIXME, the gt::eval is a workaround for gt::max only handling containers
-  return gt::max(gt::eval(gt::abs(e)));
+  return gt::max(gt::eval(gt::abs(e)), stream);
 }
 
 namespace detail
