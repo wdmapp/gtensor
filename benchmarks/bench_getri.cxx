@@ -191,19 +191,13 @@ static void BM_getri(benchmark::State& state)
 // RealType, N, NBATC
 BENCHMARK(BM_getri<float, 512, 64>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getri<double, 512, 64>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getri<float, 512, 64>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getri<double, 512, 64>)->Unit(benchmark::kMillisecond);
 
-BENCHMARK(BM_getri<float, 210, 256>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getri<double, 210, 256>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getri<float, 210, 256>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getri<double, 210, 256>)->Unit(benchmark::kMillisecond);
 
 // small cases for debugging
 /*
 BENCHMARK(BM_getri<double, 5, 2>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getri<double, 5, 2>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getri<float, 5, 2>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getri<float, 5, 2>)->Unit(benchmark::kMillisecond);
 */
 
