@@ -166,6 +166,21 @@ void gtblas_zinvert_banded_batched(int n, f2c_complex<double>** d_Aarray,
                                    f2c_complex<double>** d_Barray, int ldb,
                                    int batchSize, int lbw, int ubw);
 
+void gtblas_sgetri_batched(int n, float** d_Aarray, int lda,
+                           gt::blas::index_t* devIpiv, float** d_Carray,
+                           int ldc, int* d_infoArray, int batchSize);
+void gtblas_dgetri_batched(int n, double** d_Aarray, int lda,
+                           gt::blas::index_t* devIpiv, double** d_Carray,
+                           int ldc, int* d_infoArray, int batchSize);
+void gtblas_cgetri_batched(int n, f2c_complex<float>** d_Aarray, int lda,
+                           gt::blas::index_t* devIpiv,
+                           f2c_complex<float>** d_Carray, int ldc,
+                           int* d_infoArray, int batchSize);
+void gtblas_zgetri_batched(int n, f2c_complex<double>** d_Aarray, int lda,
+                           gt::blas::index_t* devIpiv,
+                           f2c_complex<double>** d_Carray, int ldc,
+                           int* d_infoArray, int batchSize);
+
 #ifdef __cplusplus
 }
 #endif

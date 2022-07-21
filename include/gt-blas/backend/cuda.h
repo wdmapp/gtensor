@@ -324,6 +324,34 @@ CREATE_GETRF_NPVT_BATCHED(cublasCgetrfBatched, gt::complex<float>, cuComplex)
 #undef CREATE_GETRF_NPVT_BATCHED
 
 // ======================================================================
+// getri batched
+
+template <typename T>
+inline void getri_batched(handle_t* h, int n, T* const* d_Aarray, int lda,
+                          gt::blas::index_t* devIpiv, T** d_Carray, int ldc,
+                          int* d_infoArray, int batchSize);
+
+#define CREATE_GETRI_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
+  template <>                                                                  \
+  inline void getri_batched<GTTYPE>(                                           \
+    handle_t * h, int n, GTTYPE* const* d_Aarray, int lda,                     \
+    gt::blas::index_t* devIpiv, GTTYPE** d_Carray, int ldc, int* d_infoArray,  \
+    int batchSize)                                                             \
+  {                                                                            \
+    gtBlasCheck(METHOD(h->handle, n,                                           \
+                       reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda,      \
+                       devIpiv, reinterpret_cast<BLASTYPE**>(d_Carray), ldc,   \
+                       d_infoArray, batchSize));                               \
+  }
+
+CREATE_GETRI_BATCHED(cublasZgetriBatched, gt::complex<double>, cuDoubleComplex)
+CREATE_GETRI_BATCHED(cublasCgetriBatched, gt::complex<float>, cuComplex)
+CREATE_GETRI_BATCHED(cublasDgetriBatched, double, double)
+CREATE_GETRI_BATCHED(cublasSgetriBatched, float, float)
+
+#undef CREATE_GETRI_BATCHED
+
+// ======================================================================
 // gemm batched
 
 template <typename T>

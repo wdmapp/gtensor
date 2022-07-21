@@ -351,3 +351,22 @@ CREATE_C_INVERT_BANDED_BATCHED(gtblas_zinvert_banded_batched,
                                f2c_complex<double>)
 
 #undef CREATE_C_INVERT_BANDED_BATCHED
+
+// ======================================================================
+// gtblas_Xgetri_batched
+#define CREATE_C_GETRI_BATCHED(CNAME, CPPTYPE)                                 \
+  void CNAME(int n, CPPTYPE** d_Aarray, int lda,                               \
+             gt::blas::index_t* d_PivotArray, CPPTYPE** d_Carray, int ldc,     \
+             int* d_infoArray, int batchSize)                                  \
+  {                                                                            \
+    gt::blas::getri_batched(g_handle, n, detail::cast_aligned(d_Aarray), lda,  \
+                            d_PivotArray, detail::cast_aligned(d_Carray), ldc, \
+                            d_infoArray, batchSize);                           \
+  }
+
+CREATE_C_GETRI_BATCHED(gtblas_sgetri_batched, float)
+CREATE_C_GETRI_BATCHED(gtblas_dgetri_batched, double)
+CREATE_C_GETRI_BATCHED(gtblas_cgetri_batched, f2c_complex<float>)
+CREATE_C_GETRI_BATCHED(gtblas_zgetri_batched, f2c_complex<double>)
+
+#undef CREATE_C_GETRI_BATCHED

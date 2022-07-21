@@ -244,6 +244,51 @@ inline void getrs_batched(handle_t* h, int n, int nrhs, T** d_Aarray, int lda,
 }
 
 template <typename T>
+inline void getri_batched(handle_t* h, int n, T** d_Aarray, int lda,
+                          gt::blas::index_t* d_PivotArray, T** d_Carray,
+                          int ldc, int* d_infoArray, int batchSize)
+{
+  sycl::queue& q = h->handle;
+
+  index_t n64 = n;
+  index_t lda64 = lda;
+  index_t ldc64 = ldc;
+  index_t batchSize64 = batchSize;
+
+  assert(lda == ldc);
+
+  // unlike cuBLAS/rocBLAS, the pivot array to getri is expected to be
+  // an array of pointer, just like d_Aarray.
+  gt::space::managed_vector<index_t*> d_PivotPtr(batchSize);
+  for (int i = 0; i < batchSize; i++) {
+    d_PivotPtr[i] = d_PivotArray + (i * n);
+  }
+
+  // Note: cuBLAS API is out of place; we mimic that here by copying factored A
+  // to C and inverting C in place. This might be more efficient if using a
+  // separate out of place queue.
+  gt::space::host_vector<T*> h_Aarray(batchSize);
+  gt::space::host_vector<T*> h_Carray(batchSize);
+  q.copy(d_Aarray, gt::raw_pointer_cast(h_Aarray.data()), batchSize);
+  q.copy(d_Carray, gt::raw_pointer_cast(h_Carray.data()), batchSize);
+  q.wait();
+
+  for (index_t i = 0; i < batchSize; i++) {
+    q.copy(h_Aarray[i], h_Carray[i], n * n);
+  }
+  q.wait();
+
+  auto scratch_count = oneapi::mkl::lapack::getri_batch_scratchpad_size<T>(
+    q, &n64, &lda64, 1, &batchSize64);
+  gt::space::device_vector<T> scratch(scratch_count);
+
+  auto e = oneapi::mkl::lapack::getri_batch(
+    q, &n64, d_Carray, &ldc64, gt::raw_pointer_cast(d_PivotPtr.data()), 1,
+    &batchSize64, gt::raw_pointer_cast(scratch.data()), scratch_count);
+  e.wait();
+}
+
+template <typename T>
 inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
                          T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
                          T* d_Carray[], int ldc, int batchSize)

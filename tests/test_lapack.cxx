@@ -593,3 +593,103 @@ TEST(lapack, zgetrs_batch_managed)
 {
   test_getrs_batch_complex<double, gt::space::managed>();
 }
+
+template <typename R, typename S = gt::space::device>
+void test_getri_batch_complex()
+{
+  constexpr int N = 3;
+  constexpr int batch_size = 2;
+  using T = gt::complex<R>;
+
+  gt::gtensor<T*, 1> h_Aptr(batch_size);
+  test::gtensor2<T*, 1, S> d_Aptr(batch_size);
+  gt::gtensor<T, 3> h_A(gt::shape(N, N, batch_size));
+  test::gtensor2<T, 3, S> d_A(gt::shape(N, N, batch_size));
+
+  gt::gtensor<T*, 1> h_Cptr(batch_size);
+  test::gtensor2<T*, 1, S> d_Cptr(batch_size);
+  gt::gtensor<T, 3> h_C(gt::shape(N, N, batch_size));
+  test::gtensor2<T, 3, S> d_C(gt::shape(N, N, batch_size));
+
+  gt::gtensor<gt::blas::index_t, 2> h_p(gt::shape(N, batch_size));
+  test::gtensor2<gt::blas::index_t, 2, S> d_p(gt::shape(N, batch_size));
+
+  gt::gtensor<int, 1> h_info(batch_size);
+  gt::gtensor_device<int, 1> d_info(batch_size);
+
+  // setup input for first batch
+  set_A0_LU(h_A.view(gt::all, gt::all, 0));
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
+  set_A0_piv(h_p.view(gt::all, 0));
+
+  // setup input for second batch
+  set_A1_LU_complex(h_A.view(gt::all, gt::all, 1));
+  h_Aptr[1] = h_Aptr(0) + N * N;
+  set_A1_piv(h_p.view(gt::all, 1));
+
+  h_Cptr(0) = gt::raw_pointer_cast(d_C.data());
+  h_Cptr(1) = h_Cptr(0) + N * N;
+
+  gt::copy(h_Aptr, d_Aptr);
+  gt::copy(h_A, d_A);
+  gt::copy(h_Cptr, d_Cptr);
+  gt::copy(h_C, d_C);
+  gt::copy(h_C, d_C);
+  gt::copy(h_p, d_p);
+
+  gt::blas::handle_t* h = gt::blas::create();
+
+  gt::blas::getri_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                          gt::raw_pointer_cast(d_p.data()),
+                          gt::raw_pointer_cast(d_Cptr.data()), N,
+                          gt::raw_pointer_cast(d_info.data()), batch_size);
+
+  gt::blas::destroy(h);
+
+  gt::copy(d_C, h_C);
+
+  // first batch, first solution col [1; -2; 2]
+  expect_complex_near(h_C(0, 0, 0), 1.0);
+  expect_complex_near(h_C(1, 0, 0), -2.0);
+  expect_complex_near(h_C(2, 0, 0), 2.0);
+  // first batch, second solution col [1; -1; 0.5]
+  expect_complex_near(h_C(0, 1, 0), 1.0);
+  expect_complex_near(h_C(1, 1, 0), -1.0);
+  expect_complex_near(h_C(2, 1, 0), 0.5);
+  // first batch, third solution col [-1; 1.5; -1]
+  expect_complex_near(h_C(0, 2, 0), -1.0);
+  expect_complex_near(h_C(1, 2, 0), 1.5);
+  expect_complex_near(h_C(2, 2, 0), -1.0);
+  // second batch, first solution col
+  expect_complex_near(h_C(0, 0, 1), T(-0.1, 0.3));
+  expect_complex_near(h_C(1, 0, 1), T(0.04, 0.28));
+  expect_complex_near(h_C(2, 0, 1), T(0.52, -0.36));
+  // second batch, second solution col
+  expect_complex_near(h_C(0, 1, 1), T(-0.04, -0.28));
+  expect_complex_near(h_C(1, 1, 1), T(0.016, -0.088));
+  expect_complex_near(h_C(2, 1, 1), T(-0.092, 0.256));
+  // second batch, third solution col
+  expect_complex_near(h_C(0, 2, 1), T(0.07, -0.01));
+  expect_complex_near(h_C(1, 2, 1), T(-0.028, -0.096));
+  expect_complex_near(h_C(2, 2, 1), T(0.036, 0.052));
+}
+
+TEST(lapack, cgetri_batch)
+{
+  test_getri_batch_complex<float>();
+}
+
+TEST(lapack, zgetri_batch)
+{
+  test_getri_batch_complex<double>();
+}
+
+TEST(lapack, cgetri_batch_managed)
+{
+  test_getri_batch_complex<float, gt::space::managed>();
+}
+
+TEST(lapack, zgetri_batch_managed)
+{
+  test_getri_batch_complex<double, gt::space::managed>();
+}

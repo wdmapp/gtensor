@@ -325,6 +325,36 @@ CREATE_GETRF_NPVT_BATCHED(rocsolver_cgetrf_npvt_batched, gt::complex<float>,
 #undef CREATE_GETRF_NPVT_BATCHED
 
 // ======================================================================
+// getri batched
+
+template <typename T>
+inline void getri_batched(handle_t* h, int n, T* const* d_Aarray, int lda,
+                          gt::blas::index_t* devIpiv, T** d_Carray, int ldc,
+                          int* d_infoArray, int batchSize);
+
+#define CREATE_GETRI_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
+  template <>                                                                  \
+  inline void getri_batched<GTTYPE>(                                           \
+    handle_t * h, int n, GTTYPE* const* d_Aarray, int lda,                     \
+    gt::blas::index_t* devIpiv, GTTYPE** d_Carray, int ldc, int* d_infoArray,  \
+    int batchSize)                                                             \
+  {                                                                            \
+    gtBlasCheck(                                                               \
+      METHOD(h->handle, n, reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda,  \
+             devIpiv, n, reinterpret_cast<BLASTYPE**>(d_Carray), ldc,          \
+             reinterpret_cast<rocblas_int*>(d_infoArray), batchSize));         \
+  }
+
+CREATE_GETRI_BATCHED(rocsolver_zgetri_outofplace_batched, gt::complex<double>,
+                     rocblas_double_complex)
+CREATE_GETRI_BATCHED(rocsolver_cgetri_outofplace_batched, gt::complex<float>,
+                     rocblas_float_complex)
+CREATE_GETRI_BATCHED(rocsolver_dgetri_outofplace_batched, double, double)
+CREATE_GETRI_BATCHED(rocsolver_sgetri_outofplace_batched, float, float)
+
+#undef CREATE_GETRI_BATCHED
+
+// ======================================================================
 // gemm batched
 
 template <typename T>
