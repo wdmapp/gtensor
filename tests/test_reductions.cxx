@@ -81,6 +81,28 @@ TEST(reductions, device_sum_axis_to_2d)
   EXPECT_EQ(h_asum1, (gt::gtensor<double, 1>{23., 43., 63.}));
 }
 
+TEST(reductions, device_sum_axis_to_2d_stream)
+{
+  gt::gtensor_device<double, 2> a({{11., 21., 31.}, {12., 22., 32.}});
+  GT_DEBUG_VAR(a.shape());
+
+  gt::stream s;
+
+  gt::gtensor_device<double, 1> asum0(gt::shape(2));
+  gt::gtensor_device<double, 1> asum1(gt::shape(3));
+  gt::gtensor<double, 1> h_asum0(gt::shape(2));
+  gt::gtensor<double, 1> h_asum1(gt::shape(3));
+
+  sum_axis_to(asum0, a, 0, s.get_view());
+  s.synchronize();
+  gt::copy(asum0, h_asum0);
+  EXPECT_EQ(h_asum0, (gt::gtensor<double, 1>{63., 66.}));
+  sum_axis_to(asum1, a, 1, s.get_view());
+  s.synchronize();
+  gt::copy(asum1, h_asum1);
+  EXPECT_EQ(h_asum1, (gt::gtensor<double, 1>{23., 43., 63.}));
+}
+
 TEST(reductions, device_sum_axis_to_3d_view_2d)
 {
   gt::gtensor_device<double, 3> a({{{11., 21., 31.}, {12., 22., 32.}},
@@ -212,7 +234,7 @@ TEST(reductions, device_min_1d)
 #endif // GTENSOR_HAVE_DEVICE
 
 template <typename S, typename T>
-void test_reduce_sum(int n)
+void test_reduce_sum(int n, gt::stream_view stream = gt::stream_view{})
 {
   gt::gtensor<T, 1> a(gt::shape(n));
   for (int i = 0; i < n; i++) {
@@ -220,12 +242,13 @@ void test_reduce_sum(int n)
   }
   T asum = 0.0;
   if (std::is_same<S, gt::space::host>::value) {
-    asum = gt::reduce(a, (T)0.0, std::plus<T>{});
+    asum = gt::reduce(a, (T)0.0, std::plus<T>{}, stream);
   } else {
     gt::gtensor<T, 1, S> a2(gt::shape(n));
     gt::copy(a, a2);
-    asum = gt::reduce(a2, (T)0.0, std::plus<T>{});
+    asum = gt::reduce(a2, (T)0.0, std::plus<T>{}, stream);
   }
+  stream.synchronize();
   EXPECT_EQ(asum, (T)n * (n + 1) / 2);
 }
 
@@ -241,6 +264,11 @@ TEST(reductions, device_reduce_sum_1d)
   test_reduce_sum<gt::space::device, double>(2048);
 }
 
+TEST(reductions, device_reduce_sum_1d_stream)
+{
+  gt::stream s;
+  test_reduce_sum<gt::space::device, double>(2048, s.get_view());
+}
 #endif // GTENSOR_HAVE_DEVICE
 
 template <typename Tin, typename Tout = Tin, typename Enable = void>
@@ -257,7 +285,8 @@ struct UnaryOpNorm<Tin, Tout,
 };
 
 template <typename S, typename T>
-void test_transform_reduce_sum_sq(int n)
+void test_transform_reduce_sum_sq(int n,
+                                  gt::stream_view stream = gt::stream_view{})
 {
   using Real = gt::complex_subtype_t<T>;
   gt::gtensor<T, 1> a(gt::shape(n));
@@ -268,14 +297,17 @@ void test_transform_reduce_sum_sq(int n)
   T asum2 = 0.0;
   T expected_sum = static_cast<Real>(n) * (n + 1) * (2 * n + 1) / 6;
   if (std::is_same<S, gt::space::host>::value) {
-    asum = gt::transform_reduce(a, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{});
-    asum2 = gt::sum_squares(a);
+    asum = gt::transform_reduce(a, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{},
+                                stream);
+    asum2 = gt::sum_squares(a, stream);
   } else {
     gt::gtensor<T, 1, S> a2(gt::shape(n));
     gt::copy(a, a2);
-    asum = gt::transform_reduce(a2, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{});
-    asum2 = gt::sum_squares(a2);
+    asum = gt::transform_reduce(a2, 0.0, std::plus<>{}, UnaryOpNorm<T, Real>{},
+                                stream);
+    asum2 = gt::sum_squares(a2, stream);
   }
+  stream.synchronize();
   EXPECT_EQ(asum, expected_sum);
   EXPECT_EQ(asum2, expected_sum);
 }
@@ -300,6 +332,19 @@ TEST(reductions, device_reduce_sum_sq_1d)
 TEST(reductions, device_reduce_sum_sq_1d_complex)
 {
   test_transform_reduce_sum_sq<gt::space::device, gt::complex<double>>(2048);
+}
+
+TEST(reductions, device_reduce_sum_sq_1d_stream)
+{
+  gt::stream s;
+  test_transform_reduce_sum_sq<gt::space::device, double>(2048, s.get_view());
+}
+
+TEST(reductions, device_reduce_sum_sq_1d_stream_complex)
+{
+  gt::stream s;
+  test_transform_reduce_sum_sq<gt::space::device, gt::complex<double>>(
+    2048, s.get_view());
 }
 
 #endif // GTENSOR_HAVE_DEVICE

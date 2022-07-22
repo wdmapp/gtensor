@@ -651,7 +651,7 @@ TEST(bandsolve, zsolve_inverted_batch)
 }
 
 template <typename T>
-void test_full_solve_real()
+void test_full_solve_real(gt::stream_view stream = gt::stream_view{})
 {
 
   constexpr int N = 5;
@@ -761,10 +761,21 @@ void test_full_solve_real()
 
   gt::blas::handle_t* h = gt::blas::create();
 
+  if (!stream.is_default()) {
+    gt::blas::set_stream(h, stream);
+  }
+
   gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
                           gt::raw_pointer_cast(d_p.data()),
                           gt::raw_pointer_cast(d_info.data()), batch_size);
-  gt::synchronize();
+
+  if (!stream.is_default()) {
+    // NOTE: this should work for default stream as well, but more important
+    // to test the no-stream style interface with global sync below
+    stream.synchronize();
+  } else {
+    gt::synchronize();
+  }
 
   auto bw = gt::blas::get_max_bandwidth(
     h, N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
@@ -823,4 +834,28 @@ TEST(bandsolve, cfull_invert_solve)
 TEST(bandsolve, zfull_invert_solve)
 {
   test_full_solve_real<gt::complex<double>>();
+}
+
+TEST(bandsolve, sfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<float>(s.get_view());
+}
+
+TEST(bandsolve, dfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<double>(s.get_view());
+}
+
+TEST(bandsolve, cfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<gt::complex<float>>(s.get_view());
+}
+
+TEST(bandsolve, zfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<gt::complex<double>>(s.get_view());
 }
