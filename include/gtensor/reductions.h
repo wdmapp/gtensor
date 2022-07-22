@@ -320,7 +320,7 @@ template <typename Container,
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::host>::value>,
           typename = int>
-inline auto sum(const Container& a)
+inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   auto data = a.data();
@@ -357,7 +357,7 @@ template <typename Container,
             has_data_method_v<Container> &&
             std::is_same<typename Container::space_type, space::host>::value>,
           typename = int>
-inline auto min(const Container& a)
+inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
   auto data = a.data();
@@ -377,7 +377,8 @@ template <typename Container, typename OutputType, typename BinaryReductionOp,
             std::is_same<typename Container::space_type, space::host>::value>,
           typename = int>
 inline OutputType reduce(const Container& a, OutputType init,
-                         BinaryReductionOp reduction_op)
+                         BinaryReductionOp reduction_op,
+                         gt::stream_view stream = gt::stream_view{})
 {
   using P = const typename Container::value_type*;
   P begin(a.data());
@@ -393,7 +394,8 @@ template <typename Container, typename OutputType, typename BinaryReductionOp,
           typename = int>
 inline OutputType transform_reduce(const Container& a, OutputType init,
                                    BinaryReductionOp reduction_op,
-                                   UnaryTransformOp transform_op)
+                                   UnaryTransformOp transform_op,
+                                   gt::stream_view stream = gt::stream_view{})
 {
   using P = const typename Container::value_type*;
   P begin(a.data());
@@ -501,14 +503,14 @@ struct UnaryOpNorm<Tin, Tout,
  * pointers.
  */
 template <typename E>
-auto sum_squares(const E& e)
+auto sum_squares(const E& e, gt::stream_view stream = gt::stream_view{})
 {
   // FIXME, the gt::eval is a workaround for gt::transform_reduce only handling
   // containers
   using ValueType = expr_value_type<E>;
   using Real = gt::complex_subtype_t<ValueType>;
   return gt::transform_reduce(gt::eval(e), 0.0, std::plus<>{},
-                              detail::UnaryOpNorm<ValueType, Real>{});
+                              detail::UnaryOpNorm<ValueType, Real>{}, stream);
 }
 
 } // namespace gt
