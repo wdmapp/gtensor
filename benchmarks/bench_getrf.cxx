@@ -12,21 +12,13 @@
 
 using namespace gt::placeholders;
 
-//#define BENCH_GETRF_DEBUG
+// #define BENCH_GETRF_DEBUG
 
 template <typename Matrix>
 void debug_print_matrix(const char* name, Matrix&& M)
 {
 #ifdef BENCH_GETRF_DEBUG
-  int n = M.shape(0);
-  std::cerr << name << "\n";
-  for (int j = 0; j < n; j++) {
-    for (int i = 0; i < n; i++) {
-      std::cerr << M(i, j) << " ";
-    }
-    std::cerr << "\n";
-  }
-  std::cerr << std::endl;
+  std::cerr << name << "\n" << M << std::endl;
 #endif
 }
 
@@ -34,12 +26,7 @@ template <typename Vector>
 void debug_print_vector(const char* name, Vector&& V)
 {
 #ifdef BENCH_GETRF_DEBUG
-  int n = V.shape(0);
-  std::cerr << name << "\n";
-  for (int i = 0; i < n; i++) {
-    std::cerr << V(i) << " ";
-  }
-  std::cerr << std::endl;
+  std::cerr << name << "\n" << V << std::endl;
 #endif
 }
 

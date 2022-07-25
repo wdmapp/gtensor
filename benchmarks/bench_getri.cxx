@@ -12,36 +12,7 @@
 
 using namespace gt::placeholders;
 
-//#define BENCH_GETRI_DEBUG
-
-template <typename Matrix>
-void debug_print_matrix(const char* name, Matrix&& M)
-{
-#ifdef BENCH_GETRI_DEBUG
-  int n = M.shape(0);
-  std::cerr << name << "\n";
-  for (int j = 0; j < n; j++) {
-    for (int i = 0; i < n; i++) {
-      std::cerr << M(i, j) << " ";
-    }
-    std::cerr << "\n";
-  }
-  std::cerr << std::endl;
-#endif
-}
-
-template <typename Vector>
-void debug_print_vector(const char* name, Vector&& V)
-{
-#ifdef BENCH_GETRI_DEBUG
-  int n = V.shape(0);
-  std::cerr << name << "\n";
-  for (int i = 0; i < n; i++) {
-    std::cerr << V(i) << " ";
-  }
-  std::cerr << std::endl;
-#endif
-}
+// #define BENCH_GETRI_DEBUG
 
 template <typename CT>
 auto make_test_matrix(int n, int bw, int batch_size, bool needs_pivot)
@@ -177,7 +148,7 @@ static void BM_getri(benchmark::State& state)
   check_close_identity_batch<R>(h_AAinv);
 
   for (int b = 0; b < NBATCH; b++) {
-    debug_print_matrix("A*Ainv", h_AAinv.view(_all, _all, b));
+    std::cout << b << " A*Ainv\n" << h_AAinv.view(_all, _all, b) << std::endl;
   }
 #endif
 
