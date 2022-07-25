@@ -241,8 +241,51 @@ inline bool is_device_address(const Ptr p)
           alloc_type == ::sycl::usm::alloc::shared);
 }
 
+namespace stream_interface
+{
+
+using sycl_stream_t = cl::sycl::queue&;
+
+template <>
+inline sycl_stream_t create<sycl_stream_t>()
+{
+  return gt::backend::sycl::new_stream_queue();
+}
+
+template <>
+inline sycl_stream_t get_default<sycl_stream_t>()
+{
+  return gt::backend::sycl::get_queue();
+}
+
+template <>
+inline void destroy<sycl_stream_t>(sycl_stream_t q)
+{
+  return gt::backend::sycl::delete_stream_queue(q);
+}
+
+template <>
+inline bool is_default<sycl_stream_t>(sycl_stream_t s)
+{
+  return s == gt::backend::sycl::get_queue();
+}
+
+template <>
+inline void synchronize<sycl_stream_t>(sycl_stream_t s)
+{
+  s.wait();
+}
+
+} // namespace stream_interface
+
 } // namespace backend
 
+using stream_view =
+  backend::stream_interface::stream_view_base<cl::sycl::queue&>;
+using stream =
+  backend::stream_interface::stream_base<cl::sycl::queue&, stream_view>;
+
+/*
 class stream_view
 {
 public:
@@ -277,7 +320,7 @@ public:
 private:
   cl::sycl::queue& stream_;
 };
-
+*/
 } // namespace gt
 
 #endif // GTENSOR_BACKEND_SYCL_H
