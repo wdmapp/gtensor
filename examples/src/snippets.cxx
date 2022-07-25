@@ -59,7 +59,7 @@ void launch()
 
 void blas()
 {
-  gt::blas::handle_t* h = gt::blas::create();
+  gt::blas::handle_t h;
   gt::gtensor_device<double, 1> x = gt::arange<double>(1, 11);
   gt::gtensor_device<double, 1> y = gt::arange<double>(1, 11);
   gt::blas::axpy(h, 2.0, x, y);

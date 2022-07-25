@@ -203,7 +203,7 @@ static void BM_getrf(benchmark::State& state)
   gt::copy(h_Aptr, d_Aptr);
   gt::synchronize();
 
-  gt::blas::handle_t* h = gt::blas::create();
+  gt::blas::handle_t h;
 
   auto fn = [&]() {
     if (PIVOT) {
@@ -235,8 +235,6 @@ static void BM_getrf(benchmark::State& state)
   for (auto _ : state) {
     fn();
   }
-
-  gt::blas::destroy(h);
 }
 
 // RealType, N, NBATCH, Pivot

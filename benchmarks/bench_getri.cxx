@@ -119,7 +119,7 @@ static void BM_getri(benchmark::State& state)
   gt::copy(h_AAinvptr, d_AAinvptr);
   gt::synchronize();
 
-  gt::blas::handle_t* h = gt::blas::create();
+  gt::blas::handle_t h;
 
   gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
                           gt::raw_pointer_cast(d_piv.data()),
@@ -155,8 +155,6 @@ static void BM_getri(benchmark::State& state)
   for (auto _ : state) {
     fn();
   }
-
-  gt::blas::destroy(h);
 }
 
 // RealType, N, NBATC

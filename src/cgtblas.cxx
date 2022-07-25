@@ -77,27 +77,26 @@ inline auto cast_aligned(const f2c_complex<T>** c)
 void gtblas_create()
 {
   if (g_handle == nullptr) {
-    g_handle = gt::blas::create();
+    g_handle = new gt::blas::handle_t{};
   }
 }
 
 void gtblas_destroy()
 {
   if (g_handle != nullptr) {
-    gt::blas::destroy(g_handle);
+    delete g_handle;
     g_handle = nullptr;
   }
 }
 
 void gtblas_set_stream(gt::blas::stream_t stream_id)
 {
-  gt::blas::set_stream(g_handle, gt::stream_view{stream_id});
+  g_handle->set_stream(gt::stream_view{stream_id});
 }
 
 void gtblas_get_stream(gt::blas::stream_t* stream_id)
 {
-  auto sview = gt::blas::get_stream(g_handle);
-  *stream_id = sview.get_backend_stream();
+  *stream_id = g_handle->get_stream().get_backend_stream();
 }
 
 // ======================================================================
@@ -107,7 +106,7 @@ void gtblas_get_stream(gt::blas::stream_t* stream_id)
   void CNAME(int n, const CPPTYPE* a, const CPPTYPE* x, int incx, CPPTYPE* y,  \
              int incy)                                                         \
   {                                                                            \
-    gt::blas::axpy(g_handle, n, detail::fc2cpp_deref(a),                       \
+    gt::blas::axpy(*g_handle, n, detail::fc2cpp_deref(a),                      \
                    detail::cast_aligned(x), incx, detail::cast_aligned(y),     \
                    incy);                                                      \
   }
@@ -125,7 +124,7 @@ CREATE_C_AXPY(gtblas_zaxpy, f2c_complex<double>)
 #define CREATE_C_SCAL(CNAME, STYPE, ATYPE)                                     \
   void CNAME(int n, const STYPE* a, ATYPE* x, int incx)                        \
   {                                                                            \
-    gt::blas::scal(g_handle, n, detail::fc2cpp_deref(a),                       \
+    gt::blas::scal(*g_handle, n, detail::fc2cpp_deref(a),                      \
                    detail::cast_aligned(x), incx);                             \
   }
 
@@ -144,7 +143,7 @@ CREATE_C_SCAL(gtblas_zdscal, double, f2c_complex<double>)
 #define CREATE_C_COPY(CNAME, CPPTYPE)                                          \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::copy(g_handle, n, detail::cast_aligned(x), incx,                 \
+    gt::blas::copy(*g_handle, n, detail::cast_aligned(x), incx,                \
                    detail::cast_aligned(y), incy);                             \
   }
 
@@ -159,7 +158,7 @@ CREATE_C_COPY(gtblas_zcopy, f2c_complex<double>)
 #define CREATE_C_DOT(CNAME, CPPTYPE)                                           \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::dot(g_handle, n, detail::cast_aligned(x), incx,                  \
+    gt::blas::dot(*g_handle, n, detail::cast_aligned(x), incx,                 \
                   detail::cast_aligned(y), incy);                              \
   }
 
@@ -174,7 +173,7 @@ CREATE_C_DOT(gtblas_ddot, double)
 #define CREATE_C_DOTU(CNAME, CPPTYPE)                                          \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::dotu(g_handle, n, detail::cast_aligned(x), incx,                 \
+    gt::blas::dotu(*g_handle, n, detail::cast_aligned(x), incx,                \
                    detail::cast_aligned(y), incy);                             \
   }
 
@@ -189,7 +188,7 @@ CREATE_C_DOTU(gtblas_zdotu, f2c_complex<double>)
 #define CREATE_C_DOTC(CNAME, CPPTYPE)                                          \
   void CNAME(int n, const CPPTYPE* x, int incx, CPPTYPE* y, int incy)          \
   {                                                                            \
-    gt::blas::dotu(g_handle, n, detail::cast_aligned(x), incx,                 \
+    gt::blas::dotu(*g_handle, n, detail::cast_aligned(x), incx,                \
                    detail::cast_aligned(y), incy);                             \
   }
 
@@ -206,7 +205,7 @@ CREATE_C_DOTC(gtblas_zdotc, f2c_complex<double>)
              const CPPTYPE* x, int incx, const CPPTYPE* beta, CPPTYPE* y,      \
              int incy)                                                         \
   {                                                                            \
-    gt::blas::gemv(g_handle, m, n, detail::fc2cpp_deref(alpha),                \
+    gt::blas::gemv(*g_handle, m, n, detail::fc2cpp_deref(alpha),               \
                    detail::cast_aligned(A), lda, detail::cast_aligned(x),      \
                    incx, detail::fc2cpp_deref(beta), detail::cast_aligned(y),  \
                    incy);                                                      \
@@ -226,7 +225,7 @@ CREATE_C_GEMV(gtblas_zgemv, f2c_complex<double>)
   void CNAME(int n, CPPTYPE** d_Aarray, int lda,                               \
              gt::blas::index_t* d_PivotArray, int* d_infoArray, int batchSize) \
   {                                                                            \
-    gt::blas::getrf_batched(g_handle, n, detail::cast_aligned(d_Aarray), lda,  \
+    gt::blas::getrf_batched(*g_handle, n, detail::cast_aligned(d_Aarray), lda, \
                             d_PivotArray, d_infoArray, batchSize);             \
   }
 
@@ -245,9 +244,9 @@ CREATE_C_GETRF_BATCHED(gtblas_zgetrf_batched, f2c_complex<double>)
              gt::blas::index_t* d_PivotArray, CPPTYPE** d_Barray, int ldb,     \
              int batchSize)                                                    \
   {                                                                            \
-    gt::blas::getrs_batched(g_handle, n, nrhs, detail::cast_aligned(d_Aarray), \
-                            lda, d_PivotArray, detail::cast_aligned(d_Barray), \
-                            ldb, batchSize);                                   \
+    gt::blas::getrs_batched(*g_handle, n, nrhs,                                \
+                            detail::cast_aligned(d_Aarray), lda, d_PivotArray, \
+                            detail::cast_aligned(d_Barray), ldb, batchSize);   \
   }
 
 CREATE_C_GETRS_BATCHED(gtblas_sgetrs_batched, float)
@@ -266,7 +265,7 @@ CREATE_C_GETRS_BATCHED(gtblas_zgetrs_batched, f2c_complex<double>)
              int batchSize, int lbw, int ubw)                                  \
   {                                                                            \
     gt::blas::getrs_banded_batched(                                            \
-      g_handle, n, nrhs, detail::cast_aligned(d_Aarray), lda, d_PivotArray,    \
+      *g_handle, n, nrhs, detail::cast_aligned(d_Aarray), lda, d_PivotArray,   \
       detail::cast_aligned(d_Barray), ldb, batchSize, lbw, ubw);               \
   }
 
@@ -285,7 +284,7 @@ CREATE_C_BANDED_GETRS_BATCHED(gtblas_banded_zgetrs_batched, f2c_complex<double>)
              int* ubw)                                                         \
   {                                                                            \
     auto bw = gt::blas::get_max_bandwidth(                                     \
-      g_handle, n, detail::cast_aligned(d_Aarray), lda, batchSize);            \
+      *g_handle, n, detail::cast_aligned(d_Aarray), lda, batchSize);           \
     *lbw = bw.lower;                                                           \
     *ubw = bw.upper;                                                           \
   }
@@ -301,7 +300,7 @@ CREATE_C_GET_MAX_BANDWIDTH(gtblas_zget_max_bandwidth, f2c_complex<double>)
   void CNAME(int n, CPPTYPE** d_Aarray, int lda, int* d_infoArray,             \
              int batchSize)                                                    \
   {                                                                            \
-    gt::blas::getrf_npvt_batched(g_handle, n, detail::cast_aligned(d_Aarray),  \
+    gt::blas::getrf_npvt_batched(*g_handle, n, detail::cast_aligned(d_Aarray), \
                                  lda, d_infoArray, batchSize);                 \
   }
 
@@ -317,7 +316,7 @@ CREATE_C_GETRF_NPVT_BATCHED(gtblas_zgetrf_npvt_batched, f2c_complex<double>)
              int lda, CPPTYPE** d_Barray, int ldb, const CPPTYPE* beta,        \
              CPPTYPE** d_Carray, int ldc, int batchSize)                       \
   {                                                                            \
-    gt::blas::gemm_batched(g_handle, m, n, k, detail::fc2cpp_deref(alpha),     \
+    gt::blas::gemm_batched(*g_handle, m, n, k, detail::fc2cpp_deref(alpha),    \
                            detail::cast_aligned(d_Aarray), lda,                \
                            detail::cast_aligned(d_Barray), ldb,                \
                            detail::fc2cpp_deref(beta),                         \
@@ -339,7 +338,7 @@ CREATE_C_GEMM_BATCHED(gtblas_zgemm_batched, f2c_complex<double>)
              int batchSize, int lbw, int ubw)                                  \
   {                                                                            \
     gt::blas::invert_banded_batched(                                           \
-      g_handle, n, detail::cast_aligned(d_Aarray), lda, d_PivotArray,          \
+      *g_handle, n, detail::cast_aligned(d_Aarray), lda, d_PivotArray,         \
       detail::cast_aligned(d_Barray), ldb, batchSize, lbw, ubw);               \
   }
 
@@ -359,7 +358,7 @@ CREATE_C_INVERT_BANDED_BATCHED(gtblas_zinvert_banded_batched,
              gt::blas::index_t* d_PivotArray, CPPTYPE** d_Carray, int ldc,     \
              int* d_infoArray, int batchSize)                                  \
   {                                                                            \
-    gt::blas::getri_batched(g_handle, n, detail::cast_aligned(d_Aarray), lda,  \
+    gt::blas::getri_batched(*g_handle, n, detail::cast_aligned(d_Aarray), lda, \
                             d_PivotArray, detail::cast_aligned(d_Carray), ldc, \
                             d_infoArray, batchSize);                           \
   }

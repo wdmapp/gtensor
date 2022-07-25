@@ -27,11 +27,6 @@ namespace gt
 namespace blas
 {
 
-struct handle_t
-{
-  rocblas_handle handle;
-};
-
 // ======================================================================
 // types aliases
 
@@ -41,43 +36,40 @@ using index_t = int;
 // ======================================================================
 // handle and stream management
 
-inline handle_t* create()
+class handle_hip : public detail::handle_base<handle_hip, rocblas_handle>
 {
-  handle_t* h = new handle_t();
-  gtBlasCheck(rocblas_create_handle(&(h->handle)));
-  return h;
-}
+public:
+  handle_hip() { gtBlasCheck(rocblas_create_handle(&handle_)); }
+  ~handle_hip() { gtBlasCheck(rocblas_destroy_handle(handle_)); }
 
-inline void destroy(handle_t* h)
-{
-  gtBlasCheck(rocblas_destroy_handle(h->handle));
-  delete h;
-}
+  void set_stream(gt::stream_view sview)
+  {
+    gtBlasCheck(rocblas_set_stream(handle_, sview.get_backend_stream()));
+  }
 
-inline void set_stream(handle_t* h, gt::stream_view sview)
-{
-  gtBlasCheck(rocblas_set_stream(h->handle, sview.get_backend_stream()));
-}
+  gt::stream_view get_stream()
+  {
+    stream_t s;
+    gtBlasCheck(rocblas_get_stream(handle_, &s));
+    return gt::stream_view{s};
+  }
+};
 
-inline gt::stream_view get_stream(handle_t* h)
-{
-  stream_t s;
-  gtBlasCheck(rocblas_get_stream(h->handle, &s));
-  return gt::stream_view{s};
-}
+using handle_t = handle_hip;
 
 // ======================================================================
 // axpy
 
 template <typename T>
-inline void axpy(handle_t* h, int n, T a, const T* x, int incx, T* y, int incy);
+inline void axpy(handle_t& h, int n, T a, const T* x, int incx, T* y, int incy);
 
 #define CREATE_AXPY(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void axpy<GTTYPE>(handle_t * h, int n, GTTYPE a, const GTTYPE* x,     \
+  inline void axpy<GTTYPE>(handle_t & h, int n, GTTYPE a, const GTTYPE* x,     \
                            int incx, GTTYPE* y, int incy)                      \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<BLASTYPE*>(&a),          \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n,                              \
+                       reinterpret_cast<BLASTYPE*>(&a),                        \
                        reinterpret_cast<const BLASTYPE*>(x), incx,             \
                        reinterpret_cast<BLASTYPE*>(y), incy));                 \
   }
@@ -93,14 +85,15 @@ CREATE_AXPY(rocblas_saxpy, float, float)
 // scal
 
 template <typename S, typename T>
-inline void scal(handle_t* h, int n, S fac, T* arr, const int incx);
+inline void scal(handle_t& h, int n, S fac, T* arr, const int incx);
 
 #define CREATE_SCAL(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void scal<GTTYPE, GTTYPE>(handle_t * h, int n, GTTYPE fac,            \
+  inline void scal<GTTYPE, GTTYPE>(handle_t & h, int n, GTTYPE fac,            \
                                    GTTYPE* arr, const int incx)                \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<BLASTYPE*>(&fac),        \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n,                              \
+                       reinterpret_cast<BLASTYPE*>(&fac),                      \
                        reinterpret_cast<BLASTYPE*>(arr), incx));               \
   }
 
@@ -115,36 +108,39 @@ CREATE_SCAL(rocblas_sscal, float, float)
 // (zd|cs)scal
 
 template <>
-inline void scal<double, gt::complex<double>>(handle_t* h, int n, double fac,
+inline void scal<double, gt::complex<double>>(handle_t& h, int n, double fac,
                                               gt::complex<double>* arr,
                                               const int incx)
 {
-  gtBlasCheck(rocblas_zdscal(
-    h->handle, n, &fac, reinterpret_cast<rocblas_double_complex*>(arr), incx));
+  gtBlasCheck(rocblas_zdscal(h.get_backend_handle(), n, &fac,
+                             reinterpret_cast<rocblas_double_complex*>(arr),
+                             incx));
 }
 
 template <>
-inline void scal<float, gt::complex<float>>(handle_t* h, int n, float fac,
+inline void scal<float, gt::complex<float>>(handle_t& h, int n, float fac,
                                             gt::complex<float>* arr,
                                             const int incx)
 {
-  gtBlasCheck(rocblas_csscal(
-    h->handle, n, &fac, reinterpret_cast<rocblas_float_complex*>(arr), incx));
+  gtBlasCheck(rocblas_csscal(h.get_backend_handle(), n, &fac,
+                             reinterpret_cast<rocblas_float_complex*>(arr),
+                             incx));
 }
 
 // ======================================================================
 // copy
 
 template <typename T>
-inline void copy(handle_t* h, int n, const T* x, int incx, T* y, int incy);
+inline void copy(handle_t& h, int n, const T* x, int incx, T* y, int incy);
 
 #define CREATE_COPY(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void copy<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,     \
+  inline void copy<GTTYPE>(handle_t & h, int n, const GTTYPE* x, int incx,     \
                            GTTYPE* y, int incy)                                \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
-                       incx, reinterpret_cast<BLASTYPE*>(y), incy));           \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n,                              \
+                       reinterpret_cast<const BLASTYPE*>(x), incx,             \
+                       reinterpret_cast<BLASTYPE*>(y), incy));                 \
   }
 
 CREATE_COPY(rocblas_zcopy, gt::complex<double>, rocblas_double_complex)
@@ -158,16 +154,17 @@ CREATE_COPY(rocblas_scopy, float, float)
 // dot, dotc (conjugate)
 
 template <typename T>
-inline T dot(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
+inline T dot(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
 
 #define CREATE_DOT(METHOD, GTTYPE, BLASTYPE)                                   \
   template <>                                                                  \
-  inline GTTYPE dot<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,    \
+  inline GTTYPE dot<GTTYPE>(handle_t & h, int n, const GTTYPE* x, int incx,    \
                             const GTTYPE* y, int incy)                         \
   {                                                                            \
     GTTYPE result;                                                             \
-    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
-                       incx, reinterpret_cast<const BLASTYPE*>(y), incy,       \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n,                              \
+                       reinterpret_cast<const BLASTYPE*>(x), incx,             \
+                       reinterpret_cast<const BLASTYPE*>(y), incy,             \
                        reinterpret_cast<BLASTYPE*>(&result)));                 \
     return result;                                                             \
   }
@@ -178,16 +175,17 @@ CREATE_DOT(rocblas_sdot, float, float)
 #undef CREATE_DOT
 
 template <typename T>
-inline T dotu(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
+inline T dotu(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
 
 #define CREATE_DOTU(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline GTTYPE dotu<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,   \
+  inline GTTYPE dotu<GTTYPE>(handle_t & h, int n, const GTTYPE* x, int incx,   \
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     GTTYPE result;                                                             \
-    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
-                       incx, reinterpret_cast<const BLASTYPE*>(y), incy,       \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n,                              \
+                       reinterpret_cast<const BLASTYPE*>(x), incx,             \
+                       reinterpret_cast<const BLASTYPE*>(y), incy,             \
                        reinterpret_cast<BLASTYPE*>(&result)));                 \
     return result;                                                             \
   }
@@ -198,16 +196,17 @@ CREATE_DOTU(rocblas_cdotu, gt::complex<float>, rocblas_float_complex)
 #undef CREATE_DOTU
 
 template <typename T>
-inline T dotc(handle_t* h, int n, const T* x, int incx, const T* y, int incy);
+inline T dotc(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
 
 #define CREATE_DOTC(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline GTTYPE dotc<GTTYPE>(handle_t * h, int n, const GTTYPE* x, int incx,   \
+  inline GTTYPE dotc<GTTYPE>(handle_t & h, int n, const GTTYPE* x, int incx,   \
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     GTTYPE result;                                                             \
-    gtBlasCheck(METHOD(h->handle, n, reinterpret_cast<const BLASTYPE*>(x),     \
-                       incx, reinterpret_cast<const BLASTYPE*>(y), incy,       \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n,                              \
+                       reinterpret_cast<const BLASTYPE*>(x), incx,             \
+                       reinterpret_cast<const BLASTYPE*>(y), incy,             \
                        reinterpret_cast<BLASTYPE*>(&result)));                 \
     return result;                                                             \
   }
@@ -221,16 +220,16 @@ CREATE_DOTC(rocblas_cdotc, gt::complex<float>, rocblas_float_complex)
 // gemv
 
 template <typename T>
-inline void gemv(handle_t* h, int m, int n, T alpha, const T* A, int lda,
+inline void gemv(handle_t& h, int m, int n, T alpha, const T* A, int lda,
                  const T* x, int incx, T beta, T* y, int incy);
 
 #define CREATE_GEMV(METHOD, GTTYPE, BLASTYPE)                                  \
   template <>                                                                  \
-  inline void gemv<GTTYPE>(handle_t * h, int m, int n, GTTYPE alpha,           \
+  inline void gemv<GTTYPE>(handle_t & h, int m, int n, GTTYPE alpha,           \
                            const GTTYPE* A, int lda, const GTTYPE* x,          \
                            int incx, GTTYPE beta, GTTYPE* y, int incy)         \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, rocblas_operation_none, m, n,                \
+    gtBlasCheck(METHOD(h.get_backend_handle(), rocblas_operation_none, m, n,   \
                        reinterpret_cast<BLASTYPE*>(&alpha),                    \
                        reinterpret_cast<const BLASTYPE*>(A), lda,              \
                        reinterpret_cast<const BLASTYPE*>(x), incx,             \
@@ -249,17 +248,17 @@ CREATE_GEMV(rocblas_sgemv, float, float)
 // getrf/getrs batched
 
 template <typename T>
-inline void getrf_batched(handle_t* h, int n, T** d_Aarray, int lda,
+inline void getrf_batched(handle_t& h, int n, T** d_Aarray, int lda,
                           gt::blas::index_t* d_PivotArray, int* d_infoArray,
                           int batchSize);
 
 #define CREATE_GETRF_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
-  inline void getrf_batched<GTTYPE>(handle_t * h, int n, GTTYPE** d_Aarray,    \
+  inline void getrf_batched<GTTYPE>(handle_t & h, int n, GTTYPE** d_Aarray,    \
                                     int lda, gt::blas::index_t* d_PivotArray,  \
                                     int* d_infoArray, int batchSize)           \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, n, n,                                        \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n, n,                           \
                        reinterpret_cast<BLASTYPE**>(d_Aarray), lda,            \
                        d_PivotArray, n, d_infoArray, batchSize));              \
   }
@@ -274,20 +273,20 @@ CREATE_GETRF_BATCHED(rocsolver_sgetrf_batched, float, float)
 #undef CREATE_GETRF_BATCHED
 
 template <typename T>
-inline void getrs_batched(handle_t* h, int n, int nrhs, T* const* d_Aarray,
+inline void getrs_batched(handle_t& h, int n, int nrhs, T* const* d_Aarray,
                           int lda, gt::blas::index_t* devIpiv, T** d_Barray,
                           int ldb, int batchSize);
 
 #define CREATE_GETRS_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getrs_batched<GTTYPE>(                                           \
-    handle_t * h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,           \
+    handle_t & h, int n, int nrhs, GTTYPE* const* d_Aarray, int lda,           \
     gt::blas::index_t* devIpiv, GTTYPE** d_Barray, int ldb, int batchSize)     \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, rocblas_operation_none, n, nrhs,             \
-                       reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda,      \
-                       devIpiv, n, reinterpret_cast<BLASTYPE**>(d_Barray),     \
-                       ldb, batchSize));                                       \
+    gtBlasCheck(                                                               \
+      METHOD(h.get_backend_handle(), rocblas_operation_none, n, nrhs,          \
+             reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda, devIpiv, n,    \
+             reinterpret_cast<BLASTYPE**>(d_Barray), ldb, batchSize));         \
   }
 
 CREATE_GETRS_BATCHED(rocsolver_zgetrs_batched, gt::complex<double>,
@@ -303,16 +302,16 @@ CREATE_GETRS_BATCHED(rocsolver_sgetrs_batched, float, float)
 // getrf/getrs batched without pivoting
 
 template <typename T>
-inline void getrf_npvt_batched(handle_t* h, int n, T** d_Aarray, int lda,
+inline void getrf_npvt_batched(handle_t& h, int n, T** d_Aarray, int lda,
                                int* d_infoArray, int batchSize);
 
 #define CREATE_GETRF_NPVT_BATCHED(METHOD, GTTYPE, BLASTYPE)                    \
   template <>                                                                  \
-  inline void getrf_npvt_batched<GTTYPE>(handle_t * h, int n,                  \
+  inline void getrf_npvt_batched<GTTYPE>(handle_t & h, int n,                  \
                                          GTTYPE** d_Aarray, int lda,           \
                                          int* d_infoArray, int batchSize)      \
   {                                                                            \
-    gtBlasCheck(METHOD(h->handle, n, n,                                        \
+    gtBlasCheck(METHOD(h.get_backend_handle(), n, n,                           \
                        reinterpret_cast<BLASTYPE**>(d_Aarray), lda,            \
                        d_infoArray, batchSize));                               \
   }
@@ -328,21 +327,21 @@ CREATE_GETRF_NPVT_BATCHED(rocsolver_cgetrf_npvt_batched, gt::complex<float>,
 // getri batched
 
 template <typename T>
-inline void getri_batched(handle_t* h, int n, T* const* d_Aarray, int lda,
+inline void getri_batched(handle_t& h, int n, T* const* d_Aarray, int lda,
                           gt::blas::index_t* devIpiv, T** d_Carray, int ldc,
                           int* d_infoArray, int batchSize);
 
 #define CREATE_GETRI_BATCHED(METHOD, GTTYPE, BLASTYPE)                         \
   template <>                                                                  \
   inline void getri_batched<GTTYPE>(                                           \
-    handle_t * h, int n, GTTYPE* const* d_Aarray, int lda,                     \
+    handle_t & h, int n, GTTYPE* const* d_Aarray, int lda,                     \
     gt::blas::index_t* devIpiv, GTTYPE** d_Carray, int ldc, int* d_infoArray,  \
     int batchSize)                                                             \
   {                                                                            \
-    gtBlasCheck(                                                               \
-      METHOD(h->handle, n, reinterpret_cast<BLASTYPE* const*>(d_Aarray), lda,  \
-             devIpiv, n, reinterpret_cast<BLASTYPE**>(d_Carray), ldc,          \
-             reinterpret_cast<rocblas_int*>(d_infoArray), batchSize));         \
+    gtBlasCheck(METHOD(                                                        \
+      h.get_backend_handle(), n, reinterpret_cast<BLASTYPE* const*>(d_Aarray), \
+      lda, devIpiv, n, reinterpret_cast<BLASTYPE**>(d_Carray), ldc,            \
+      reinterpret_cast<rocblas_int*>(d_infoArray), batchSize));                \
   }
 
 CREATE_GETRI_BATCHED(rocsolver_zgetri_outofplace_batched, gt::complex<double>,
@@ -358,24 +357,24 @@ CREATE_GETRI_BATCHED(rocsolver_sgetri_outofplace_batched, float, float)
 // gemm batched
 
 template <typename T>
-inline void gemm_batched(handle_t* h, int m, int n, int k, T alpha,
+inline void gemm_batched(handle_t& h, int m, int n, int k, T alpha,
                          T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
                          T** d_Carray, int ldc, int batchSize);
 
 #define CREATE_GEMM_BATCHED(METHOD, GTTYPE, BLASTYPE)                          \
   template <>                                                                  \
-  inline void gemm_batched<GTTYPE>(handle_t * h, int m, int n, int k,          \
+  inline void gemm_batched<GTTYPE>(handle_t & h, int m, int n, int k,          \
                                    GTTYPE alpha, GTTYPE** d_Aarray, int lda,   \
                                    GTTYPE** d_Barray, int ldb, GTTYPE beta,    \
                                    GTTYPE** d_Carray, int ldc, int batchSize)  \
   {                                                                            \
-    gtBlasCheck(                                                               \
-      METHOD(h->handle, rocblas_operation_none, rocblas_operation_none, m, n,  \
-             k, reinterpret_cast<BLASTYPE*>(&alpha),                           \
-             reinterpret_cast<BLASTYPE**>(d_Aarray), lda,                      \
-             reinterpret_cast<BLASTYPE**>(d_Barray), ldb,                      \
-             reinterpret_cast<BLASTYPE*>(&beta),                               \
-             reinterpret_cast<BLASTYPE**>(d_Carray), ldc, batchSize));         \
+    gtBlasCheck(METHOD(                                                        \
+      h.get_backend_handle(), rocblas_operation_none, rocblas_operation_none,  \
+      m, n, k, reinterpret_cast<BLASTYPE*>(&alpha),                            \
+      reinterpret_cast<BLASTYPE**>(d_Aarray), lda,                             \
+      reinterpret_cast<BLASTYPE**>(d_Barray), ldb,                             \
+      reinterpret_cast<BLASTYPE*>(&beta),                                      \
+      reinterpret_cast<BLASTYPE**>(d_Carray), ldc, batchSize));                \
   }
 
 CREATE_GEMM_BATCHED(rocblas_zgemm_batched, gt::complex<double>,

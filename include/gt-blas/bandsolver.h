@@ -29,7 +29,7 @@ struct matrix_bandwidth
  * @return matrix_bandwidth struct containing max upper and lower bandwidth
  */
 template <typename T>
-inline matrix_bandwidth get_max_bandwidth(handle_t* h, int n, T** d_Aarray,
+inline matrix_bandwidth get_max_bandwidth(handle_t& h, int n, T** d_Aarray,
                                           int lda, int batch_size)
 {
   matrix_bandwidth res;
@@ -41,7 +41,7 @@ inline matrix_bandwidth get_max_bandwidth(handle_t* h, int n, T** d_Aarray,
   auto k_batch_lbw = d_batch_lbw.to_kernel();
   auto k_batch_ubw = d_batch_ubw.to_kernel();
 
-  auto stream = gt::blas::get_stream(h);
+  auto stream = h.get_stream();
 
   gt::launch<1>(
     launch_shape,
@@ -117,11 +117,11 @@ inline matrix_bandwidth get_max_bandwidth(handle_t* h, int n, T** d_Aarray,
  * @param ubw max upper bandwidth of all [A_i]
  */
 template <typename T>
-inline void getrs_banded_batched(handle_t* h, int n, int nrhs, T** d_Aarray,
+inline void getrs_banded_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
                                  int lda, index_t* d_PivotArray, T** d_Barray,
                                  int ldb, int batchSize, int lbw, int ubw)
 {
-  auto stream = gt::blas::get_stream(h);
+  auto stream = h.get_stream();
   auto launch_shape = gt::shape(nrhs, batchSize);
   gt::launch<2>(
     launch_shape,
@@ -190,12 +190,12 @@ inline void getrs_banded_batched(handle_t* h, int n, int nrhs, T** d_Aarray,
  * @param ubw max upper bandwidth of all [A_i]
  */
 template <typename T>
-inline void invert_banded_batched(handle_t* h, int n, T** d_Aarray, int lda,
+inline void invert_banded_batched(handle_t& h, int n, T** d_Aarray, int lda,
                                   index_t* d_PivotArray, T** d_Barray, int ldb,
                                   int batchSize, int lbw, int ubw)
 {
   int nrhs = n;
-  auto stream = gt::blas::get_stream(h);
+  auto stream = h.get_stream();
   auto launch_shape = gt::shape(nrhs, batchSize);
   gt::launch<2>(
     launch_shape,
@@ -274,12 +274,12 @@ inline void invert_banded_batched(handle_t* h, int n, T** d_Aarray, int lda,
  * @param batchSize number of matrices [A^-1_i], [B_i], [C_i] in batch
  */
 template <typename T>
-inline void solve_inverted_batched(handle_t* h, int n, int nrhs, T** d_Aarray,
+inline void solve_inverted_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
                                    int lda, T** d_Barray, int ldb, T** d_Carray,
                                    int ldc, int batchSize)
 {
   auto launch_shape = gt::shape(nrhs, batchSize);
-  auto stream = gt::blas::get_stream(h);
+  auto stream = h.get_stream();
   gt::launch<2>(
     launch_shape,
     GT_LAMBDA(int rhs, int batch) {

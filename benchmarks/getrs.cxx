@@ -223,7 +223,7 @@ void test(test_problem<CT> tp, int known_bw = 0)
 
   std::cout << "INFO: memcpy to device done" << std::endl;
 
-  gt::blas::handle_t* h = gt::blas::create();
+  gt::blas::handle_t h;
 
   auto bw2 = gt::blas::get_max_bandwidth(
     h, n, gt::raw_pointer_cast(d_Aptr.data()), lda, batch_size);
@@ -279,10 +279,6 @@ void test(test_problem<CT> tp, int known_bw = 0)
   check_and_measure(test_blas, "blas");
   check_and_measure(test_banded, "banded");
   check_and_measure(test_inverted, "inverted");
-
-  gt::blas::destroy(h);
-
-  std::cout << "INFO: destroy done" << std::endl;
 }
 
 int main(int argc, char** argv)

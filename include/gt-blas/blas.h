@@ -13,8 +13,39 @@ namespace gt
 namespace blas
 {
 
-// wrapper around backend specific type
-struct handle_t;
+namespace detail
+{
+
+/**
+ * CRTP static interface for backend specific handle wrapper. Provides RIAA
+ * for the underlying C interface.
+ */
+template <typename D, typename Handle>
+class handle_base
+{
+public:
+  using derived_type = D;
+
+  const derived_type& derived() const&
+  {
+    return static_cast<const derived_type&>(*this);
+  }
+  derived_type& derived() & { return static_cast<const derived_type&>(*this); }
+  derived_type derived() && { return static_cast<derived_type&>(*this); }
+
+  void set_stream(gt::stream_view sview) { derived().set_stream(sview); };
+  gt::stream_view get_stream() { return derived().get_stream(); };
+  Handle& get_backend_handle() { return handle_; };
+
+private:
+  Handle handle_;
+
+  handle_base() = default;
+  ~handle_base() = default;
+  friend D;
+};
+
+} // namespace detail
 
 } // namespace blas
 
@@ -38,7 +69,7 @@ namespace blas
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
-inline void axpy(handle_t* h, typename C::value_type a, const C& x, C& y)
+inline void axpy(handle_t& h, typename C::value_type a, const C& x, C& y)
 {
   assert(x.size() == y.size());
   axpy(h, x.size(), a, gt::raw_pointer_cast(x.data()), 1,
@@ -47,7 +78,7 @@ inline void axpy(handle_t* h, typename C::value_type a, const C& x, C& y)
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
-inline void scal(handle_t* h, typename C::value_type fac, C& arr)
+inline void scal(handle_t& h, typename C::value_type fac, C& arr)
 {
   scal(h, arr.size(), fac, gt::raw_pointer_cast(arr.data()), 1);
 }
@@ -55,14 +86,14 @@ inline void scal(handle_t* h, typename C::value_type fac, C& arr)
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C> &&
                                                   has_complex_value_type_v<C>>>
-inline void scal(handle_t* h, container_complex_subtype_t<C> fac, C& arr)
+inline void scal(handle_t& h, container_complex_subtype_t<C> fac, C& arr)
 {
   scal(h, arr.size(), fac, gt::raw_pointer_cast(arr.data()), 1);
 }
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
-inline void copy(handle_t* h, C& src, C& dest)
+inline void copy(handle_t& h, C& src, C& dest)
 {
   copy(h, src.size(), gt::raw_pointer_cast(src.data()), 1,
        gt::raw_pointer_cast(dest.data()), 1);
@@ -70,7 +101,7 @@ inline void copy(handle_t* h, C& src, C& dest)
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
-inline typename C::value_type dot(handle_t* h, const C& x, const C& y)
+inline typename C::value_type dot(handle_t& h, const C& x, const C& y)
 {
   return dot(h, x.size(), gt::raw_pointer_cast(x.data()), 1,
              gt::raw_pointer_cast(y.data()), 1);
@@ -78,7 +109,7 @@ inline typename C::value_type dot(handle_t* h, const C& x, const C& y)
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
-inline typename C::value_type dotu(handle_t* h, const C& x, const C& y)
+inline typename C::value_type dotu(handle_t& h, const C& x, const C& y)
 {
   return dotu(h, x.size(), gt::raw_pointer_cast(x.data()), 1,
               gt::raw_pointer_cast(y.data()), 1);
@@ -86,7 +117,7 @@ inline typename C::value_type dotu(handle_t* h, const C& x, const C& y)
 
 template <typename C, typename = std::enable_if_t<has_container_methods_v<C> &&
                                                   has_space_type_device_v<C>>>
-inline typename C::value_type dotc(handle_t* h, const C& x, const C& y)
+inline typename C::value_type dotc(handle_t& h, const C& x, const C& y)
 {
   return dotc(h, x.size(), gt::raw_pointer_cast(x.data()), 1,
               gt::raw_pointer_cast(y.data()), 1);
@@ -96,7 +127,7 @@ template <typename M, typename V,
           typename = std::enable_if_t<
             has_container_methods_v<M> && has_space_type_device_v<M> &&
             has_container_methods_v<V> && has_space_type_device_v<V>>>
-inline void gemv(handle_t* h, typename M::value_type alpha, M& A, V& x,
+inline void gemv(handle_t& h, typename M::value_type alpha, M& A, V& x,
                  typename M::value_type beta, V& y)
 {
   static_assert(expr_dimension<M>() == 2,
