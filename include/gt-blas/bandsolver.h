@@ -4,6 +4,8 @@
 #include "gtensor/complex.h"
 #include "gtensor/reductions.h"
 
+#include "gt-blas/blas.h"
+
 namespace gt
 {
 
@@ -19,6 +21,7 @@ struct matrix_bandwidth
 /**
  * Calculate max bandwidth in a batch of square matrices.
  *
+ * @param h gt::blas::handle_t object
  * @param n size of each A_i
  * @param d_Aarray Array of device pointers to input [A_i]
  * @param lda leading distance of each A_i, >=n
@@ -26,8 +29,8 @@ struct matrix_bandwidth
  * @return matrix_bandwidth struct containing max upper and lower bandwidth
  */
 template <typename T>
-inline matrix_bandwidth get_max_bandwidth(int n, T** d_Aarray, int lda,
-                                          int batch_size)
+inline matrix_bandwidth get_max_bandwidth(handle_t& h, int n, T** d_Aarray,
+                                          int lda, int batch_size)
 {
   matrix_bandwidth res;
 
@@ -37,8 +40,12 @@ inline matrix_bandwidth get_max_bandwidth(int n, T** d_Aarray, int lda,
   auto launch_shape = gt::shape(batch_size);
   auto k_batch_lbw = d_batch_lbw.to_kernel();
   auto k_batch_ubw = d_batch_ubw.to_kernel();
+
+  auto stream = h.get_stream();
+
   gt::launch<1>(
-    launch_shape, GT_LAMBDA(int batch) {
+    launch_shape,
+    GT_LAMBDA(int batch) {
       int lbw = n - 1;
       int ubw = n - 1;
       int i, j;
@@ -82,10 +89,11 @@ inline matrix_bandwidth get_max_bandwidth(int n, T** d_Aarray, int lda,
 
       k_batch_lbw(batch) = lbw;
       k_batch_ubw(batch) = ubw;
-    });
+    },
+    stream);
 
-  res.lower = gt::max(d_batch_lbw);
-  res.upper = gt::max(d_batch_ubw);
+  res.lower = gt::max(d_batch_lbw, stream);
+  res.upper = gt::max(d_batch_ubw, stream);
 
   return res;
 }
@@ -96,6 +104,7 @@ inline matrix_bandwidth get_max_bandwidth(int n, T** d_Aarray, int lda,
  * @see gt::blas::getrf_batched()
  * @see gt::blas::get_max_bandwidth()
  *
+ * @param h gt::blas::handle_t object
  * @param n size of each A_i and number of rows of each B_i
  * @param nrhs number of RHS column vectors in each B_i
  * @param d_Aarray Array of device pointers to LU factored input [A_i]
@@ -108,13 +117,15 @@ inline matrix_bandwidth get_max_bandwidth(int n, T** d_Aarray, int lda,
  * @param ubw max upper bandwidth of all [A_i]
  */
 template <typename T>
-inline void getrs_banded_batched(int n, int nrhs, T** d_Aarray, int lda,
-                                 index_t* d_PivotArray, T** d_Barray, int ldb,
-                                 int batchSize, int lbw, int ubw)
+inline void getrs_banded_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
+                                 int lda, index_t* d_PivotArray, T** d_Barray,
+                                 int ldb, int batchSize, int lbw, int ubw)
 {
+  auto stream = h.get_stream();
   auto launch_shape = gt::shape(nrhs, batchSize);
   gt::launch<2>(
-    launch_shape, GT_LAMBDA(int rhs, int batch) {
+    launch_shape,
+    GT_LAMBDA(int rhs, int batch) {
       T* A = d_Aarray[batch];
       T* B = d_Barray[batch] + ldb * rhs;
       index_t* piv = d_PivotArray + batch * n;
@@ -157,7 +168,8 @@ inline void getrs_banded_batched(int n, int nrhs, T** d_Aarray, int lda,
         }
         B[i] = tmp / A[i * lda + i];
       }
-    });
+    },
+    stream);
 }
 
 /**
@@ -166,6 +178,7 @@ inline void getrs_banded_batched(int n, int nrhs, T** d_Aarray, int lda,
  * @see gt::blas::getrf_batched()
  * @see gt::blas::get_max_bandwidth()
  *
+ * @param h gt::blas::handle_t object
  * @param n size of each A_i and B_i matrix in batch
  * @param d_Aarray Array of device pointers to each input A_i
  * @param lda leading distance of each A_i, >=n
@@ -177,14 +190,16 @@ inline void getrs_banded_batched(int n, int nrhs, T** d_Aarray, int lda,
  * @param ubw max upper bandwidth of all [A_i]
  */
 template <typename T>
-inline void invert_banded_batched(int n, T** d_Aarray, int lda,
+inline void invert_banded_batched(handle_t& h, int n, T** d_Aarray, int lda,
                                   index_t* d_PivotArray, T** d_Barray, int ldb,
                                   int batchSize, int lbw, int ubw)
 {
   int nrhs = n;
+  auto stream = h.get_stream();
   auto launch_shape = gt::shape(nrhs, batchSize);
   gt::launch<2>(
-    launch_shape, GT_LAMBDA(int rhs, int batch) {
+    launch_shape,
+    GT_LAMBDA(int rhs, int batch) {
       T* A = d_Aarray[batch];
       T* B = d_Barray[batch] + ldb * rhs;
       index_t* piv = d_PivotArray + batch * n;
@@ -232,11 +247,14 @@ inline void invert_banded_batched(int n, T** d_Aarray, int lda,
         }
         B[i] = tmp / A[i * lda + i];
       }
-    });
+    },
+    stream);
 }
 
 /**
  * Naive batched matrix multiply for solving with inverted matrices C = A^-1 * B
+ *
+ * DEPRECATED
  *
  * All matrices must be col-major
  *
@@ -244,6 +262,7 @@ inline void invert_banded_batched(int n, T** d_Aarray, int lda,
  * @see gt::blas::getrf_batched()
  * @see gt::blas::invert_banded_batched()
  *
+ * @param h gt::blas::handle_t object
  * @param n size of each A^-1_i and rows of each B_i and C_i
  * @param nrhs number of RHS column vectors in each B_i and C_i
  * @param d_Aarray Array of device pointers to each inverted input A_i
@@ -255,13 +274,15 @@ inline void invert_banded_batched(int n, T** d_Aarray, int lda,
  * @param batchSize number of matrices [A^-1_i], [B_i], [C_i] in batch
  */
 template <typename T>
-inline void solve_inverted_batched(int n, int nrhs, T** d_Aarray, int lda,
-                                   T** d_Barray, int ldb, T** d_Carray, int ldc,
-                                   int batchSize)
+inline void solve_inverted_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
+                                   int lda, T** d_Barray, int ldb, T** d_Carray,
+                                   int ldc, int batchSize)
 {
   auto launch_shape = gt::shape(nrhs, batchSize);
+  auto stream = h.get_stream();
   gt::launch<2>(
-    launch_shape, GT_LAMBDA(int rhs, int batch) {
+    launch_shape,
+    GT_LAMBDA(int rhs, int batch) {
       T* A = d_Aarray[batch];
       T* b = d_Barray[batch] + ldb * rhs;
       T* c = d_Carray[batch] + ldc * rhs;
@@ -277,7 +298,8 @@ inline void solve_inverted_batched(int n, int nrhs, T** d_Aarray, int lda,
         }
         c[i] = tmp;
       }
-    });
+    },
+    stream);
 }
 
 } // namespace blas

@@ -189,10 +189,12 @@ void test_getrs_batch_real()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::blas::getrs_banded_batched(N, NRHS, gt::raw_pointer_cast(d_Aptr.data()),
-                                 N, gt::raw_pointer_cast(d_p.data()),
-                                 gt::raw_pointer_cast(d_Bptr.data()), N,
-                                 batch_size, N - 1, N - 1);
+  gt::blas::handle_t h;
+
+  gt::blas::getrs_banded_batched(
+    h, N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
+    gt::raw_pointer_cast(d_p.data()), gt::raw_pointer_cast(d_Bptr.data()), N,
+    batch_size, N - 1, N - 1);
 
   gt::copy(d_B, h_B);
 
@@ -294,10 +296,12 @@ void test_getrs_batch_complex()
   gt::copy(h_B, d_B);
   gt::copy(h_p, d_p);
 
-  gt::blas::getrs_banded_batched(N, NRHS, gt::raw_pointer_cast(d_Aptr.data()),
-                                 N, gt::raw_pointer_cast(d_p.data()),
-                                 gt::raw_pointer_cast(d_Bptr.data()), N,
-                                 batch_size, N - 1, N - 1);
+  gt::blas::handle_t h;
+
+  gt::blas::getrs_banded_batched(
+    h, N, NRHS, gt::raw_pointer_cast(d_Aptr.data()), N,
+    gt::raw_pointer_cast(d_p.data()), gt::raw_pointer_cast(d_Bptr.data()), N,
+    batch_size, N - 1, N - 1);
 
   gt::copy(d_B, h_B);
 
@@ -364,18 +368,20 @@ void test_get_max_bandwidth()
   gt::copy(h_A, d_A);
   gt::copy(h_Aptr, d_Aptr);
 
-  auto bw0 =
-    gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
+  gt::blas::handle_t h;
+
+  auto bw0 = gt::blas::get_max_bandwidth(
+    h, N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
   EXPECT_EQ(bw0.lower, 0);
   EXPECT_EQ(bw0.upper, 0);
 
   auto bw1 = gt::blas::get_max_bandwidth(
-    N, gt::raw_pointer_cast(d_Aptr.data()) + 1, N, 1);
+    h, N, gt::raw_pointer_cast(d_Aptr.data()) + 1, N, 1);
   EXPECT_EQ(bw1.lower, N - 3);
   EXPECT_EQ(bw1.upper, 1);
 
-  auto bw = gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()),
-                                        N, batch_size);
+  auto bw = gt::blas::get_max_bandwidth(
+    h, N, gt::raw_pointer_cast(d_Aptr.data()), N, batch_size);
   EXPECT_EQ(bw.lower, N - 3);
   EXPECT_EQ(bw.upper, 1);
 }
@@ -442,9 +448,12 @@ void test_invert_batch_complex()
   gt::copy(h_Ainv, d_Ainv);
   gt::copy(h_p, d_p);
 
-  gt::blas::invert_banded_batched(
-    N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
-    gt::raw_pointer_cast(d_Ainvptr.data()), N, batch_size, N - 1, N - 1);
+  gt::blas::handle_t h;
+
+  gt::blas::invert_banded_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                                  gt::raw_pointer_cast(d_p.data()),
+                                  gt::raw_pointer_cast(d_Ainvptr.data()), N,
+                                  batch_size, N - 1, N - 1);
 
   gt::copy(d_Ainv, h_Ainv);
 
@@ -594,8 +603,10 @@ void test_solve_inverted_batch_complex()
 
   gt::copy(h_Cptr, d_Cptr);
 
+  gt::blas::handle_t h;
+
   gt::blas::solve_inverted_batched(
-    N, NRHS, gt::raw_pointer_cast(d_Ainvptr.data()), N,
+    h, N, NRHS, gt::raw_pointer_cast(d_Ainvptr.data()), N,
     gt::raw_pointer_cast(d_Bptr.data()), N, gt::raw_pointer_cast(d_Cptr.data()),
     N, batch_size);
 
@@ -630,7 +641,7 @@ TEST(bandsolve, zsolve_inverted_batch)
 }
 
 template <typename T>
-void test_full_solve_real()
+void test_full_solve_real(gt::stream_view stream = gt::stream_view{})
 {
 
   constexpr int N = 5;
@@ -738,22 +749,34 @@ void test_full_solve_real()
   gt::copy(h_Bptr, d_Bptr);
   gt::copy(h_Cptr, d_Cptr);
 
-  gt::blas::handle_t* h = gt::blas::create();
+  gt::blas::handle_t h;
+
+  if (!stream.is_default()) {
+    h.set_stream(stream);
+  }
 
   gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
                           gt::raw_pointer_cast(d_p.data()),
                           gt::raw_pointer_cast(d_info.data()), batch_size);
-  gt::synchronize();
 
-  auto bw =
-    gt::blas::get_max_bandwidth(N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
+  if (!stream.is_default()) {
+    // NOTE: this should work for default stream as well, but more important
+    // to test the no-stream style interface with global sync below
+    stream.synchronize();
+  } else {
+    gt::synchronize();
+  }
+
+  auto bw = gt::blas::get_max_bandwidth(
+    h, N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
 
   GT_DEBUG_VAR(bw.lower);
   GT_DEBUG_VAR(bw.upper);
 
-  gt::blas::invert_banded_batched(
-    N, gt::raw_pointer_cast(d_Aptr.data()), N, gt::raw_pointer_cast(d_p.data()),
-    gt::raw_pointer_cast(d_Ainvptr.data()), N, batch_size, bw.lower, bw.upper);
+  gt::blas::invert_banded_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
+                                  gt::raw_pointer_cast(d_p.data()),
+                                  gt::raw_pointer_cast(d_Ainvptr.data()), N,
+                                  batch_size, bw.lower, bw.upper);
   gt::synchronize();
 
   gt::copy(d_Ainv, h_Ainv);
@@ -764,8 +787,6 @@ void test_full_solve_real()
                             gt::raw_pointer_cast(d_Bptr.data()), N, 0.0,
                             gt::raw_pointer_cast(d_Cptr.data()), N, batch_size);
   gt::synchronize();
-
-  gt::blas::destroy(h);
 
   gt::copy(d_C, h_C);
 
@@ -801,4 +822,28 @@ TEST(bandsolve, cfull_invert_solve)
 TEST(bandsolve, zfull_invert_solve)
 {
   test_full_solve_real<gt::complex<double>>();
+}
+
+TEST(bandsolve, sfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<float>(s.get_view());
+}
+
+TEST(bandsolve, dfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<double>(s.get_view());
+}
+
+TEST(bandsolve, cfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<gt::complex<float>>(s.get_view());
+}
+
+TEST(bandsolve, zfull_invert_solve_new_stream)
+{
+  gt::stream s;
+  test_full_solve_real<gt::complex<double>>(s.get_view());
 }

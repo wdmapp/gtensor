@@ -223,10 +223,10 @@ void test(test_problem<CT> tp, int known_bw = 0)
 
   std::cout << "INFO: memcpy to device done" << std::endl;
 
-  gt::blas::handle_t* h = gt::blas::create();
+  gt::blas::handle_t h;
 
-  auto bw2 = gt::blas::get_max_bandwidth(n, gt::raw_pointer_cast(d_Aptr.data()),
-                                         lda, batch_size);
+  auto bw2 = gt::blas::get_max_bandwidth(
+    h, n, gt::raw_pointer_cast(d_Aptr.data()), lda, batch_size);
   if (known_bw > 0) {
     if (bw2.lower != known_bw || bw2.upper != known_bw) {
       std::cerr << "ERR: construct matrix bandwidth mismatch, expected "
@@ -239,8 +239,8 @@ void test(test_problem<CT> tp, int known_bw = 0)
   ss << bw2.lower << "_" << bw2.upper;
   bw_str = ss.str();
 
-  gt::blas::invert_banded_batched(n, gt::raw_pointer_cast(d_Aptr.data()), lda,
-                                  gt::raw_pointer_cast(d_piv.data()),
+  gt::blas::invert_banded_batched(h, n, gt::raw_pointer_cast(d_Aptr.data()),
+                                  lda, gt::raw_pointer_cast(d_piv.data()),
                                   gt::raw_pointer_cast(d_Ainvptr.data()), lda,
                                   batch_size, bw2.lower, bw2.upper);
 
@@ -251,10 +251,10 @@ void test(test_problem<CT> tp, int known_bw = 0)
                             batch_size);
   };
   auto const test_banded = [&]() {
-    gt::blas::getrs_banded_batched(n, nrhs, gt::raw_pointer_cast(d_Aptr.data()),
-                                   lda, gt::raw_pointer_cast(d_piv.data()),
-                                   gt::raw_pointer_cast(d_Bptr.data()), ldb,
-                                   batch_size, bw2.lower, bw2.upper);
+    gt::blas::getrs_banded_batched(
+      h, n, nrhs, gt::raw_pointer_cast(d_Aptr.data()), lda,
+      gt::raw_pointer_cast(d_piv.data()), gt::raw_pointer_cast(d_Bptr.data()),
+      ldb, batch_size, bw2.lower, bw2.upper);
   };
   auto const test_inverted = [&]() {
     gt::blas::gemm_batched<CT>(
@@ -279,10 +279,6 @@ void test(test_problem<CT> tp, int known_bw = 0)
   check_and_measure(test_blas, "blas");
   check_and_measure(test_banded, "banded");
   check_and_measure(test_inverted, "inverted");
-
-  gt::blas::destroy(h);
-
-  std::cout << "INFO: destroy done" << std::endl;
 }
 
 int main(int argc, char** argv)
