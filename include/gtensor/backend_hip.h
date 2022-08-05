@@ -201,50 +201,58 @@ inline bool is_device_address(const Ptr p)
   return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
 }
 
+namespace stream_interface
+{
+
+template <>
+inline hipStream_t create<hipStream_t>()
+{
+  hipStream_t s;
+  gtGpuCheck(hipStreamCreate(&s));
+  return s;
+}
+
+template <>
+inline hipStream_t get_default<hipStream_t>()
+{
+  return nullptr;
+}
+
+template <>
+inline void destroy<hipStream_t>(hipStream_t s)
+{
+  gtGpuCheck(hipStreamDestroy(s));
+}
+
+template <>
+inline bool is_default<hipStream_t>(hipStream_t s)
+{
+  return s == nullptr;
+}
+
+template <>
+inline void synchronize<hipStream_t>(hipStream_t s)
+{
+  gtGpuCheck(hipStreamSynchronize(s));
+}
+
+template <typename Stream>
+class stream_view_hip : public stream_view_base<Stream>
+{
+public:
+  using base_type = stream_view_base<Stream>;
+  using base_type::base_type;
+  using base_type::stream_;
+
+  auto get_execution_policy() { return thrust::hip::par.on(stream_); }
+};
+
+} // namespace stream_interface
+
 } // namespace backend
 
-class stream_view
-{
-public:
-  stream_view() : stream_(nullptr) {}
-  stream_view(hipStream_t s) : stream_(s) {}
-
-  auto get_backend_stream() { return stream_; }
-
-  auto get_execution_policy() { return thrust::hip::par.on(stream_); }
-
-  bool is_default() { return stream_ == nullptr; }
-
-  void synchronize() { gtGpuCheck(hipStreamSynchronize(stream_)); }
-
-private:
-  hipStream_t stream_;
-};
-
-class stream
-{
-public:
-  stream() { gtGpuCheck(hipStreamCreate(&stream_)); }
-
-  ~stream()
-  {
-    gtGpuCheck(hipStreamSynchronize(stream_));
-    gtGpuCheck(hipStreamDestroy(stream_));
-  }
-
-  auto get_backend_stream() { return stream_; }
-
-  auto get_execution_policy() { return thrust::hip::par.on(stream_); }
-
-  bool is_default() { return stream_ == nullptr; }
-
-  auto get_view() { return stream_view(this->stream_); }
-
-  void synchronize() { gtGpuCheck(hipStreamSynchronize(stream_)); }
-
-private:
-  hipStream_t stream_;
-};
+using stream_view = backend::stream_interface::stream_view_hip<hipStream_t>;
+using stream = backend::stream_interface::stream_base<hipStream_t, stream_view>;
 
 } // namespace gt
 

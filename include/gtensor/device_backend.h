@@ -23,11 +23,127 @@
 namespace gt
 {
 
-class stream_view;
-class stream_wrapper;
-
 namespace backend
 {
+
+// ======================================================================
+// stream interface
+
+namespace stream_interface
+{
+
+template <typename Stream>
+Stream create();
+
+template <typename Stream>
+void destroy(Stream s);
+
+template <typename Stream>
+Stream get_default();
+
+template <typename Stream>
+bool is_default(Stream s);
+
+template <typename Stream>
+void synchronize(Stream s);
+
+/**
+ * CRTP static interface for backend specific stream wrapper, non owning view.
+ *
+ * View type:
+ * - reference semantics
+ * - two constructors - default creates a view to default stream, alternate
+ *   form takes a backend stream and creates a view from it.
+ */
+template <typename Stream>
+class stream_view_base
+{
+public:
+  using stream_t = Stream;
+
+  stream_view_base()
+    : stream_(gt::backend::stream_interface::get_default<stream_t>())
+  {}
+  stream_view_base(stream_t s) : stream_(s) {}
+
+  stream_t& get_backend_stream() { return stream_; }
+
+  bool is_default()
+  {
+    return gt::backend::stream_interface::is_default<stream_t>(stream_);
+  }
+
+  void synchronize()
+  {
+    gt::backend::stream_interface::synchronize<stream_t>(stream_);
+  }
+
+protected:
+  Stream stream_;
+};
+
+/**
+ * CRTP static interface for backend specific stream wrappers. This must be
+ * used to define an owning type with RIAA.
+ *
+ * Owning type:
+ * - copying not allowed
+ * - one default constructor, creates a new stream
+ *
+ * Backend implementations should inherit constructors, e.g.
+ *
+ *   using base_type = stream_base<...>;
+ *   using base_type::base_type;
+ */
+template <typename Stream, typename View = stream_view_base<Stream>>
+class stream_base
+{
+public:
+  using stream_t = Stream;
+  using view_t = View;
+
+  stream_base() : view_(gt::backend::stream_interface::create<stream_t>()) {}
+  ~stream_base() { sync_and_destroy(view_.get_backend_stream()); }
+
+  // copy not allowed
+  stream_base(stream_base& other) = delete;
+  stream_base& operator=(const stream_base& other) = delete;
+
+  stream_base(stream_base&& other) : view_(other.view_)
+  {
+    other.moved_from_ = true;
+  }
+
+  stream_base& operator=(stream_base&& other)
+  {
+    stream_t old_stream = view_.get_backend_stream();
+    view_ = other.view_;
+    other.moved_from_ = true;
+    sync_and_destroy(old_stream);
+  }
+
+  view_t& get_view() { return view_; }
+
+  stream_t get_backend_stream() { return view_.get_backend_stream(); }
+
+  bool is_default() { return view_.is_default(); }
+
+  void synchronize() { view_.synchronize(); }
+
+protected:
+  bool moved_from_;
+  view_t view_;
+
+  void sync_and_destroy(stream_t s)
+  {
+    if (!moved_from_) {
+      gt::backend::stream_interface::synchronize<stream_t>(s);
+      gt::backend::stream_interface::destroy<stream_t>(s);
+    }
+  }
+};
+
+} // namespace stream_interface
 
 // ======================================================================
 // space_pointer_impl::selector
