@@ -202,7 +202,7 @@ struct equals<N, N>
               <<  e1.strides() << std::endl;
     std::cout << "e2 " << e2_.strides() " -> "
               <<  e2.strides() << std::endl;
-    for (int i = 0; i < calc_size(e1.shape()); i++) {
+    for (size_type i = 0; i < calc_size(e1.shape()); i++) {
       if (e1.data_access(i) != e2.data_access(i)) {
         std::cout << e1.data_access(i) << " != "
                   << e2.data_access(i) << std::endl;
