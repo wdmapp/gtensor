@@ -93,7 +93,14 @@ private:
 template <typename T, size_type N>
 inline gtensor_container<T, N>::gtensor_container(const shape_type& shape)
   : base_type(shape, calc_strides(shape)), storage_(calc_size(shape))
-{}
+{
+#if defined(GTENSOR_USE_THRUST) && defined(GTENSOR_DEVICE_HIP)
+  // NOTE: rocThrust backend appears to not synchronize uninitialized zero fill
+  // by default, which can lead to suprising behavior where data is zeroed after
+  // constructor is run.
+  gt::synchronize();
+#endif
+}
 
 template <typename T, size_type N>
 template <typename E, typename Enabled>
