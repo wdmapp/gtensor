@@ -41,7 +41,9 @@ struct thrust_const_pointer<
 } // namespace detail
 
 template <typename Container,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
 inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
@@ -58,7 +60,9 @@ inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
 }
 
 template <typename Container,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
 inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
@@ -70,7 +74,9 @@ inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
 }
 
 template <typename Container,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
 inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
 {
   using T = typename Container::value_type;
@@ -83,7 +89,9 @@ inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
 }
 
 template <typename Container, typename OutputType, typename BinaryReductionOp,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
 inline OutputType reduce(const Container& a, OutputType init,
                          BinaryReductionOp reduction_op,
                          gt::stream_view stream = gt::stream_view{})
@@ -103,7 +111,9 @@ inline OutputType reduce(const Container& a, OutputType init,
 
 template <typename Container, typename OutputType, typename BinaryReductionOp,
           typename UnaryTransformOp,
-          typename = std::enable_if_t<has_data_method_v<Container>>>
+          typename = std::enable_if_t<
+            has_data_method_v<Container> &&
+            std::is_same<typename Container::space_type, space::device>::value>>
 inline OutputType transform_reduce(const Container& a, OutputType init,
                                    BinaryReductionOp reduction_op,
                                    UnaryTransformOp transform_op,
@@ -313,8 +323,6 @@ inline OutputType transform_reduce(const Container& a, OutputType init,
 
 #endif // device implementations
 
-#if defined(GTENSOR_DEVICE_HOST) || defined(GTENSOR_DEVICE_SYCL)
-
 template <typename Container,
           typename = std::enable_if_t<
             has_data_method_v<Container> &&
@@ -409,8 +417,6 @@ inline OutputType transform_reduce(const Container& a, OutputType init,
   return init;
 #endif
 }
-
-#endif // HOST / SYCL host implementation
 
 template <typename Eout, typename Ein>
 inline void sum_axis_to(Eout&& out, Ein&& in, int axis,
