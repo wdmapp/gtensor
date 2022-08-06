@@ -3,8 +3,10 @@
 #define GTENSOR_GVIEW_H
 
 #include "assign.h"
+#include "defs.h"
 #include "expression.h"
 #include "gslice.h"
+#include "helper.h"
 #include "meta.h"
 
 namespace gt

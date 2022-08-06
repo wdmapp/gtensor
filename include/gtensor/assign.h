@@ -2,7 +2,10 @@
 #ifndef GTENSOR_ASSIGN_H
 #define GTENSOR_ASSIGN_H
 
+#include <type_traits>
+
 #include "defs.h"
+#include "space.h"
 
 namespace gt
 {
