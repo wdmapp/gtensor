@@ -347,7 +347,8 @@ template <typename Elhs, typename Erhs, size_type N>
 __global__ void kernel_assign_N(Elhs lhs, Erhs rhs, size_type size,
                                 gt::shape_type<N> strides)
 {
-  size_type i = threadIdx.x + blockIdx.x * blockDim.x;
+  // workaround ROCm 5.2.0 compiler bug
+  size_type i = threadIdx.x + static_cast<size_type>(blockIdx.x) * blockDim.x;
 
   if (i < size) {
     auto idx = unravel(i, strides);

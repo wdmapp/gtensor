@@ -312,7 +312,8 @@ __global__ void kernel_launch(gt::shape_type<6> shape, F f)
 template <typename F, size_type N>
 __global__ void kernel_launch_N(F f, size_type size, gt::shape_type<N> strides)
 {
-  size_type i = threadIdx.x + blockIdx.x * blockDim.x;
+  // workaround ROCm 5.2.0 compiler bug
+  size_type i = threadIdx.x + static_cast<size_type>(blockIdx.x) * blockDim.x;
 
   if (i < size) {
     auto idx = unravel(i, strides);
