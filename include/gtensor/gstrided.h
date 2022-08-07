@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GSTRIDED_H
 #define GTENSOR_GSTRIDED_H
 
+#include <cstddef>
+
 #include "defs.h"
 #include "expression.h"
 #include "gslice.h"
