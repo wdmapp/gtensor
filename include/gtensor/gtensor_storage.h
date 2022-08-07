@@ -216,7 +216,7 @@ bool operator==(const gtensor_storage<T, A, O>& v1,
   auto&& h2 = host_mirror(v2);
   copy(v1, h1);
   copy(v2, h2);
-  for (int i = 0; i < h1.size(); i++) {
+  for (size_type i = 0; i < h1.size(); i++) {
     if (h1[i] != h2[i]) {
       return false;
     }

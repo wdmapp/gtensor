@@ -344,10 +344,11 @@ struct assigner<6, space::device>
 #else // not defined GTENSOR_PER_DIM_KERNELS
 
 template <typename Elhs, typename Erhs, size_type N>
-__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, int size,
+__global__ void kernel_assign_N(Elhs lhs, Erhs rhs, size_type size,
                                 gt::shape_type<N> strides)
 {
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  // workaround ROCm 5.2.0 compiler bug
+  size_type i = threadIdx.x + static_cast<size_type>(blockIdx.x) * blockDim.x;
 
   if (i < size) {
     auto idx = unravel(i, strides);
@@ -361,9 +362,12 @@ struct assigner<N, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
-    int size = int(calc_size(lhs.shape()));
+    auto size = calc_size(lhs.shape());
     auto strides = calc_strides(lhs.shape());
-    auto block_size = std::min(size, BS_LINEAR);
+    unsigned int block_size = BS_LINEAR;
+    if (block_size > size) {
+      block_size = static_cast<unsigned int>(size);
+    }
 
     dim3 numThreads(block_size);
     dim3 numBlocks(gt::div_ceil(size, block_size));
@@ -399,7 +403,7 @@ struct assigner<1, space::device>
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign1<E1, E2, ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<1> item) {
-        int i = item.get_id();
+        auto i = item.get_id();
         k_lhs(i) = k_rhs(i);
       });
     });
@@ -425,8 +429,8 @@ struct assigner<2, space::device>
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign2<E1, E2, ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
-        int i = item.get_id(1);
-        int j = item.get_id(0);
+        auto i = item.get_id(1);
+        auto j = item.get_id(0);
         k_lhs(i, j) = k_rhs(i, j);
       });
     });
@@ -452,9 +456,9 @@ struct assigner<3, space::device>
       using rtype = decltype(k_rhs);
       using kname = gt::backend::sycl::Assign3<E1, E2, ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
-        int i = item.get_id(2);
-        int j = item.get_id(1);
-        int k = item.get_id(0);
+        auto i = item.get_id(2);
+        auto j = item.get_id(1);
+        auto k = item.get_id(0);
         k_lhs(i, j, k) = k_rhs(i, j, k);
       });
     });
@@ -515,7 +519,7 @@ template <typename S>
 inline void valid_assign_broadcast_or_throw(const S& lhs_shape,
                                             const S& rhs_shape)
 {
-  for (int i = 0; i < lhs_shape.size(); i++) {
+  for (size_type i = 0; i < lhs_shape.size(); i++) {
     if (lhs_shape[i] != rhs_shape[i] && rhs_shape[i] != 1) {
       throw std::runtime_error("cannot assign lhs = " + to_string(lhs_shape) +
                                " rhs = " + to_string(rhs_shape) + "\n");

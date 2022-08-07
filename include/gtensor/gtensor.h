@@ -310,9 +310,10 @@ __global__ void kernel_launch(gt::shape_type<6> shape, F f)
 #else // not GTENSOR_PER_DIM_KERNELS
 
 template <typename F, size_type N>
-__global__ void kernel_launch_N(F f, int size, gt::shape_type<N> strides)
+__global__ void kernel_launch_N(F f, size_type size, gt::shape_type<N> strides)
 {
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  // workaround ROCm 5.2.0 compiler bug
+  size_type i = threadIdx.x + static_cast<size_type>(blockIdx.x) * blockDim.x;
 
   if (i < size) {
     auto idx = unravel(i, strides);
@@ -540,9 +541,12 @@ struct launch<N, space::device>
   template <typename F>
   static void run(const gt::shape_type<N>& shape, F&& f, gt::stream_view stream)
   {
-    int size = int(calc_size(shape));
+    auto size = calc_size(shape);
     auto strides = calc_strides(shape);
-    auto block_size = std::min(size, BS_LINEAR);
+    unsigned int block_size = BS_LINEAR;
+    if (block_size > size) {
+      block_size = static_cast<unsigned int>(size);
+    }
 
     dim3 numThreads(block_size);
     dim3 numBlocks(gt::div_ceil(size, block_size));
@@ -574,7 +578,7 @@ struct launch<1, space::device>
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch1<decltype(f)>;
       cgh.parallel_for(range, [=](sycl::item<1> item) {
-        int i = item.get_id(0);
+        auto i = item.get_id(0);
         f(i);
       });
     });
@@ -596,8 +600,8 @@ struct launch<2, space::device>
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch2<decltype(f)>;
       cgh.parallel_for(range, [=](sycl::item<2> item) {
-        int i = item.get_id(1);
-        int j = item.get_id(0);
+        auto i = item.get_id(1);
+        auto j = item.get_id(0);
         f(i, j);
       });
     });
@@ -619,9 +623,9 @@ struct launch<3, space::device>
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::Launch3<decltype(f)>;
       cgh.parallel_for(range, [=](sycl::item<3> item) {
-        int i = item.get_id(2);
-        int j = item.get_id(1);
-        int k = item.get_id(0);
+        auto i = item.get_id(2);
+        auto j = item.get_id(1);
+        auto k = item.get_id(0);
         f(i, j, k);
       });
     });
@@ -641,7 +645,7 @@ struct launch<N, space::device>
     gpuSyncIfEnabledStream(stream);
 
     sycl::queue q = stream.get_backend_stream();
-    int size = calc_size(shape);
+    auto size = calc_size(shape);
     auto strides = calc_strides(shape);
     auto e = q.submit([&](sycl::handler& cgh) {
       // using kname = gt::backend::sycl::LaunchN<decltype(f)>;

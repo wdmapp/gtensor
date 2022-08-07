@@ -335,7 +335,7 @@ inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
   // TODO: this assumes type has an initializer from int(0), which should be
   // true for all numeric types encountered in practice, but this is ugly
   T tmp = 0;
-  for (int i = 0; i < a.size(); i++) {
+  for (size_type i = 0; i < a.size(); i++) {
     tmp += data[i];
   }
   return tmp;
@@ -352,7 +352,7 @@ inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
   auto data = a.data();
   T max_value = data[0];
   T current_value;
-  for (int i = 1; i < a.size(); i++) {
+  for (size_type i = 1; i < a.size(); i++) {
     current_value = data[i];
     if (current_value > max_value)
       max_value = current_value;
@@ -371,7 +371,7 @@ inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
   auto data = a.data();
   T min_value = data[0];
   T current_value;
-  for (int i = 0; i < a.size(); i++) {
+  for (size_type i = 0; i < a.size(); i++) {
     current_value = data[i];
     if (current_value < min_value)
       min_value = current_value;

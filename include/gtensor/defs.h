@@ -25,8 +25,8 @@ class sarray;
 template <size_type N>
 using shape_type = sarray<int, N>;
 
-template <typename T>
-T div_ceil(const T n, const T d)
+template <typename T1, typename T2>
+auto div_ceil(const T1 n, const T2 d)
 {
   return (n - 1) / d + 1;
 }
