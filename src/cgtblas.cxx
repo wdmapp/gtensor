@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdint>
+#include <type_traits>
 
 #include "gt-blas/blas.h"
 #include "gt-blas/cblas.h"
@@ -72,6 +73,46 @@ inline auto cast_aligned(const f2c_complex<T>** c)
   return reinterpret_cast<const gt::complex<T>**>(c);
 }
 
+template <typename Stream,
+          typename std::enable_if_t<
+            std::is_same<std::decay_t<Stream>,
+                         std::decay_t<gt::stream_view::stream_t>>::value,
+            int> = 0>
+void set_stream(Stream stream_id)
+{
+  g_handle->set_stream(gt::stream_view{stream_id});
+}
+
+template <typename Stream,
+          typename std::enable_if_t<
+            std::is_same<std::decay_t<Stream>,
+                         std::decay_t<gt::stream_view::stream_t>*>::value,
+            int> = 0>
+void set_stream(Stream stream_id)
+{
+  g_handle->set_stream(gt::stream_view{*stream_id});
+}
+
+template <typename Stream,
+          typename std::enable_if_t<
+            std::is_same<std::decay_t<Stream>,
+                         std::decay_t<gt::stream_view::stream_t>>::value,
+            int> = 0>
+void get_stream(Stream* stream_id)
+{
+  *stream_id = g_handle->get_stream().get_backend_stream();
+}
+
+template <typename Stream,
+          typename std::enable_if_t<
+            std::is_same<std::decay_t<Stream>,
+                         std::decay_t<gt::stream_view::stream_t>*>::value,
+            int> = 0>
+void get_stream(Stream* stream_id)
+{
+  *stream_id = &g_handle->get_stream().get_backend_stream();
+}
+
 } // namespace detail
 
 void gtblas_create()
@@ -91,12 +132,12 @@ void gtblas_destroy()
 
 void gtblas_set_stream(gt::blas::stream_t stream_id)
 {
-  g_handle->set_stream(gt::stream_view{stream_id});
+  detail::set_stream(stream_id);
 }
 
 void gtblas_get_stream(gt::blas::stream_t* stream_id)
 {
-  *stream_id = g_handle->get_stream().get_backend_stream();
+  detail::get_stream(stream_id);
 }
 
 // ======================================================================

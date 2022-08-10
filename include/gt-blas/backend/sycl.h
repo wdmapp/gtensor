@@ -13,7 +13,7 @@ namespace blas
 // ======================================================================
 // types aliases
 
-using stream_t = cl::sycl::queue;
+using stream_t = cl::sycl::queue*;
 using index_t = std::int64_t;
 
 // ======================================================================
