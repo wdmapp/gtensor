@@ -335,22 +335,7 @@ if (GTENSOR_BUILD_BENCHMARKS)
   )
 endif()
 
-function(target_gtensor_sources TARGET)
-  set(options "")
-  set(oneValueArgs "")
-  set(multiValueArgs PRIVATE)
-  cmake_parse_arguments(target_gtensor_sources "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  target_sources(${TARGET} PRIVATE ${target_gtensor_sources_PRIVATE})
-  if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
-    set_source_files_properties(${target_gtensor_sources_PRIVATE}
-                                TARGET_DIRECTORY ${TARGET}
-                                PROPERTIES LANGUAGE CUDA)
-  else()
-    set_source_files_properties(${target_gtensor_sources_PRIVATE}
-                                TARGET_DIRECTORY ${TARGET}
-                                PROPERTIES LANGUAGE CXX)
-  endif()
-endfunction()
+include(cmake/target-gtensor-sources-macro.cmake)
 
 if (BUILD_TESTING AND IS_MAIN_PROJECT)
   add_subdirectory(tests)
@@ -462,6 +447,7 @@ configure_package_config_file(
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/gtensor-config.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/gtensor-config-version.cmake
+    cmake/target-gtensor-sources-macro.cmake
     DESTINATION ${INSTALL_CONFIGDIR}
 )
 
