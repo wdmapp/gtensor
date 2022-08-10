@@ -90,7 +90,11 @@ template <typename Stream,
             int> = 0>
 void set_stream(Stream stream_id)
 {
-  g_handle->set_stream(gt::stream_view{*stream_id});
+  if (stream_id) {
+    g_handle->set_stream(gt::stream_view{*stream_id});
+  } else {
+    g_handle->set_stream(gt::stream_view{});
+  }
 }
 
 template <typename Stream,
