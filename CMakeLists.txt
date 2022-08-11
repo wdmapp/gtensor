@@ -96,7 +96,13 @@ macro(add_gtensor_library DEVICE)
        $<INSTALL_INTERFACE:include>
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   )
-  target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_14)
+  if ("${GTENSOR_DEVICE}" STREQUAL "sycl")
+    # Note: SYCL 2020 standard requires C++17, and gtensor takes advantage of this
+    # in some SYCL backend specific code
+    target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_17)
+  else()
+    target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_14)
+  endif()
 
   list(APPEND GTENSOR_TARGETS gtensor_${DEVICE})
 
@@ -194,7 +200,7 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   add_gtensor_library(sycl)
 
   target_compile_options(gtensor_sycl INTERFACE
-                         $<$<COMPILE_LANGUAGE:CXX>:-fsycl>)
+                         $<$<COMPILE_LANGUAGE:CXX>:-fsycl -x c++>)
   target_link_options(gtensor_sycl INTERFACE
                       $<$<COMPILE_LANGUAGE:CXX>:-fsycl>)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
@@ -329,22 +335,7 @@ if (GTENSOR_BUILD_BENCHMARKS)
   )
 endif()
 
-function(target_gtensor_sources TARGET)
-  set(options "")
-  set(oneValueArgs "")
-  set(multiValueArgs PRIVATE)
-  cmake_parse_arguments(target_gtensor_sources "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  target_sources(${TARGET} PRIVATE ${target_gtensor_sources_PRIVATE})
-  if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
-    set_source_files_properties(${target_gtensor_sources_PRIVATE}
-                                TARGET_DIRECTORY ${TARGET}
-                                PROPERTIES LANGUAGE CUDA)
-  else()
-    set_source_files_properties(${target_gtensor_sources_PRIVATE}
-                                TARGET_DIRECTORY ${TARGET}
-                                PROPERTIES LANGUAGE CXX)
-  endif()
-endfunction()
+include(cmake/target-gtensor-sources-macro.cmake)
 
 if (BUILD_TESTING AND IS_MAIN_PROJECT)
   add_subdirectory(tests)
@@ -456,6 +447,7 @@ configure_package_config_file(
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/gtensor-config.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/gtensor-config-version.cmake
+    cmake/target-gtensor-sources-macro.cmake
     DESTINATION ${INSTALL_CONFIGDIR}
 )
 
