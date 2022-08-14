@@ -38,6 +38,8 @@ set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
 set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
+  set(GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE "coarse" CACHE STRING
+    "One of 'coarse', 'fine', or 'device'")
 
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING
@@ -183,6 +185,21 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     $<$<COMPILE_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
   target_link_options(gtensor_hip INTERFACE
     $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+
+  if (${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE} STREQUAL "fine")
+    target_compile_definitions(gtensor_hip INTERFACE
+      GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_FINE)
+  elseif(${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE} STREQUAL "device")
+    target_compile_definitions(gtensor_hip INTERFACE
+      GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_DEVICE)
+  elseif(${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE} STREQUAL "coarse")
+    target_compile_definitions(gtensor_hip INTERFACE
+      GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_COARSE)
+  else()
+    message(FATAL_ERROR "${PROJECT_NAME}: unknown value of GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE: '${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE}'")
+    message(STATUS "${PROJECT_NAME}: hip managed memory type '${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE}'")
+  endif()
+  message(STATUS "${PROJECT_NAME}: hip managed memory type '${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE}'")
 
   if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE

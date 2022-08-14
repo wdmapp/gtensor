@@ -44,7 +44,21 @@ struct gallocator<gt::space::hip_managed>
   static T* allocate(size_t n)
   {
     T* p;
-    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
+    auto nbytes = sizeof(T) * n;
+#if defined(GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_DEVICE)
+    gtGpuCheck(hipMalloc(&p, nbytes));
+#else
+    gtGpuCheck(hipMallocManaged(&p, nbytes));
+#if !defined(GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_FINE)
+#if HIP_VERSION_MAJOR >= 5
+    int device_id;
+    gtGpuCheck(hipGetDevice(&device_id));
+    gtGpuCheck(hipMemAdvise(p, nbytes, hipMemAdviseSetCoarseGrain, device_id));
+#else
+#warning "Coarse grain memory not available in ROCm version, using fine"
+#endif // HIP_VERSOIN_MAJOR
+#endif // MANAGED_MEMORY_TYPE_FINE
+#endif // MANAGED_MEMORY_TYPE_DEVICE
     return p;
   }
 

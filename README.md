@@ -66,16 +66,20 @@ gtensor for nVidia GPUs with CUDA requires
 
 ### AMD HIP requirements
 
-gtensor for AMD GPUs with HIP requires ROCm 3.3.0+, and
-rocthrust and rocprim unless `-DGTENSOR_USE_THRUST=OFF`. See the
-[ROCm installation guide](https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html)
+gtensor for AMD GPUs with HIP requires ROCm 4.5.0+, and rocthrust and
+rocprim. See the [ROCm installation
+guide](https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html)
 for details. In Ubuntu, after setting up the ROCm repository, the required
 packages can be installed like this:
 ```
 sudo apt install rocm-dkms rocm-dev rocthrust
 ```
 The official packages install to `/opt/rocm`. If using a different install
-location, add it to `CMAKE_PREFIX_PATH` when running cmake for the application.
+location, set the `ROCM_PATH` cmake variable. To use coarse grained
+managed memory, ROCm 5.0+ is required.
+
+To use gt-fft and gt-blas, rocsolver, rocblas, and rocfft packages need
+to be installed as well.
 
 ### Intel SYCL requirements
 
