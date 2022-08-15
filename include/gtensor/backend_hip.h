@@ -45,20 +45,27 @@ struct gallocator<gt::space::hip_managed>
   {
     T* p;
     auto nbytes = sizeof(T) * n;
-#if defined(GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_DEVICE)
-    gtGpuCheck(hipMalloc(&p, nbytes));
-#else
-    gtGpuCheck(hipMallocManaged(&p, nbytes));
-#if !defined(GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_FINE)
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (strcmp(mtype, "device") == 0) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
+    } else if (strcmp(mtype, "managed") == 0 ||
+               strcmp(mtype, "managed_fine") == 0) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
+    } else if (strcmp(mtype, "managed_coarse") == 0) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
 #if HIP_VERSION_MAJOR >= 5
-    int device_id;
-    gtGpuCheck(hipGetDevice(&device_id));
-    gtGpuCheck(hipMemAdvise(p, nbytes, hipMemAdviseSetCoarseGrain, device_id));
+      int device_id;
+      gtGpuCheck(hipGetDevice(&device_id));
+      gtGpuCheck(
+        hipMemAdvise(p, nbytes, hipMemAdviseSetCoarseGrain, device_id));
 #else
-#warning "Coarse grain memory not available in ROCm version, using fine"
-#endif // HIP_VERSOIN_MAJOR
-#endif // MANAGED_MEMORY_TYPE_FINE
-#endif // MANAGED_MEMORY_TYPE_DEVICE
+      throw std::runtime_error(
+        "managed_coarse managed memory type requires ROCm >= 5");
+#endif
+    } else {
+      throw std::runtime_error("unsupported managed memory type for backend");
+    }
+
     return p;
   }
 

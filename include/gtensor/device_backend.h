@@ -27,6 +27,50 @@ namespace backend
 {
 
 // ======================================================================
+// library wide configuration
+
+#ifndef GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
+#define GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed"
+#endif
+
+namespace config
+{
+
+class GtensorConfig
+{
+public:
+  GtensorConfig() : managed_memory_type_(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT) {}
+
+  void set_managed_memory_type(const char* mtype)
+  {
+    managed_memory_type_ = mtype;
+  }
+
+  auto get_managed_memory_type() { return managed_memory_type_; }
+
+private:
+  const char* managed_memory_type_;
+};
+
+inline GtensorConfig& get_config_instance()
+{
+  static GtensorConfig config;
+  return config;
+}
+
+} // namespace config
+
+inline void set_managed_memory_type(const char* mtype)
+{
+  config::get_config_instance().set_managed_memory_type(mtype);
+}
+
+inline auto get_managed_memory_type()
+{
+  return config::get_config_instance().get_managed_memory_type();
+}
+
+// ======================================================================
 // stream interface
 
 namespace stream_interface

@@ -17,6 +17,11 @@ set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 
+set(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed" CACHE STRING
+   "One of 'managed', 'device', or for HIP 'managed_coarse' or 'managed_fine'")
+set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
+             PROPERTY STRINGS "managed" "device" "managed_coarse" "managed_fine")
+
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
 option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
@@ -38,8 +43,6 @@ set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
 set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
-  set(GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE "coarse" CACHE STRING
-    "One of 'coarse', 'fine', or 'device'")
 
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING
@@ -186,21 +189,6 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_link_options(gtensor_hip INTERFACE
     $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
 
-  if (${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE} STREQUAL "fine")
-    target_compile_definitions(gtensor_hip INTERFACE
-      GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_FINE)
-  elseif(${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE} STREQUAL "device")
-    target_compile_definitions(gtensor_hip INTERFACE
-      GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_DEVICE)
-  elseif(${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE} STREQUAL "coarse")
-    target_compile_definitions(gtensor_hip INTERFACE
-      GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE_COARSE)
-  else()
-    message(FATAL_ERROR "${PROJECT_NAME}: unknown value of GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE: '${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE}'")
-    message(STATUS "${PROJECT_NAME}: hip managed memory type '${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE}'")
-  endif()
-  message(STATUS "${PROJECT_NAME}: hip managed memory type '${GTENSOR_DEVICE_HIP_MANAGED_MEMORY_TYPE}'")
-
   if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE
       $<$<COMPILE_LANGUAGE:CXX>:--gcc-toolchain=${HIP_GCC_TOOLCHAIN}>)
@@ -304,6 +292,10 @@ else()
                              INTERFACE GTENSOR_ALLOCATOR_NO_CACHING)
   message(STATUS "${PROJECT_NAME}: caching allocator disabled")
 endif()
+
+target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
+  GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT="${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT}")
+message(STATUS "${PROJECT_NAME}: default managed memory type '${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT}'")
 
 # define aliases for use in tests and examples subdirs
 add_library(gtensor ALIAS gtensor_${GTENSOR_DEVICE})
