@@ -30,7 +30,7 @@ namespace backend
 // library wide configuration
 
 #ifndef GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
-#define GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT managed_memory_type::managed
+#define GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT managed
 #endif
 
 #ifdef GTENSOR_DEVICE_HIP
@@ -61,11 +61,15 @@ enum class managed_memory_type
 namespace config
 {
 
+#define QUALIFY_MMTYPE(x) gt::backend::managed_memory_type::x
+
 struct gtensor_config
 {
   gt::backend::managed_memory_type managed_memory_type =
-    GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT;
+    QUALIFY_MMTYPE(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT);
 };
+
+#undef QUALIFY_MMTYPE
 
 inline gtensor_config& get_instance()
 {
