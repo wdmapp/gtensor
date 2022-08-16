@@ -17,6 +17,11 @@ set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
 set_property(CACHE GTENSOR_DEVICE PROPERTY STRINGS "host" "cuda" "hip" "sycl")
 set(GTENSOR_BUILD_DEVICES "" CACHE STRING "List of device types 'host', 'cuda', 'hip', and 'sycl' (semicolon separated)")
 
+set(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed" CACHE STRING
+   "One of 'managed', 'device', or for HIP 'managed_coarse' or 'managed_fine'")
+set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
+             PROPERTY STRINGS "managed" "device" "managed_coarse" "managed_fine")
+
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
 option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
@@ -287,6 +292,10 @@ else()
                              INTERFACE GTENSOR_ALLOCATOR_NO_CACHING)
   message(STATUS "${PROJECT_NAME}: caching allocator disabled")
 endif()
+
+target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
+  GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT=${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT})
+message(STATUS "${PROJECT_NAME}: default managed memory type '${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT}'")
 
 # define aliases for use in tests and examples subdirs
 add_library(gtensor ALIAS gtensor_${GTENSOR_DEVICE})

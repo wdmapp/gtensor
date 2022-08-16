@@ -44,7 +44,29 @@ struct gallocator<gt::space::hip_managed>
   static T* allocate(size_t n)
   {
     T* p;
-    gtGpuCheck(hipMallocManaged(&p, sizeof(T) * n));
+    auto nbytes = sizeof(T) * n;
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype == gt::backend::managed_memory_type::device) {
+      gtGpuCheck(hipMalloc(&p, nbytes));
+#if HIP_VERSION_MAJOR >= 5
+    } else if (mtype == gt::backend::managed_memory_type::managed_fine) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
+    } else if (mtype == gt::backend::managed_memory_type::managed_coarse ||
+               mtype == gt::backend::managed_memory_type::managed) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
+      int device_id;
+      gtGpuCheck(hipGetDevice(&device_id));
+      gtGpuCheck(
+        hipMemAdvise(p, nbytes, hipMemAdviseSetCoarseGrain, device_id));
+#else // TODO: drop ROCm < 5 support when CI is running on 5
+    } else if (mtype == gt::backend::managed_memory_type::managed_fine ||
+               mtype == gt::backend::managed_memory_type::managed) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
+#endif
+    } else {
+      throw std::runtime_error("unsupported managed memory type for backend");
+    }
+
     return p;
   }
 
@@ -53,7 +75,7 @@ struct gallocator<gt::space::hip_managed>
   {
     gtGpuCheck(hipFree(p));
   }
-};
+}; // namespace allocator_impl
 
 template <>
 struct gallocator<gt::space::hip_host>

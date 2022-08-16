@@ -27,6 +27,69 @@ namespace backend
 {
 
 // ======================================================================
+// library wide configuration
+
+#ifndef GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
+#define GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT managed
+#endif
+
+#ifdef GTENSOR_DEVICE_HIP
+#if HIP_VERSION_MAJOR >= 5
+enum class managed_memory_type
+{
+  managed,
+  device,
+  managed_fine,
+  managed_coarse
+};
+#else
+enum class managed_memory_type
+{
+  managed,
+  device,
+  managed_fine
+};
+#endif // HIP_VERSION_MAJOR
+#else
+enum class managed_memory_type
+{
+  managed,
+  device
+};
+#endif
+
+namespace config
+{
+
+#define QUALIFY_MMTYPE(x) gt::backend::managed_memory_type::x
+
+struct gtensor_config
+{
+  gt::backend::managed_memory_type managed_memory_type =
+    QUALIFY_MMTYPE(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT);
+};
+
+#undef QUALIFY_MMTYPE
+
+inline gtensor_config& get_instance()
+{
+  static gtensor_config config;
+  return config;
+}
+
+} // namespace config
+
+inline void set_managed_memory_type(managed_memory_type mtype)
+{
+  config::get_instance().managed_memory_type = mtype;
+}
+
+inline auto get_managed_memory_type()
+{
+  return config::get_instance().managed_memory_type;
+}
+
+// ======================================================================
 // stream interface
 
 namespace stream_interface
