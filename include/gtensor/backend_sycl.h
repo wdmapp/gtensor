@@ -121,9 +121,9 @@ struct gallocator<gt::space::sycl_managed>
   static T* allocate(size_t n)
   {
     auto mtype = gt::backend::get_managed_memory_type();
-    if (strcmp(mtype, "managed") == 0) {
+    if (mtype == gt::backend::managed_memory_type::managed) {
       return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
-    } else if (strcmp(mtype, "device") == 0) {
+    } else if (mtype == gt::backend::managed_memory_type::device) {
       return cl::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
     } else {
       throw std::runtime_error("unsupported managed memory type for backend");

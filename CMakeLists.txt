@@ -294,7 +294,7 @@ else()
 endif()
 
 target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
-  GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT="${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT}")
+  GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT=managed_memory_type::${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT})
 message(STATUS "${PROJECT_NAME}: default managed memory type '${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT}'")
 
 # define aliases for use in tests and examples subdirs

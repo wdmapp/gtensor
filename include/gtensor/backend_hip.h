@@ -46,21 +46,22 @@ struct gallocator<gt::space::hip_managed>
     T* p;
     auto nbytes = sizeof(T) * n;
     auto mtype = gt::backend::get_managed_memory_type();
-    if (strcmp(mtype, "device") == 0) {
-      gtGpuCheck(hipMallocManaged(&p, nbytes));
-    } else if (strcmp(mtype, "managed") == 0 ||
-               strcmp(mtype, "managed_fine") == 0) {
-      gtGpuCheck(hipMallocManaged(&p, nbytes));
-    } else if (strcmp(mtype, "managed_coarse") == 0) {
-      gtGpuCheck(hipMallocManaged(&p, nbytes));
+    if (mtype == gt::backend::managed_memory_type::device) {
+      gtGpuCheck(hipMalloc(&p, nbytes));
 #if HIP_VERSION_MAJOR >= 5
+    } else if (mtype == gt::backend::managed_memory_type::managed_fine) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
+    } else if (mtype == gt::backend::managed_memory_type::managed_coarse ||
+               mtype == gt::backend::managed_memory_type::managed) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
       int device_id;
       gtGpuCheck(hipGetDevice(&device_id));
       gtGpuCheck(
         hipMemAdvise(p, nbytes, hipMemAdviseSetCoarseGrain, device_id));
-#else
-      throw std::runtime_error(
-        "managed_coarse managed memory type requires ROCm >= 5");
+#else // TODO: drop ROCm < 5 support when CI is running on 5
+    } else if (mtype == gt::backend::managed_memory_type::managed_fine ||
+               mtype == gt::backend::managed_memory_type::managed) {
+      gtGpuCheck(hipMallocManaged(&p, nbytes));
 #endif
     } else {
       throw std::runtime_error("unsupported managed memory type for backend");
@@ -74,7 +75,7 @@ struct gallocator<gt::space::hip_managed>
   {
     gtGpuCheck(hipFree(p));
   }
-};
+}; // namespace allocator_impl
 
 template <>
 struct gallocator<gt::space::hip_host>

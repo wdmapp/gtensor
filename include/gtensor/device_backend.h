@@ -30,44 +30,59 @@ namespace backend
 // library wide configuration
 
 #ifndef GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
-#define GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed"
+#define GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT managed_memory_type::managed
+#endif
+
+#ifdef GTENSOR_DEVICE_HIP
+#if HIP_VERSION_MAJOR >= 5
+enum class managed_memory_type
+{
+  managed,
+  device,
+  managed_fine,
+  managed_coarse
+};
+#else
+enum class managed_memory_type
+{
+  managed,
+  device,
+  managed_fine
+};
+#endif // HIP_VERSION_MAJOR
+#else
+enum class managed_memory_type
+{
+  managed,
+  device
+};
 #endif
 
 namespace config
 {
 
-class GtensorConfig
+struct gtensor_config
 {
-public:
-  GtensorConfig() : managed_memory_type_(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT) {}
-
-  void set_managed_memory_type(const char* mtype)
-  {
-    managed_memory_type_ = mtype;
-  }
-
-  auto get_managed_memory_type() { return managed_memory_type_; }
-
-private:
-  const char* managed_memory_type_;
+  gt::backend::managed_memory_type managed_memory_type =
+    GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT;
 };
 
-inline GtensorConfig& get_config_instance()
+inline gtensor_config& get_instance()
 {
-  static GtensorConfig config;
+  static gtensor_config config;
   return config;
 }
 
 } // namespace config
 
-inline void set_managed_memory_type(const char* mtype)
+inline void set_managed_memory_type(managed_memory_type mtype)
 {
-  config::get_config_instance().set_managed_memory_type(mtype);
+  config::get_instance().managed_memory_type = mtype;
 }
 
 inline auto get_managed_memory_type()
 {
-  return config::get_config_instance().get_managed_memory_type();
+  return config::get_instance().managed_memory_type;
 }
 
 // ======================================================================

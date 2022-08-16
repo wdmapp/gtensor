@@ -48,9 +48,9 @@ struct gallocator<gt::space::cuda_managed>
     T* p;
     auto nbytes = sizeof(T) * n;
     auto mtype = gt::backend::get_managed_memory_type();
-    if (strcmp(mtype, "managed") == 0) {
+    if (mtype == gt::backend::managed_memory_type::managed) {
       gtGpuCheck(cudaMallocManaged(&p, nbytes));
-    } else if (strcmp(mtype, "device") == 0) {
+    } else if (mtype == gt::backend::managed_memory_type::device) {
       gtGpuCheck(cudaMalloc(&p, nbytes));
     } else {
       throw std::runtime_error("unsupported managed memory type for backend");
