@@ -20,7 +20,7 @@
 #include "CL/sycl/backend/opencl.hpp"
 #endif
 
-#include "pointer_traits.h"
+#include "backend_common.h"
 
 #include "gtensor/backend_sycl_device.h"
 

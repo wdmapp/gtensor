@@ -2,8 +2,7 @@
 #ifndef GTENSOR_BACKEND_CUDA_H
 #define GTENSOR_BACKEND_CUDA_H
 
-#include "macros.h"
-#include "pointer_traits.h"
+#include "backend_common.h"
 
 #include <cuda_runtime_api.h>
 
