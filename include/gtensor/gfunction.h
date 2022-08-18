@@ -228,6 +228,13 @@ public:
 
   const_kernel_type to_kernel() const;
 
+  template <typename... Args>
+  inline auto view(Args&&... args) &;
+  template <typename... Args>
+  inline auto view(Args&&... args) const&;
+  template <typename... Args>
+  inline auto view(Args&&... args) &&;
+
 private:
   F f_;
   E e_;
@@ -271,6 +278,13 @@ public:
   GT_INLINE value_type operator()(Args... args) const;
 
   const_kernel_type to_kernel() const;
+
+  template <typename... Args>
+  inline auto view(Args&&... args) &;
+  template <typename... Args>
+  inline auto view(Args&&... args) const&;
+  template <typename... Args>
+  inline auto view(Args&&... args) &&;
 
 private:
   F f_;
@@ -350,6 +364,27 @@ template <typename F, typename E1, typename E2>
 inline auto gfunction<F, E1, E2>::to_kernel() const -> const_kernel_type
 {
   return function(F(f_), e1_.to_kernel(), e2_.to_kernel());
+}
+
+template <typename F, typename E1, typename E2>
+template <typename... Args>
+inline auto gfunction<F, E1, E2>::view(Args&&... args) const&
+{
+  return gt::view(*this, std::forward<Args>(args)...);
+}
+
+template <typename F, typename E1, typename E2>
+template <typename... Args>
+inline auto gfunction<F, E1, E2>::view(Args&&... args) &
+{
+  return gt::view(*this, std::forward<Args>(args)...);
+}
+
+template <typename F, typename E1, typename E2>
+template <typename... Args>
+inline auto gfunction<F, E1, E2>::view(Args&&... args) &&
+{
+  return gt::view(std::move(*this), std::forward<Args>(args)...);
 }
 
 #define MAKE_UNARY_OP(NAME, OP)                                                \
