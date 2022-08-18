@@ -2,11 +2,12 @@
 #ifndef GTENSOR_HELPER_H
 #define GTENSOR_HELPER_H
 
+#include <tuple>
+#include <type_traits>
+
 #include "defs.h"
 #include "meta.h"
 #include "sarray.h"
-
-#include <tuple>
 
 namespace gt
 {
