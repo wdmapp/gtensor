@@ -2,7 +2,7 @@
 #ifndef GTENSOR_BACKEND_HOST_H
 #define GTENSOR_BACKEND_HOST_H
 
-#include "pointer_traits.h"
+#include "backend_common.h"
 
 #include <algorithm>
 

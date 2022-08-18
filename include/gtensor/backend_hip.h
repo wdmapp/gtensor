@@ -2,7 +2,7 @@
 #ifndef GTENSOR_BACKEND_HIP_H
 #define GTENSOR_BACKEND_HIP_H
 
-#include "pointer_traits.h"
+#include "backend_common.h"
 
 #include <hip/hip_runtime.h>
 
