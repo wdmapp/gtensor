@@ -130,16 +130,16 @@ namespace detail
 {
 
 template <typename S, typename E>
-GT_INLINE void calc_shape(S& shape, const E& e)
+GT_INLINE void calc_shape_impl(S& shape, const E& e)
 {
   broadcast_shape(shape, e.shape());
 }
 
 template <typename S, typename E, typename... Es>
-GT_INLINE void calc_shape(S& shape, const E& e, const Es&... es)
+GT_INLINE void calc_shape_impl(S& shape, const E& e, const Es&... es)
 {
   broadcast_shape(shape, e.shape());
-  calc_shape(shape, es...);
+  calc_shape_impl(shape, es...);
 }
 
 } // namespace detail
@@ -150,7 +150,7 @@ GT_INLINE void calc_shape(S& shape, const Es&... es)
   for (auto& val : shape) {
     val = 1;
   }
-  detail::calc_shape(shape, es...);
+  detail::calc_shape_impl(shape, es...);
 }
 
 // ======================================================================
