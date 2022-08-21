@@ -2,14 +2,15 @@
 #ifndef GTENSOR_SPACE_H
 #define GTENSOR_SPACE_H
 
+#include <type_traits>
+#include <vector>
+
 #include "allocator.h"
 #include "defs.h"
 #include "gtensor_storage.h"
 #include "helper.h"
 #include "meta.h"
 #include "span.h"
-
-#include <vector>
 
 #ifdef GTENSOR_HAVE_THRUST
 #include <thrust/device_vector.h>
@@ -131,7 +132,7 @@ struct has_space_type : std::false_type
 template <typename T, typename S>
 struct has_space_type<T, S,
                       gt::meta::void_t<std::enable_if_t<
-                        std::is_same<expr_space_type<T>, S>::value>>>
+                        std::is_same<gt::expr_space_type<T>, S>::value>>>
   : std::true_type
 {};
 

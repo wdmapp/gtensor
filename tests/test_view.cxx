@@ -574,6 +574,37 @@ TEST(gview, flatten_gfunction_to_kernel)
   EXPECT_EQ(k_aflat, (gt::gtensor<double, 1>{22., 42., 62., 24., 44., 64.}));
 }
 
+TEST(gview, gfunction_view_method)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  gt::gtensor<double, 2> b{{11., 21., 31.}, {12., 22., 32.}};
+  auto aplusb = a + b;
+  auto aplusb_slice = aplusb.view(_all, 0);
+  GT_DEBUG_TYPE(aplusb);
+  GT_DEBUG_TYPE(aplusb_slice);
+  EXPECT_EQ(aplusb_slice, (gt::gtensor<double, 1>{22., 42., 62.}));
+}
+
+TEST(gview, gfunction_view_method_const)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  gt::gtensor<double, 2> b{{11., 21., 31.}, {12., 22., 32.}};
+  const auto aplusb = a + b;
+  auto aplusb_slice = aplusb.view(_all, 0);
+  GT_DEBUG_TYPE(aplusb);
+  GT_DEBUG_TYPE(aplusb_slice);
+  EXPECT_EQ(aplusb_slice, (gt::gtensor<double, 1>{22., 42., 62.}));
+}
+
+TEST(gview, gfunction_view_method_rvalue)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  gt::gtensor<double, 2> b{{11., 21., 31.}, {12., 22., 32.}};
+  auto aplusb_slice = (a + b).view(_all, 0);
+  GT_DEBUG_TYPE(aplusb_slice);
+  EXPECT_EQ(aplusb_slice, (gt::gtensor<double, 1>{22., 42., 62.}));
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(gview, device_copy_ctor)

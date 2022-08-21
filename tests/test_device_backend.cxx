@@ -87,6 +87,24 @@ TEST(device_backend, is_device_address)
 #endif
 }
 
+TEST(device_backend, managed_prefetch)
+{
+  using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
+  double* a = allocator::allocate<double>(N);
+  gt::backend::prefetch_host(a, N);
+  for (int i = 0; i < N; i++) {
+    a[i] = ((double)i) / N;
+  }
+  gt::backend::prefetch_device(a, N);
+  auto aview = gt::adapt_device(a, gt::shape(N));
+  aview = aview + 1.0;
+  gt::synchronize();
+  for (int i = 0; i < N; i++) {
+    EXPECT_EQ(a[i], 1.0 + ((double)i) / N);
+  }
+  allocator::deallocate(a);
+}
+
 #ifdef GTENSOR_DEVICE_SYCL
 
 TEST(device_backend, sycl_new_stream_queue)

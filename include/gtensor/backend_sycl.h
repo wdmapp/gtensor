@@ -285,6 +285,21 @@ inline void synchronize<sycl_stream_t>(sycl_stream_t s)
 
 } // namespace stream_interface
 
+// ======================================================================
+// prefetch
+
+template <typename T>
+void prefetch_device(T* p, size_type n)
+{
+  ::sycl::queue& q = gt::backend::sycl::get_queue();
+  q.prefetch(p, n);
+}
+
+// Not available in SYCL 2020, make it a no-op
+template <typename T>
+void prefetch_host(T* p, size_type n)
+{}
+
 } // namespace backend
 
 using stream_view =
@@ -292,42 +307,6 @@ using stream_view =
 using stream =
   backend::stream_interface::stream_base<cl::sycl::queue&, stream_view>;
 
-/*
-class stream_view
-{
-public:
-  stream_view() : stream_(gt::backend::sycl::get_queue()) {}
-  stream_view(cl::sycl::queue& q) : stream_(q) {}
-
-  auto& get_backend_stream() { return stream_; }
-
-  bool is_default() { return stream_ == gt::backend::sycl::get_queue(); }
-
-  void synchronize() { stream_.wait(); }
-
-private:
-  cl::sycl::queue& stream_;
-};
-
-class stream
-{
-public:
-  stream() : stream_(gt::backend::sycl::new_stream_queue()) {}
-
-  ~stream() { gt::backend::sycl::delete_stream_queue(stream_); }
-
-  auto& get_backend_stream() { return stream_; }
-
-  bool is_default() { return stream_ == gt::backend::sycl::get_queue(); }
-
-  auto get_view() { return stream_view(stream_); }
-
-  void synchronize() { stream_.wait(); }
-
-private:
-  cl::sycl::queue& stream_;
-};
-*/
 } // namespace gt
 
 #endif // GTENSOR_BACKEND_SYCL_H

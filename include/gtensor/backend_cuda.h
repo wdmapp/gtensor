@@ -259,6 +259,23 @@ public:
 
 } // namespace stream_interface
 
+// ======================================================================
+// prefetch
+
+template <typename T>
+void prefetch_device(T* p, size_type n)
+{
+  int device_id;
+  gtGpuCheck(cudaGetDevice(&device_id));
+  gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+}
+
+template <typename T>
+void prefetch_host(T* p, size_type n)
+{
+  gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), cudaCpuDeviceId, nullptr));
+}
+
 } // namespace backend
 
 using stream_view = backend::stream_interface::stream_view_cuda<cudaStream_t>;

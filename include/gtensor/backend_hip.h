@@ -271,6 +271,23 @@ public:
 
 } // namespace stream_interface
 
+// ======================================================================
+// prefetch
+
+template <typename T>
+void prefetch_device(T* p, size_type n)
+{
+  int device_id;
+  gtGpuCheck(hipGetDevice(&device_id));
+  gtGpuCheck(hipMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+}
+
+template <typename T>
+void prefetch_host(T* p, size_type n)
+{
+  gtGpuCheck(hipMemPrefetchAsync(p, n * sizeof(T), hipCpuDeviceId, nullptr));
+}
+
 } // namespace backend
 
 using stream_view = backend::stream_interface::stream_view_hip<hipStream_t>;

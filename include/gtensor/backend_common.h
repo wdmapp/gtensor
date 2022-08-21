@@ -293,6 +293,15 @@ struct selector
 
 } // namespace allocator_impl
 
+// ======================================================================
+// prefetch interface
+
+template <typename T>
+void prefetch_device(T* p, size_type n);
+
+template <typename T>
+void prefetch_host(T* p, size_type n);
+
 } // namespace backend
 
 } // namespace gt

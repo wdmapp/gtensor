@@ -108,4 +108,14 @@ bool gt_backend_is_device_address(void* p)
   return gt::backend::is_device_address(p);
 }
 
+void gt_backend_prefetch_device(void* p, size_t nbytes)
+{
+  gt::backend::prefetch_device<uint8_t>(static_cast<uint8_t*>(p), nbytes);
+}
+
+void gt_backend_prefetch_host(void* p, size_t nbytes)
+{
+  gt::backend::prefetch_device<uint8_t>(static_cast<uint8_t*>(p), nbytes);
+}
+
 #endif
