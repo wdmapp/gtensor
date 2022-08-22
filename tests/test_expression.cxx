@@ -341,6 +341,24 @@ TEST(expression, shape_second)
   EXPECT_EQ(e.shape(), (S3{2, 3, 4}));
 }
 
+TEST(expression, typestr)
+{
+  gt::gtensor<double, 2> a = {{1, 2}, {3, 4}};
+  auto aview = a.view(gt::all, 0);
+
+  auto adfn = 5.0 + a;
+  auto avfn = 5 * aview;
+  auto asfn = 5 * a.to_kernel();
+  auto sina = gt::sin(a);
+
+  std::cout << "a     typestr " << a.typestr() << std::endl;
+  std::cout << "aview typestr " << aview.typestr() << std::endl;
+  std::cout << "adfn  typestr " << adfn.typestr() << std::endl;
+  std::cout << "avfn  typestr " << avfn.typestr() << std::endl;
+  std::cout << "asfn  typestr " << asfn.typestr() << std::endl;
+  std::cout << "sina  typestr " << sina.typestr() << std::endl;
+}
+
 template <typename S>
 void test_index_expression()
 {

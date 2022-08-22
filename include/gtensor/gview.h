@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GVIEW_H
 #define GTENSOR_GVIEW_H
 
+#include <sstream>
+
 #include "assign.h"
 #include "defs.h"
 #include "expression.h"
@@ -64,6 +66,8 @@ public:
     shape_type idx = unravel(i, strides_);
     return access(std::make_index_sequence<idx.size()>(), idx);
   }
+
+  inline std::string typestr() const& { return e_.typestr(); }
 
 private:
   template <size_type... I>
@@ -211,6 +215,8 @@ public:
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
 
+  inline std::string typestr() const&;
+
 private:
   EC e_;
   size_type offset_;
@@ -288,6 +294,15 @@ template <typename EC, size_type N>
 GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 {
   return e_.data_access(offset_ + i);
+}
+
+template <typename EC, size_type N>
+inline std::string gview<EC, N>::typestr() const&
+{
+  std::stringstream s;
+  s << "v" << N << "(" << e_.typestr() << ")" << this->shape()
+    << this->strides();
+  return s.str();
 }
 
 template <typename EC, size_type N>

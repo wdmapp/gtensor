@@ -338,6 +338,55 @@ struct is_allowed_element_type_conversion
   : std::is_convertible<From (*)[], To (*)[]>
 {};
 
+// ======================================================================
+// get_type_name
+
+// See https://stackoverflow.com/a/35943472
+
+namespace detail
+{
+
+struct string_view
+{
+  char const* data;
+  std::size_t size;
+};
+
+inline std::ostream& operator<<(std::ostream& o, string_view const& s)
+{
+  return o.write(s.data, s.size);
+}
+
+} // namespace detail
+
+template <class T>
+constexpr detail::string_view get_type_name()
+{
+  // "constexpr string_view get_type_name() [with T = long unsigned int]"
+  char const* p = __PRETTY_FUNCTION__;
+
+  // scan for the equals sign
+  while (*p++ != '=')
+    ;
+  // skip space after equals sign
+  for (; *p == ' '; ++p)
+    ;
+
+  // scan to ']' to determine where type name ends
+  char const* p2 = p;
+  int count = 1;
+  for (;; ++p2) {
+    switch (*p2) {
+      case '[': ++count; break;
+      case ']':
+        --count;
+        if (!count)
+          return {p, std::size_t(p2 - p)};
+    }
+  }
+  return {};
+}
+
 } // namespace gt
 
 #endif

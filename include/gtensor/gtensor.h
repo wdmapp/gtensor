@@ -2,6 +2,9 @@
 #ifndef GTENSOR_GTENSOR_H
 #define GTENSOR_GTENSOR_H
 
+#include <sstream>
+#include <string>
+
 #include "defs.h"
 #include "device_backend.h"
 
@@ -12,6 +15,7 @@
 #include "gtensor_forward.h"
 #include "gtensor_span.h"
 #include "gview.h"
+#include "helper.h"
 #include "operator.h"
 #include "space.h"
 
@@ -74,6 +78,8 @@ public:
 
   const_kernel_type to_kernel() const;
   kernel_type to_kernel();
+
+  std::string typestr() const&;
 
 private:
   GT_INLINE const storage_type& storage_impl() const;
@@ -178,6 +184,15 @@ template <typename T, size_type N>
 inline auto gtensor_container<T, N>::to_kernel() -> kernel_type
 {
   return kernel_type(this->data(), this->shape(), this->strides());
+}
+
+template <typename T, size_type N>
+inline std::string gtensor_container<T, N>::typestr() const&
+{
+  std::stringstream s;
+  s << "d" << N << "<" << get_type_name<typename T::value_type>() << ">"
+    << this->shape() << this->strides();
+  return s.str();
 }
 
 // ======================================================================

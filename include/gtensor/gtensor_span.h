@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GTENSOR_VIEW_H
 #define GTENSOR_GTENSOR_VIEW_H
 
+#include <cassert>
+#include <sstream>
 #include <type_traits>
 
 #include "device_backend.h"
@@ -108,6 +110,8 @@ public:
 
   GT_INLINE reference data_access(size_type i) const;
 
+  inline std::string typestr() const&;
+
 private:
   storage_type storage_;
 
@@ -202,6 +206,15 @@ GT_INLINE auto gtensor_span<T, N, S>::operator[](const shape_type& idx) const
   -> reference
 {
   return access(std::make_index_sequence<shape_type::dimension>(), idx);
+}
+
+template <typename T, size_type N, typename S>
+inline std::string gtensor_span<T, N, S>::typestr() const&
+{
+  std::stringstream s;
+  s << "s" << N << "<" << get_type_name<T>() << ">" << this->shape()
+    << this->strides();
+  return s.str();
 }
 
 // ======================================================================

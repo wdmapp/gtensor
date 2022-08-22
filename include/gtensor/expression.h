@@ -2,6 +2,8 @@
 #ifndef GTENSOR_EXPRESSION_H
 #define GTENSOR_EXPRESSION_H
 
+#include <string>
+
 #include "defs.h"
 #include "gtensor_forward.h"
 #include "gtl.h"
@@ -32,6 +34,8 @@ public:
   GT_INLINE const derived_type& derived() const&;
   GT_INLINE derived_type& derived() &;
   derived_type derived() &&;
+
+  inline std::string typestr() const&;
 };
 
 template <typename D>
@@ -50,6 +54,13 @@ template <typename D>
 inline auto expression<D>::derived() && -> derived_type
 {
   return static_cast<derived_type&&>(*this);
+}
+
+template <typename D>
+inline std::string expression<D>::typestr() const&
+{
+  auto sv = get_type_name<D>();
+  return std::string(sv.data, sv.size);
 }
 
 // ======================================================================

@@ -3,7 +3,10 @@
 #define GTENSOR_GFUNCTION_H
 
 #include <cassert>
+#include <sstream>
+#include <string>
 
+#include "complex_ops.h"
 #include "defs.h"
 #include "expression.h"
 #include "gscalar.h"
@@ -231,6 +234,8 @@ public:
   template <typename... Args>
   inline auto view(Args&&... args) &&;
 
+  inline std::string typestr() const&;
+
 private:
   F f_;
   E e_;
@@ -281,6 +286,8 @@ public:
   inline auto view(Args&&... args) const&;
   template <typename... Args>
   inline auto view(Args&&... args) &&;
+
+  inline std::string typestr() const&;
 
 private:
   F f_;
@@ -420,6 +427,7 @@ MAKE_UNARY_OP(negate, -)
     {                                                                          \
       return a OP b;                                                           \
     }                                                                          \
+    const char* typestr = #OP;                                                 \
   };                                                                           \
                                                                                \
   } /* namespace ops */                                                        \
@@ -453,6 +461,7 @@ MAKE_BINARY_OP(divide, /)
     {                                                                          \
       return FUNC(a);                                                          \
     }                                                                          \
+    const char* typestr = #NAME;                                               \
   };                                                                           \
   }                                                                            \
                                                                                \
@@ -470,6 +479,43 @@ MAKE_UNARY_FUNC(tan, std::tan)
 MAKE_UNARY_FUNC(exp, gt::exp)
 
 #undef MAKE_UNARY_FUNC
+
+// ======================================================================
+// gfunction::typestr
+
+namespace detail
+{
+
+template <typename F, typename Enable = void>
+struct fnstr
+{
+  static inline auto str(const F& f) { return get_type_name<F>(); }
+};
+
+template <typename F>
+struct fnstr<F, gt::meta::void_t<decltype(std::declval<F>().typestr)>>
+{
+  static inline auto str(const F& f) { return f.typestr; }
+};
+
+} // namespace detail
+
+template <typename F, typename E1, typename E2>
+inline std::string gfunction<F, E1, E2>::typestr() const&
+{
+  std::stringstream s;
+  s << "fn:(" << e1_.typestr() << " " << detail::fnstr<F>::str(f_) << " "
+    << e2_.typestr() << ")";
+  return s.str();
+}
+
+template <typename F, typename E1>
+inline std::string gfunction<F, E1, gt_empty_expr>::typestr() const&
+{
+  std::stringstream s;
+  s << "fn:" << detail::fnstr<F>::str(f_) << "(" << e_.typestr() << ")";
+  return s.str();
+}
 
 // ======================================================================
 // ggenerator
