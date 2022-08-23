@@ -109,22 +109,22 @@ inline auto gpuGetLastError()
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
-#ifndef NDEBUG
+#ifdef GTENSOR_SYNC_KERNELS
 #define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
     a_stream_view.synchronize();                                               \
   } while (0)
-#else // NDEBUG defined
+#else // not GTENSOR_SYNC_KERNELS
 #define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
   } while (0)
-#endif // NDEBUG
+#endif // GTENSOR_SYNC_KERNELS
 
 #endif // end GTENSOR_DEVICE_SYCL
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
-#ifndef NDEBUG
+#ifdef GTENSOR_SYNC_KERNELS
 #define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
     gtGpuCheck(gpuGetLastError());                                             \

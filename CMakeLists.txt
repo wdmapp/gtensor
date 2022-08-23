@@ -38,6 +38,7 @@ option(GTENSOR_PER_DIM_KERNELS
 option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 
 option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
+option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
 
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
@@ -301,6 +302,14 @@ if (GTENSOR_BOUNDS_CHECK)
                              INTERFACE GTENSOR_BOUNDS_CHECK)
 else()
   message(STATUS "${PROJECT_NAME}: bounds checking is OFF")
+endif()
+
+if (GTENSOR_SYNC_KERNELS)
+  message(STATUS "${PROJECT_NAME}: sync kernels is ON")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_SYNC_KERNELS)
+else()
+  message(STATUS "${PROJECT_NAME}: sync kernels is OFF")
 endif()
 
 target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
