@@ -2,8 +2,6 @@
 #ifndef GTENSOR_GTENSOR_VIEW_H
 #define GTENSOR_GTENSOR_VIEW_H
 
-#include <cassert>
-
 #include <type_traits>
 
 #include "device_backend.h"
@@ -131,20 +129,25 @@ GT_INLINE gtensor_span<T, N, S>::gtensor_span(pointer data,
                                               const strides_type& strides)
   : base_type(shape, strides), storage_(data, calc_size(shape))
 {
-#if defined(GTENSOR_HAVE_DEVICE) && !defined(NDEBUG)
+#if defined(GTENSOR_HAVE_DEVICE) && defined(GTENSOR_ADDRESS_CHECK)
+  bool check_address = false;
 #ifdef GTENSOR_DEVICE_SYCL
   // special case SYCL to handle the host backend, which says that
   // even device pointers are not device addresses (true from a hardware
   // perspective, even if it's logically false in gtensor).
   sycl::device d = gt::backend::sycl::get_queue().get_device();
   if ((d.is_gpu() || d.is_cpu()) && std::is_same<S, space::device>::value) {
-    assert(gt::backend::is_device_address(gt::raw_pointer_cast(data)));
+    check_address = true;
   }
 #else  // not SYCL
   if (std::is_same<S, space::device>::value) {
-    assert(gt::backend::is_device_address(gt::raw_pointer_cast(data)));
+    check_address = true;
   }
 #endif // GTENSOR_DEVICE_SYCL
+  if (check_address) {
+    gtGpuAssert(gt::backend::is_device_address(gt::raw_pointer_cast(data)),
+                "host address passed to device span");
+  }
 #endif
 }
 

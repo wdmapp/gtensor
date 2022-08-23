@@ -9,6 +9,7 @@
 #include "gscalar.h"
 #include "gstrided.h"
 #include "helper.h"
+#include "macros.h"
 
 #include <numeric>
 
@@ -112,13 +113,8 @@ GT_INLINE void broadcast_shape(S& to, const S2& from)
     } else if (from[end_from - i] == 1) {
       // broadcasting, from, nothing to do
     } else {
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) ||               \
-  defined(__SYCL_DEVICE_ONLY__)
-      assert(false);
-#else
-      throw std::runtime_error("cannot broadcast to = " + to_string(to) +
-                               " from = " + to_string(from) + "\n");
-#endif
+      gtGpuAssert(false, "cannot broadcast to = " + to_string(to) +
+                           " from = " + to_string(from) + "\n");
     }
   }
 }
