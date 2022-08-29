@@ -130,11 +130,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: gtensor cmake
-      run: cmake -S . -B build-install -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF
+      run: cmake -S . -B build-install -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF -DGTENSOR_ENABLE_FORTRAN=ON
     - name: gtensor install
       run: cmake --build build-install -v -t install
     - name: examples cmake
-      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON -DGTENSOR_ENABLE_CLIB=ON
+      run: cmake -S . -B build-find-package -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_EXAMPLES_USE_FIND_PACKAGE=ON -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_FORTRAN=ON
       working-directory: ${{ github.workspace }}/examples
       env:
         gtensor_DIR: ${{ github.workspace }}/gtensor-install
