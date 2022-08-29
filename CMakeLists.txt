@@ -31,6 +31,7 @@ option(GTENSOR_BUILD_EXAMPLES "Build example programs" OFF)
 option(GTENSOR_ENABLE_CLIB "Enable libcgtensor" OFF)
 option(GTENSOR_ENABLE_BLAS "Enable gtblas" OFF)
 option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
+option(GTENSOR_ENABLE_FORTRAN "Enable Fortran interoperability" OFF)
 
 option(GTENSOR_PER_DIM_KERNELS
        "Enable per dim kernels (may break for large arrays)" OFF)
@@ -40,6 +41,12 @@ option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
 option(GTENSOR_ADDRESS_CHECK "Enable address checking for device spans" OFF)
 option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
+
+if (GTENSOR_ENABLE_FORTRAN)
+  # do this early (here) since later the `enable_language(Fortran)` gives me trouble
+  message(STATUS "${PROJECT_NAME}: Fortran is ENABLED")
+  enable_language(Fortran)
+endif()
 
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
@@ -442,6 +449,32 @@ if (GTENSOR_ENABLE_FFT)
   add_library(gtensor::gtfft ALIAS gtfft)
 endif()
 
+if (GTENSOR_ENABLE_FORTRAN)
+  # message(STATUS "${PROJECT_NAME}: Fortran is ENABLED")
+  # enable_language(Fortran)
+  CPMAddPackage(
+    NAME flcl
+    GITHUB_REPOSITORY kokkos/kokkos-fortran-interop
+    GIT_TAG develop
+    VERSION 0.99
+    DOWNLOAD_ONLY TRUE)
+
+  add_library(fgtensor)
+  target_sources(fgtensor PRIVATE
+    ${flcl_SOURCE_DIR}/src/flcl-types-f.f90
+    ${flcl_SOURCE_DIR}/src/flcl-ndarray-f.f90)
+  set_target_properties(fgtensor PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran)
+  target_include_directories(fgtensor
+    INTERFACE
+       $<INSTALL_INTERFACE:include/gtensor/fortran>
+       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/fortran>
+  )
+  target_link_libraries(fgtensor PUBLIC gtensor)
+
+  list(APPEND GTENSOR_TARGETS fgtensor)
+  add_library(gtensor::fgtensor ALIAS fgtensor)
+endif()
+
 # See https://github.com/pabloariasal/modern-cmake-sample
 ##############################################
 # Installation instructions
@@ -456,6 +489,9 @@ install(TARGETS ${GTENSOR_TARGETS}
 )
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+if (GTENSOR_ENABLE_FORTRAN)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gtensor)
+endif()
 
 #Export the targets to a script
 install(EXPORT gtensor-targets

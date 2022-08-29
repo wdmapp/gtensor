@@ -8,6 +8,10 @@ option(GTENSOR_EXAMPLES_USE_FIND_PACKAGE,
     "when ON, use find_package, when OFF use a copy of gtensor as subdir"
     OFF)
 
+if (GTENSOR_ENABLE_FORTRAN)
+  enable_language(Fortran)
+endif()
+
 # support building as a subdirectory of the main project, or
 # as an independent project with gtensor installed or gtensor
 # as a subdirectory
@@ -62,4 +66,9 @@ if ("${GTENSOR_DEVICE}" STREQUAL "cuda")
   add_executable(trig_adapted)
   target_gtensor_sources(trig_adapted PRIVATE src/trig_adapted.cxx)
   target_link_libraries(trig_adapted gtensor::gtensor)
+endif()
+
+if (GTENSOR_ENABLE_FORTRAN)
+  add_executable(test_fortran src/test_fortran.F90 src/c_test_fortran.cxx)
+  target_link_libraries(test_fortran PRIVATE gtensor::fgtensor)
 endif()
