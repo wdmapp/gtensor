@@ -381,6 +381,7 @@ TEST(lapack, zgetrf_batch)
   test_getrf_batch_complex<double>();
 }
 
+#ifdef GTENSOR_HAVE_DEVICE
 template <typename R>
 void test_getrf_npvt_batch_complex()
 {
@@ -459,6 +460,7 @@ TEST(lapack, zgetrf_npvt_batch)
 {
   test_getrf_npvt_batch_complex<double>();
 }
+#endif
 
 namespace test
 {
