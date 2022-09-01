@@ -38,7 +38,7 @@ option(GTENSOR_PER_DIM_KERNELS
 option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 
 option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
-option(GTENSOR_ADDRESS_CHECK "Enable per access bounds checking" OFF)
+option(GTENSOR_ADDRESS_CHECK "Enable address checking for device spans" OFF)
 option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
 
 # HIP specific configuration
