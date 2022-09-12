@@ -37,6 +37,10 @@ option(GTENSOR_PER_DIM_KERNELS
 
 option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 
+option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
+option(GTENSOR_ADDRESS_CHECK "Enable address checking for device spans" OFF)
+option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
+
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
@@ -291,6 +295,30 @@ else()
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
                              INTERFACE GTENSOR_ALLOCATOR_NO_CACHING)
   message(STATUS "${PROJECT_NAME}: caching allocator disabled")
+endif()
+
+if (GTENSOR_BOUNDS_CHECK)
+  message(STATUS "${PROJECT_NAME}: bounds checking is ON")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_BOUNDS_CHECK)
+else()
+  message(STATUS "${PROJECT_NAME}: bounds checking is OFF")
+endif()
+
+if (GTENSOR_ADDRESS_CHECK)
+  message(STATUS "${PROJECT_NAME}: address checking is ON")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_ADDRESS_CHECK)
+else()
+  message(STATUS "${PROJECT_NAME}: address checking is OFF")
+endif()
+
+if (GTENSOR_SYNC_KERNELS)
+  message(STATUS "${PROJECT_NAME}: sync kernels is ON")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_SYNC_KERNELS)
+else()
+  message(STATUS "${PROJECT_NAME}: sync kernels is OFF")
 endif()
 
 target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE

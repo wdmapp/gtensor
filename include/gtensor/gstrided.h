@@ -133,7 +133,7 @@ template <typename D>
 template <typename... Args>
 GT_INLINE size_type gstrided<D>::index(Args&&... args) const
 {
-#ifdef GT_BOUNDSCHECK
+#ifdef GTENSOR_BOUNDS_CHECK
   bounds_check(this->shape(), std::forward<Args>(args)...);
 #endif
   return calc_index(this->strides_, std::forward<Args>(args)...);

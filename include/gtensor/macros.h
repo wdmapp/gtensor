@@ -18,16 +18,30 @@
 #define GT_INLINE inline __host__ __device__
 #define GT_LAMBDA [=] __host__ __device__
 
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
+#define GTENSOR_DEVICE_ONLY
+#endif
+
 #elif defined(GTENSOR_DEVICE_SYCL)
 
 #define GT_INLINE inline
 #define GT_LAMBDA [=]
 
-#else
+#ifdef __SYCL_DEVICE_ONLY__
+#define GTENSOR_DEVICE_ONLY
+#endif
+
+#else // HOST
 
 #define GT_INLINE inline
 #define GT_LAMBDA [=]
 
+#endif
+
+#ifdef GTENSOR_DEVICE_ONLY
+#include <cassert>
+#else
+#include <stdexcept>
 #endif
 
 #ifdef GTENSOR_DEVICE_CUDA
@@ -109,22 +123,22 @@ inline auto gpuGetLastError()
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
-#ifndef NDEBUG
+#ifdef GTENSOR_SYNC_KERNELS
 #define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
     a_stream_view.synchronize();                                               \
   } while (0)
-#else // NDEBUG defined
+#else // not GTENSOR_SYNC_KERNELS
 #define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
   } while (0)
-#endif // NDEBUG
+#endif // GTENSOR_SYNC_KERNELS
 
 #endif // end GTENSOR_DEVICE_SYCL
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
-#ifndef NDEBUG
+#ifdef GTENSOR_SYNC_KERNELS
 #define gpuSyncIfEnabledStream(a_stream_view)                                  \
   do {                                                                         \
     gtGpuCheck(gpuGetLastError());                                             \
@@ -140,5 +154,16 @@ inline auto gpuGetLastError()
 #endif // end CUDA or HIP
 
 #define gpuSyncIfEnabled() gpuSyncIfEnabledStream(gt::stream_view{})
+
+#ifdef GTENSOR_DEVICE_ONLY
+#define gtGpuAssert(cond, errmsg) assert((cond))
+#else
+#define gtGpuAssert(cond, errmsg)                                              \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      throw std::runtime_error(errmsg);                                        \
+    }                                                                          \
+  } while (0)
+#endif
 
 #endif // GTENSORS_MACROS_H
