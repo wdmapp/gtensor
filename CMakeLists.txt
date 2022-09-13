@@ -487,13 +487,3 @@ install(FILES
     cmake/target-gtensor-sources-macro.cmake
     DESTINATION ${INSTALL_CONFIGDIR}
 )
-
-##############################################
-## Exporting from the build tree
-
-export(EXPORT gtensor-targets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/gtensor-targets.cmake
-    NAMESPACE gtensor::)
-
-#Register package in user's package registry
-export(PACKAGE gtensor)
