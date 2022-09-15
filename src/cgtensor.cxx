@@ -8,8 +8,6 @@ void gt_synchronize()
   gt::synchronize();
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 int gt_backend_device_get_count()
 {
   return gt::backend::clib::device_get_count();
@@ -29,6 +27,8 @@ uint32_t gt_backend_device_get_vendor_id(int device_id)
 {
   return gt::backend::clib::device_get_vendor_id(device_id);
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 void* gt_backend_host_allocate(size_t nbytes)
 {

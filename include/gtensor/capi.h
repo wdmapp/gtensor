@@ -21,12 +21,12 @@ extern "C" {
 
 void gt_synchronize();
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 int gt_backend_device_get_count();
 void gt_backend_device_set(int device_id);
 int gt_backend_device_get();
 uint32_t gt_backend_device_get_vendor_id(int device_id);
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 void* gt_backend_host_allocate(size_t nbytes);
 void* gt_backend_device_allocate(size_t nbytes);

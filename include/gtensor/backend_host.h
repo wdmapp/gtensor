@@ -22,6 +22,26 @@ inline void device_synchronize()
   // no need to synchronize on host
 }
 
+inline int device_get_count()
+{
+  return 1;
+}
+
+inline void device_set(int device_id)
+{
+  assert(device_id == 0);
+}
+
+inline int device_get()
+{
+  return 0;
+}
+
+inline uint32_t device_get_vendor_id(int device_id)
+{
+  return 0;
+}
+
 } // namespace host
 
 namespace allocator_impl
