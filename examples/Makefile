@@ -53,12 +53,29 @@ GTENSOR_TARGETS = daxpy stencil1d mult_table
 ifeq ($(GTENSOR_DEVICE),cuda)
   GTENSOR_TARGETS += trig_adapted
 endif
+ifneq ($(GTENSOR_ENABLE_FORTRAN),)
+  FC := gfortran
+  FCFLAGS := -I$(GTENSOR_DIR)/include/gtensor/fortran
+  FLIBS := $(shell $(FC) --print-file-name=libgfortran.dylib)
+  FLIBS += $(shell $(FC) --print-libgcc-file-name)
+  GTENSOR_LIBS += $(GTENSOR_DIR)/lib/libfgtensor.a
+  GTENSOR_TARGETS += test_fortran
+endif
 
 .PHONY: all
 all: $(GTENSOR_TARGETS)
 
-$(GTENSOR_TARGETS): % : src/%.cxx $(GTENSOR_HEADERS)
+% : src/%.cxx $(GTENSOR_HEADERS)
 	$(GTENSOR_CXX) $(GTENSOR_FLAGS) -o $@ $<
+
+test_fortran: src/test_fortran.o src/c_test_fortran.o
+	$(GTENSOR_CXX) $^ $(FLIBS) $(GTENSOR_LIBS) -o $@
+
+src/%.o: src/%.F90
+	$(FC) $(FCFLAGS) -c $< -o $@
+
+src/%.o: src/%.cxx
+	$(GTENSOR_CXX) $(GTENSOR_FLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
