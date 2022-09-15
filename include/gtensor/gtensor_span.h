@@ -218,7 +218,6 @@ gtensor_span<T, N> adapt(T* data, const int* shape_data)
   return adapt<N, T>(data, {shape_data, N});
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
 template <size_type N, typename T>
 GT_INLINE gtensor_span<T, N, space::device> adapt_device(
   T* data, const shape_type<N>& shape)
@@ -232,7 +231,6 @@ gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
 {
   return adapt_device<N, T>(data, {shape_data, N});
 }
-#endif
 
 // ======================================================================
 // is_gtensor_span
