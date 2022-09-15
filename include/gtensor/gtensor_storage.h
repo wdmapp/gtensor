@@ -105,15 +105,11 @@ private:
   allocator_type allocator_;
 };
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 template <typename T, typename A = gt::device_allocator<T>>
 using device_storage = gtensor_storage<T, A, space::device>;
 
 template <typename T>
 using managed_storage = device_storage<T, gt::managed_allocator<T>>;
-
-#endif
 
 template <typename T, typename A = gt::host_allocator<T>>
 using host_storage = gtensor_storage<T, A, space::host>;
@@ -173,12 +169,26 @@ const host_storage<T>& host_mirror(const host_storage<T>& h)
 }
 
 template <typename T>
-void copy(const host_storage<T>& d, const host_storage<T>& h)
+void copy(const host_storage<T>& from, const host_storage<T>& to)
 {
-  // this copy is, at this time, only for use with host_mirror,
-  // which return a reference to the very same object in the host
+  // this copy may be called with host_mirror, which return a reference to the
+  // very same object in the host case, so no copying needs to be done in this
   // case
-  assert(&h == &d);
+  // FIXME -- there is some ugliness here. If one makes a mirror of a const
+  // storage, one wants that mirror to be not-const so that one can copy to it
+  // -- but if it's already host, we just get a reference to the original const
+  // storage, so we can't copy to it, and we don't really need to. But we still
+  // want to call this copy().
+  assert(from.data() == to.data());
+}
+
+template <typename T>
+void copy(const host_storage<T>& from, host_storage<T>& to)
+{
+  if (from.data() == to.data())
+    return;
+
+  gt::copy_n(from.data(), from.size(), to.data());
 }
 
 #ifdef GTENSOR_HAVE_DEVICE
