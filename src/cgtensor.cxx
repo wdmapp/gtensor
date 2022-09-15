@@ -28,8 +28,6 @@ uint32_t gt_backend_device_get_vendor_id(int device_id)
   return gt::backend::clib::device_get_vendor_id(device_id);
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 void* gt_backend_host_allocate(size_t nbytes)
 {
   return (void*)
@@ -67,6 +65,8 @@ void gt_backend_managed_deallocate(void* p)
   gt::backend::clib::gallocator<gt::space::clib_managed>::deallocate(
     (uint8_t*)p);
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes)
 {

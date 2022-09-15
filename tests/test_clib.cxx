@@ -26,8 +26,6 @@ TEST(clib, list_devices)
   }
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 #define N 10
 TEST(clib, managed_allocate)
 {
@@ -43,6 +41,8 @@ TEST(clib, managed_allocate)
   }
   gt_backend_managed_deallocate((void*)a);
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 #define N 10
 TEST(clib, memcpy)

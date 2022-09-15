@@ -26,14 +26,14 @@ void gt_backend_device_set(int device_id);
 int gt_backend_device_get();
 uint32_t gt_backend_device_get_vendor_id(int device_id);
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 void* gt_backend_host_allocate(size_t nbytes);
 void* gt_backend_device_allocate(size_t nbytes);
 void* gt_backend_managed_allocate(size_t nbytes);
 void gt_backend_host_deallocate(void* p);
 void gt_backend_device_deallocate(void* p);
 void gt_backend_managed_deallocate(void* p);
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes);

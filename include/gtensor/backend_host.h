@@ -46,6 +46,22 @@ inline uint32_t device_get_vendor_id(int device_id)
 
 namespace allocator_impl
 {
+template <>
+struct gallocator<gt::space::host_only>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    return static_cast<T*>(malloc(sizeof(T) * n));
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    free(p);
+  }
+};
+
 template <typename T>
 struct selector<T, gt::space::host_only>
 {

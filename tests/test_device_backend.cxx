@@ -8,6 +8,7 @@
 #include "test_debug.h"
 
 #define MAX_DEVICES 100
+#define N 10
 
 TEST(device_backend, list_devices)
 {
@@ -32,9 +33,6 @@ TEST(device_backend, list_devices)
   }
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
-#define N 10
 TEST(device_backend, managed_allocate)
 {
   using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
@@ -50,6 +48,8 @@ TEST(device_backend, managed_allocate)
   }
   allocator::deallocate(a);
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 TEST(device_backend, is_device_address)
 {
