@@ -135,12 +135,6 @@ inline OutputType transform_reduce(const Container& a, OutputType init,
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
-#ifdef GTENSOR_DEVICE_SYCL_HOST
-#define SYCL_REDUCTION_WORK_GROUP_SIZE 16
-#else
-#define SYCL_REDUCTION_WORK_GROUP_SIZE 128
-#endif
-
 template <typename Container,
           typename = std::enable_if_t<
             has_data_method_v<Container> &&
@@ -158,21 +152,14 @@ inline auto sum(const Container& a, gt::stream_view stream = gt::stream_view{})
   T sum_result = 0;
   sycl::buffer<T> sum_buf{&sum_result, 1};
   {
-    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
-    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
-      range = sycl::nd_range<1>(a.size(), a.size());
-    }
+    sycl::range<1> range(a.size());
     auto data = a.data();
     auto e = q.submit([&](sycl::handler& cgh) {
-      auto sum_acc =
-        sum_buf.template get_access<sycl::access::mode::read_write>(cgh);
-      auto sum_reducer =
-        sycl::ext::oneapi::reduction(sum_acc, sycl::ext::oneapi::plus<T>{});
+      auto sum_reducer = sycl::reduction(sum_buf, cgh, sycl::plus<T>{});
       using kname = gt::backend::sycl::Sum<Container>;
-      cgh.parallel_for<kname>(range, sum_reducer,
-                              [=](sycl::nd_item<1> item, auto& sum) {
-                                sum += data[item.get_global_id(0)];
-                              });
+      cgh.parallel_for<kname>(
+        range, sum_reducer,
+        [=](sycl::id<1> idx, auto& sum) { sum += data[idx]; });
     });
     e.wait();
   }
@@ -199,21 +186,14 @@ inline auto max(const Container& a, gt::stream_view stream = gt::stream_view{})
   T max_result = 0;
   sycl::buffer<T> max_buf{&max_result, 1};
   {
-    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
-    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
-      range = sycl::nd_range<1>(a.size(), a.size());
-    }
+    sycl::range<1> range(a.size());
     auto data = a.data();
     auto e = q.submit([&](sycl::handler& cgh) {
-      auto max_acc =
-        max_buf.template get_access<sycl::access::mode::read_write>(cgh);
-      auto max_reducer =
-        sycl::ext::oneapi::reduction(max_acc, sycl::ext::oneapi::maximum<T>{});
+      auto max_reducer = sycl::reduction(max_buf, cgh, sycl::maximum<T>{});
       using kname = gt::backend::sycl::Max<Container>;
-      cgh.parallel_for<kname>(range, max_reducer,
-                              [=](sycl::nd_item<1> item, auto& max) {
-                                max.combine(data[item.get_global_id(0)]);
-                              });
+      cgh.parallel_for<kname>(
+        range, max_reducer,
+        [=](sycl::id<1> idx, auto& max) { max.combine(data[idx]); });
     });
     e.wait();
   }
@@ -237,10 +217,7 @@ inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
   T min_result;
   sycl::buffer<T> min_buf{&min_result, 1};
   {
-    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
-    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
-      range = sycl::nd_range<1>(a.size(), a.size());
-    }
+    sycl::range<1> range(a.size());
     auto data = a.data();
     // TODO: this is hacky, there must be a better way?
     q.submit([&](sycl::handler& cgh) {
@@ -249,15 +226,11 @@ inline auto min(const Container& a, gt::stream_view stream = gt::stream_view{})
       cgh.single_task([=]() { min_write[0] = data[0]; });
     });
     auto e = q.submit([&](sycl::handler& cgh) {
-      auto min_acc =
-        min_buf.template get_access<sycl::access::mode::read_write>(cgh);
-      auto min_reducer =
-        sycl::ext::oneapi::reduction(min_acc, sycl::ext::oneapi::minimum<T>{});
+      auto min_reducer = sycl::reduction(min_buf, cgh, sycl::minimum<T>{});
       using kname = gt::backend::sycl::Min<Container>;
-      cgh.parallel_for<kname>(range, min_reducer,
-                              [=](sycl::nd_item<1> item, auto& min) {
-                                min.combine(data[item.get_global_id(0)]);
-                              });
+      cgh.parallel_for<kname>(
+        range, min_reducer,
+        [=](sycl::id<1> idx, auto& min) { min.combine(data[idx]); });
     });
     e.wait();
   }
@@ -302,18 +275,12 @@ inline OutputType transform_reduce(const Container& a, OutputType init,
   OutputType result = init;
   sycl::buffer<OutputType> result_buf{&result, 1};
   {
-    sycl::nd_range<1> range(a.size(), SYCL_REDUCTION_WORK_GROUP_SIZE);
-    if (a.size() <= SYCL_REDUCTION_WORK_GROUP_SIZE) {
-      range = sycl::nd_range<1>(a.size(), a.size());
-    }
+    sycl::range<1> range(a.size());
     auto data = a.data();
     auto e = q.submit([&](sycl::handler& cgh) {
-      auto result_acc =
-        result_buf.template get_access<sycl::access::mode::read_write>(cgh);
-      auto reducer =
-        sycl::ext::oneapi::reduction(result_acc, init, reduction_op);
-      cgh.parallel_for(range, reducer, [=](sycl::nd_item<1> item, auto& r) {
-        r.combine(transform_op(data[item.get_global_id(0)]));
+      auto reducer = sycl::reduction(result_buf, cgh, init, reduction_op);
+      cgh.parallel_for(range, reducer, [=](sycl::id<1> idx, auto& r) {
+        r.combine(transform_op(data[idx]));
       });
     });
     e.wait();
