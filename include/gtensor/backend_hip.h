@@ -226,6 +226,20 @@ public:
     gtGpuCheck(rval);
     return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
   }
+
+  template <typename T>
+  static void prefetch_device(T* p, size_type n)
+  {
+    int device_id;
+    gtGpuCheck(hipGetDevice(&device_id));
+    gtGpuCheck(hipMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+  }
+
+  template <typename T>
+  static void prefetch_host(T* p, size_type n)
+  {
+    gtGpuCheck(hipMemPrefetchAsync(p, n * sizeof(T), hipCpuDeviceId, nullptr));
+  }
 };
 
 namespace stream_interface
@@ -275,23 +289,6 @@ public:
 };
 
 } // namespace stream_interface
-
-// ======================================================================
-// prefetch
-
-template <typename T>
-void prefetch_device(T* p, size_type n)
-{
-  int device_id;
-  gtGpuCheck(hipGetDevice(&device_id));
-  gtGpuCheck(hipMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
-}
-
-template <typename T>
-void prefetch_host(T* p, size_type n)
-{
-  gtGpuCheck(hipMemPrefetchAsync(p, n * sizeof(T), hipCpuDeviceId, nullptr));
-}
 
 } // namespace backend
 

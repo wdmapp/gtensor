@@ -296,15 +296,6 @@ struct selector
 template <typename S>
 class backend_ops;
 
-// ======================================================================
-// prefetch interface
-
-template <typename T>
-void prefetch_device(T* p, size_type n);
-
-template <typename T>
-void prefetch_host(T* p, size_type n);
-
 } // namespace backend
 
 } // namespace gt

@@ -87,8 +87,6 @@ TEST(device_backend, is_device_address)
 #endif
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 TEST(device_backend, managed_prefetch)
 {
   using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
@@ -154,5 +152,3 @@ TEST(device_backend, sycl_new_stream_queue)
 }
 
 #endif // GTENSOR_DEVICE_SYCL
-
-#endif // GTENSOR_HAVE_DEVICE

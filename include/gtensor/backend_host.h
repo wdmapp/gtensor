@@ -53,6 +53,14 @@ public:
   {
     return true;
   }
+
+  template <typename T>
+  static void prefetch_device(T* p, size_type n)
+  {}
+
+  template <typename T>
+  static void prefetch_host(T* p, size_type n)
+  {}
 };
 
 namespace allocator_impl

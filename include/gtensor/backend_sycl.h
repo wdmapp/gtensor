@@ -251,6 +251,18 @@ public:
     return (alloc_type == ::sycl::usm::alloc::device ||
             alloc_type == ::sycl::usm::alloc::shared);
   }
+
+  template <typename T>
+  static void prefetch_device(T* p, size_type n)
+  {
+    ::sycl::queue& q = gt::backend::sycl::get_queue();
+    q.prefetch(p, n);
+  }
+
+  // Not available in SYCL 2020, make it a no-op
+  template <typename T>
+  static void prefetch_host(T* p, size_type n)
+  {}
 };
 
 namespace stream_interface
@@ -289,22 +301,6 @@ inline void synchronize<sycl_stream_t>(sycl_stream_t s)
 }
 
 } // namespace stream_interface
-
-// ======================================================================
-// prefetch
-
-template <typename T>
-void prefetch_device(T* p, size_type n)
-{
-  ::sycl::queue& q = gt::backend::sycl::get_queue();
-  q.prefetch(p, n);
-}
-
-// Not available in SYCL 2020, make it a no-op
-template <typename T>
-void prefetch_host(T* p, size_type n)
-{
-}
 
 } // namespace backend
 

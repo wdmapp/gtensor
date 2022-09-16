@@ -45,6 +45,18 @@ bool is_device_address(Ptr ptr)
   return backend_ops<gt::space::device>::is_device_address(ptr);
 }
 
+template <typename T>
+static void prefetch_device(T* p, size_type n)
+{
+  return backend_ops<gt::space::device>::prefetch_device(p, n);
+}
+
+template <typename T>
+static void prefetch_host(T* p, size_type n)
+{
+  return backend_ops<gt::space::device>::prefetch_host(p, n);
+}
+
 } // namespace backend
 
 template <typename T, typename S = gt::space::device>
