@@ -10,22 +10,22 @@ void gt_synchronize()
 
 int gt_backend_device_get_count()
 {
-  return gt::backend::backend_ops_clib::device_get_count();
+  return gt::backend::clib::device_get_count();
 }
 
 void gt_backend_device_set(int device_id)
 {
-  return gt::backend::backend_ops_clib::device_set(device_id);
+  return gt::backend::clib::device_set(device_id);
 }
 
 int gt_backend_device_get()
 {
-  return gt::backend::backend_ops_clib::device_get();
+  return gt::backend::clib::device_get();
 }
 
 uint32_t gt_backend_device_get_vendor_id(int device_id)
 {
-  return gt::backend::backend_ops_clib::device_get_vendor_id(device_id);
+  return gt::backend::clib::device_get_vendor_id(device_id);
 }
 
 void* gt_backend_host_allocate(size_t nbytes)
@@ -76,8 +76,8 @@ void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes)
 
 void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::backend_ops_clib::copy_async_dd<uint8_t>((uint8_t*)src,
-                                                        (uint8_t*)dst, nbytes);
+  gt::backend::clib::copy_async_dd<uint8_t>((uint8_t*)src, (uint8_t*)dst,
+                                            nbytes);
 }
 
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes)
@@ -98,19 +98,19 @@ void gt_backend_memset(void* dst, int value, size_t nbytes)
            gt::device_pointer_cast((uint8_t*)dst) + nbytes, value);
 }
 
+#endif
+
 bool gt_backend_is_device_address(void* p)
 {
-  return gt::backend::backend_ops_clib::is_device_address(p);
+  return gt::backend::clib::is_device_address(p);
 }
 
 void gt_backend_prefetch_device(void* p, size_t nbytes)
 {
-  gt::backend::prefetch_device<uint8_t>(static_cast<uint8_t*>(p), nbytes);
+  gt::backend::clib::prefetch_device<uint8_t>(static_cast<uint8_t*>(p), nbytes);
 }
 
 void gt_backend_prefetch_host(void* p, size_t nbytes)
 {
-  gt::backend::prefetch_device<uint8_t>(static_cast<uint8_t*>(p), nbytes);
+  gt::backend::clib::prefetch_device<uint8_t>(static_cast<uint8_t*>(p), nbytes);
 }
-
-#endif

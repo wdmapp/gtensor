@@ -27,13 +27,13 @@ template <typename S>
 using gallocator = gt::backend::allocator_impl::gallocator<S>;
 
 #if GTENSOR_DEVICE_CUDA
-using backend_ops_clib = backend_ops<gt::space::cuda>;
+using clib = backend_ops<gt::space::cuda>;
 #elif GTENSOR_DEVICE_HIP
-using backend_ops_clib = backend_ops<gt::space::hip>;
+using clib = backend_ops<gt::space::hip>;
 #elif GTENSOR_DEVICE_SYCL
-using backend_ops_clib = backend_ops<gt::space::sycl>;
+using clib = backend_ops<gt::space::sycl>;
 #else
-using backend_ops_clib = backend_ops<gt::space::host>;
+using clib = backend_ops<gt::space::host>;
 #endif
 
 } // namespace backend
@@ -83,7 +83,7 @@ inline void copy_n(InputPtr in, gt::size_type count, OutputPtr out)
 
 void inline synchronize()
 {
-  gt::backend::backend_ops_clib::device_synchronize();
+  gt::backend::clib::device_synchronize();
 }
 
 } // namespace gt
