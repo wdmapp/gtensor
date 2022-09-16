@@ -198,18 +198,23 @@ inline void fill(gt::space::cuda tag, Ptr first, Ptr last, const T& value)
 }
 } // namespace fill_impl
 
-template <typename Ptr>
-inline bool is_device_address(const Ptr p)
+template <>
+class backend_ops<gt::space::cuda>
 {
-  cudaPointerAttributes attr;
-  cudaError_t rval = cudaPointerGetAttributes(&attr, p);
-  if (rval == cudaErrorInvalidValue) {
-    return false;
+public:
+  template <typename Ptr>
+  static bool is_device_address(const Ptr p)
+  {
+    cudaPointerAttributes attr;
+    cudaError_t rval = cudaPointerGetAttributes(&attr, p);
+    if (rval == cudaErrorInvalidValue) {
+      return false;
+    }
+    gtGpuCheck(rval);
+    return (attr.type == cudaMemoryTypeDevice ||
+            attr.type == cudaMemoryTypeManaged);
   }
-  gtGpuCheck(rval);
-  return (attr.type == cudaMemoryTypeDevice ||
-          attr.type == cudaMemoryTypeManaged);
-}
+};
 
 namespace stream_interface
 {

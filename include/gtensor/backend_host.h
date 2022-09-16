@@ -44,6 +44,17 @@ inline uint32_t device_get_vendor_id(int device_id)
 
 } // namespace host
 
+template <>
+class backend_ops<gt::space::host>
+{
+public:
+  template <typename Ptr>
+  static bool is_device_address(const Ptr p)
+  {
+    return true;
+  }
+};
+
 namespace allocator_impl
 {
 template <>

@@ -239,14 +239,19 @@ inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
 
 } // namespace fill_impl
 
-template <typename Ptr>
-inline bool is_device_address(const Ptr p)
+template <>
+class backend_ops<gt::space::sycl>
 {
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  auto alloc_type = ::sycl::get_pointer_type(p, q.get_context());
-  return (alloc_type == ::sycl::usm::alloc::device ||
-          alloc_type == ::sycl::usm::alloc::shared);
-}
+public:
+  template <typename Ptr>
+  static bool is_device_address(const Ptr p)
+  {
+    cl::sycl::queue& q = gt::backend::sycl::get_queue();
+    auto alloc_type = ::sycl::get_pointer_type(p, q.get_context());
+    return (alloc_type == ::sycl::usm::alloc::device ||
+            alloc_type == ::sycl::usm::alloc::shared);
+  }
+};
 
 namespace stream_interface
 {
@@ -298,7 +303,8 @@ void prefetch_device(T* p, size_type n)
 // Not available in SYCL 2020, make it a no-op
 template <typename T>
 void prefetch_host(T* p, size_type n)
-{}
+{
+}
 
 } // namespace backend
 

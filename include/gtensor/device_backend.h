@@ -31,13 +31,19 @@ using namespace backend::cuda;
 using namespace backend::hip;
 #elif GTENSOR_DEVICE_SYCL
 using namespace backend::sycl;
-#else // just for device_synchronize()
+#else
 using namespace backend::host;
 #endif
 
 template <typename S>
 using gallocator = gt::backend::allocator_impl::gallocator<S>;
 } // namespace clib
+
+template <typename Ptr>
+bool is_device_address(Ptr ptr)
+{
+  return backend_ops<gt::space::device>::is_device_address(ptr);
+}
 
 } // namespace backend
 

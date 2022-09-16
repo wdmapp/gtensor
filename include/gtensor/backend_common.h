@@ -293,6 +293,9 @@ struct selector
 
 } // namespace allocator_impl
 
+template <typename S>
+class backend_ops;
+
 // ======================================================================
 // prefetch interface
 

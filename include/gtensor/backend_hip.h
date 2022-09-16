@@ -211,17 +211,22 @@ inline void fill(gt::space::hip tag, Ptr first, Ptr last, const T& value)
 }
 } // namespace fill_impl
 
-template <typename Ptr>
-inline bool is_device_address(const Ptr p)
+template <>
+class backend_ops<gt::space::hip>
 {
-  hipPointerAttribute_t attr;
-  hipError_t rval = hipPointerGetAttributes(&attr, p);
-  if (rval == hipErrorInvalidValue) {
-    return false;
+public:
+  template <typename Ptr>
+  static bool is_device_address(const Ptr p)
+  {
+    hipPointerAttribute_t attr;
+    hipError_t rval = hipPointerGetAttributes(&attr, p);
+    if (rval == hipErrorInvalidValue) {
+      return false;
+    }
+    gtGpuCheck(rval);
+    return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
   }
-  gtGpuCheck(rval);
-  return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
-}
+};
 
 namespace stream_interface
 {

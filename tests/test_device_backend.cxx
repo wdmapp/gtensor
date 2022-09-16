@@ -49,15 +49,13 @@ TEST(device_backend, managed_allocate)
   allocator::deallocate(a);
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 TEST(device_backend, is_device_address)
 {
   using T = double;
 
   gt::gtensor<T, 1> h_a(gt::shape(10));
   gt::gtensor_device<T, 1> d_a(gt::shape(10));
-  gt::gtensor_container<gt::space::managed_vector<T>, 1> m_a(gt::shape(10));
+  gt::gtensor<T, 1, gt::space::managed> m_a(gt::shape(10));
 
 #ifdef GTENSOR_DEVICE_SYCL
   // special case SYCL to handle the host backend, which says that
@@ -80,12 +78,16 @@ TEST(device_backend, is_device_address)
       gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
   }
 #else
+#if GTENSOR_HAVE_DEVICE
   ASSERT_FALSE(
     gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
+#endif
   ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
   ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
 #endif
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 TEST(device_backend, managed_prefetch)
 {
