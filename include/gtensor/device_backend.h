@@ -25,15 +25,6 @@ namespace backend
 
 namespace clib
 {
-#if GTENSOR_DEVICE_CUDA
-using namespace backend::cuda;
-#elif GTENSOR_DEVICE_HIP
-using namespace backend::hip;
-#elif GTENSOR_DEVICE_SYCL
-using namespace backend::sycl;
-#else
-#endif
-
 template <typename S>
 using gallocator = gt::backend::allocator_impl::gallocator<S>;
 } // namespace clib
