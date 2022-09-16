@@ -14,40 +14,20 @@ namespace gt
 namespace backend
 {
 
-namespace host
-{
-
-inline void device_synchronize()
-{
-  // no need to synchronize on host
-}
-
-inline int device_get_count()
-{
-  return 1;
-}
-
-inline void device_set(int device_id)
-{
-  assert(device_id == 0);
-}
-
-inline int device_get()
-{
-  return 0;
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  return 0;
-}
-
-} // namespace host
-
 template <>
 class backend_ops<gt::space::host>
 {
 public:
+  static void device_synchronize() {}
+
+  static int device_get_count() { return 1; }
+
+  static void device_set(int device_id) { assert(device_id == 0); }
+
+  static int device_get() { return 0; }
+
+  static uint32_t device_get_vendor_id(int device_id) { return 0; }
+
   template <typename Ptr>
   static bool is_device_address(const Ptr p)
   {

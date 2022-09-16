@@ -12,7 +12,7 @@
 
 TEST(device_backend, list_devices)
 {
-  int n_devices = gt::backend::clib::device_get_count();
+  int n_devices = gt::backend::backend_ops_clib::device_get_count();
   uint32_t vendor_id[MAX_DEVICES];
 
   ASSERT_LE(n_devices, MAX_DEVICES);
@@ -23,7 +23,7 @@ TEST(device_backend, list_devices)
 #endif
 
   for (int i = 0; i < n_devices; i++) {
-    vendor_id[i] = gt::backend::clib::device_get_vendor_id(i);
+    vendor_id[i] = gt::backend::backend_ops_clib::device_get_vendor_id(i);
     GT_DEBUG_PRINTLN("device[" << i << "]: 0x" << std::setfill('0')
                                << std::setw(8) << std::hex << vendor_id[i]
                                << std::dec << std::endl);

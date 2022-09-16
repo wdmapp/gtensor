@@ -10,22 +10,22 @@ void gt_synchronize()
 
 int gt_backend_device_get_count()
 {
-  return gt::backend::clib::device_get_count();
+  return gt::backend::backend_ops_clib::device_get_count();
 }
 
 void gt_backend_device_set(int device_id)
 {
-  return gt::backend::clib::device_set(device_id);
+  return gt::backend::backend_ops_clib::device_set(device_id);
 }
 
 int gt_backend_device_get()
 {
-  return gt::backend::clib::device_get();
+  return gt::backend::backend_ops_clib::device_get();
 }
 
 uint32_t gt_backend_device_get_vendor_id(int device_id)
 {
-  return gt::backend::clib::device_get_vendor_id(device_id);
+  return gt::backend::backend_ops_clib::device_get_vendor_id(device_id);
 }
 
 void* gt_backend_host_allocate(size_t nbytes)
@@ -81,8 +81,8 @@ void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes)
 
 void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes)
 {
-  gt::backend::clib::device_copy_async_dd<uint8_t>((uint8_t*)src, (uint8_t*)dst,
-                                                   nbytes);
+  gt::backend::backend_ops_clib::copy_async_dd<uint8_t>((uint8_t*)src,
+                                                        (uint8_t*)dst, nbytes);
 }
 
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes)

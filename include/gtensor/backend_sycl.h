@@ -36,38 +36,6 @@ namespace backend
 namespace sycl
 {
 
-inline void device_synchronize()
-{
-  get_queue().wait();
-}
-
-inline int device_get_count()
-{
-  return device::get_sycl_queues_instance().get_device_count();
-}
-
-inline void device_set(int device_id)
-{
-  device::get_sycl_queues_instance().set_device_id(device_id);
-}
-
-inline int device_get()
-{
-  return device::get_sycl_queues_instance().get_device_id();
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  return device::get_sycl_queues_instance().get_device_vendor_id(device_id);
-}
-
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, size_type count)
-{
-  cl::sycl::queue& q = get_queue();
-  q.memcpy(dst, src, sizeof(T) * count);
-}
-
 // kernel name templates
 template <typename E1, typename E2, typename K1, typename K2>
 class Assign1;
@@ -243,6 +211,28 @@ template <>
 class backend_ops<gt::space::sycl>
 {
 public:
+  static void device_synchronize() { get_queue().wait(); }
+
+  static int device_get_count()
+  {
+    return device::get_sycl_queues_instance().get_device_count();
+  }
+
+  static void device_set(int device_id)
+  {
+    device::get_sycl_queues_instance().set_device_id(device_id);
+  }
+
+  static int device_get()
+  {
+    return device::get_sycl_queues_instance().get_device_id();
+  }
+
+  static uint32_t device_get_vendor_id(int device_id)
+  {
+    return device::get_sycl_queues_instance().get_device_vendor_id(device_id);
+  }
+
   template <typename Ptr>
   static bool is_device_address(const Ptr p)
   {
@@ -277,6 +267,13 @@ public:
   template <typename T>
   static void prefetch_host(T* p, size_type n)
   {}
+
+  template <typename T>
+  static void copy_async_dd(const T* src, T* dst, size_type count)
+  {
+    cl::sycl::queue& q = get_queue();
+    q.memcpy(dst, src, sizeof(T) * count);
+  }
 };
 
 namespace stream_interface

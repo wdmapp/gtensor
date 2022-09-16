@@ -32,12 +32,21 @@ using namespace backend::hip;
 #elif GTENSOR_DEVICE_SYCL
 using namespace backend::sycl;
 #else
-using namespace backend::host;
 #endif
 
 template <typename S>
 using gallocator = gt::backend::allocator_impl::gallocator<S>;
 } // namespace clib
+
+#if GTENSOR_DEVICE_CUDA
+using backend_ops_clib = backend_ops<gt::space::cuda>;
+#elif GTENSOR_DEVICE_HIP
+using backend_ops_clib = backend_ops<gt::space::hip>;
+#elif GTENSOR_DEVICE_SYCL
+using backend_ops_clib = backend_ops<gt::space::sycl>;
+#else
+using backend_ops_clib = backend_ops<gt::space::host>;
+#endif
 
 template <typename Ptr>
 bool is_device_address(Ptr ptr)
@@ -110,7 +119,7 @@ inline void copy_n(InputPtr in, gt::size_type count, OutputPtr out)
 
 void inline synchronize()
 {
-  gt::backend::clib::device_synchronize();
+  gt::backend::backend_ops_clib::device_synchronize();
 }
 
 } // namespace gt

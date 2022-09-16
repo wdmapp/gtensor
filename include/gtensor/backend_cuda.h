@@ -84,56 +84,6 @@ struct gallocator<gt::space::cuda_host>
 
 } // namespace allocator_impl
 
-namespace cuda
-{
-
-inline void device_synchronize()
-{
-  gtGpuCheck(cudaStreamSynchronize(0));
-}
-
-template <typename T>
-inline void device_copy_async_dd(const T* src, T* dst, size_type count)
-{
-  gtGpuCheck(
-    cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
-}
-
-inline int device_get_count()
-{
-  int device_count;
-  gtGpuCheck(cudaGetDeviceCount(&device_count));
-  return device_count;
-}
-
-inline void device_set(int device_id)
-{
-  gtGpuCheck(cudaSetDevice(device_id));
-}
-
-inline int device_get()
-{
-  int device_id;
-  gtGpuCheck(cudaGetDevice(&device_id));
-  return device_id;
-}
-
-inline uint32_t device_get_vendor_id(int device_id)
-{
-  cudaDeviceProp prop;
-  uint32_t packed = 0;
-
-  gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
-
-  packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
-  packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
-  packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
-
-  return packed;
-}
-
-} // namespace cuda
-
 namespace copy_impl
 {
 
@@ -202,6 +152,41 @@ template <>
 class backend_ops<gt::space::cuda>
 {
 public:
+  static void device_synchronize() { gtGpuCheck(cudaStreamSynchronize(0)); }
+
+  static int device_get_count()
+  {
+    int device_count;
+    gtGpuCheck(cudaGetDeviceCount(&device_count));
+    return device_count;
+  }
+
+  static void device_set(int device_id)
+  {
+    gtGpuCheck(cudaSetDevice(device_id));
+  }
+
+  static int device_get()
+  {
+    int device_id;
+    gtGpuCheck(cudaGetDevice(&device_id));
+    return device_id;
+  }
+
+  static uint32_t device_get_vendor_id(int device_id)
+  {
+    cudaDeviceProp prop;
+    uint32_t packed = 0;
+
+    gtGpuCheck(cudaGetDeviceProperties(&prop, device_id));
+
+    packed |= (0x000000FF & ((uint32_t)prop.pciDeviceID));
+    packed |= (0x0000FF00 & (((uint32_t)prop.pciBusID) << 8));
+    packed |= (0xFFFF0000 & (((uint32_t)prop.pciDomainID) << 16));
+
+    return packed;
+  }
+
   template <typename Ptr>
   static bool is_device_address(const Ptr p)
   {
@@ -247,6 +232,13 @@ public:
   {
     gtGpuCheck(
       cudaMemPrefetchAsync(p, n * sizeof(T), cudaCpuDeviceId, nullptr));
+  }
+
+  template <typename T>
+  static void copy_async_dd(const T* src, T* dst, size_type count)
+  {
+    gtGpuCheck(
+      cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
   }
 };
 
