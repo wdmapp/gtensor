@@ -23,11 +23,8 @@ namespace gt
 namespace backend
 {
 
-namespace clib
-{
 template <typename S>
 using gallocator = gt::backend::allocator_impl::gallocator<S>;
-} // namespace clib
 
 #if GTENSOR_DEVICE_CUDA
 using backend_ops_clib = backend_ops<gt::space::cuda>;

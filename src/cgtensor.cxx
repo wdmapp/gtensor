@@ -31,39 +31,34 @@ uint32_t gt_backend_device_get_vendor_id(int device_id)
 void* gt_backend_host_allocate(size_t nbytes)
 {
   return (void*)
-    gt::backend::clib::gallocator<gt::space::clib_host>::allocate<uint8_t>(
-      nbytes);
+    gt::backend::gallocator<gt::space::clib_host>::allocate<uint8_t>(nbytes);
 }
 
 void* gt_backend_device_allocate(size_t nbytes)
 {
   return (void*)
-    gt::backend::clib::gallocator<gt::space::clib_device>::allocate<uint8_t>(
-      nbytes);
+    gt::backend::gallocator<gt::space::clib_device>::allocate<uint8_t>(nbytes);
 }
 
 void* gt_backend_managed_allocate(size_t nbytes)
 {
   return (void*)
-    gt::backend::clib::gallocator<gt::space::clib_managed>::allocate<uint8_t>(
-      nbytes);
+    gt::backend::gallocator<gt::space::clib_managed>::allocate<uint8_t>(nbytes);
 }
 
 void gt_backend_host_deallocate(void* p)
 {
-  gt::backend::clib::gallocator<gt::space::clib_host>::deallocate((uint8_t*)p);
+  gt::backend::gallocator<gt::space::clib_host>::deallocate((uint8_t*)p);
 }
 
 void gt_backend_device_deallocate(void* p)
 {
-  gt::backend::clib::gallocator<gt::space::clib_device>::deallocate(
-    (uint8_t*)p);
+  gt::backend::gallocator<gt::space::clib_device>::deallocate((uint8_t*)p);
 }
 
 void gt_backend_managed_deallocate(void* p)
 {
-  gt::backend::clib::gallocator<gt::space::clib_managed>::deallocate(
-    (uint8_t*)p);
+  gt::backend::gallocator<gt::space::clib_managed>::deallocate((uint8_t*)p);
 }
 
 #ifdef GTENSOR_HAVE_DEVICE

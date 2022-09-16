@@ -35,7 +35,7 @@ TEST(device_backend, list_devices)
 
 TEST(device_backend, managed_allocate)
 {
-  using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
+  using allocator = gt::backend::gallocator<gt::space::clib_managed>;
   double* a = allocator::allocate<double>(N);
   for (int i = 0; i < N; i++) {
     a[i] = ((double)i) / N;
@@ -89,7 +89,7 @@ TEST(device_backend, is_device_address)
 
 TEST(device_backend, managed_prefetch)
 {
-  using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
+  using allocator = gt::backend::gallocator<gt::space::clib_managed>;
   double* a = allocator::allocate<double>(N);
   gt::backend::prefetch_host(a, N);
   for (int i = 0; i < N; i++) {
