@@ -26,6 +26,14 @@ namespace gt
 namespace backend
 {
 
+enum class memory_type
+{
+  host,
+  device,
+  managed,
+  unregistered,
+};
+
 // ======================================================================
 // library wide configuration
 

@@ -227,6 +227,27 @@ public:
     return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
   }
 
+  template <typename Ptr>
+  static memory_type get_memory_type(const Ptr ptr)
+  {
+    hipPointerAttribute_t attr;
+    auto rc = hipPointerGetAttributes(&attr, ptr);
+    if (rc == hipErrorInvalidValue) {
+      hipGetLastError(); // clear the error
+      return memory_type::unregistered;
+    }
+    gtGpuCheck(rc);
+    if (attr.isManaged) {
+      return memory_type::managed;
+    }
+    switch (attr.memoryType) {
+      case hipMemoryTypeHost: return memory_type::host;
+      case hipMemoryTypeDevice: return memory_type::device;
+      case hipMemoryTypeUnified: return memory_type::managed;
+      default: assert(0);
+    }
+  }
+
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {

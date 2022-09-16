@@ -252,6 +252,20 @@ public:
             alloc_type == ::sycl::usm::alloc::shared);
   }
 
+  template <typename Ptr>
+  static memory_type get_memory_type(const Ptr ptr)
+  {
+    cl::sycl::queue& q = gt::backend::sycl::get_queue();
+    auto alloc_type = ::sycl::get_pointer_type(p, q.get_context());
+    switch (alloctype) {
+      case ::sycl::usm::alloc::host: return memory_type::host;
+      case ::sycl::usm::alloc::device: return memory_type::device;
+      case ::sycl::usm::alloc::shared: return memory_type::managed;
+      case ::sycl::usm::alloc::unkown: return memory_type::unregisered;
+      default: assert(0);
+    }
+  }
+
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {

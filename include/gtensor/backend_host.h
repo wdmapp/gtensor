@@ -54,6 +54,12 @@ public:
     return true;
   }
 
+  template <typename Ptr>
+  static memory_type get_memory_type(const Ptr ptr)
+  {
+    return memory_type::host;
+  }
+
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {}

@@ -215,6 +215,25 @@ public:
             attr.type == cudaMemoryTypeManaged);
   }
 
+  template <typename Ptr>
+  static memory_type get_memory_type(Ptr ptr)
+  {
+    cudaPointerAttributes attr;
+    auto rc = cudaPointerGetAttributes(&attr, ptr);
+    if (rc == cudaErrorInvalidValue) {
+      cudaGetLastError(); // clear the error
+      return memory_type::unregistered;
+    }
+    gtGpuCheck(rc);
+    switch (attr.type) {
+      case cudaMemoryTypeHost: return memory_type::host;
+      case cudaMemoryTypeDevice: return memory_type::device;
+      case cudaMemoryTypeManaged: return memory_type::managed;
+      default: assert(0);
+    }
+    return static_cast<memory_type>(attr.type);
+  }
+
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {

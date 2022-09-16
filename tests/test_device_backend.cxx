@@ -105,6 +105,21 @@ TEST(device_backend, managed_prefetch)
   allocator::deallocate(a);
 }
 
+TEST(device_backend, get_memory_type)
+{
+  gt::backend::host_storage<int> h(1);
+  EXPECT_EQ(gt::backend::get_memory_type(gt::raw_pointer_cast(h.data())),
+            gt::backend::memory_type::host);
+#ifdef GTENSOR_HAVE_DEVICE
+  gt::backend::device_storage<int> d(1);
+  EXPECT_EQ(gt::backend::get_memory_type(gt::raw_pointer_cast(d.data())),
+            gt::backend::memory_type::device);
+  gt::backend::managed_storage<int> m(1);
+  EXPECT_EQ(gt::backend::get_memory_type(gt::raw_pointer_cast(m.data())),
+            gt::backend::memory_type::managed);
+#endif
+}
+
 #ifdef GTENSOR_DEVICE_SYCL
 
 TEST(device_backend, sycl_new_stream_queue)

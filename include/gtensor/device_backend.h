@@ -45,6 +45,12 @@ bool is_device_address(Ptr ptr)
   return backend_ops<gt::space::device>::is_device_address(ptr);
 }
 
+template <typename Ptr>
+inline memory_type get_memory_type(const Ptr ptr)
+{
+  return backend_ops<gt::space::device>::get_memory_type(ptr);
+}
+
 template <typename T>
 static void prefetch_device(T* p, size_type n)
 {
