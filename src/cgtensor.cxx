@@ -100,7 +100,7 @@ void gt_backend_memset(void* dst, int value, size_t nbytes)
 
 bool gt_backend_is_device_address(void* p)
 {
-  return gt::backend::is_device_address(p);
+  return gt::backend::backend_ops_clib::is_device_address(p);
 }
 
 void gt_backend_prefetch_device(void* p, size_t nbytes)

@@ -36,30 +36,6 @@ using backend_ops_clib = backend_ops<gt::space::sycl>;
 using backend_ops_clib = backend_ops<gt::space::host>;
 #endif
 
-template <typename Ptr>
-bool is_device_address(Ptr ptr)
-{
-  return backend_ops_clib::is_device_address(ptr);
-}
-
-template <typename Ptr>
-inline memory_type get_memory_type(const Ptr ptr)
-{
-  return backend_ops_clib::get_memory_type(ptr);
-}
-
-template <typename T>
-static void prefetch_device(T* p, size_type n)
-{
-  return backend_ops_clib::prefetch_device(p, n);
-}
-
-template <typename T>
-static void prefetch_host(T* p, size_type n)
-{
-  return backend_ops_clib::prefetch_host(p, n);
-}
-
 } // namespace backend
 
 template <typename T, typename S = gt::space::device>

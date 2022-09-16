@@ -63,27 +63,29 @@ TEST(device_backend, is_device_address)
   // perspective, even if it's logically false in gtensor).
   sycl::device d = gt::backend::sycl::get_queue().get_device();
   if (d.is_gpu() || d.is_cpu()) {
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
-    ASSERT_TRUE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
-    ASSERT_TRUE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    ASSERT_FALSE(gt::backend::backend_ops_clib::is_device_address(
+      gt::raw_pointer_cast(h_a.data())));
+    ASSERT_TRUE(gt::backend::backend_ops_clib::is_device_address(
+      gt::raw_pointer_cast(d_a.data())));
+    ASSERT_TRUE(gt::backend::backend_ops_clib::is_device_address(
+      gt::raw_pointer_cast(m_a.data())));
   } else {
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    ASSERT_FALSE(gt::backend::backend_ops_clib::is_device_address(
+      gt::raw_pointer_cast(h_a.data())));
+    ASSERT_FALSE(gt::backend::backend_ops_clib::is_device_address(
+      gt::raw_pointer_cast(d_a.data())));
+    ASSERT_FALSE(gt::backend::backend_ops_clib::is_device_address(
+      gt::raw_pointer_cast(m_a.data())));
   }
 #else
 #if GTENSOR_HAVE_DEVICE
-  ASSERT_FALSE(
-    gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
+  ASSERT_FALSE(gt::backend::backend_ops_clib::is_device_address(
+    gt::raw_pointer_cast(h_a.data())));
 #endif
-  ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
-  ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+  ASSERT_TRUE(gt::backend::backend_ops_clib::is_device_address(
+    gt::raw_pointer_cast(d_a.data())));
+  ASSERT_TRUE(gt::backend::backend_ops_clib::is_device_address(
+    gt::raw_pointer_cast(m_a.data())));
 #endif
 }
 
@@ -91,11 +93,11 @@ TEST(device_backend, managed_prefetch)
 {
   using allocator = gt::backend::gallocator<gt::space::clib_managed>;
   double* a = allocator::allocate<double>(N);
-  gt::backend::prefetch_host(a, N);
+  gt::backend::backend_ops_clib::prefetch_host(a, N);
   for (int i = 0; i < N; i++) {
     a[i] = ((double)i) / N;
   }
-  gt::backend::prefetch_device(a, N);
+  gt::backend::backend_ops_clib::prefetch_device(a, N);
   auto aview = gt::adapt_device(a, gt::shape(N));
   aview = aview + 1.0;
   gt::synchronize();
@@ -108,14 +110,17 @@ TEST(device_backend, managed_prefetch)
 TEST(device_backend, get_memory_type)
 {
   gt::backend::host_storage<int> h(1);
-  EXPECT_EQ(gt::backend::get_memory_type(gt::raw_pointer_cast(h.data())),
+  EXPECT_EQ(gt::backend::backend_ops_clib::get_memory_type(
+              gt::raw_pointer_cast(h.data())),
             gt::backend::memory_type::host);
 #ifdef GTENSOR_HAVE_DEVICE
   gt::backend::device_storage<int> d(1);
-  EXPECT_EQ(gt::backend::get_memory_type(gt::raw_pointer_cast(d.data())),
+  EXPECT_EQ(gt::backend::backend_ops_clib::get_memory_type(
+              gt::raw_pointer_cast(d.data())),
             gt::backend::memory_type::device);
   gt::backend::managed_storage<int> m(1);
-  EXPECT_EQ(gt::backend::get_memory_type(gt::raw_pointer_cast(m.data())),
+  EXPECT_EQ(gt::backend::backend_ops_clib::get_memory_type(
+              gt::raw_pointer_cast(m.data())),
             gt::backend::memory_type::managed);
 #endif
 }

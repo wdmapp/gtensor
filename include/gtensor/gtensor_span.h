@@ -145,7 +145,8 @@ GT_INLINE gtensor_span<T, N, S>::gtensor_span(pointer data,
   }
 #endif // GTENSOR_DEVICE_SYCL
   if (check_address) {
-    gtGpuAssert(gt::backend::is_device_address(gt::raw_pointer_cast(data)),
+    gtGpuAssert(gt::backend::backend_ops_clib::is_device_address(
+                  gt::raw_pointer_cast(data)),
                 "host address passed to device span");
   }
 #endif
