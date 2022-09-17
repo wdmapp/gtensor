@@ -256,7 +256,9 @@ public:
       case ::sycl::usm::alloc::device: return memory_type::device;
       case ::sycl::usm::alloc::shared: return memory_type::managed;
       case ::sycl::usm::alloc::unknown: return memory_type::unregistered;
-      default: assert(0);
+      default:
+        fprintf(stderr, "ERROR: unknown memoryType %d.\n", alloc_type);
+        std::abort();
     }
   }
 

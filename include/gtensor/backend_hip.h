@@ -226,7 +226,9 @@ public:
       case hipMemoryTypeHost: return memory_type::host;
       case hipMemoryTypeDevice: return memory_type::device;
       case hipMemoryTypeUnified: return memory_type::managed;
-      default: assert(0);
+      default:
+        fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.memoryType);
+        std::abort();
     }
   }
 

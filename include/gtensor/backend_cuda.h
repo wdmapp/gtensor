@@ -214,7 +214,9 @@ public:
       case cudaMemoryTypeHost: return memory_type::host;
       case cudaMemoryTypeDevice: return memory_type::device;
       case cudaMemoryTypeManaged: return memory_type::managed;
-      default: assert(0);
+      default:
+        fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.type);
+        std::abort();
     }
     return static_cast<memory_type>(attr.type);
   }
