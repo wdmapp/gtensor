@@ -112,7 +112,7 @@ TEST(device_backend, get_memory_type)
   gt::backend::host_storage<int> h(1);
   EXPECT_EQ(gt::backend::clib::get_memory_type(gt::raw_pointer_cast(h.data())),
             gt::backend::memory_type::host);
-#ifdef GTENSOR_HAVE_DEVICE
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(GTENSOR_DEVICE_SYCL)
   gt::backend::device_storage<int> d(1);
   EXPECT_EQ(gt::backend::clib::get_memory_type(gt::raw_pointer_cast(d.data())),
             gt::backend::memory_type::device);

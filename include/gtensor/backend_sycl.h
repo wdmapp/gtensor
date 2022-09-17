@@ -211,33 +211,37 @@ template <>
 class backend_ops<gt::space::sycl>
 {
 public:
-  static void device_synchronize() { get_queue().wait(); }
+  static void device_synchronize() { gt::backend::sycl::get_queue().wait(); }
 
   static int device_get_count()
   {
-    return device::get_sycl_queues_instance().get_device_count();
+    return gt::backend::sycl::device::get_sycl_queues_instance()
+      .get_device_count();
   }
 
   static void device_set(int device_id)
   {
-    device::get_sycl_queues_instance().set_device_id(device_id);
+    gt::backend::sycl::device::get_sycl_queues_instance().set_device_id(
+      device_id);
   }
 
   static int device_get()
   {
-    return device::get_sycl_queues_instance().get_device_id();
+    return gt::backend::sycl::device::get_sycl_queues_instance()
+      .get_device_id();
   }
 
   static uint32_t device_get_vendor_id(int device_id)
   {
-    return device::get_sycl_queues_instance().get_device_vendor_id(device_id);
+    return gt::backend::sycl::device::get_sycl_queues_instance()
+      .get_device_vendor_id(device_id);
   }
 
   template <typename Ptr>
-  static bool is_device_accessible(const Ptr p)
+  static bool is_device_accessible(const Ptr ptr)
   {
-    cl::sycl::queue& q = gt::backend::sycl::get_queue();
-    auto alloc_type = ::sycl::get_pointer_type(p, q.get_context());
+    auto& q = gt::backend::sycl::get_queue();
+    auto alloc_type = ::sycl::get_pointer_type(ptr, q.get_context());
     return (alloc_type == ::sycl::usm::alloc::device ||
             alloc_type == ::sycl::usm::alloc::shared);
   }
@@ -245,13 +249,13 @@ public:
   template <typename Ptr>
   static memory_type get_memory_type(const Ptr ptr)
   {
-    cl::sycl::queue& q = gt::backend::sycl::get_queue();
-    auto alloc_type = ::sycl::get_pointer_type(p, q.get_context());
-    switch (alloctype) {
+    auto& q = gt::backend::sycl::get_queue();
+    auto alloc_type = ::sycl::get_pointer_type(ptr, q.get_context());
+    switch (alloc_type) {
       case ::sycl::usm::alloc::host: return memory_type::host;
       case ::sycl::usm::alloc::device: return memory_type::device;
       case ::sycl::usm::alloc::shared: return memory_type::managed;
-      case ::sycl::usm::alloc::unkown: return memory_type::unregisered;
+      case ::sycl::usm::alloc::unknown: return memory_type::unregistered;
       default: assert(0);
     }
   }
@@ -259,7 +263,7 @@ public:
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {
-    ::sycl::queue& q = gt::backend::sycl::get_queue();
+    auto& q = gt::backend::sycl::get_queue();
     q.prefetch(p, n);
   }
 
@@ -271,7 +275,7 @@ public:
   template <typename T>
   static void copy_async_dd(const T* src, T* dst, size_type count)
   {
-    cl::sycl::queue& q = get_queue();
+    auto& q = gt::backend::sycl::get_queue();
     q.memcpy(dst, src, sizeof(T) * count);
   }
 };
