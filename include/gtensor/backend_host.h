@@ -29,7 +29,7 @@ public:
   static uint32_t device_get_vendor_id(int device_id) { return 0; }
 
   template <typename Ptr>
-  static bool is_device_address(const Ptr p)
+  static bool is_device_accessible(const Ptr p)
   {
     return true;
   }

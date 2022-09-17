@@ -100,9 +100,14 @@ void gt_backend_memset(void* dst, int value, size_t nbytes)
 
 #endif
 
+bool gt_backend_is_device_accessible(void* p)
+{
+  return gt::backend::clib::is_device_accessible(p);
+}
+
 bool gt_backend_is_device_address(void* p)
 {
-  return gt::backend::clib::is_device_address(p);
+  return gt::backend::clib::is_device_accessible(p);
 }
 
 void gt_backend_prefetch_device(void* p, size_t nbytes)

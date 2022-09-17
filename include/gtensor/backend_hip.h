@@ -198,7 +198,7 @@ public:
   }
 
   template <typename Ptr>
-  static bool is_device_address(const Ptr p)
+  static bool is_device_accessible(const Ptr p)
   {
     hipPointerAttribute_t attr;
     hipError_t rval = hipPointerGetAttributes(&attr, p);

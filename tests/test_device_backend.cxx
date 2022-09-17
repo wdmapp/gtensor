@@ -49,7 +49,7 @@ TEST(device_backend, managed_allocate)
   allocator::deallocate(a);
 }
 
-TEST(device_backend, is_device_address)
+TEST(device_backend, is_device_accessible)
 {
   using T = double;
 
@@ -63,29 +63,29 @@ TEST(device_backend, is_device_address)
   // perspective, even if it's logically false in gtensor).
   sycl::device d = gt::backend::sycl::get_queue().get_device();
   if (d.is_gpu() || d.is_cpu()) {
-    ASSERT_FALSE(
-      gt::backend::clib::is_device_address(gt::raw_pointer_cast(h_a.data())));
-    ASSERT_TRUE(
-      gt::backend::clib::is_device_address(gt::raw_pointer_cast(d_a.data())));
-    ASSERT_TRUE(
-      gt::backend::clib::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(h_a.data())));
+    ASSERT_TRUE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(d_a.data())));
+    ASSERT_TRUE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(m_a.data())));
   } else {
-    ASSERT_FALSE(
-      gt::backend::clib::is_device_address(gt::raw_pointer_cast(h_a.data())));
-    ASSERT_FALSE(
-      gt::backend::clib::is_device_address(gt::raw_pointer_cast(d_a.data())));
-    ASSERT_FALSE(
-      gt::backend::clib::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(h_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(d_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(m_a.data())));
   }
 #else
 #if GTENSOR_HAVE_DEVICE
   ASSERT_FALSE(
-    gt::backend::clib::is_device_address(gt::raw_pointer_cast(h_a.data())));
+    gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(h_a.data())));
 #endif
   ASSERT_TRUE(
-    gt::backend::clib::is_device_address(gt::raw_pointer_cast(d_a.data())));
+    gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(d_a.data())));
   ASSERT_TRUE(
-    gt::backend::clib::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(m_a.data())));
 #endif
 }
 

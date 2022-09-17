@@ -234,7 +234,7 @@ public:
   }
 
   template <typename Ptr>
-  static bool is_device_address(const Ptr p)
+  static bool is_device_accessible(const Ptr p)
   {
     cl::sycl::queue& q = gt::backend::sycl::get_queue();
     auto alloc_type = ::sycl::get_pointer_type(p, q.get_context());
