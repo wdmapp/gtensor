@@ -151,6 +151,14 @@ inline auto gpuGetLastError()
   } while (0)
 #endif
 
+#elif GTENSOR_DEVICE_SYCL
+
+#else
+
+#define gpuSyncIfEnabledStream(a_stream_view)                                  \
+  do {                                                                         \
+  } while (0)
+
 #endif // end CUDA or HIP
 
 #define gpuSyncIfEnabled() gpuSyncIfEnabledStream(gt::stream_view{})
