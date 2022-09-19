@@ -21,8 +21,6 @@ extern "C" {
 
 void gt_synchronize();
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 int gt_backend_device_get_count();
 void gt_backend_device_set(int device_id);
 int gt_backend_device_get();
@@ -35,6 +33,8 @@ void gt_backend_host_deallocate(void* p);
 void gt_backend_device_deallocate(void* p);
 void gt_backend_managed_deallocate(void* p);
 
+#ifdef GTENSOR_HAVE_DEVICE
+
 void gt_backend_memcpy_hh(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_dd(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes);
@@ -43,12 +43,14 @@ void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes);
 
 void gt_backend_memset(void* dst, int value, size_t nbytes);
 
-bool gt_backend_is_device_address(void* p);
+#endif // GTENSOR_HAVE_DEVICE
+
+bool gt_backend_is_device_accessible(void* p);
+[[deprecated("use gt_backend_is_device_accessible() instead")]] bool
+gt_backend_is_device_address(void* p);
 
 void gt_backend_prefetch_device(void* p, size_t nbytes);
 void gt_backend_prefetch_host(void* p, size_t nbytes);
-
-#endif // GTENSOR_HAVE_DEVICE
 
 #ifdef __cplusplus
 }

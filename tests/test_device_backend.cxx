@@ -8,8 +8,7 @@
 #include "test_debug.h"
 
 #define MAX_DEVICES 100
-
-#ifdef GTENSOR_HAVE_DEVICE
+#define N 10
 
 TEST(device_backend, list_devices)
 {
@@ -34,10 +33,9 @@ TEST(device_backend, list_devices)
   }
 }
 
-#define N 10
 TEST(device_backend, managed_allocate)
 {
-  using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
+  using allocator = gt::backend::gallocator<gt::space::clib_managed>;
   double* a = allocator::allocate<double>(N);
   for (int i = 0; i < N; i++) {
     a[i] = ((double)i) / N;
@@ -51,13 +49,13 @@ TEST(device_backend, managed_allocate)
   allocator::deallocate(a);
 }
 
-TEST(device_backend, is_device_address)
+TEST(device_backend, is_device_accessible)
 {
   using T = double;
 
   gt::gtensor<T, 1> h_a(gt::shape(10));
   gt::gtensor_device<T, 1> d_a(gt::shape(10));
-  gt::gtensor_container<gt::space::managed_vector<T>, 1> m_a(gt::shape(10));
+  gt::gtensor<T, 1, gt::space::managed> m_a(gt::shape(10));
 
 #ifdef GTENSOR_DEVICE_SYCL
   // special case SYCL to handle the host backend, which says that
@@ -65,37 +63,41 @@ TEST(device_backend, is_device_address)
   // perspective, even if it's logically false in gtensor).
   sycl::device d = gt::backend::sycl::get_queue().get_device();
   if (d.is_gpu() || d.is_cpu()) {
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
-    ASSERT_TRUE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
-    ASSERT_TRUE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(h_a.data())));
+    ASSERT_TRUE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(d_a.data())));
+    ASSERT_TRUE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(m_a.data())));
   } else {
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
-    ASSERT_FALSE(
-      gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(h_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(d_a.data())));
+    ASSERT_FALSE(gt::backend::clib::is_device_accessible(
+      gt::raw_pointer_cast(m_a.data())));
   }
 #else
+#if GTENSOR_HAVE_DEVICE
   ASSERT_FALSE(
-    gt::backend::is_device_address(gt::raw_pointer_cast(h_a.data())));
-  ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(d_a.data())));
-  ASSERT_TRUE(gt::backend::is_device_address(gt::raw_pointer_cast(m_a.data())));
+    gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(h_a.data())));
+#endif
+  ASSERT_TRUE(
+    gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(d_a.data())));
+  ASSERT_TRUE(
+    gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(m_a.data())));
 #endif
 }
 
 TEST(device_backend, managed_prefetch)
 {
-  using allocator = gt::backend::clib::gallocator<gt::space::clib_managed>;
+  using allocator = gt::backend::gallocator<gt::space::clib_managed>;
   double* a = allocator::allocate<double>(N);
-  gt::backend::prefetch_host(a, N);
+  gt::backend::clib::prefetch_host(a, N);
   for (int i = 0; i < N; i++) {
     a[i] = ((double)i) / N;
   }
-  gt::backend::prefetch_device(a, N);
+  gt::backend::clib::prefetch_device(a, N);
   auto aview = gt::adapt_device(a, gt::shape(N));
   aview = aview + 1.0;
   gt::synchronize();
@@ -103,6 +105,21 @@ TEST(device_backend, managed_prefetch)
     EXPECT_EQ(a[i], 1.0 + ((double)i) / N);
   }
   allocator::deallocate(a);
+}
+
+TEST(device_backend, get_memory_type)
+{
+  gt::backend::host_storage<int> h(1);
+  EXPECT_EQ(gt::backend::clib::get_memory_type(gt::raw_pointer_cast(h.data())),
+            gt::backend::memory_type::host);
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(GTENSOR_DEVICE_SYCL)
+  gt::backend::device_storage<int> d(1);
+  EXPECT_EQ(gt::backend::clib::get_memory_type(gt::raw_pointer_cast(d.data())),
+            gt::backend::memory_type::device);
+  gt::backend::managed_storage<int> m(1);
+  EXPECT_EQ(gt::backend::clib::get_memory_type(gt::raw_pointer_cast(m.data())),
+            gt::backend::memory_type::managed);
+#endif
 }
 
 #ifdef GTENSOR_DEVICE_SYCL
@@ -152,5 +169,3 @@ TEST(device_backend, sycl_new_stream_queue)
 }
 
 #endif // GTENSOR_DEVICE_SYCL
-
-#endif // GTENSOR_HAVE_DEVICE

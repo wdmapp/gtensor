@@ -28,8 +28,6 @@ TEST(adapt, adapt_complex)
   EXPECT_EQ(a[N * M - 1], (T{1., -1.}));
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 TEST(adapt, adapt_device)
 {
   constexpr int N = 10;
@@ -46,5 +44,3 @@ TEST(adapt, adapt_device)
 
   EXPECT_EQ(aview, h_expected);
 }
-
-#endif // GTENSOR_HAVE_DEVICE

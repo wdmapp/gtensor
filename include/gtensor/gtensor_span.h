@@ -145,8 +145,9 @@ GT_INLINE gtensor_span<T, N, S>::gtensor_span(pointer data,
   }
 #endif // GTENSOR_DEVICE_SYCL
   if (check_address) {
-    gtGpuAssert(gt::backend::is_device_address(gt::raw_pointer_cast(data)),
-                "host address passed to device span");
+    gtGpuAssert(
+      gt::backend::clib::is_device_accessible(gt::raw_pointer_cast(data)),
+      "host address passed to device span");
   }
 #endif
 }
@@ -218,7 +219,6 @@ gtensor_span<T, N> adapt(T* data, const int* shape_data)
   return adapt<N, T>(data, {shape_data, N});
 }
 
-#ifdef GTENSOR_HAVE_DEVICE
 template <size_type N, typename T>
 GT_INLINE gtensor_span<T, N, space::device> adapt_device(
   T* data, const shape_type<N>& shape)
@@ -232,7 +232,6 @@ gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
 {
   return adapt_device<N, T>(data, {shape_data, N});
 }
-#endif
 
 // ======================================================================
 // is_gtensor_span

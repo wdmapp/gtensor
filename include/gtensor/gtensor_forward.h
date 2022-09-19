@@ -11,7 +11,13 @@ namespace gt
 namespace space
 {
 template <typename S>
-struct space_traits2;
+struct space_traits2
+{
+#if GTENSOR_HAVE_DEVICE
+  template <typename T>
+  using storage_type = device_vector<T>;
+#endif
+};
 
 template <>
 struct space_traits2<host>
@@ -20,14 +26,6 @@ struct space_traits2<host>
   using storage_type = host_vector<T>;
 };
 
-#ifdef GTENSOR_HAVE_DEVICE
-template <>
-struct space_traits2<device>
-{
-  template <typename T>
-  using storage_type = device_vector<T>;
-};
-#endif
 } // namespace space
 
 template <typename EC, size_type N>

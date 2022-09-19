@@ -23,21 +23,18 @@ namespace gt
 namespace backend
 {
 
-namespace clib
-{
-#if GTENSOR_DEVICE_CUDA
-using namespace backend::cuda;
-#elif GTENSOR_DEVICE_HIP
-using namespace backend::hip;
-#elif GTENSOR_DEVICE_SYCL
-using namespace backend::sycl;
-#else // just for device_synchronize()
-using namespace backend::host;
-#endif
-
 template <typename S>
 using gallocator = gt::backend::allocator_impl::gallocator<S>;
-} // namespace clib
+
+#if GTENSOR_DEVICE_CUDA
+using clib = backend_ops<gt::space::cuda>;
+#elif GTENSOR_DEVICE_HIP
+using clib = backend_ops<gt::space::hip>;
+#elif GTENSOR_DEVICE_SYCL
+using clib = backend_ops<gt::space::sycl>;
+#else
+using clib = backend_ops<gt::space::host>;
+#endif
 
 } // namespace backend
 

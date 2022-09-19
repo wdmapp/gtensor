@@ -8,8 +8,6 @@
 
 #define MAX_DEVICES 100
 
-#ifdef GTENSOR_HAVE_DEVICE
-
 TEST(clib, list_devices)
 {
   int n_devices = gt_backend_device_get_count();
@@ -43,6 +41,8 @@ TEST(clib, managed_allocate)
   }
   gt_backend_managed_deallocate((void*)a);
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
 
 #define N 10
 TEST(clib, memcpy)

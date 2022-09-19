@@ -87,6 +87,9 @@ using clib_managed = sycl_managed;
 using host = host_only;
 using device = host;
 using managed = host;
+using clib_host = host;
+using clib_device = host;
+using clib_managed = host;
 
 #endif
 

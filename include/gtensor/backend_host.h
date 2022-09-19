@@ -14,18 +14,59 @@ namespace gt
 namespace backend
 {
 
-namespace host
+template <>
+class backend_ops<gt::space::host>
 {
+public:
+  static void device_synchronize() {}
 
-inline void device_synchronize()
-{
-  // no need to synchronize on host
-}
+  static int device_get_count() { return 1; }
 
-} // namespace host
+  static void device_set(int device_id) { assert(device_id == 0); }
+
+  static int device_get() { return 0; }
+
+  static uint32_t device_get_vendor_id(int device_id) { return 0; }
+
+  template <typename Ptr>
+  static bool is_device_accessible(const Ptr p)
+  {
+    return true;
+  }
+
+  template <typename Ptr>
+  static memory_type get_memory_type(const Ptr ptr)
+  {
+    return memory_type::host;
+  }
+
+  template <typename T>
+  static void prefetch_device(T* p, size_type n)
+  {}
+
+  template <typename T>
+  static void prefetch_host(T* p, size_type n)
+  {}
+};
 
 namespace allocator_impl
 {
+template <>
+struct gallocator<gt::space::host_only>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    return static_cast<T*>(malloc(sizeof(T) * n));
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    free(p);
+  }
+};
+
 template <typename T>
 struct selector<T, gt::space::host_only>
 {

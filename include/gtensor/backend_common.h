@@ -26,6 +26,14 @@ namespace gt
 namespace backend
 {
 
+enum class memory_type
+{
+  host,
+  device,
+  managed,
+  unregistered,
+};
+
 // ======================================================================
 // library wide configuration
 
@@ -293,14 +301,8 @@ struct selector
 
 } // namespace allocator_impl
 
-// ======================================================================
-// prefetch interface
-
-template <typename T>
-void prefetch_device(T* p, size_type n);
-
-template <typename T>
-void prefetch_host(T* p, size_type n);
+template <typename S>
+class backend_ops;
 
 } // namespace backend
 
