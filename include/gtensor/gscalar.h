@@ -2,6 +2,8 @@
 #ifndef GTENSOR_GSCALAR_H
 #define GTENSOR_GSCALAR_H
 
+#include <sstream>
+
 #include "expression.h"
 #include "sarray.h"
 
@@ -29,6 +31,13 @@ public:
   }
 
   gscalar<value_type> to_kernel() const { return gscalar<value_type>(value_); }
+
+  inline std::string typestr() const&
+  {
+    std::stringstream s;
+    s << value_ << "<" << get_type_name<T>() << ">";
+    return s.str();
+  }
 
 private:
   value_type value_;

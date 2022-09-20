@@ -341,6 +341,42 @@ TEST(expression, shape_second)
   EXPECT_EQ(e.shape(), (S3{2, 3, 4}));
 }
 
+TEST(expression, typestr)
+{
+  gt::gtensor<double, 2> a = {{1, 2}, {3, 4}};
+  // d2 -> d for owning data, 2 for 2d
+  // <double> for element type
+  // {2, 2} is shape
+  // {1, 2} is strides
+  EXPECT_EQ(a.typestr(), "d2<double>{2, 2}{1, 2}");
+  std::cout << "a     typestr " << a.typestr() << std::endl;
+
+  auto aview = a.view(gt::all, 0);
+  // v1 is for 1d view
+  // (...) is the owning data object the view is over (above)
+  // {2}{1} are the strides of the view
+  EXPECT_EQ(aview.typestr(), "v1(d2<double>{2, 2}{1, 2}){2}{1}");
+  std::cout << "aview typestr " << aview.typestr() << std::endl;
+
+  auto adfn = 5.0 + a;
+  // fn:(... OP ...) for standard binary ops
+  EXPECT_EQ(adfn.typestr(), "fn:(5<double> + d2<double>{2, 2}{1, 2})");
+  std::cout << "adfn  typestr " << adfn.typestr() << std::endl;
+
+  auto avfn = 5 * aview;
+  EXPECT_EQ(avfn.typestr(), "fn:(5<int> * v1(d2<double>{2, 2}{1, 2}){2}{1})");
+  std::cout << "avfn  typestr " << avfn.typestr() << std::endl;
+
+  auto asfn = 5 * a.to_kernel();
+  EXPECT_EQ(asfn.typestr(), "fn:(5<int> * s2<double>{2, 2}{1, 2})");
+  std::cout << "asfn  typestr " << asfn.typestr() << std::endl;
+
+  // fn:NAME(...) for unary functions
+  auto sina = gt::sin(a);
+  EXPECT_EQ(sina.typestr(), "fn:sin(d2<double>{2, 2}{1, 2})");
+  std::cout << "sina  typestr " << sina.typestr() << std::endl;
+}
+
 template <typename S>
 void test_index_expression()
 {
