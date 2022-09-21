@@ -7,17 +7,17 @@
 #include <iostream>
 #include <unordered_map>
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
 #include "level_zero/ze_api.h"
 #include "level_zero/zes_api.h"
 
-#include "CL/sycl/backend/level_zero.hpp"
+#include "sycl/ext/oneapi/backend/level_zero.hpp"
 #endif
 
 #ifdef GTENSOR_DEVICE_SYCL_OPENCL
-#include "CL/sycl/backend/opencl.hpp"
+#include "sycl/backend/opencl.hpp"
 #endif
 
 #include "backend_common.h"
