@@ -46,6 +46,7 @@ if (GTENSOR_ENABLE_FORTRAN)
   # do this early (here) since later the `enable_language(Fortran)` gives me trouble
   message(STATUS "${PROJECT_NAME}: Fortran is ENABLED")
   enable_language(Fortran)
+  set(GTENSOR_ENABLE_CLIB ON)
 endif()
 
 # HIP specific configuration
@@ -399,7 +400,7 @@ if (GTENSOR_ENABLE_CLIB)
   message(STATUS "${PROJECT_NAME}: CLIB is ENABLED")
   add_library(cgtensor)
   target_gtensor_sources(cgtensor PRIVATE src/cgtensor.cxx)
-  target_link_libraries(cgtensor gtensor::gtensor)
+  target_link_libraries(cgtensor PUBLIC gtensor::gtensor)
 
   list(APPEND GTENSOR_TARGETS cgtensor)
   add_library(gtensor::cgtensor ALIAS cgtensor)
@@ -460,16 +461,20 @@ if (GTENSOR_ENABLE_FORTRAN)
     DOWNLOAD_ONLY TRUE)
 
   add_library(fgtensor)
+  set_target_properties(fgtensor PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran)
   target_sources(fgtensor PRIVATE
+    src/fortran/gpu_api_interface.F90
     ${flcl_SOURCE_DIR}/src/flcl-types-f.f90
     ${flcl_SOURCE_DIR}/src/flcl-ndarray-f.f90)
-  set_target_properties(fgtensor PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran)
+  target_gtensor_sources(fgtensor PRIVATE
+    src/fortran/gpu_api.cxx)
+
   target_include_directories(fgtensor
     INTERFACE
        $<INSTALL_INTERFACE:include/gtensor/fortran>
        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/fortran>
   )
-  target_link_libraries(fgtensor PUBLIC gtensor)
+  target_link_libraries(fgtensor PUBLIC gtensor::cgtensor)
 
   list(APPEND GTENSOR_TARGETS fgtensor)
   add_library(gtensor::fgtensor ALIAS fgtensor)
