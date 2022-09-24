@@ -84,10 +84,6 @@ module gpu_api_m
 
 #ifdef WITH_GPU
 
-   enum,bind(c)
-      enumerator :: gpuCpuDeviceId=-1
-   end enum
-
    interface
 
       ! Defined in gpu_api.cu. Use is discouraged, as most of these do
