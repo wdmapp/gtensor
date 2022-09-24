@@ -10,14 +10,12 @@
 !! to meaning / string between vendors, and the complication of converting
 !! from C strings to Fortran strings.
 
-#define WITH_GPU
 ! Wrap non-void gtensor functions for use only inside gpu_api_m to define
 ! a subroutine version.
 module cgtensor_private_m
    use,intrinsic :: iso_c_binding
    implicit none
 
-#ifdef WITH_GPU
    interface
 
       function gt_backend_device_get_count() bind(c,name="gt_backend_device_get_count")
@@ -73,7 +71,7 @@ module cgtensor_private_m
       end subroutine gt_backend_prefetch_host
 
    end interface
-#endif
+
 end module cgtensor_private_m
 
 
@@ -81,8 +79,6 @@ module gpu_api_m
    use,intrinsic :: iso_c_binding
    use cgtensor_private_m
    implicit none
-
-#ifdef WITH_GPU
 
    interface
 
@@ -209,7 +205,7 @@ module gpu_api_m
       end subroutine gpuDeviceReset
 
    end interface
-#endif
+
 contains
 
    !> Get gpu device id based on MPI rank, ranks per node, and devices per node
@@ -239,7 +235,6 @@ contains
       device_id = modulo(node_rank / ranks_per_device, devices_per_node)
    end function get_gpu_device_for_rank
 
-#ifdef WITH_GPU
    !> Get a 10 character string representing the vendor id of the GPU
    !! device at the specified gpu_id index.
    !! For CUDA and HIP, this will be the PCI Address, but other vendors may
@@ -402,7 +397,5 @@ contains
          call abort()
       end if
    end subroutine gpuAssertDeviceAddressInteger
-
-#endif
 
 end module gpu_api_m
