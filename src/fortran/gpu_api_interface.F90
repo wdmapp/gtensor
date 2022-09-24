@@ -196,15 +196,6 @@ module gpu_api_m
       subroutine gpuSynchronize() bind(c,name="gt_synchronize")
       end subroutine gpuSynchronize
 
-      subroutine gpuMemPrefetchAsync(dev_ptr, n_bytes, device_id, stream_id) bind(c,name="gpuMemPrefetchAsync")
-         import
-
-         type(C_PTR),value,intent(IN) :: dev_ptr
-         integer(C_SIZE_T),value,intent(IN) :: n_bytes
-         integer(C_INT),value,intent(IN) :: device_id
-         type(C_PTR),value,intent(IN) :: stream_id
-      end subroutine gpuMemPrefetchAsync
-
       subroutine gpuDeviceReset() bind(c,name="gpuDeviceReset")
          import
       end subroutine gpuDeviceReset

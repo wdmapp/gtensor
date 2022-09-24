@@ -93,21 +93,6 @@ extern "C" void gpuCheckLastError()
 #endif
 }
 
-#ifdef GTENSOR_DEVICE_CUDA
-extern "C" void gpuMemPrefetchAsync(const void* dev_ptr, size_t count,
-                                    int device, void* stream)
-{
-  gtGpuCheck(
-    cudaMemPrefetchAsync(dev_ptr, count, device, (cudaStream_t)stream));
-}
-#elif defined(GTENSOR_DEVICE_HIP)
-extern "C" void gpuMemPrefetchAsync(const void* dev_ptr, size_t count,
-                                    int device, void* stream)
-{
-  gtGpuCheck(hipMemPrefetchAsync(dev_ptr, count, device, (hipStream_t)stream));
-}
-#endif
-
 extern "C" void gpuDeviceReset()
 {
 #ifdef GTENSOR_DEVICE_CUDA
@@ -238,18 +223,6 @@ extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
   sycl::queue& q = sycl_get_queue(stream);
   q.memcpy(dst, src, bytes);
   return 0;
-}
-
-extern "C" void gpuMemPrefetchAsync(const void* dev_ptr, size_t count,
-                                    int device, void* stream)
-{
-  if (device < 0) {
-    // This is used by cuda and hip to indicate prefetch to host; SYCL does not
-    // have this functionality
-    return;
-  }
-  sycl::queue& q = sycl_get_queue(stream, device);
-  q.prefetch(dev_ptr, count);
 }
 
 #endif
