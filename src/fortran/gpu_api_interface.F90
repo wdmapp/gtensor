@@ -60,6 +60,18 @@ module cgtensor_private_m
          logical(C_BOOL) :: gt_backend_is_device_address
       end function gt_backend_is_device_address
 
+      subroutine gt_backend_prefetch_device(ptr, sz) bind(c)
+         import
+         type(C_PTR), value :: ptr
+         integer(C_SIZE_T), value :: sz
+      end subroutine gt_backend_prefetch_device
+
+      subroutine gt_backend_prefetch_host(ptr, sz) bind(c)
+         import
+         type(C_PTR), value :: ptr
+         integer(C_SIZE_T), value :: sz
+      end subroutine gt_backend_prefetch_host
+
    end interface
 #endif
 end module cgtensor_private_m
