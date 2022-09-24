@@ -1,11 +1,9 @@
 /**
- * This file, along with gpu_api_interface.F90, is designed to replace
- * cuda_helpers.F90 and be GPU vendor independent. Initially it will only
- * support cuda, AMD / HIP support to follow shortly, and eventually Intel
- * GPU support. CUDA specific language features should be avoided - this is
- * a .cu only temporarily to make sure the correct headers are included by
- * the build system. C++ features are fine to use, and will likely be
- * required to support Intel GPUs.
+ * This file, along with gpu_api_interface.F90, is designed to provide
+ * GPU vendor-independent functionality to Fortran.
+ *
+ * However, most of what's here should be moved to cgtensor and then
+ * directly interfaced.
  *
  * The current focus is on device selection, which needs to be called
  * directly from GENE fortran before starting any computation. Other
@@ -15,7 +13,7 @@
  * Rather than handle the complexity of moving strings between C and Fortran,
  * most routines will print error to stderr and force an immediate exit. If
  * we encounter routines that have a use for non-fatal failure modes, we can
- * revist this. Error codes are also vendor specific, so returning them to the
+ * revisit this. Error codes are also vendor specific, so returning them to the
  * Fortran layer just increases complexity in the absense of compelling
  * non-fatal error cases.
  *
