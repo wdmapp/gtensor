@@ -624,7 +624,6 @@ void test_getri_batch_complex()
   gt::copy(h_A, d_A);
   gt::copy(h_Cptr, d_Cptr);
   gt::copy(h_C, d_C);
-  gt::copy(h_C, d_C);
   gt::copy(h_p, d_p);
 
   gt::blas::handle_t h;
