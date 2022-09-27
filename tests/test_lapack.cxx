@@ -21,7 +21,10 @@ gt::gtensor<double, 2> A0_LU{{4.0, 1.0, 0.25},
                              {4.0, 2.0, 0.5 },
                              {2.0, 2.0, 0.5 }};
 
-gt::gtensor<int, 1> A0_piv{2, 3, 3};
+// Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
+// on the thirst step no swap is done so one-based index of third row
+// is still 3 (no swapping).
+gt::gtensor<gt::blas::index_t, 1> A0_piv{2, 3, 3};
 
 // A0_nopiv = [1 0 0; 1 2 0; 0 2 3];
 gt::gtensor<double, 2> A0_nopiv{{1, 0, 0},
@@ -37,7 +40,7 @@ gt::gtensor<gt::complex<double>, 2> A1_LU{{4.i,    - 1.i, 0.25 - 0.25i},
                                           {4. ,     10.i,      - 0.10i},
                                           {2. , 4. + 2.i, 1.30 + 0.90i}};
 
-gt::gtensor<int, 1> A1_piv{2, 3, 3};
+gt::gtensor<gt::blas::index_t, 1> A1_piv{2, 3, 3};
 
 // A1_nopiv
 gt::gtensor<gt::complex<double>, 2> A1_nopiv{{1., 0., 0.},
@@ -60,9 +63,7 @@ void test_getrf_batch_real()
   gt::gtensor<int, 1> h_info(batch_size);
   gt::gtensor_device<int, 1> d_info(batch_size);
 
-  auto h_A0 = h_A.view(gt::all, gt::all, 0);
-
-  h_A0 = A0;
+  h_A.view(gt::all, gt::all, 0) = A0;
   h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
 
   gt::copy(h_A, d_A);
@@ -78,30 +79,11 @@ void test_getrf_batch_real()
   gt::copy(d_p, h_p);
   gt::copy(d_info, h_info);
 
-  // first column factored
-  EXPECT_EQ(h_A0(0, 0), 4.0);
-  EXPECT_EQ(h_A0(1, 0), 1.0);
-  EXPECT_EQ(h_A0(2, 0), 0.25);
-  // second column factored
-  EXPECT_EQ(h_A0(0, 1), 4.0);
-  EXPECT_EQ(h_A0(1, 1), 2.0);
-  EXPECT_EQ(h_A0(2, 1), 0.5);
-  // third column factored
-  EXPECT_EQ(h_A0(0, 2), 2.0);
-  EXPECT_EQ(h_A0(1, 2), 2.0);
-  EXPECT_EQ(h_A0(2, 2), 0.5);
+  auto h_A0 = h_A.view(gt::all, gt::all, 0);
+  EXPECT_NEAR(gt::sum_squares(h_A0 - A0_LU), 0., 1e-14);
+  EXPECT_EQ(h_p.view(gt::all, 0), A0_piv);
 
-  // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
-  // on the thirst step no swap is done so one-based index of third row
-  // is still 3 (no swapping).
-  EXPECT_EQ(h_p(0, 0), 2);
-  EXPECT_EQ(h_p(1, 0), 3);
-  EXPECT_EQ(h_p(2, 0), 3);
-
-  for (int b = 0; b < batch_size; b++) {
-    // A_i factored successfully
-    EXPECT_EQ(h_info(b), 0);
-  }
+  EXPECT_EQ(h_info, gt::zeros<int>({batch_size}));
 }
 
 TEST(lapack, sgetrf_batch)
@@ -140,13 +122,9 @@ void test_getrs_batch_real()
 
   // set up two col vectors to solve in first (and only) batch
   // first RHS, col vector [11; 18; 28]
-  h_B(0, 0, 0) = 11;
-  h_B(1, 0, 0) = 18;
-  h_B(2, 0, 0) = 28;
+  h_B.view(gt::all, 0, 0) = gt::gtensor<T, 1>{11., 18., 28.};
   // second RHS, col vector [73; 78; 154]
-  h_B(0, 1, 0) = 73;
-  h_B(1, 1, 0) = 78;
-  h_B(2, 1, 0) = 154;
+  h_B.view(gt::all, 1, 0) = gt::gtensor<T, 1>{73., 78., 154.};
 
   h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
@@ -166,13 +144,9 @@ void test_getrs_batch_real()
   gt::copy(d_B, h_B);
 
   // solution vector [1; 2; 3]
-  EXPECT_EQ(h_B(0, 0, 0), 1.0);
-  EXPECT_EQ(h_B(1, 0, 0), 2.0);
-  EXPECT_EQ(h_B(2, 0, 0), 3.0);
+  EXPECT_EQ(h_B.view(gt::all, 0, 0), (gt::gtensor<T, 1>{1., 2., 3.}));
   // solution vector [-3; 7; 31]
-  EXPECT_EQ(h_B(0, 1, 0), -3.0);
-  EXPECT_EQ(h_B(1, 1, 0), 7.0);
-  EXPECT_EQ(h_B(2, 1, 0), 31.0);
+  EXPECT_EQ(h_B.view(gt::all, 1, 0), (gt::gtensor<T, 1>{-3., 7., 31.}));
 }
 
 TEST(lapack, sgetrs_batch)
@@ -225,51 +199,16 @@ void test_getrf_batch_complex()
   gt::copy(d_info, h_info);
 
   // first batch matrix result
-  // first column factored
-  expect_complex_near(h_A(0, 0, 0), 4.0);
-  expect_complex_near(h_A(1, 0, 0), 1.0);
-  expect_complex_near(h_A(2, 0, 0), 0.25);
-  // second column factored
-  expect_complex_near(h_A(0, 1, 0), 4.0);
-  expect_complex_near(h_A(1, 1, 0), 2.0);
-  expect_complex_near(h_A(2, 1, 0), 0.5);
-  // third column factored
-  expect_complex_near(h_A(0, 2, 0), 2.0);
-  expect_complex_near(h_A(1, 2, 0), 2.0);
-  expect_complex_near(h_A(2, 2, 0), 0.5);
-
-  // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
-  // on the thirst step no swap is done so one-based index of third row
-  // is still 3 (no swapping).
-  EXPECT_EQ(h_p(0, 0), 2);
-  EXPECT_EQ(h_p(1, 0), 3);
-  EXPECT_EQ(h_p(2, 0), 3);
+  gt::gtensor<T, 2> h_A0 = h_A.view(gt::all, gt::all, 0);
+  EXPECT_NEAR(gt::sum_squares(h_A0 - gt::gtensor<T, 2>(A0_LU)), 0., 1e-14);
+  EXPECT_EQ(h_p.view(gt::all, 0), A0_piv);
 
   // second batch matrix result
-  // first column factored
-  expect_complex_near(h_A(0, 0, 1), T(0, 4));
-  expect_complex_near(h_A(1, 0, 1), T(0, -1));
-  expect_complex_near(h_A(2, 0, 1), T(0.25, -0.25));
-  // second column factored
-  expect_complex_near(h_A(0, 1, 1), T(4, 0));
-  expect_complex_near(h_A(1, 1, 1), T(0, 10));
-  expect_complex_near(h_A(2, 1, 1), T(0, -0.1));
-  // third column factored
-  expect_complex_near(h_A(0, 2, 1), T(2, 0));
-  expect_complex_near(h_A(1, 2, 1), T(4, 2));
-  expect_complex_near(h_A(2, 2, 1), T(1.3, 0.9));
+  gt::gtensor<T, 2> h_A1 = h_A.view(gt::all, gt::all, 1);
+  EXPECT_NEAR(gt::sum_squares(h_A1 - gt::gtensor<T, 2>(A1_LU)), 0., 1e-14);
+  EXPECT_EQ(h_p.view(gt::all, 1), A1_piv);
 
-  // Math notation is 2, 3, 1, but BLAS uses procedural notation, i.e.
-  // on the thirst step no swap is done so one-based index of third row
-  // is still 3 (no swapping).
-  EXPECT_EQ(h_p(0, 1), 2);
-  EXPECT_EQ(h_p(1, 1), 3);
-  EXPECT_EQ(h_p(2, 1), 3);
-
-  for (int b = 0; b < batch_size; b++) {
-    // A_i factored successfully
-    EXPECT_EQ(h_info(b), 0);
-  }
+  EXPECT_EQ(h_info, gt::zeros<int>({batch_size}));
 }
 
 TEST(lapack, cgetrf_batch)
@@ -298,12 +237,12 @@ void test_getrf_npvt_batch_complex()
 
   // setup first batch matrix input
   h_A.view(gt::all, gt::all, 0) = A0_nopiv;
-  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
-
   // setup second batch matrix input
-  set_A1_complex_nopiv(h_A.view(gt::all, gt::all, 1));
+  h_A.view(gt::all, gt::all, 1) = A1_nopiv;
+
   // TODO: better notation for this, i.e. the ability to get a pointer from a
   // view if it is wrapping a gcontainer or gtensor_span?
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Aptr(1) = h_Aptr(0) + N * N;
 
   gt::copy(h_A, d_A);
@@ -414,21 +353,15 @@ void test_getrs_batch_complex()
   h_Aptr[1] = h_Aptr(0) + N * N;
 
   // first batch, first rhs col vector   (11; 18; 28)
-  h_B(0, 0, 0) = 11;
-  h_B(1, 0, 0) = 18;
-  h_B(2, 0, 0) = 28;
+  h_B.view(gt::all, 0, 0) = gt::gtensor<T, 1>{11., 18., 28.};
   // first batch, second rhs col vector  (73; 78; 154)
-  h_B(0, 1, 0) = 73;
-  h_B(1, 1, 0) = 78;
-  h_B(2, 1, 0) = 154;
+  h_B.view(gt::all, 1, 0) = gt::gtensor<T, 1>{73., 78., 154.};
   // second batch, first rhs col vector  (73; 78; 154)
-  h_B(0, 0, 1) = T(11, -1);
-  h_B(1, 0, 1) = T(14, 4);
-  h_B(2, 0, 1) = T(16, 12);
+  h_B.view(gt::all, 0, 1) =
+    gt::gtensor<T, 1>{T(11., -1.), T(14., 4.), T(16., 12.)};
   // second batch, second rhs col vector (73-10i; 90-12i; 112 + 42i)
-  h_B(0, 1, 1) = T(73, -10);
-  h_B(1, 1, 1) = T(90, -12);
-  h_B(2, 1, 1) = T(112, 42);
+  h_B.view(gt::all, 1, 1) =
+    gt::gtensor<T, 1>{T(73., -10.), T(90., -12.), T(112., 42.)};
 
   h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
   h_Bptr(1) = h_Bptr(0) + N * NRHS;
@@ -449,21 +382,12 @@ void test_getrs_batch_complex()
   gt::copy(d_B, h_B);
 
   // first batch, first solution vector [1; 2; 3]
-  expect_complex_near(h_B(0, 0, 0), 1.0);
-  expect_complex_near(h_B(1, 0, 0), 2.0);
-  expect_complex_near(h_B(2, 0, 0), 3.0);
   // first batch, second solution vector [-3; 7; 31]
-  expect_complex_near(h_B(0, 1, 0), -3.0);
-  expect_complex_near(h_B(1, 1, 0), 7.0);
-  expect_complex_near(h_B(2, 1, 0), 31.0);
   // second batch, first solution vector [1; 2; 3]
-  expect_complex_near(h_B(0, 0, 1), 1.0);
-  expect_complex_near(h_B(1, 0, 1), 2.0);
-  expect_complex_near(h_B(2, 0, 1), 3.0);
   // second batch, second solution vector [-3; 7; 31]
-  expect_complex_near(h_B(0, 1, 1), -3.0);
-  expect_complex_near(h_B(1, 1, 1), 7.0);
-  expect_complex_near(h_B(2, 1, 1), 31.0);
+  auto expected_B = gt::gtensor<T, 3>(
+    {{{1., 2., 3.}, {-3., 7., 31.}}, {{1., 2., 3.}, {-3., 7., 31.}}});
+  EXPECT_NEAR(gt::sum_squares(h_B - expected_B), 0., 1e-10);
 }
 
 TEST(lapack, cgetrs_batch)
@@ -539,30 +463,15 @@ void test_getri_batch_complex()
 
   gt::copy(d_C, h_C);
 
-  // first batch, first solution col [1; -2; 2]
-  expect_complex_near(h_C(0, 0, 0), 1.0);
-  expect_complex_near(h_C(1, 0, 0), -2.0);
-  expect_complex_near(h_C(2, 0, 0), 2.0);
-  // first batch, second solution col [1; -1; 0.5]
-  expect_complex_near(h_C(0, 1, 0), 1.0);
-  expect_complex_near(h_C(1, 1, 0), -1.0);
-  expect_complex_near(h_C(2, 1, 0), 0.5);
-  // first batch, third solution col [-1; 1.5; -1]
-  expect_complex_near(h_C(0, 2, 0), -1.0);
-  expect_complex_near(h_C(1, 2, 0), 1.5);
-  expect_complex_near(h_C(2, 2, 0), -1.0);
-  // second batch, first solution col
-  expect_complex_near(h_C(0, 0, 1), T(-0.1, 0.3));
-  expect_complex_near(h_C(1, 0, 1), T(0.04, 0.28));
-  expect_complex_near(h_C(2, 0, 1), T(0.52, -0.36));
-  // second batch, second solution col
-  expect_complex_near(h_C(0, 1, 1), T(-0.04, -0.28));
-  expect_complex_near(h_C(1, 1, 1), T(0.016, -0.088));
-  expect_complex_near(h_C(2, 1, 1), T(-0.092, 0.256));
-  // second batch, third solution col
-  expect_complex_near(h_C(0, 2, 1), T(0.07, -0.01));
-  expect_complex_near(h_C(1, 2, 1), T(-0.028, -0.096));
-  expect_complex_near(h_C(2, 2, 1), T(0.036, 0.052));
+  // clang-format off
+  auto expected_C =
+    gt::gtensor<T, 3>({{{ 1.0, -2.0,  2.0},
+                        { 1.0, -1.0,   .5},
+                        {-1.0,  1.5, -1.0}},
+                       {{T(-0.1 ,  0.3 ), T( 0.04 ,  0.28 ), T( 0.52 , -0.36 )},
+                        {T(-0.04, -0.28), T( 0.016, -0.088), T(-0.092,  0.256)},
+                        {T( 0.07, -0.01), T(-0.028, -0.096), T( 0.036,  0.052)}}});
+  // clang-format on
 }
 
 TEST(lapack, cgetri_batch)
