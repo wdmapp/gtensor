@@ -113,9 +113,6 @@ template <typename Stream>
 Stream get_default();
 
 template <typename Stream>
-bool is_default(Stream s);
-
-template <typename Stream>
 void synchronize(Stream s);
 
 /**
@@ -138,11 +135,6 @@ public:
   stream_view_base(stream_t s) : stream_(s) {}
 
   stream_t& get_backend_stream() { return stream_; }
-
-  bool is_default()
-  {
-    return gt::backend::stream_interface::is_default<stream_t>(stream_);
-  }
 
   void synchronize()
   {

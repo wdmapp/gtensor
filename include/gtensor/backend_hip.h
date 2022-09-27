@@ -258,9 +258,10 @@ public:
   public:
     using base_type = stream_view_base<hipStream_t>;
     using base_type::base_type;
-    using base_type::stream_;
 
-    auto get_execution_policy() { return thrust::hip::par.on(stream_); }
+    bool is_default() { return this->stream_ == hipStreamDefault; };
+
+    auto get_execution_policy() { return thrust::hip::par.on(this->stream_); }
   };
 };
 
@@ -285,12 +286,6 @@ template <>
 inline void destroy<hipStream_t>(hipStream_t s)
 {
   gtGpuCheck(hipStreamDestroy(s));
-}
-
-template <>
-inline bool is_default<hipStream_t>(hipStream_t s)
-{
-  return s == nullptr;
 }
 
 template <>

@@ -281,7 +281,14 @@ public:
     q.memcpy(dst, src, sizeof(T) * count);
   }
 
-  using stream_view = stream_interface::stream_view_base<cl::sycl::queue&>;
+  class stream_view
+    : public stream_interface::stream_view_base<cl::sycl::queue&>
+  {
+    bool is_default()
+    {
+      return this->stream_ == gt::backend::sycl::get_queue();
+    }
+  };
 };
 
 namespace stream_interface
@@ -305,12 +312,6 @@ template <>
 inline void destroy<sycl_stream_t>(sycl_stream_t q)
 {
   return gt::backend::sycl::delete_stream_queue(q);
-}
-
-template <>
-inline bool is_default<sycl_stream_t>(sycl_stream_t s)
-{
-  return s == gt::backend::sycl::get_queue();
 }
 
 template <>

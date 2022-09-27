@@ -248,9 +248,10 @@ public:
   public:
     using base_type = stream_view_base<cudaStream_t>;
     using base_type::base_type;
-    using base_type::stream_;
 
-    auto get_execution_policy() { return thrust::cuda::par.on(stream_); }
+    bool is_default() { return this->stream_ == cudaStreamDefault; };
+
+    auto get_execution_policy() { return thrust::cuda::par.on(this->stream_); }
   };
 };
 
@@ -275,12 +276,6 @@ template <>
 inline void destroy<cudaStream_t>(cudaStream_t s)
 {
   gtGpuCheck(cudaStreamDestroy(s));
-}
-
-template <>
-inline bool is_default<cudaStream_t>(cudaStream_t s)
-{
-  return s == nullptr;
 }
 
 template <>

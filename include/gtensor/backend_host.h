@@ -56,7 +56,8 @@ public:
   public:
     using base_type = stream_view_base<hostStream_t>;
     using base_type::base_type;
-    using base_type::stream_;
+
+    bool is_default() { return true; }
   };
 };
 
@@ -112,12 +113,6 @@ template <>
 inline hostStream_t get_default<hostStream_t>()
 {
   return {};
-}
-
-template <>
-inline bool is_default<hostStream_t>(hostStream_t s)
-{
-  return true;
 }
 
 template <>
