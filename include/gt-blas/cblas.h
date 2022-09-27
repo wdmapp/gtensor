@@ -12,8 +12,8 @@ extern "C" {
 void gtblas_create();
 void gtblas_destroy();
 
-void gtblas_set_stream(gt::stream_view::stream_t stream_id);
-void gtblas_get_stream(gt::stream_view::stream_t* stream_id);
+void gtblas_set_stream(gt::stream_view stream_id);
+void gtblas_get_stream(gt::stream_view* stream_id);
 
 void gtblas_saxpy(int n, const float* a, const float* x, int incx, float* y,
                   int incy);

@@ -134,14 +134,14 @@ void gtblas_destroy()
   }
 }
 
-void gtblas_set_stream(gt::stream_view::stream_t stream_id)
+void gtblas_set_stream(gt::stream_view stream)
 {
-  detail::set_stream(stream_id);
+  g_handle->set_stream(stream);
 }
 
-void gtblas_get_stream(gt::stream_view::stream_t* stream_id)
+void gtblas_get_stream(gt::stream_view* stream_id)
 {
-  detail::get_stream(stream_id);
+  *stream_id = g_handle->get_stream();
 }
 
 // ======================================================================
