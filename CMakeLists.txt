@@ -424,8 +424,9 @@ if (GTENSOR_ENABLE_BLAS)
     set(BLA_VENDOR OpenBLAS)
     find_package(BLAS REQUIRED)
     get_filename_component(BLAS_DIR ${BLAS_LIBRARIES} DIRECTORY)
-    find_path(BLAS_INCLUDE_DIRS cblas_openblas.h PATHS "${BLAS_DIR}/.." REQUIRED)
-    target_include_directories(BLAS::BLAS INTERFACE ${BLAS_INCLUDE_DIRS}) # HACK!
+    # Hack, see https://gitlab.kitware.com/cmake/cmake/-/issues/20268
+    find_path(BLAS_INCLUDE_DIRS cblas.h PATH_SUFFIXES openblas REQUIRED)
+    target_include_directories(BLAS::BLAS INTERFACE ${BLAS_INCLUDE_DIRS})
     find_package(LAPACK REQUIRED)
     target_link_libraries(gtblas INTERFACE BLAS::BLAS LAPACK::LAPACK)
   endif()

@@ -211,8 +211,10 @@ static void BM_getrf(benchmark::State& state)
                               gt::raw_pointer_cast(d_piv.data()),
                               gt::raw_pointer_cast(d_info.data()), NBATCH);
     } else {
+#ifdef GTENSOR_HAVE_DEVICE
       gt::blas::getrf_npvt_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
                                    gt::raw_pointer_cast(d_info.data()), NBATCH);
+#endif
     }
     gt::synchronize();
   };
@@ -240,13 +242,15 @@ static void BM_getrf(benchmark::State& state)
 // RealType, N, NBATCH, Pivot
 BENCHMARK(BM_getrf<float, 512, 64, true>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getrf<double, 512, 64, true>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<float, 512, 64, false>)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_getrf<double, 512, 64, false>)->Unit(benchmark::kMillisecond);
-
 BENCHMARK(BM_getrf<float, 210, 256, true>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getrf<double, 210, 256, true>)->Unit(benchmark::kMillisecond);
+
+#ifdef GTENSOR_HAVE_DEVICE
+BENCHMARK(BM_getrf<float, 512, 64, false>)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_getrf<double, 512, 64, false>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getrf<float, 210, 256, false>)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_getrf<double, 210, 256, false>)->Unit(benchmark::kMillisecond);
+#endif
 
 // small cases for debugging
 /*
