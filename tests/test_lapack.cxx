@@ -6,144 +6,44 @@
 
 #include "test_helpers.h"
 
-template <typename T>
-void set_A0(T&& h_A)
-{
-  // matlab/octave:
-  //  A = [1 2 2; 4 4 2; 4 6 4];
-  //  L,U,p = lu(A)
-  // first column
-  h_A(0, 0) = 1;
-  h_A(1, 0) = 4;
-  h_A(2, 0) = 4;
-  // second column
-  h_A(0, 1) = 2;
-  h_A(1, 1) = 4;
-  h_A(2, 1) = 6;
-  // third column
-  h_A(0, 2) = 2;
-  h_A(1, 2) = 2;
-  h_A(2, 2) = 4;
-}
+using namespace std::complex_literals;
 
-template <typename T>
-void set_A0_nopiv(T&& h_A)
-{
-  // matlab/octave:
-  // does not require pivoting even if pivoting is possible
-  //  A = [1 0 0; 1 2 0; 0 2 3];
-  //  L,U,p = lu(A)
-  // first column
-  h_A(0, 0) = 1.;
-  h_A(1, 0) = 0.;
-  h_A(2, 0) = 0.;
-  // second column
-  h_A(0, 1) = 1.;
-  h_A(1, 1) = 2.;
-  h_A(2, 1) = 0.;
-  // third column
-  h_A(0, 2) = 0.;
-  h_A(1, 2) = 2.;
-  h_A(2, 2) = 3.;
-}
+// matlab/octave:
+//  L,U,p = lu(A)
 
-template <typename T>
-void set_A0_LU(T&& h_A)
-{
-  // first column factored
-  h_A(0, 0) = 4.0;
-  h_A(1, 0) = 1.0;
-  h_A(2, 0) = 0.25;
-  // second column
-  h_A(0, 1) = 4.0;
-  h_A(1, 1) = 2.0;
-  h_A(2, 1) = 0.5;
-  // thrid column
-  h_A(0, 2) = 2.0;
-  h_A(1, 2) = 2.0;
-  h_A(2, 2) = 0.5;
-}
+// clang-format off
+// A0 = [1 2 2; 4 4 2; 4 6 4];
+gt::gtensor<double, 2> A0{{1, 4, 4},
+                          {2, 4, 6},
+                          {2, 2, 4}};
 
-template <typename T>
-void set_A0_piv(T&& h_p)
-{
-  h_p(0) = 2;
-  h_p(1) = 3;
-  h_p(2) = 3;
-}
+gt::gtensor<double, 2> A0_LU{{4.0, 1.0, 0.25},
+                             {4.0, 2.0, 0.5 },
+                             {2.0, 2.0, 0.5 }};
 
-template <typename C>
-void set_A1_complex(C&& h_A1)
-{
-  using T = typename C::value_type;
+gt::gtensor<int, 1> A0_piv{2, 3, 3};
 
-  // second matrix, complex
-  // matlab/octave:
-  //  B = [1+i 2-i 2; 4i 4 2; 4 6i 4];
-  //  L,U,p = lu(A2);
-  // first column
-  h_A1(0, 0) = T(1, 1);
-  h_A1(1, 0) = T(0, 4);
-  h_A1(2, 0) = T(4, 0);
-  // second column
-  h_A1(0, 1) = T(2, -1);
-  h_A1(1, 1) = T(4, 0);
-  h_A1(2, 1) = T(0, 6);
-  // third column
-  h_A1(0, 2) = T(2, 0);
-  h_A1(1, 2) = T(2, 0);
-  h_A1(2, 2) = T(4, 0);
-}
+// A0_nopiv = [1 0 0; 1 2 0; 0 2 3];
+gt::gtensor<double, 2> A0_nopiv{{1, 0, 0},
+                                {1, 2, 0},
+                                {0, 2, 3}};
 
-template <typename C>
-void set_A1_complex_nopiv(C&& h_A1)
-{
-  using T = typename C::value_type;
+// A1 = [1+i 2-i 2; 4i 4 2; 4 6i 4];
+gt::gtensor<gt::complex<double>, 2> A1{{1. + 1.i, 4.i, 4. },
+                                       {2. - 1.i,  4., 6.i},
+                                       {2.      ,  2., 4. }};
+// A1_LU
+gt::gtensor<gt::complex<double>, 2> A1_LU{{4.i,    - 1.i, 0.25 - 0.25i},
+                                          {4. ,     10.i,      - 0.10i},
+                                          {2. , 4. + 2.i, 1.30 + 0.90i}};
 
-  // second matrix, complex
-  // matlab/octave:
-  //  B = [1+i 2-i 2; 4i 4 2; 4 6i 4];
-  //  L,U,p = lu(A2);
-  // first column
-  h_A1(0, 0) = T(1, 0);
-  h_A1(1, 0) = T(0, 0);
-  h_A1(2, 0) = T(0, 0);
-  // second column
-  h_A1(0, 1) = T(1, 0);
-  h_A1(1, 1) = T(2, 0);
-  h_A1(2, 1) = T(0, 0);
-  // third column
-  h_A1(0, 2) = T(0, 0);
-  h_A1(1, 2) = T(2, 0);
-  h_A1(2, 2) = T(3, 0);
-}
+gt::gtensor<int, 1> A1_piv{2, 3, 3};
 
-template <typename C>
-void set_A1_LU_complex(C&& h_A1)
-{
-  using T = typename C::value_type;
-
-  // first column
-  h_A1(0, 0) = T(0, 4);
-  h_A1(1, 0) = T(0, -1);
-  h_A1(2, 0) = T(0.25, -0.25);
-  // second column factored
-  h_A1(0, 1) = T(4, 0);
-  h_A1(1, 1) = T(0, 10);
-  h_A1(2, 1) = T(0, -0.1);
-  // third column factored
-  h_A1(0, 2) = T(2, 0);
-  h_A1(1, 2) = T(4, 2);
-  h_A1(2, 2) = T(1.3, 0.9);
-}
-
-template <typename T>
-void set_A1_piv(T&& h_p)
-{
-  h_p(0) = 2;
-  h_p(1) = 3;
-  h_p(2) = 3;
-}
+// A1_nopiv
+gt::gtensor<gt::complex<double>, 2> A1_nopiv{{1., 0., 0.},
+                                             {1., 2., 0.},
+                                             {0., 2., 3.}};
+// clang-format on
 
 template <typename T>
 void test_getrf_batch_real()
@@ -162,7 +62,7 @@ void test_getrf_batch_real()
 
   auto h_A0 = h_A.view(gt::all, gt::all, 0);
 
-  set_A0(h_A0);
+  h_A0 = A0;
   h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
 
   gt::copy(h_A, d_A);
@@ -235,9 +135,8 @@ void test_getrs_batch_real()
   gt::gtensor_device<gt::blas::index_t, 2> d_p(gt::shape(N, batch_size));
 
   // set up first (and only) batch
-  set_A0_LU(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
-  set_A0_piv(h_p.view(gt::all, 0));
+  h_A.view(gt::all, gt::all, 0) = A0_LU;
+  h_p.view(gt::all, 0) = A0_piv;
 
   // set up two col vectors to solve in first (and only) batch
   // first RHS, col vector [11; 18; 28]
@@ -248,6 +147,8 @@ void test_getrs_batch_real()
   h_B(0, 1, 0) = 73;
   h_B(1, 1, 0) = 78;
   h_B(2, 1, 0) = 154;
+
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Bptr(0) = gt::raw_pointer_cast(d_B.data());
 
   gt::copy(h_Aptr, d_Aptr);
@@ -301,13 +202,13 @@ void test_getrf_batch_complex()
   gt::gtensor_device<int, 1> d_info(batch_size);
 
   // setup first batch matrix input
-  set_A0(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
+  h_A.view(gt::all, gt::all, 0) = A0;
 
   // setup second batch matrix input
-  set_A1_complex(h_A.view(gt::all, gt::all, 1));
+  h_A.view(gt::all, gt::all, 1) = A1;
   // TODO: better notation for this, i.e. the ability to get a pointer from a
   // view if it is wrapping a gcontainer or gtensor_span?
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Aptr(1) = h_Aptr(0) + N * N;
 
   gt::copy(h_A, d_A);
@@ -396,7 +297,7 @@ void test_getrf_npvt_batch_complex()
   gt::gtensor_device<int, 1> d_info(batch_size);
 
   // setup first batch matrix input
-  set_A0_nopiv(h_A.view(gt::all, gt::all, 0));
+  h_A.view(gt::all, gt::all, 0) = A0_nopiv;
   h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
 
   // setup second batch matrix input
@@ -502,14 +403,15 @@ void test_getrs_batch_complex()
   test::gtensor2<gt::blas::index_t, 2, S> d_p(gt::shape(N, batch_size));
 
   // setup input for first batch
-  set_A0_LU(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
-  set_A0_piv(h_p.view(gt::all, 0));
+  h_A.view(gt::all, gt::all, 0) = A0_LU;
+  h_p.view(gt::all, 0) = A0_piv;
 
   // setup input for second batch
-  set_A1_LU_complex(h_A.view(gt::all, gt::all, 1));
+  h_A.view(gt::all, gt::all, 1) = A1_LU;
+  h_p.view(gt::all, 1) = A1_piv;
+
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Aptr[1] = h_Aptr(0) + N * N;
-  set_A1_piv(h_p.view(gt::all, 1));
 
   // first batch, first rhs col vector   (11; 18; 28)
   h_B(0, 0, 0) = 11;
@@ -608,14 +510,15 @@ void test_getri_batch_complex()
   gt::gtensor_device<int, 1> d_info(batch_size);
 
   // setup input for first batch
-  set_A0_LU(h_A.view(gt::all, gt::all, 0));
-  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
-  set_A0_piv(h_p.view(gt::all, 0));
+  h_A.view(gt::all, gt::all, 0) = A0_LU;
+  h_p.view(gt::all, 0) = A0_piv;
 
   // setup input for second batch
-  set_A1_LU_complex(h_A.view(gt::all, gt::all, 1));
+  h_A.view(gt::all, gt::all, 1) = A1_LU;
+  h_p.view(gt::all, 1) = A1_piv;
+
+  h_Aptr(0) = gt::raw_pointer_cast(d_A.data());
   h_Aptr[1] = h_Aptr(0) + N * N;
-  set_A1_piv(h_p.view(gt::all, 1));
 
   h_Cptr(0) = gt::raw_pointer_cast(d_C.data());
   h_Cptr(1) = h_Cptr(0) + N * N;
