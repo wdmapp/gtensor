@@ -3,7 +3,9 @@
 
 #include <gtensor/gtensor.h>
 
-#include <cblas_openblas.h>
+#include <complex.h>
+
+#include <cblas.h>
 extern "C" {
 #include <lapack.h>
 }
@@ -166,36 +168,40 @@ CREATE_DOT(cblas_sdot, float, float)
 template <typename T>
 inline T dotu(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
 
-#define CREATE_DOTU(METHOD, GTTYPE, BLASTYPE)                                  \
+#define CREATE_DOTU(METHOD, GTTYPE, BLASTYPE, RPART, IPART)                    \
   template <>                                                                  \
   inline GTTYPE dotu<GTTYPE>(handle_t & h, int n, const GTTYPE* x, int incx,   \
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     BLASTYPE result = METHOD(n, reinterpret_cast<const BLASTYPE*>(x), incx,    \
                              reinterpret_cast<const BLASTYPE*>(y), incy);      \
-    return {result.real, result.imag};                                         \
+    return {RPART(result), IPART(result)};                                     \
   }
 
-CREATE_DOTU(cblas_zdotu, gt::complex<double>, openblas_complex_double)
-CREATE_DOTU(cblas_cdotu, gt::complex<float>, openblas_complex_float)
+CREATE_DOTU(cblas_zdotu, gt::complex<double>, openblas_complex_double, creal,
+            cimag)
+CREATE_DOTU(cblas_cdotu, gt::complex<float>, openblas_complex_float, crealf,
+            cimagf)
 
 #undef CREATE_DOTU
 
 template <typename T>
 inline T dotc(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
 
-#define CREATE_DOTC(METHOD, GTTYPE, BLASTYPE)                                  \
+#define CREATE_DOTC(METHOD, GTTYPE, BLASTYPE, RPART, IPART)                    \
   template <>                                                                  \
   inline GTTYPE dotc<GTTYPE>(handle_t & h, int n, const GTTYPE* x, int incx,   \
                              const GTTYPE* y, int incy)                        \
   {                                                                            \
     BLASTYPE result = METHOD(n, reinterpret_cast<const BLASTYPE*>(x), incx,    \
                              reinterpret_cast<const BLASTYPE*>(y), incy);      \
-    return {result.real, result.imag};                                         \
+    return {RPART(result), IPART(result)};                                     \
   }
 
-CREATE_DOTC(cblas_zdotc, gt::complex<double>, openblas_complex_double)
-CREATE_DOTC(cblas_cdotc, gt::complex<float>, openblas_complex_float)
+CREATE_DOTC(cblas_zdotc, gt::complex<double>, openblas_complex_double, creal,
+            cimag)
+CREATE_DOTC(cblas_cdotc, gt::complex<float>, openblas_complex_float, crealf,
+            cimagf)
 
 #undef CREATE_DOTC
 
