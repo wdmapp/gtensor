@@ -119,8 +119,6 @@ using hostStream_t = gt::backend::backend_ops<gt::space::host>::hostStream_t;
 
 #ifndef GTENSOR_HAVE_DEVICE
 
-using stream_view = gt::backend::backend_ops<gt::space::host>::stream_view;
-
 class stream
 {
 public:
@@ -130,7 +128,10 @@ public:
 
   bool is_default() { return true; }
 
-  auto get_view() { return stream_view(); }
+  auto get_view()
+  {
+    return gt::backend::backend_ops<gt::space::host>::stream_view();
+  }
 
   void synchronize() {}
 };

@@ -290,8 +290,8 @@ inline void destroy<hipStream_t>(hipStream_t s)
 
 } // namespace backend
 
-using stream_view = backend::backend_ops<gt::space::hip>::stream_view;
-using stream = backend::stream_interface::stream_base<hipStream_t, stream_view>;
+using stream = backend::stream_interface::stream_base<
+  hipStream_t, backend::backend_ops<gt::space::hip>::stream_view>;
 
 } // namespace gt
 

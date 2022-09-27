@@ -320,9 +320,8 @@ inline void destroy<sycl_stream_t>(sycl_stream_t q)
 
 } // namespace backend
 
-using stream_view = backend::backend_ops<gt::space::sycl>::stream_view;
-using stream =
-  backend::stream_interface::stream_base<cl::sycl::queue&, stream_view>;
+using stream = backend::stream_interface::stream_base<
+  cl::sycl::queue&, backend::backend_ops<gt::space::sycl>::stream_view>;
 
 } // namespace gt
 

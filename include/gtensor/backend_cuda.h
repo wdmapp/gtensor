@@ -280,9 +280,8 @@ inline void destroy<cudaStream_t>(cudaStream_t s)
 
 } // namespace backend
 
-using stream_view = backend::backend_ops<gt::space::cuda>::stream_view;
-using stream =
-  backend::stream_interface::stream_base<cudaStream_t, stream_view>;
+using stream = backend::stream_interface::stream_base<
+  cudaStream_t, backend::backend_ops<gt::space::cuda>::stream_view>;
 
 } // namespace gt
 
