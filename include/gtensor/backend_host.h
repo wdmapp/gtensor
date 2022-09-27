@@ -57,6 +57,8 @@ public:
     using base_type = stream_view_base<hostStream_t>;
     using base_type::base_type;
 
+    stream_view() : base_type({}) {}
+
     bool is_default() { return true; }
 
     void synchronize() {}
@@ -110,12 +112,6 @@ inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 namespace stream_interface
 {
 using hostStream_t = gt::backend::backend_ops<gt::space::host>::hostStream_t;
-
-template <>
-inline hostStream_t get_default<hostStream_t>()
-{
-  return {};
-}
 
 } // namespace stream_interface
 

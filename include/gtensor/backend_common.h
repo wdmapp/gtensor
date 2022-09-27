@@ -109,9 +109,6 @@ Stream create();
 template <typename Stream>
 void destroy(Stream s);
 
-template <typename Stream>
-Stream get_default();
-
 /**
  * CRTP static interface for backend specific stream wrapper, non owning view.
  *
@@ -126,9 +123,6 @@ class stream_view_base
 public:
   using stream_t = Stream;
 
-  stream_view_base()
-    : stream_(gt::backend::stream_interface::get_default<stream_t>())
-  {}
   stream_view_base(stream_t s) : stream_(s) {}
 
   stream_t& get_backend_stream() { return stream_; }

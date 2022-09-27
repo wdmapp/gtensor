@@ -249,6 +249,8 @@ public:
     using base_type = stream_view_base<cudaStream_t>;
     using base_type::base_type;
 
+    stream_view() : base_type(cudaStreamDefault) {}
+
     bool is_default() { return this->stream_ == cudaStreamDefault; };
 
     void synchronize() { gtGpuCheck(cudaStreamSynchronize(this->stream_)); }
@@ -266,12 +268,6 @@ inline cudaStream_t create<cudaStream_t>()
   cudaStream_t s;
   gtGpuCheck(cudaStreamCreate(&s));
   return s;
-}
-
-template <>
-inline cudaStream_t get_default<cudaStream_t>()
-{
-  return nullptr;
 }
 
 template <>

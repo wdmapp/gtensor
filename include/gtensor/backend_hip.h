@@ -259,6 +259,8 @@ public:
     using base_type = stream_view_base<hipStream_t>;
     using base_type::base_type;
 
+    stream_view() : base_type(hipStreamDefault) {}
+
     bool is_default() { return this->stream_ == hipStreamDefault; };
 
     void synchronize() { gtGpuCheck(hipStreamSynchronize(this->stream_)); }
@@ -276,12 +278,6 @@ inline hipStream_t create<hipStream_t>()
   hipStream_t s;
   gtGpuCheck(hipStreamCreate(&s));
   return s;
-}
-
-template <>
-inline hipStream_t get_default<hipStream_t>()
-{
-  return nullptr;
 }
 
 template <>

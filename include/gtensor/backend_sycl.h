@@ -288,6 +288,8 @@ public:
     using base_class = stream_view_base<cl::sycl::queue&>;
     using base_class::base_class;
 
+    stream_view() : base_class(gt::backend::sycl::get_queue()) {}
+
     bool is_default()
     {
       return this->stream_ == gt::backend::sycl::get_queue();
@@ -306,12 +308,6 @@ template <>
 inline sycl_stream_t create<sycl_stream_t>()
 {
   return gt::backend::sycl::new_stream_queue();
-}
-
-template <>
-inline sycl_stream_t get_default<sycl_stream_t>()
-{
-  return gt::backend::sycl::get_queue();
 }
 
 template <>
