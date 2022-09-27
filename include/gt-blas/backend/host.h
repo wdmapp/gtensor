@@ -20,7 +20,6 @@ namespace blas
 // types aliases
 
 using index_t = int;
-using stream_t = gt::backend::backend_ops<gt::space::host>::hostStream_t;
 
 // ======================================================================
 // handle and stream management

@@ -29,7 +29,6 @@ namespace blas
 // ======================================================================
 // types aliases
 
-using stream_t = cudaStream_t;
 using index_t = int;
 
 // ======================================================================
@@ -48,7 +47,7 @@ public:
 
   gt::stream_view get_stream()
   {
-    stream_t s;
+    cudaStream_t s;
     gtBlasCheck(cublasGetStream(handle_, &s));
     return gt::stream_view{s};
   }
