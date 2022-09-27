@@ -279,11 +279,10 @@ inline void synchronize<cudaStream_t>(cudaStream_t s)
   gtGpuCheck(cudaStreamSynchronize(s));
 }
 
-template <typename Stream>
-class stream_view_cuda : public stream_view_base<Stream>
+class stream_view_cuda : public stream_view_base<cudaStream_t>
 {
 public:
-  using base_type = stream_view_base<Stream>;
+  using base_type = stream_view_base<cudaStream_t>;
   using base_type::base_type;
   using base_type::stream_;
 
@@ -294,7 +293,7 @@ public:
 
 } // namespace backend
 
-using stream_view = backend::stream_interface::stream_view_cuda<cudaStream_t>;
+using stream_view = backend::stream_interface::stream_view_cuda;
 using stream =
   backend::stream_interface::stream_base<cudaStream_t, stream_view>;
 
