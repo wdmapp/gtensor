@@ -19,6 +19,8 @@ namespace blas
 
 using index_t = int;
 
+using stream_t = dummy_stream;
+
 // ======================================================================
 // handle and stream management
 
@@ -28,6 +30,9 @@ class dummy_handle
 class handle_host : public detail::handle_base<handle_host, dummy_handle>
 {
 public:
+  handle_host() {}
+  ~handle_host() {}
+
   void set_stream(gt::stream_view sview) {}
 
   gt::stream_view get_stream() { return gt::stream_view{}; }
