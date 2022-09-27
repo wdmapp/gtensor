@@ -284,10 +284,16 @@ public:
   class stream_view
     : public stream_interface::stream_view_base<cl::sycl::queue&>
   {
+  public:
+    using base_class = stream_view_base<cl::sycl::queue&>;
+    using base_class::base_class;
+
     bool is_default()
     {
       return this->stream_ == gt::backend::sycl::get_queue();
     }
+
+    void synchronize() { stream_.wait(); }
   };
 };
 
@@ -312,12 +318,6 @@ template <>
 inline void destroy<sycl_stream_t>(sycl_stream_t q)
 {
   return gt::backend::sycl::delete_stream_queue(q);
-}
-
-template <>
-inline void synchronize<sycl_stream_t>(sycl_stream_t s)
-{
-  s.wait();
 }
 
 } // namespace stream_interface

@@ -261,6 +261,8 @@ public:
 
     bool is_default() { return this->stream_ == hipStreamDefault; };
 
+    void synchronize() { gtGpuCheck(hipStreamSynchronize(this->stream_)); }
+
     auto get_execution_policy() { return thrust::hip::par.on(this->stream_); }
   };
 };
@@ -286,12 +288,6 @@ template <>
 inline void destroy<hipStream_t>(hipStream_t s)
 {
   gtGpuCheck(hipStreamDestroy(s));
-}
-
-template <>
-inline void synchronize<hipStream_t>(hipStream_t s)
-{
-  gtGpuCheck(hipStreamSynchronize(s));
 }
 
 } // namespace stream_interface

@@ -58,6 +58,8 @@ public:
     using base_type::base_type;
 
     bool is_default() { return true; }
+
+    void synchronize() {}
   };
 };
 
@@ -114,10 +116,6 @@ inline hostStream_t get_default<hostStream_t>()
 {
   return {};
 }
-
-template <>
-inline void synchronize<hostStream_t>(hostStream_t s)
-{}
 
 } // namespace stream_interface
 

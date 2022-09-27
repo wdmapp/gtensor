@@ -251,6 +251,8 @@ public:
 
     bool is_default() { return this->stream_ == cudaStreamDefault; };
 
+    void synchronize() { gtGpuCheck(cudaStreamSynchronize(this->stream_)); }
+
     auto get_execution_policy() { return thrust::cuda::par.on(this->stream_); }
   };
 };
@@ -276,12 +278,6 @@ template <>
 inline void destroy<cudaStream_t>(cudaStream_t s)
 {
   gtGpuCheck(cudaStreamDestroy(s));
-}
-
-template <>
-inline void synchronize<cudaStream_t>(cudaStream_t s)
-{
-  gtGpuCheck(cudaStreamSynchronize(s));
 }
 
 } // namespace stream_interface
