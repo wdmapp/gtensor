@@ -242,6 +242,16 @@ public:
     gtGpuCheck(
       cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
   }
+
+  class stream_view : public stream_interface::stream_view_base<cudaStream_t>
+  {
+  public:
+    using base_type = stream_view_base<cudaStream_t>;
+    using base_type::base_type;
+    using base_type::stream_;
+
+    auto get_execution_policy() { return thrust::cuda::par.on(stream_); }
+  };
 };
 
 namespace stream_interface
@@ -279,21 +289,11 @@ inline void synchronize<cudaStream_t>(cudaStream_t s)
   gtGpuCheck(cudaStreamSynchronize(s));
 }
 
-class stream_view_cuda : public stream_view_base<cudaStream_t>
-{
-public:
-  using base_type = stream_view_base<cudaStream_t>;
-  using base_type::base_type;
-  using base_type::stream_;
-
-  auto get_execution_policy() { return thrust::cuda::par.on(stream_); }
-};
-
 } // namespace stream_interface
 
 } // namespace backend
 
-using stream_view = backend::stream_interface::stream_view_cuda;
+using stream_view = backend::backend_ops<gt::space::cuda>::stream_view;
 using stream =
   backend::stream_interface::stream_base<cudaStream_t, stream_view>;
 

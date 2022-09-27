@@ -47,6 +47,17 @@ public:
   template <typename T>
   static void prefetch_host(T* p, size_type n)
   {}
+
+  class hostStream_t
+  {};
+
+  class stream_view : public stream_interface::stream_view_base<hostStream_t>
+  {
+  public:
+    using base_type = stream_view_base<hostStream_t>;
+    using base_type::base_type;
+    using base_type::stream_;
+  };
 };
 
 namespace allocator_impl
@@ -93,31 +104,33 @@ inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 }
 } // namespace fill_impl
 
+namespace stream_interface
+{
+using hostStream_t = gt::backend::backend_ops<gt::space::host>::hostStream_t;
+
+template <>
+inline hostStream_t get_default<hostStream_t>()
+{
+  return {};
+}
+
+template <>
+inline bool is_default<hostStream_t>(hostStream_t s)
+{
+  return true;
+}
+
+template <>
+inline void synchronize<hostStream_t>(hostStream_t s)
+{}
+
+} // namespace stream_interface
+
 } // namespace backend
 
 #ifndef GTENSOR_HAVE_DEVICE
 
-class dummy_stream
-{};
-
-// streams are no-op on host (could use threads in the future)
-class stream_view
-{
-  using stream_t = dummy_stream;
-
-public:
-  stream_view() {}
-  stream_view(stream_t) {}
-
-  stream_t& get_backend_stream() { return stream_; }
-
-  bool is_default() { return true; }
-
-  void synchronize() {}
-
-private:
-  stream_t stream_;
-};
+using stream_view = gt::backend::backend_ops<gt::space::host>::stream_view;
 
 class stream
 {

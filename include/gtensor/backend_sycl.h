@@ -280,6 +280,8 @@ public:
     auto& q = gt::backend::sycl::get_queue();
     q.memcpy(dst, src, sizeof(T) * count);
   }
+
+  using stream_view = stream_interface::stream_view_base<cl::sycl::queue&>;
 };
 
 namespace stream_interface
@@ -321,8 +323,7 @@ inline void synchronize<sycl_stream_t>(sycl_stream_t s)
 
 } // namespace backend
 
-using stream_view =
-  backend::stream_interface::stream_view_base<cl::sycl::queue&>;
+using stream_view = backend::backend_ops<gt::space::sycl>::stream_view;
 using stream =
   backend::stream_interface::stream_base<cl::sycl::queue&, stream_view>;
 

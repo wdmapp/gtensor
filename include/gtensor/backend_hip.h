@@ -252,6 +252,16 @@ public:
     gtGpuCheck(
       hipMemcpyAsync(dst, src, sizeof(T) * count, hipMemcpyDeviceToDevice));
   }
+
+  class stream_view : public stream_interface::stream_view_base<hipStream_t>
+  {
+  public:
+    using base_type = stream_view_base<hipStream_t>;
+    using base_type::base_type;
+    using base_type::stream_;
+
+    auto get_execution_policy() { return thrust::hip::par.on(stream_); }
+  };
 };
 
 namespace stream_interface
@@ -289,22 +299,11 @@ inline void synchronize<hipStream_t>(hipStream_t s)
   gtGpuCheck(hipStreamSynchronize(s));
 }
 
-template <typename Stream>
-class stream_view_hip : public stream_view_base<Stream>
-{
-public:
-  using base_type = stream_view_base<Stream>;
-  using base_type::base_type;
-  using base_type::stream_;
-
-  auto get_execution_policy() { return thrust::hip::par.on(stream_); }
-};
-
 } // namespace stream_interface
 
 } // namespace backend
 
-using stream_view = backend::stream_interface::stream_view_hip<hipStream_t>;
+using stream_view = backend::backend_ops<gt::space::hip>::stream_view;
 using stream = backend::stream_interface::stream_base<hipStream_t, stream_view>;
 
 } // namespace gt
