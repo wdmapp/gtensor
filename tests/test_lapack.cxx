@@ -79,8 +79,11 @@ void test_getrf_batch_real()
   gt::copy(d_p, h_p);
   gt::copy(d_info, h_info);
 
-  auto h_A0 = h_A.view(gt::all, gt::all, 0);
-  EXPECT_NEAR(gt::sum_squares(h_A0 - A0_LU), 0., 1e-14);
+  gt::launch_host<2>(
+    A0_LU.shape(), GT_LAMBDA(int i, int j) {
+      EXPECT_NEAR(h_A(i, j, 0), A0_LU(i, j), 1e-14)
+        << "i = " << i << " j = " << j;
+    });
   EXPECT_EQ(h_p.view(gt::all, 0), A0_piv);
 
   EXPECT_EQ(h_info, gt::zeros<int>({batch_size}));
@@ -199,13 +202,17 @@ void test_getrf_batch_complex()
   gt::copy(d_info, h_info);
 
   // first batch matrix result
-  gt::gtensor<T, 2> h_A0 = h_A.view(gt::all, gt::all, 0);
-  EXPECT_NEAR(gt::sum_squares(h_A0 - gt::gtensor<T, 2>(A0_LU)), 0., 1e-14);
+  gt::launch_host<2>(
+    A0_LU.shape(), GT_LAMBDA(int i, int j) {
+      expect_complex_near(h_A(i, j, 0), T(A0_LU(i, j)), 1e-6);
+    });
   EXPECT_EQ(h_p.view(gt::all, 0), A0_piv);
 
   // second batch matrix result
-  gt::gtensor<T, 2> h_A1 = h_A.view(gt::all, gt::all, 1);
-  EXPECT_NEAR(gt::sum_squares(h_A1 - gt::gtensor<T, 2>(A1_LU)), 0., 1e-14);
+  gt::launch_host<2>(
+    A0_LU.shape(), GT_LAMBDA(int i, int j) {
+      expect_complex_near(h_A(i, j, 1), T(A1_LU(i, j)), 1e-6);
+    });
   EXPECT_EQ(h_p.view(gt::all, 1), A1_piv);
 
   EXPECT_EQ(h_info, gt::zeros<int>({batch_size}));
@@ -387,7 +394,10 @@ void test_getrs_batch_complex()
   // second batch, second solution vector [-3; 7; 31]
   auto expected_B = gt::gtensor<T, 3>(
     {{{1., 2., 3.}, {-3., 7., 31.}}, {{1., 2., 3.}, {-3., 7., 31.}}});
-  EXPECT_NEAR(gt::sum_squares(h_B - expected_B), 0., 1e-10);
+  gt::launch_host<3>(
+    h_B.shape(), GT_LAMBDA(int i, int j, int k) {
+      expect_complex_near(h_B(i, j, k), expected_B(i, j, k), 1e-6);
+    });
 }
 
 TEST(lapack, cgetrs_batch)
