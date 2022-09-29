@@ -41,9 +41,9 @@ void gt_backend_memcpy_async_dd(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_dh(void* dst, const void* src, size_t nbytes);
 void gt_backend_memcpy_hd(void* dst, const void* src, size_t nbytes);
 
-void gt_backend_memset(void* dst, int value, size_t nbytes);
-
 #endif // GTENSOR_HAVE_DEVICE
+
+void gt_backend_memset(void* dst, int value, size_t nbytes);
 
 bool gt_backend_is_device_accessible(void* p);
 [[deprecated("use gt_backend_is_device_accessible() instead")]] bool
