@@ -178,10 +178,10 @@ inline T dotu(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
     return {RPART(result), IPART(result)};                                     \
   }
 
-CREATE_DOTU(cblas_zdotu, gt::complex<double>, openblas_complex_double, creal,
-            cimag)
-CREATE_DOTU(cblas_cdotu, gt::complex<float>, openblas_complex_float, crealf,
-            cimagf)
+CREATE_DOTU(cblas_zdotu, gt::complex<double>, openblas_complex_double,
+            openblas_complex_double_real, openblas_complex_double_imag)
+CREATE_DOTU(cblas_cdotu, gt::complex<float>, openblas_complex_float,
+            openblas_complex_float_real, openblas_complex_float_imag)
 
 #undef CREATE_DOTU
 
@@ -198,10 +198,10 @@ inline T dotc(handle_t& h, int n, const T* x, int incx, const T* y, int incy);
     return {RPART(result), IPART(result)};                                     \
   }
 
-CREATE_DOTC(cblas_zdotc, gt::complex<double>, openblas_complex_double, creal,
-            cimag)
-CREATE_DOTC(cblas_cdotc, gt::complex<float>, openblas_complex_float, crealf,
-            cimagf)
+CREATE_DOTC(cblas_zdotc, gt::complex<double>, openblas_complex_double,
+            openblas_complex_double_real, openblas_complex_double_imag)
+CREATE_DOTC(cblas_cdotc, gt::complex<float>, openblas_complex_float,
+            openblas_complex_float_real, openblas_complex_float_imag)
 
 #undef CREATE_DOTC
 
