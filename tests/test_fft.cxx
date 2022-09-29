@@ -8,7 +8,7 @@
 
 #include "gt-fft/fft.h"
 
-#include "test_helpers.h"
+#include "gtest_predicates.h"
 
 constexpr double PI = 3.141592653589793;
 
@@ -60,15 +60,15 @@ void fft_r2c_1d()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  EXPECT_EQ(h_A, h_A2 / N);
+  GT_EXPECT_EQ(h_A, h_A2 / N);
 
-  expect_complex_near(h_B(0, 0), T(8, 0));
-  expect_complex_near(h_B(1, 0), T(3, 1));
-  expect_complex_near(h_B(2, 0), T(-6, 0));
+  GT_EXPECT_NEAR(h_B(0, 0), T(8, 0));
+  GT_EXPECT_NEAR(h_B(1, 0), T(3, 1));
+  GT_EXPECT_NEAR(h_B(2, 0), T(-6, 0));
 
-  expect_complex_near(h_B(0, 1), T(-2, 0));
-  expect_complex_near(h_B(1, 1), T(-4, 22));
-  expect_complex_near(h_B(2, 1), T(38, 0));
+  GT_EXPECT_NEAR(h_B(0, 1), T(-2, 0));
+  GT_EXPECT_NEAR(h_B(1, 1), T(-4, 22));
+  GT_EXPECT_NEAR(h_B(2, 1), T(38, 0));
 
   // reset input and output arrays and repeat with alternate ctor
   gt::copy(h_A, d_A);
@@ -84,15 +84,15 @@ void fft_r2c_1d()
   plan2.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  EXPECT_EQ(h_A, h_A2 / N);
+  GT_EXPECT_EQ(h_A, h_A2 / N);
 
-  expect_complex_near(h_B(0, 0), T(8, 0));
-  expect_complex_near(h_B(1, 0), T(3, 1));
-  expect_complex_near(h_B(2, 0), T(-6, 0));
+  GT_EXPECT_NEAR(h_B(0, 0), T(8, 0));
+  GT_EXPECT_NEAR(h_B(1, 0), T(3, 1));
+  GT_EXPECT_NEAR(h_B(2, 0), T(-6, 0));
 
-  expect_complex_near(h_B(0, 1), T(-2, 0));
-  expect_complex_near(h_B(1, 1), T(-4, 22));
-  expect_complex_near(h_B(2, 1), T(38, 0));
+  GT_EXPECT_NEAR(h_B(0, 1), T(-2, 0));
+  GT_EXPECT_NEAR(h_B(1, 1), T(-4, 22));
+  GT_EXPECT_NEAR(h_B(2, 1), T(38, 0));
 }
 
 TEST(fft, d2z_1d)
@@ -165,8 +165,8 @@ void fft_r2c_1d_strided()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  GT_EXPECT_NEAR_ARRAY(h_B_expected, h_B);
-  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / N);
+  GT_EXPECT_EQ(h_B_expected, h_B);
+  GT_EXPECT_EQ(h_A, h_A2 / N);
 }
 
 TEST(fft, d2z_1d_strided)
@@ -271,15 +271,15 @@ void fft_c2c_1d_forward()
 
   gt::copy(d_B, h_B);
 
-  expect_complex_near(h_B(0, 0), T(8, 0));
-  expect_complex_near(h_B(1, 0), T(3, 1));
-  expect_complex_near(h_B(2, 0), T(-6, 0));
-  expect_complex_near(h_B(3, 0), T(3, -1));
+  GT_EXPECT_NEAR(h_B(0, 0), T(8, 0));
+  GT_EXPECT_NEAR(h_B(1, 0), T(3, 1));
+  GT_EXPECT_NEAR(h_B(2, 0), T(-6, 0));
+  GT_EXPECT_NEAR(h_B(3, 0), T(3, -1));
 
-  expect_complex_near(h_B(0, 1), T(-2, 0));
-  expect_complex_near(h_B(1, 1), T(-4, 22));
-  expect_complex_near(h_B(2, 1), T(38, 0));
-  expect_complex_near(h_B(3, 1), T(-4, -22));
+  GT_EXPECT_NEAR(h_B(0, 1), T(-2, 0));
+  GT_EXPECT_NEAR(h_B(1, 1), T(-4, 22));
+  GT_EXPECT_NEAR(h_B(2, 1), T(38, 0));
+  GT_EXPECT_NEAR(h_B(3, 1), T(-4, -22));
 
   // test round trip
   plan.inverse(d_B, d_A2);
@@ -287,7 +287,7 @@ void fft_c2c_1d_forward()
 
   for (int i = 0; i < h_A.shape(1); i++) {
     for (int j = 0; j < h_A.shape(0); j++) {
-      expect_complex_near(h_A(j, i), h_A2(j, i) / T(N, 0));
+      GT_EXPECT_NEAR(h_A(j, i), h_A2(j, i) / T(N, 0));
     }
   }
 }
@@ -361,8 +361,8 @@ void fft_c2c_1d_forward_strided()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  GT_EXPECT_NEAR_ARRAY(h_B_expected, h_B);
-  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / T(N, 0));
+  GT_EXPECT_NEAR(h_B_expected, h_B);
+  GT_EXPECT_NEAR(h_A, h_A2 / T(N, 0));
 }
 
 TEST(fft, z2z_1d_forward_strided)
@@ -411,15 +411,15 @@ void fft_c2c_1d_inverse()
 
   // required when using std::complex, int multiply is not defined
   auto dN = static_cast<E>(N);
-  expect_complex_near(h_B(0, 0), dN * T(2, 0));
-  expect_complex_near(h_B(1, 0), dN * T(3, 0));
-  expect_complex_near(h_B(2, 0), dN * T(-1, 0));
-  expect_complex_near(h_B(3, 0), dN * T(4, 0));
+  GT_EXPECT_NEAR(h_B(0, 0), dN * T(2, 0));
+  GT_EXPECT_NEAR(h_B(1, 0), dN * T(3, 0));
+  GT_EXPECT_NEAR(h_B(2, 0), dN * T(-1, 0));
+  GT_EXPECT_NEAR(h_B(3, 0), dN * T(4, 0));
 
-  expect_complex_near(h_B(0, 1), dN * T(7, 0));
-  expect_complex_near(h_B(1, 1), dN * T(-21, 0));
-  expect_complex_near(h_B(2, 1), dN * T(11, 0));
-  expect_complex_near(h_B(3, 1), dN * T(1, 0));
+  GT_EXPECT_NEAR(h_B(0, 1), dN * T(7, 0));
+  GT_EXPECT_NEAR(h_B(1, 1), dN * T(-21, 0));
+  GT_EXPECT_NEAR(h_B(2, 1), dN * T(11, 0));
+  GT_EXPECT_NEAR(h_B(3, 1), dN * T(1, 0));
 }
 
 TEST(fft, z2z_1d_inverse)
@@ -477,9 +477,9 @@ TEST(fft, move_only)
 
   gt::copy(d_B, h_B);
 
-  expect_complex_near(h_B(0, 0), T(8, 0));
-  expect_complex_near(h_B(1, 0), T(3, 1));
-  expect_complex_near(h_B(2, 0), T(-6, 0));
+  GT_EXPECT_NEAR(h_B(0, 0), T(8, 0));
+  GT_EXPECT_NEAR(h_B(1, 0), T(3, 1));
+  GT_EXPECT_NEAR(h_B(2, 0), T(-6, 0));
 }
 
 template <typename E>
@@ -531,12 +531,12 @@ void fft_r2c_2d()
     }
   }
 
-  GT_EXPECT_NEAR_ARRAY_ERR(h_B_expected, h_B, max_err);
+  GT_EXPECT_NEAR_MAXERR(h_B_expected, h_B, max_err);
 
   // test roundtripping data, with normalization
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
-  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / (Nx * Ny));
+  GT_EXPECT_NEAR(h_A, h_A2 / (Nx * Ny));
 }
 
 TEST(fft, r2c_2d)
@@ -587,7 +587,7 @@ void fft_c2c_2d()
   gt::copy(d_A2, h_A2);
   for (int i = 0; i < h_A.shape(0); i++) {
     for (int j = 0; j < h_A.shape(1); j++) {
-      expect_complex_near(h_A(i, j, 0), h_A2(i, j, 0) / T(Nx * Ny, 0));
+      GT_EXPECT_NEAR(h_A(i, j, 0), h_A2(i, j, 0) / T(Nx * Ny, 0));
     }
   }
 }
@@ -630,12 +630,12 @@ void fft_r2c_3d()
   gt::copy(d_B, h_B);
 
   // FFT of delta function is all ones in magnitude
-  GT_EXPECT_NEAR_ARRAY_ABS(h_B, 1.0);
+  GT_EXPECT_NEAR(h_B, 1.0);
 
   // test roundtripping data, with normalization
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
-  GT_EXPECT_NEAR_ARRAY(h_A, h_A2 / (Nx * Ny * Nz));
+  GT_EXPECT_NEAR(h_A, h_A2 / (Nx * Ny * Nz));
 }
 
 TEST(fft, r2c_3d)
