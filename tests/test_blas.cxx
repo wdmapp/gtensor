@@ -416,70 +416,59 @@ TEST(blas, zgemv)
 template <typename R>
 void test_gemm_batched_real()
 {
-  constexpr int N = 32;
-  constexpr int NRHS = 3;
+  // FIXME, all square diagonal matrices isn't exactly very general test
+  constexpr int M = 3, K = 3, N = 3;
   constexpr int batch_size = 5;
-  int m = N;
-  int n = NRHS;
-  int k = N;
-  // m x k (NxN)
-  auto h_mat = gt::zeros<R>(gt::shape(N, N, batch_size));
-  gt::gtensor_device<R, 3> d_mat(gt::shape(N, N, batch_size));
 
-  // k x n (NxNRHS)
-  gt::gtensor<R, 3> h_X({N, NRHS, batch_size});
-  gt::gtensor_device<R, 3> d_X({N, NRHS, batch_size});
+  auto h_A = gt::zeros<R>(gt::shape(M, K, batch_size));
+  auto d_A = gt::zeros_device<R>(gt::shape(M, K, batch_size));
 
-  // m x n (NxNRHS)
-  gt::gtensor<R, 3> h_Y({N, NRHS, batch_size});
-  gt::gtensor_device<R, 3> d_Y({N, NRHS, batch_size});
+  auto h_B = gt::zeros<R>(gt::shape(K, N, batch_size));
+  auto d_B = gt::zeros_device<R>(gt::shape(K, N, batch_size));
 
-  gt::gtensor<R*, 1> h_yptr(batch_size);
-  gt::gtensor_device<R*, 1> d_yptr(batch_size);
-  gt::gtensor<R*, 1> h_xptr(batch_size);
-  gt::gtensor_device<R*, 1> d_xptr(batch_size);
-  gt::gtensor<R*, 1> h_matptr(batch_size);
-  gt::gtensor_device<R*, 1> d_matptr(batch_size);
+  auto h_C = gt::zeros<R>(gt::shape(M, N, batch_size));
+  auto d_C = gt::zeros_device<R>(gt::shape(M, N, batch_size));
+
+  gt::gtensor<R*, 1> h_Aptr(batch_size);
+  gt::gtensor_device<R*, 1> d_Aptr(batch_size);
+  gt::gtensor<R*, 1> h_Bptr(batch_size);
+  gt::gtensor_device<R*, 1> d_Bptr(batch_size);
+  gt::gtensor<R*, 1> h_Cptr(batch_size);
+  gt::gtensor_device<R*, 1> d_Cptr(batch_size);
 
   R a = R(0.5);
   R b = R(-1.0);
 
   for (int t = 0; t < batch_size; t++) {
     for (int i = 0; i < N; i++) {
-      // identity matrix
-      h_mat(i, i, t) = R(1.0);
-      for (int rhs = 0; rhs < NRHS; rhs++) {
-        // all rhs are the same, to simplify validation
-        h_X(i, rhs, t) = R(2 * i);
-        h_Y(i, rhs, t) = R(0.5 * i);
-      }
+      h_A(i, i, t) = R(3 * i + t);
+      h_B(i, i, t) = R(2 * i);
+      h_C(i, i, t) = R(0.5 * i + t);
     }
-    h_xptr(t) = gt::raw_pointer_cast(d_X.data()) + t * N * NRHS;
-    h_yptr(t) = gt::raw_pointer_cast(d_Y.data()) + t * N * NRHS;
-    h_matptr(t) = gt::raw_pointer_cast(d_mat.data()) + t * N * N;
+    h_Aptr(t) = gt::raw_pointer_cast(&d_A(0, 0, t));
+    h_Bptr(t) = gt::raw_pointer_cast(&d_B(0, 0, t));
+    h_Cptr(t) = gt::raw_pointer_cast(&d_C(0, 0, t));
   }
 
-  gt::copy(h_X, d_X);
-  gt::copy(h_Y, d_Y);
-  gt::copy(h_mat, d_mat);
-  gt::copy(h_xptr, d_xptr);
-  gt::copy(h_yptr, d_yptr);
-  gt::copy(h_matptr, d_matptr);
+  gt::copy(h_A, d_A);
+  gt::copy(h_B, d_B);
+  gt::copy(h_C, d_C);
+  gt::copy(h_Aptr, d_Aptr);
+  gt::copy(h_Bptr, d_Bptr);
+  gt::copy(h_Cptr, d_Cptr);
 
   gt::blas::handle_t h;
 
-  gt::blas::gemm_batched<R>(h, m, n, k, a,
-                            gt::raw_pointer_cast(d_matptr.data()), N,
-                            gt::raw_pointer_cast(d_xptr.data()), N, b,
-                            gt::raw_pointer_cast(d_yptr.data()), N, batch_size);
+  gt::blas::gemm_batched<R>(
+    h, M, N, K, a, gt::raw_pointer_cast(d_Aptr.data()), d_A.strides()[1],
+    gt::raw_pointer_cast(d_Bptr.data()), d_B.strides()[1], b,
+    gt::raw_pointer_cast(d_Cptr.data()), d_C.strides()[1], batch_size);
 
-  gt::copy(d_Y, h_Y);
-
+  gt::copy(d_C, h_C);
   for (int t = 0; t < batch_size; t++) {
-    for (int rhs = 0; rhs < NRHS; rhs++) {
-      for (int i = 0; i < N; i++) {
-        EXPECT_EQ(h_Y(i, rhs, t), i / 2.0);
-      }
+    for (int i = 0; i < N; i++) {
+      EXPECT_EQ(h_C(i, i, t), a * R(3 * i + t) * R(2 * i) + b * R(.5 * i + t))
+        << "i = " << i << " t = " << t;
     }
   }
 }

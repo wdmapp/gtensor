@@ -381,6 +381,7 @@ TEST(lapack, zgetrf_batch)
   test_getrf_batch_complex<double>();
 }
 
+#ifdef GTENSOR_HAVE_DEVICE
 template <typename R>
 void test_getrf_npvt_batch_complex()
 {
@@ -459,6 +460,7 @@ TEST(lapack, zgetrf_npvt_batch)
 {
   test_getrf_npvt_batch_complex<double>();
 }
+#endif
 
 namespace test
 {
@@ -623,7 +625,6 @@ void test_getri_batch_complex()
   gt::copy(h_Aptr, d_Aptr);
   gt::copy(h_A, d_A);
   gt::copy(h_Cptr, d_Cptr);
-  gt::copy(h_C, d_C);
   gt::copy(h_C, d_C);
   gt::copy(h_p, d_p);
 

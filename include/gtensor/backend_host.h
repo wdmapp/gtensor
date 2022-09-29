@@ -97,17 +97,26 @@ inline void fill(gt::space::host tag, Ptr first, Ptr last, const T& value)
 
 #ifndef GTENSOR_HAVE_DEVICE
 
+class dummy_stream
+{};
+
 // streams are no-op on host (could use threads in the future)
 class stream_view
 {
+  using stream_t = dummy_stream;
+
 public:
   stream_view() {}
+  stream_view(stream_t) {}
 
-  auto get_backend_stream() { return nullptr; }
+  stream_t& get_backend_stream() { return stream_; }
 
   bool is_default() { return true; }
 
   void synchronize() {}
+
+private:
+  stream_t stream_;
 };
 
 class stream

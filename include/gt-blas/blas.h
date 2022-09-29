@@ -57,6 +57,8 @@ private:
 #include "backend/hip.h"
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include "backend/sycl.h"
+#else
+#include "backend/host.h"
 #endif
 
 #include "bandsolver.h"

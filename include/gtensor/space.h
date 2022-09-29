@@ -71,14 +71,12 @@ using managed_vector =
 template <typename T, typename A = GTENSOR_DEFAULT_HOST_ALLOCATOR(T)>
 using host_vector = gt::backend::host_storage<T, A>;
 
-#ifdef GTENSOR_HAVE_DEVICE
 template <typename T, typename A = GTENSOR_DEFAULT_DEVICE_ALLOCATOR(T)>
 using device_vector = gt::backend::device_storage<T, A>;
 
 template <typename T>
 using managed_vector =
   gt::backend::device_storage<T, GTENSOR_DEFAULT_MANAGED_ALLOCATOR(T)>;
-#endif
 
 #endif // GTENSOR_USE_THRUST
 

@@ -341,6 +341,8 @@ CREATE_C_GET_MAX_BANDWIDTH(gtblas_zget_max_bandwidth, f2c_complex<double>)
 
 // ======================================================================
 // gtblas_Xgetrf_npvt_batched
+#ifdef GTENSOR_HAVE_DEVICE
+
 #define CREATE_C_GETRF_NPVT_BATCHED(CNAME, CPPTYPE)                            \
   void CNAME(int n, CPPTYPE** d_Aarray, int lda, int* d_infoArray,             \
              int batchSize)                                                    \
@@ -353,6 +355,8 @@ CREATE_C_GETRF_NPVT_BATCHED(gtblas_cgetrf_npvt_batched, f2c_complex<float>)
 CREATE_C_GETRF_NPVT_BATCHED(gtblas_zgetrf_npvt_batched, f2c_complex<double>)
 
 #undef CREATE_C_GETRF_NPVT_BATCHED
+
+#endif
 
 // ======================================================================
 // gtblas_Xgemm_batched

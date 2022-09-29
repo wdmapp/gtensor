@@ -418,6 +418,17 @@ if (GTENSOR_ENABLE_BLAS)
     target_link_libraries(gtblas INTERFACE rocblas rocsolver)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     target_link_libraries(gtblas INTERFACE oneapi_mkl_sycl)
+  elseif (${GTENSOR_DEVICE} STREQUAL "host")
+    # only openblas is supported at this time -- needs
+    # adaptations for the various cblas interfaces
+    set(BLA_VENDOR OpenBLAS)
+    find_package(BLAS REQUIRED)
+    get_filename_component(BLAS_DIR ${BLAS_LIBRARIES} DIRECTORY)
+    # Hack, see https://gitlab.kitware.com/cmake/cmake/-/issues/20268
+    find_path(BLAS_INCLUDE_DIRS cblas.h PATH_SUFFIXES openblas REQUIRED)
+    target_include_directories(BLAS::BLAS INTERFACE ${BLAS_INCLUDE_DIRS})
+    find_package(LAPACK REQUIRED)
+    target_link_libraries(gtblas INTERFACE BLAS::BLAS LAPACK::LAPACK)
   endif()
 
   list(APPEND GTENSOR_TARGETS gtblas)
