@@ -57,9 +57,15 @@ pred_near3(const char* xname, const char* yname, const char* mname, R1 x, R2 y,
   }
   R actual_err = std::abs(x - y);
   if (actual_err > max_err) {
-    return testing::AssertionFailure()
-           << xname << " and " << yname << " are not near, err " << actual_err
-           << " > " << max_err;
+    auto af = testing::AssertionFailure();
+    if (max_err == 0) {
+      af << "Expected equal values:\n";
+    } else {
+      af << "Expected near values (err=" << actual_err << " > " << max_err
+         << "):\n";
+    }
+    return af << "  " << xname << "\n    Which is: " << x << "\n"
+              << "  " << yname << "\n    Which is: " << y << "\n";
   }
   return testing::AssertionSuccess();
 }
@@ -77,9 +83,15 @@ pred_near3(const char* xname, const char* yname, const char* mname,
   }
   double actual_err = gt::abs(x - y);
   if (actual_err > max_err) {
-    return testing::AssertionFailure()
-           << xname << " and " << yname << " are not near, err " << actual_err
-           << " > " << max_err;
+    auto af = testing::AssertionFailure();
+    if (max_err == 0) {
+      af << "Expected equal values:\n";
+    } else {
+      af << "Expected near values (err=" << actual_err << " > " << max_err
+         << "):\n";
+    }
+    return af << "  " << xname << "\n    Which is: " << x << "\n"
+              << "  " << yname << "\n    Which is: " << y << "\n";
   }
   return testing::AssertionSuccess();
 }
@@ -105,7 +117,7 @@ pred_near3(const char* xname, const char* yname, const char* mname, E1&& x,
   using V = gt::expr_value_type<E1>;
   bool equal = true;
   int i;
-  double err;
+  double actual_err;
 
   if (max_err == -1.0) {
     max_err = gt::test::detail::max_err<V>::value;
@@ -118,8 +130,8 @@ pred_near3(const char* xname, const char* yname, const char* mname, E1&& x,
   int n = xflat.shape(0);
 
   for (i = 0; i < n; i++) {
-    err = gt::abs(xflat(i) - yflat(i));
-    if (err > max_err) {
+    actual_err = gt::abs(xflat(i) - yflat(i));
+    if (actual_err > max_err) {
       equal = false;
       break;
     }
@@ -134,13 +146,17 @@ pred_near3(const char* xname, const char* yname, const char* mname, E1&& x,
     }
     int end = std::min(start + max_view, n);
     auto xs = gt::slice(start, end);
-    return testing::AssertionFailure()
-           << "Arrays not close (max " << max_err << ") "
-           << " err " << err << " at [" << i << "]" << std::endl
-           << " " << xname << ":" << std::endl
-           << "  " << xflat.view(xs) << std::endl
-           << " " << yname << ":" << std::endl
-           << "  " << yflat.view(xs) << std::endl;
+
+    auto af = testing::AssertionFailure();
+    if (max_err == 0) {
+      af << "Expected equal values";
+    } else {
+      af << "Expected near values (err=" << actual_err << " > " << max_err
+         << ")";
+    }
+    af << " at [" << i << "]:\n";
+    return af << "  " << xname << "\n    Which is: " << xflat.view(xs) << "\n"
+              << "  " << yname << "\n    Which is: " << yflat.view(xs) << "\n";
   }
 
   return testing::AssertionSuccess();
@@ -155,7 +171,7 @@ pred_near3(const char* xname, const char* yname, const char* mname, E1&& x, R y,
   using V = gt::expr_value_type<E1>;
   bool equal = true;
   int i, n;
-  double err;
+  double actual_err;
 
   if (max_err == -1.0) {
     max_err = gt::test::detail::max_err<V>::value;
@@ -165,8 +181,8 @@ pred_near3(const char* xname, const char* yname, const char* mname, E1&& x, R y,
   n = xflat.shape(0);
 
   for (i = 0; i < n; i++) {
-    err = std::abs(gt::abs(xflat(i)) - y);
-    if (err > max_err) {
+    actual_err = std::abs(gt::abs(xflat(i)) - y);
+    if (actual_err > max_err) {
       equal = false;
       break;
     }
@@ -181,10 +197,17 @@ pred_near3(const char* xname, const char* yname, const char* mname, E1&& x, R y,
     }
     int end = std::min(start + max_view, n);
     auto xs = gt::slice(start, end);
-    return testing::AssertionFailure()
-           << "Array entries not close to value " << y << ", err " << err
-           << " at [" << i << "]" << std::endl
-           << " " << xname << ":" << xflat.view(xs) << std::endl;
+
+    auto af = testing::AssertionFailure();
+    if (max_err == 0) {
+      af << "Expected equal values";
+    } else {
+      af << "Expected near values (err=" << actual_err << " > " << max_err
+         << ")";
+    }
+    af << " at [" << i << "]:\n";
+    return af << "  " << xname << "\n    Which is: " << xflat.view(xs) << "\n"
+              << "  " << yname << "\n    Which is: " << y << "\n";
   }
 
   return testing::AssertionSuccess();

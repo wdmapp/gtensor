@@ -15,6 +15,10 @@ TEST(gtest_predicates, fp)
   double b = 0.5;
   GT_EXPECT_EQ(a, 2 * b);
 
+  auto ar = gt::test::pred_near3("a", "1.1", "err", a, 1.1, 0);
+  std::cout << "a = 1.1 message:\n" << ar.message() << std::endl;
+  EXPECT_FALSE(ar);
+
   float af = 1.0;
   float bf = 0.5;
   GT_EXPECT_EQ(af, 2 * bf);
@@ -39,6 +43,10 @@ TEST(gtest_predicates, complex_fp)
   D im_d = D(0.0, -1.0);
   GT_EXPECT_EQ(im_d * im_d, -1.0);
 
+  auto ar = gt::test::pred_near3("im_d", "-1.0", "err", im_d, -1.0, 0.5);
+  std::cout << "im_d == -1 message:\n" << ar.message() << std::endl;
+  EXPECT_FALSE(ar);
+
   using F = gt::complex<float>;
   F im_f = F(0.0, -1.0);
   GT_EXPECT_EQ(im_f * im_f, -1.0);
@@ -53,6 +61,7 @@ TEST(gtest_predicates, gtensor_expr)
   GT_EXPECT_NEAR(a, 2 * b);
 
   auto ar = gt::test::pred_near3("a", "c", "err", a, 2 * c, 0.0001);
+  std::cout << "a near 2*c message:" << std::endl << ar.message() << std::endl;
   EXPECT_FALSE(ar);
   EXPECT_NE(std::string(ar.message()).find("at [1]"), std::string::npos);
 }
@@ -64,6 +73,7 @@ TEST(gtest_predicates, gtensor_value)
   GT_EXPECT_NEAR_MAXERR(a, 1.0, 0.01);
 
   auto ar = gt::test::pred_near3("a", "1", "err", a, 1.0, 0.0001);
+  std::cout << "a near 1.0 message:" << std::endl << ar.message() << std::endl;
   EXPECT_FALSE(ar);
   EXPECT_NE(std::string(ar.message()).find("at [0]"), std::string::npos);
 }
