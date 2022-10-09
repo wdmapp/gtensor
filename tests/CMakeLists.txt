@@ -41,6 +41,7 @@ add_gtensor_test(test_sarray)
 add_gtensor_test(test_assign)
 add_gtensor_test(test_space)
 add_gtensor_test(test_stream)
+add_gtensor_test(test_gtest_predicates)
 
 if (GTENSOR_ENABLE_CLIB)
   add_executable(test_clib)
