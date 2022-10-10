@@ -276,6 +276,53 @@ inline void getri_batched(handle_t& h, int n, T** d_Aarray, int lda,
   e.wait();
 }
 
+// Strided getrf/s, oneMKL specific
+
+template <typename T>
+inline gt::blas::index_t getrf_strided_batched_scratchpad_size(handle_t& h,
+                                                               int n, int lda,
+                                                               int batchSize)
+{
+  sycl::queue& q = h.get_backend_handle();
+  return oneapi::mkl::lapack::getrf_batch_scratchpad_size<T>(
+    q, n, n, lda, n * n, n, batchSize);
+}
+
+template <typename T>
+inline void getrf_strided_batched(handle_t& h, int n, T* d_A, int lda,
+                                  gt::blas::index_t* d_PivotArray,
+                                  int batchSize, T* d_scratch,
+                                  gt::blas::index_t scratch_count)
+{
+  sycl::queue& q = h.get_backend_handle();
+  oneapi::mkl::lapack::getrf_batch(q, n, n, d_A, lda, n * n, d_PivotArray, n,
+                                   batchSize, d_scratch, scratch_count);
+}
+
+template <typename T>
+inline gt::blas::index_t getrs_strided_batched_scratchpad_size(handle_t& h,
+                                                               int n, int nrhs,
+                                                               int lda, int ldb,
+                                                               int batchSize)
+{
+  sycl::queue& q = h.get_backend_handle();
+  return oneapi::mkl::lapack::getrs_batch_scratchpad_size<T>(
+    q, oneapi::mkl::transpose::nontrans, n, nrhs, lda, n * n, n, ldb, n * nrhs,
+    batchSize);
+}
+
+template <typename T>
+inline void getrs_strided_batched(handle_t& h, int n, int nrhs, T* d_A, int lda,
+                                  gt::blas::index_t* d_PivotArray, T* d_B,
+                                  int ldb, int batchSize, T* d_scratch,
+                                  gt::blas::index_t scratch_count)
+{
+  sycl::queue& q = h.get_backend_handle();
+  oneapi::mkl::lapack::getrs_batch(
+    q, oneapi::mkl::transpose::nontrans, n, nrhs, d_A, lda, n * n, d_PivotArray,
+    n, d_B, ldb, n * nrhs, batchSize, d_scratch, scratch_count);
+}
+
 template <typename T>
 inline void gemm_batched(handle_t& h, int m, int n, int k, T alpha,
                          T** d_Aarray, int lda, T** d_Barray, int ldb, T beta,
