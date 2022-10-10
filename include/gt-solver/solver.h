@@ -15,6 +15,8 @@ template <typename T>
 class GpuSolverDense
 {
 public:
+  using value_type = T;
+
   GpuSolverDense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
                  T* const* matrix_batches);
 
@@ -41,12 +43,37 @@ extern template class GpuSolverDense<double>;
 extern template class GpuSolverDense<gt::complex<float>>;
 extern template class GpuSolverDense<gt::complex<double>>;
 
+template <typename T>
+class GpuSolverInvert : GpuSolverDense<T>
+{
+public:
+  using value_type = typename GpuSolverDense<T>::value_type;
+
+  GpuSolverInvert(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+                  T* const* matrix_batches);
+
+  virtual void prepare();
+
+  virtual void solve(T* rhs, T* result);
+
+protected:
+  gt::gtensor_device<T, 3> rhs_input_data_;
+  gt::gtensor_device<T*, 1> rhs_input_pointers_;
+};
+
+extern template class GpuSolverInvert<float>;
+extern template class GpuSolverInvert<double>;
+extern template class GpuSolverInvert<gt::complex<float>>;
+extern template class GpuSolverInvert<gt::complex<double>>;
+
 #ifdef GTENSOR_DEVICE_SYCL
 
 template <typename T>
 class GpuSolverDenseSYCL : public GpuSolverDense<T>
 {
 public:
+  using value_type = typename GpuSolverDense<T>::value_type;
+
   GpuSolverDenseSYCL(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
                      T* const* matrix_batches);
 

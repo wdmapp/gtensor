@@ -9,9 +9,10 @@
 #include "gtest_predicates.h"
 #include "test_debug.h"
 
-template <typename T>
+template <typename Solver>
 void test_full_solve()
 {
+  using T = typename Solver::value_type;
   constexpr int N = 5;
   constexpr int NRHS = 2;
   constexpr int batch_size = 1;
@@ -49,8 +50,7 @@ void test_full_solve()
 
   gt::blas::handle_t h;
 
-  gt::solver::GpuSolverDense<T> solver(h, N, batch_size, NRHS,
-                                       gt::raw_pointer_cast(h_Aptr.data()));
+  Solver solver(h, N, batch_size, NRHS, gt::raw_pointer_cast(h_Aptr.data()));
   solver.prepare();
 
   gt::copy(h_B, d_B);
@@ -70,46 +70,68 @@ void test_full_solve()
   // second batch should be -2 times first batch
   h_C_expected = T(-2.0) * h_C_expected;
   GT_EXPECT_NEAR(h_C.view(gt::all, 1, 0), h_C_expected);
-
-#ifdef GTENSOR_DEVICE_SYCL
-  gt::solver::GpuSolverDenseSYCL<T> solver2(
-    h, N, batch_size, NRHS, gt::raw_pointer_cast(h_Aptr.data()));
-  solver2.prepare();
-
-  gt::copy(h_B, d_B);
-  solver2.solve(gt::raw_pointer_cast(d_B.data()),
-                gt::raw_pointer_cast(d_C.data()));
-  gt::copy(d_C, h_C);
-
-  h_C_expected(0) = 2.5;
-  h_C_expected(1) = 4.0;
-  h_C_expected(2) = 4.5;
-  h_C_expected(3) = 4.0;
-  h_C_expected(4) = 2.5;
-  GT_EXPECT_NEAR(h_C.view(gt::all, 0, 0), h_C_expected);
-
-  // second batch should be -2 times first batch
-  h_C_expected = T(-2.0) * h_C_expected;
-  GT_EXPECT_NEAR(h_C.view(gt::all, 1, 0), h_C_expected);
-#endif
 }
 
 TEST(solver, sfull_dense_solve)
 {
-  test_full_solve<float>();
+  test_full_solve<gt::solver::GpuSolverDense<float>>();
 }
 
 TEST(solver, dfull_dense_solve)
 {
-  test_full_solve<double>();
+  test_full_solve<gt::solver::GpuSolverDense<double>>();
 }
 
 TEST(solver, cfull_dense_solve)
 {
-  test_full_solve<gt::complex<float>>();
+  test_full_solve<gt::solver::GpuSolverDense<gt::complex<float>>>();
 }
 
 TEST(solver, zfull_dense_solve)
 {
-  test_full_solve<gt::complex<double>>();
+  test_full_solve<gt::solver::GpuSolverDense<gt::complex<double>>>();
+}
+
+#ifdef GTENSOR_DEVICE_SYCL
+
+TEST(solver, sfull_dense_sycl_solve)
+{
+  test_full_solve<gt::solver::GpuSolverDenseSYCL<float>>();
+}
+
+TEST(solver, dfull_dense_sycl_solve)
+{
+  test_full_solve<gt::solver::GpuSolverDenseSYCL<double>>();
+}
+
+TEST(solver, cfull_dense_sycl_solve)
+{
+  test_full_solve<gt::solver::GpuSolverDenseSYCL<gt::complex<float>>>();
+}
+
+TEST(solver, zfull_dense_sycl_solve)
+{
+  test_full_solve<gt::solver::GpuSolverDenseSYCL<gt::complex<double>>>();
+}
+
+#endif
+
+TEST(solver, sfull_invert_solve)
+{
+  test_full_solve<gt::solver::GpuSolverInvert<float>>();
+}
+
+TEST(solver, dfull_invert_solve)
+{
+  test_full_solve<gt::solver::GpuSolverInvert<double>>();
+}
+
+TEST(solver, cfull_invert_solve)
+{
+  test_full_solve<gt::solver::GpuSolverInvert<gt::complex<float>>>();
+}
+
+TEST(solver, zfull_invert_solve)
+{
+  test_full_solve<gt::solver::GpuSolverInvert<gt::complex<double>>>();
 }
