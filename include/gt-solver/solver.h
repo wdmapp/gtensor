@@ -38,11 +38,6 @@ protected:
   bool prepared_;
 };
 
-extern template class GpuSolverDense<float>;
-extern template class GpuSolverDense<double>;
-extern template class GpuSolverDense<gt::complex<float>>;
-extern template class GpuSolverDense<gt::complex<double>>;
-
 template <typename T>
 class GpuSolverInvert : GpuSolverDense<T>
 {
@@ -60,11 +55,6 @@ protected:
   gt::gtensor_device<T, 3> rhs_input_data_;
   gt::gtensor_device<T*, 1> rhs_input_pointers_;
 };
-
-extern template class GpuSolverInvert<float>;
-extern template class GpuSolverInvert<double>;
-extern template class GpuSolverInvert<gt::complex<float>>;
-extern template class GpuSolverInvert<gt::complex<double>>;
 
 #ifdef GTENSOR_DEVICE_SYCL
 
@@ -85,11 +75,6 @@ protected:
   gt::blas::index_t scratch_count_;
   gt::space::device_vector<T> scratch_;
 };
-
-extern template class GpuSolverDenseSYCL<float>;
-extern template class GpuSolverDenseSYCL<double>;
-extern template class GpuSolverDenseSYCL<gt::complex<float>>;
-extern template class GpuSolverDenseSYCL<gt::complex<double>>;
 
 #endif
 

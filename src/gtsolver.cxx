@@ -8,6 +8,40 @@ namespace gt
 namespace solver
 {
 
+namespace detail
+{
+
+template <typename PtrArray, typename DataArray>
+void init_device_pointer_array(PtrArray& d_ptr_array, DataArray& d_data_array)
+{
+  static_assert(gt::expr_dimension<PtrArray>() == 1, "PtrArray must be dim 1");
+  static_assert(gt::expr_dimension<DataArray>() == 3,
+                "DataArray must be dim 3");
+  using P = typename PtrArray::value_type;
+  gt::gtensor<P, 1> h_ptr_array(d_ptr_array.shape());
+  int nbatches = d_data_array.shape(2);
+  for (int i = 0; i < nbatches; i++) {
+    h_ptr_array(i) = &(d_data_array(0, 0, i));
+  }
+  gt::copy(h_ptr_array, d_ptr_array);
+}
+
+template <typename T, typename DataArray>
+void copy_batch_data(T* const* in_matrix_batches, DataArray& out_data)
+{
+  static_assert(gt::expr_dimension<DataArray>() == 3,
+                "DataArray must be dim 3");
+  int nbatches = out_data.shape(2);
+  int stride = out_data.shape(0) * out_data.shape(1);
+  // copy from pointer per batch to appropriate offset in contiguous device
+  // memory
+  for (int i = 0; i < nbatches; i++) {
+    gt::copy_n(in_matrix_batches[i], stride, out_data.data() + stride * i);
+  }
+}
+
+} // namespace detail
+
 template <typename T>
 GpuSolverDense<T>::GpuSolverDense(gt::blas::handle_t& h, int n, int nbatches,
                                   int nrhs, T* const* matrix_batches)
@@ -23,21 +57,11 @@ GpuSolverDense<T>::GpuSolverDense(gt::blas::handle_t& h, int n, int nbatches,
     rhs_pointers_(gt::shape(nbatches)),
     prepared_(false)
 {
-  gt::gtensor<T*, 1> h_matrix_pointers(gt::shape(nbatches));
-  gt::gtensor<T*, 1> h_rhs_pointers(gt::shape(nbatches));
-  auto pdata = matrix_data_.data();
-  decltype(pdata) pmatrix;
-  T* prhs_data = gt::raw_pointer_cast(rhs_data_.data());
-  gt::blas::index_t* ppivot_data = gt::raw_pointer_cast(pivot_data_.data());
-  // copy in to contiguous device memory
-  for (int i = 0; i < nbatches; i++) {
-    pmatrix = pdata + n * n * i;
-    gt::copy_n(matrix_batches[i], n * n, pmatrix);
-    h_matrix_pointers(i) = gt::raw_pointer_cast(pmatrix);
-    h_rhs_pointers(i) = prhs_data + n * nrhs * i;
-  }
-  gt::copy(h_matrix_pointers, matrix_pointers_);
-  gt::copy(h_rhs_pointers, rhs_pointers_);
+  // copy non-contiguous host memory to contiguous device memory
+  detail::copy_batch_data(matrix_batches, matrix_data_);
+  detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
+  detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
+  gt::synchronize();
 }
 
 template <typename T>
@@ -77,12 +101,7 @@ GpuSolverInvert<T>::GpuSolverInvert(gt::blas::handle_t& h, int n, int nbatches,
     rhs_input_data_(gt::shape(n, nrhs, nbatches)),
     rhs_input_pointers_(gt::shape(nbatches))
 {
-  gt::gtensor<T*, 1> h_rhs_input_pointers(gt::shape(nbatches));
-  T* prhs_input_data = gt::raw_pointer_cast(this->rhs_input_data_.data());
-  for (int i = 0; i < this->nbatches_; i++) {
-    h_rhs_input_pointers(i) = prhs_input_data + n * nrhs * i;
-  }
-  gt::copy(h_rhs_input_pointers, this->rhs_input_pointers_);
+  detail::init_device_pointer_array(rhs_input_pointers_, rhs_input_data_);
 }
 
 template <typename T>
@@ -94,14 +113,8 @@ void GpuSolverInvert<T>::prepare()
   // getri is not in place, copy input data to temporary, so inverted output
   // goes to member matrix_data_
   gt::gtensor_device<T, 3> d_A(this->matrix_data_.shape());
-  gt::gtensor<T*, 1> h_Aptr(this->matrix_pointers_.shape());
   gt::gtensor_device<T*, 1> d_Aptr(this->matrix_pointers_.shape());
-
-  T* Adata = gt::raw_pointer_cast(d_A.data());
-  for (int i = 0; i < this->nbatches_; i++) {
-    h_Aptr(i) = Adata + this->n_ * this->n_ * i;
-  }
-  gt::copy(h_Aptr, d_Aptr);
+  detail::init_device_pointer_array(d_Aptr, d_A);
   gt::copy(this->matrix_data_, d_A);
   gt::synchronize();
   gt::blas::getri_batched<T>(
