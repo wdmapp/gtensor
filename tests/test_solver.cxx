@@ -51,7 +51,6 @@ void test_full_solve()
   gt::blas::handle_t h;
 
   Solver solver(h, N, batch_size, NRHS, gt::raw_pointer_cast(h_Aptr.data()));
-  solver.prepare();
 
   gt::copy(h_B, d_B);
   solver.solve(gt::raw_pointer_cast(d_B.data()),
@@ -74,64 +73,64 @@ void test_full_solve()
 
 TEST(solver, sfull_dense_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDense<float>>();
+  test_full_solve<gt::solver::SolverDense<float>>();
 }
 
 TEST(solver, dfull_dense_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDense<double>>();
+  test_full_solve<gt::solver::SolverDense<double>>();
 }
 
 TEST(solver, cfull_dense_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDense<gt::complex<float>>>();
+  test_full_solve<gt::solver::SolverDense<gt::complex<float>>>();
 }
 
 TEST(solver, zfull_dense_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDense<gt::complex<double>>>();
+  test_full_solve<gt::solver::SolverDense<gt::complex<double>>>();
 }
 
 #ifdef GTENSOR_DEVICE_SYCL
 
 TEST(solver, sfull_dense_sycl_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDenseSYCL<float>>();
+  test_full_solve<gt::solver::SolverDenseSYCL<float>>();
 }
 
 TEST(solver, dfull_dense_sycl_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDenseSYCL<double>>();
+  test_full_solve<gt::solver::SolverDenseSYCL<double>>();
 }
 
 TEST(solver, cfull_dense_sycl_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDenseSYCL<gt::complex<float>>>();
+  test_full_solve<gt::solver::SolverDenseSYCL<gt::complex<float>>>();
 }
 
 TEST(solver, zfull_dense_sycl_solve)
 {
-  test_full_solve<gt::solver::GpuSolverDenseSYCL<gt::complex<double>>>();
+  test_full_solve<gt::solver::SolverDenseSYCL<gt::complex<double>>>();
 }
 
 #endif
 
 TEST(solver, sfull_invert_solve)
 {
-  test_full_solve<gt::solver::GpuSolverInvert<float>>();
+  test_full_solve<gt::solver::SolverInvert<float>>();
 }
 
 TEST(solver, dfull_invert_solve)
 {
-  test_full_solve<gt::solver::GpuSolverInvert<double>>();
+  test_full_solve<gt::solver::SolverInvert<double>>();
 }
 
 TEST(solver, cfull_invert_solve)
 {
-  test_full_solve<gt::solver::GpuSolverInvert<gt::complex<float>>>();
+  test_full_solve<gt::solver::SolverInvert<gt::complex<float>>>();
 }
 
 TEST(solver, zfull_invert_solve)
 {
-  test_full_solve<gt::solver::GpuSolverInvert<gt::complex<double>>>();
+  test_full_solve<gt::solver::SolverInvert<gt::complex<double>>>();
 }

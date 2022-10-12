@@ -43,8 +43,8 @@ void copy_batch_data(T* const* in_matrix_batches, DataArray& out_data)
 } // namespace detail
 
 template <typename T>
-GpuSolverDense<T>::GpuSolverDense(gt::blas::handle_t& h, int n, int nbatches,
-                                  int nrhs, T* const* matrix_batches)
+SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
+                            int nrhs, T* const* matrix_batches)
   : h_(h),
     n_(n),
     nbatches_(nbatches),
@@ -54,28 +54,26 @@ GpuSolverDense<T>::GpuSolverDense(gt::blas::handle_t& h, int n, int nbatches,
     pivot_data_(gt::shape(n, nbatches)),
     info_(gt::shape(nbatches)),
     rhs_data_(gt::shape(n, nrhs, nbatches)),
-    rhs_pointers_(gt::shape(nbatches)),
-    prepared_(false)
+    rhs_pointers_(gt::shape(nbatches))
 {
   // copy non-contiguous host memory to contiguous device memory
   detail::copy_batch_data(matrix_batches, matrix_data_);
   detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
   detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
-  gt::synchronize();
+  prepare();
 }
 
 template <typename T>
-void GpuSolverDense<T>::prepare()
+void SolverDense<T>::prepare()
 {
   gt::blas::getrf_batched<T>(h_, n_,
                              gt::raw_pointer_cast(matrix_pointers_.data()), n_,
                              gt::raw_pointer_cast(pivot_data_.data()),
                              gt::raw_pointer_cast(info_.data()), nbatches_);
-  prepared_ = true;
 }
 
 template <typename T>
-void GpuSolverDense<T>::solve(T* rhs, T* result)
+void SolverDense<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
@@ -89,113 +87,130 @@ void GpuSolverDense<T>::solve(T* rhs, T* result)
              gt::device_pointer_cast(result));
 }
 
-template class GpuSolverDense<float>;
-template class GpuSolverDense<double>;
-template class GpuSolverDense<gt::complex<float>>;
-template class GpuSolverDense<gt::complex<double>>;
+template class SolverDense<float>;
+template class SolverDense<double>;
+template class SolverDense<gt::complex<float>>;
+template class SolverDense<gt::complex<double>>;
 
 template <typename T>
-GpuSolverInvert<T>::GpuSolverInvert(gt::blas::handle_t& h, int n, int nbatches,
-                                    int nrhs, T* const* matrix_batches)
-  : GpuSolverDense<T>(h, n, nbatches, nrhs, matrix_batches),
+SolverInvert<T>::SolverInvert(gt::blas::handle_t& h, int n, int nbatches,
+                              int nrhs, T* const* matrix_batches)
+  : h_(h),
+    n_(n),
+    nbatches_(nbatches),
+    nrhs_(nrhs),
+    matrix_data_(gt::shape(n, n, nbatches)),
+    matrix_pointers_(gt::shape(nbatches)),
+    pivot_data_(gt::shape(n, nbatches)),
+    info_(gt::shape(nbatches)),
+    rhs_data_(gt::shape(n, nrhs, nbatches)),
+    rhs_pointers_(gt::shape(nbatches)),
     rhs_input_data_(gt::shape(n, nrhs, nbatches)),
     rhs_input_pointers_(gt::shape(nbatches))
 {
+  detail::copy_batch_data(matrix_batches, matrix_data_);
+  detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
+  detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
   detail::init_device_pointer_array(rhs_input_pointers_, rhs_input_data_);
+  prepare();
 }
 
 template <typename T>
-void GpuSolverInvert<T>::prepare()
+void SolverInvert<T>::prepare()
 {
   // factor into matrix_data_
-  GpuSolverDense<T>::prepare();
+  gt::blas::getrf_batched<T>(h_, n_,
+                             gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+                             gt::raw_pointer_cast(pivot_data_.data()),
+                             gt::raw_pointer_cast(info_.data()), nbatches_);
 
   // getri is not in place, copy input data to temporary, so inverted output
   // goes to member matrix_data_
-  gt::gtensor_device<T, 3> d_A(this->matrix_data_.shape());
-  gt::gtensor_device<T*, 1> d_Aptr(this->matrix_pointers_.shape());
+  gt::gtensor_device<T, 3> d_A(matrix_data_.shape());
+  gt::gtensor_device<T*, 1> d_Aptr(matrix_pointers_.shape());
   detail::init_device_pointer_array(d_Aptr, d_A);
-  gt::copy(this->matrix_data_, d_A);
+  gt::copy(matrix_data_, d_A);
   gt::synchronize();
-  gt::blas::getri_batched<T>(
-    this->h_, this->n_, gt::raw_pointer_cast(d_Aptr.data()), this->n_,
-    gt::raw_pointer_cast(this->pivot_data_.data()),
-    gt::raw_pointer_cast(this->matrix_pointers_.data()), this->n_,
-    gt::raw_pointer_cast(this->info_.data()), this->nbatches_);
+  gt::blas::getri_batched<T>(h_, n_, gt::raw_pointer_cast(d_Aptr.data()), n_,
+                             gt::raw_pointer_cast(pivot_data_.data()),
+                             gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+                             gt::raw_pointer_cast(info_.data()), nbatches_);
   gt::synchronize();
-  this->prepared_ = true;
 }
 
 template <typename T>
-void GpuSolverInvert<T>::solve(T* rhs, T* result)
+void SolverInvert<T>::solve(T* rhs, T* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs),
-             this->n_ * this->nrhs_ * this->nbatches_,
-             this->rhs_input_data_.data());
+  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+             rhs_input_data_.data());
   gt::blas::gemm_batched<T>(
-    this->h_, this->n_, this->nrhs_, this->n_, 1.0,
-    gt::raw_pointer_cast(this->matrix_pointers_.data()), this->n_,
-    gt::raw_pointer_cast(this->rhs_input_pointers_.data()), this->n_, 0.0,
-    gt::raw_pointer_cast(this->rhs_pointers_.data()), this->n_,
-    this->nbatches_);
-  gt::copy_n(this->rhs_data_.data(), this->n_ * this->nrhs_ * this->nbatches_,
+    h_, n_, nrhs_, n_, 1.0, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+    gt::raw_pointer_cast(rhs_input_pointers_.data()), n_, 0.0,
+    gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
+  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
 
-template class GpuSolverInvert<float>;
-template class GpuSolverInvert<double>;
-template class GpuSolverInvert<gt::complex<float>>;
-template class GpuSolverInvert<gt::complex<double>>;
+template class SolverInvert<float>;
+template class SolverInvert<double>;
+template class SolverInvert<gt::complex<float>>;
+template class SolverInvert<gt::complex<double>>;
 
 #ifdef GTENSOR_DEVICE_SYCL
 
 template <typename T>
-GpuSolverDenseSYCL<T>::GpuSolverDenseSYCL(gt::blas::handle_t& h, int n,
-                                          int nbatches, int nrhs,
-                                          T* const* matrix_batches)
-  : GpuSolverDense<T>(h, n, nbatches, nrhs, matrix_batches),
+SolverDenseSYCL<T>::SolverDenseSYCL(gt::blas::handle_t& h, int n, int nbatches,
+                                    int nrhs, T* const* matrix_batches)
+  : h_(h),
+    n_(n),
+    nbatches_(nbatches),
+    nrhs_(nrhs),
+    matrix_data_(gt::shape(n, n, nbatches)),
+    pivot_data_(gt::shape(n, nbatches)),
+    rhs_data_(gt::shape(n, nrhs, nbatches)),
     scratch_count_(gt::blas::getrs_strided_batched_scratchpad_size<T>(
       h, n, n, n, nrhs, nbatches)),
     scratch_(scratch_count_)
-{}
+{
+  detail::copy_batch_data(matrix_batches, matrix_data_);
+  prepare();
+}
 
 template <typename T>
-void GpuSolverDenseSYCL<T>::prepare()
+void SolverDenseSYCL<T>::prepare()
 {
-  auto prep_scratch_count = gt::blas::getrf_strided_batched_scratchpad_size<T>(
-    this->h_, this->n_, this->n_, this->nbatches_);
+  auto prep_scratch_count =
+    gt::blas::getrf_strided_batched_scratchpad_size<T>(h_, n_, n_, nbatches_);
   gt::space::device_vector<T> prep_scratch(prep_scratch_count);
 
   gt::blas::getrf_strided_batched<T>(
-    this->h_, this->n_, gt::raw_pointer_cast(this->matrix_data_.data()),
-    this->n_, gt::raw_pointer_cast(this->pivot_data_.data()), this->nbatches_,
+    h_, n_, gt::raw_pointer_cast(matrix_data_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()), nbatches_,
     gt::raw_pointer_cast(prep_scratch.data()), prep_scratch_count);
   // Note: synchronize so it's safe to garbage collect scratch
   gt::synchronize();
-  this->prepared_ = true;
 }
 
 template <typename T>
-void GpuSolverDenseSYCL<T>::solve(T* rhs, T* result)
+void SolverDenseSYCL<T>::solve(T* rhs, T* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs),
-             this->n_ * this->nrhs_ * this->nbatches_, this->rhs_data_.data());
+  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+             rhs_data_.data());
   gt::synchronize();
   gt::blas::getrs_strided_batched<T>(
-    this->h_, this->n_, this->nrhs_,
-    gt::raw_pointer_cast(this->matrix_data_.data()), this->n_,
-    gt::raw_pointer_cast(this->pivot_data_.data()),
-    gt::raw_pointer_cast(this->rhs_data_.data()), this->n_, this->nbatches_,
-    gt::raw_pointer_cast(this->scratch_.data()), this->scratch_count_);
+    h_, n_, nrhs_, gt::raw_pointer_cast(matrix_data_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()),
+    gt::raw_pointer_cast(rhs_data_.data()), n_, nbatches_,
+    gt::raw_pointer_cast(scratch_.data()), scratch_count_);
   gt::synchronize();
-  gt::copy_n(this->rhs_data_.data(), this->n_ * this->nrhs_ * this->nbatches_,
+  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
 
-template class GpuSolverDenseSYCL<float>;
-template class GpuSolverDenseSYCL<double>;
-template class GpuSolverDenseSYCL<gt::complex<float>>;
-template class GpuSolverDenseSYCL<gt::complex<double>>;
+template class SolverDenseSYCL<float>;
+template class SolverDenseSYCL<double>;
+template class SolverDenseSYCL<gt::complex<float>>;
+template class SolverDenseSYCL<gt::complex<double>>;
 
 #endif
 

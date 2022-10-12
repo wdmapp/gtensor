@@ -12,46 +12,69 @@ namespace solver
 {
 
 template <typename T>
-class GpuSolverDense
+class Solver
 {
 public:
   using value_type = T;
 
-  GpuSolverDense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-                 T* const* matrix_batches);
+  virtual void solve(T* rhs, T* result) = 0;
 
-  virtual void prepare();
+protected:
+  virtual void prepare() = 0;
+};
+
+template <typename T>
+class SolverDense : public Solver<T>
+{
+public:
+  using base_type = Solver<T>;
+  using typename base_type::value_type;
+
+  SolverDense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+              T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
 protected:
+  virtual void prepare();
+
   gt::blas::handle_t& h_;
+  int n_;
+  int nbatches_;
+  int nrhs_;
   gt::gtensor_device<T, 3> matrix_data_;
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
   gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
-  int n_;
-  int nbatches_;
-  int nrhs_;
-  bool prepared_;
 };
 
 template <typename T>
-class GpuSolverInvert : GpuSolverDense<T>
+class SolverInvert : Solver<T>
 {
 public:
-  using value_type = typename GpuSolverDense<T>::value_type;
+  using base_type = Solver<T>;
+  using typename base_type::value_type;
 
-  GpuSolverInvert(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-                  T* const* matrix_batches);
-
-  virtual void prepare();
+  SolverInvert(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+               T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
 protected:
+  virtual void prepare();
+
+  gt::blas::handle_t& h_;
+  int n_;
+  int nbatches_;
+  int nrhs_;
+  gt::gtensor_device<T, 3> matrix_data_;
+  gt::gtensor_device<T*, 1> matrix_pointers_;
+  gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
+  gt::gtensor_device<int, 1> info_;
+  gt::gtensor_device<T, 3> rhs_data_;
+  gt::gtensor_device<T*, 1> rhs_pointers_;
   gt::gtensor_device<T, 3> rhs_input_data_;
   gt::gtensor_device<T*, 1> rhs_input_pointers_;
 };
@@ -59,19 +82,27 @@ protected:
 #ifdef GTENSOR_DEVICE_SYCL
 
 template <typename T>
-class GpuSolverDenseSYCL : public GpuSolverDense<T>
+class SolverDenseSYCL : public Solver<T>
 {
 public:
-  using value_type = typename GpuSolverDense<T>::value_type;
+  using base_type = Solver<T>;
+  using typename base_type::value_type;
 
-  GpuSolverDenseSYCL(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-                     T* const* matrix_batches);
-
-  virtual void prepare();
+  SolverDenseSYCL(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+                  T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
 protected:
+  virtual void prepare();
+
+  gt::blas::handle_t& h_;
+  int n_;
+  int nbatches_;
+  int nrhs_;
+  gt::gtensor_device<T, 3> matrix_data_;
+  gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
+  gt::gtensor_device<T, 3> rhs_data_;
   gt::blas::index_t scratch_count_;
   gt::space::device_vector<T> scratch_;
 };
