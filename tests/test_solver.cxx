@@ -91,30 +91,6 @@ TEST(solver, zfull_dense_solve)
   test_full_solve<gt::solver::SolverDense<gt::complex<double>>>();
 }
 
-#ifdef GTENSOR_DEVICE_SYCL
-
-TEST(solver, sfull_dense_sycl_solve)
-{
-  test_full_solve<gt::solver::SolverDenseSYCL<float>>();
-}
-
-TEST(solver, dfull_dense_sycl_solve)
-{
-  test_full_solve<gt::solver::SolverDenseSYCL<double>>();
-}
-
-TEST(solver, cfull_dense_sycl_solve)
-{
-  test_full_solve<gt::solver::SolverDenseSYCL<gt::complex<float>>>();
-}
-
-TEST(solver, zfull_dense_sycl_solve)
-{
-  test_full_solve<gt::solver::SolverDenseSYCL<gt::complex<double>>>();
-}
-
-#endif
-
 TEST(solver, sfull_invert_solve)
 {
   test_full_solve<gt::solver::SolverInvert<float>>();

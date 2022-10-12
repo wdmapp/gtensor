@@ -42,6 +42,59 @@ void copy_batch_data(T* const* in_matrix_batches, DataArray& out_data)
 
 } // namespace detail
 
+#ifdef GTENSOR_DEVICE_SYCL
+
+template <typename T>
+SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
+                            int nrhs, T* const* matrix_batches)
+  : h_(h),
+    n_(n),
+    nbatches_(nbatches),
+    nrhs_(nrhs),
+    matrix_data_(gt::shape(n, n, nbatches)),
+    pivot_data_(gt::shape(n, nbatches)),
+    rhs_data_(gt::shape(n, nrhs, nbatches)),
+    scratch_count_(gt::blas::getrs_strided_batched_scratchpad_size<T>(
+      h, n, n, n, nrhs, nbatches)),
+    scratch_(scratch_count_)
+{
+  detail::copy_batch_data(matrix_batches, matrix_data_);
+  prepare();
+}
+
+template <typename T>
+void SolverDense<T>::prepare()
+{
+  auto prep_scratch_count =
+    gt::blas::getrf_strided_batched_scratchpad_size<T>(h_, n_, n_, nbatches_);
+  gt::space::device_vector<T> prep_scratch(prep_scratch_count);
+
+  gt::blas::getrf_strided_batched<T>(
+    h_, n_, gt::raw_pointer_cast(matrix_data_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()), nbatches_,
+    gt::raw_pointer_cast(prep_scratch.data()), prep_scratch_count);
+  // Note: synchronize so it's safe to garbage collect scratch
+  gt::synchronize();
+}
+
+template <typename T>
+void SolverDense<T>::solve(T* rhs, T* result)
+{
+  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+             rhs_data_.data());
+  gt::synchronize();
+  gt::blas::getrs_strided_batched<T>(
+    h_, n_, nrhs_, gt::raw_pointer_cast(matrix_data_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()),
+    gt::raw_pointer_cast(rhs_data_.data()), n_, nbatches_,
+    gt::raw_pointer_cast(scratch_.data()), scratch_count_);
+  gt::synchronize();
+  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
+             gt::device_pointer_cast(result));
+}
+
+#else // CUDA and HIP
+
 template <typename T>
 SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
                             int nrhs, T* const* matrix_batches)
@@ -86,6 +139,8 @@ void SolverDense<T>::solve(T* rhs, T* result)
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
+
+#endif
 
 template class SolverDense<float>;
 template class SolverDense<double>;
@@ -155,64 +210,6 @@ template class SolverInvert<float>;
 template class SolverInvert<double>;
 template class SolverInvert<gt::complex<float>>;
 template class SolverInvert<gt::complex<double>>;
-
-#ifdef GTENSOR_DEVICE_SYCL
-
-template <typename T>
-SolverDenseSYCL<T>::SolverDenseSYCL(gt::blas::handle_t& h, int n, int nbatches,
-                                    int nrhs, T* const* matrix_batches)
-  : h_(h),
-    n_(n),
-    nbatches_(nbatches),
-    nrhs_(nrhs),
-    matrix_data_(gt::shape(n, n, nbatches)),
-    pivot_data_(gt::shape(n, nbatches)),
-    rhs_data_(gt::shape(n, nrhs, nbatches)),
-    scratch_count_(gt::blas::getrs_strided_batched_scratchpad_size<T>(
-      h, n, n, n, nrhs, nbatches)),
-    scratch_(scratch_count_)
-{
-  detail::copy_batch_data(matrix_batches, matrix_data_);
-  prepare();
-}
-
-template <typename T>
-void SolverDenseSYCL<T>::prepare()
-{
-  auto prep_scratch_count =
-    gt::blas::getrf_strided_batched_scratchpad_size<T>(h_, n_, n_, nbatches_);
-  gt::space::device_vector<T> prep_scratch(prep_scratch_count);
-
-  gt::blas::getrf_strided_batched<T>(
-    h_, n_, gt::raw_pointer_cast(matrix_data_.data()), n_,
-    gt::raw_pointer_cast(pivot_data_.data()), nbatches_,
-    gt::raw_pointer_cast(prep_scratch.data()), prep_scratch_count);
-  // Note: synchronize so it's safe to garbage collect scratch
-  gt::synchronize();
-}
-
-template <typename T>
-void SolverDenseSYCL<T>::solve(T* rhs, T* result)
-{
-  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-             rhs_data_.data());
-  gt::synchronize();
-  gt::blas::getrs_strided_batched<T>(
-    h_, n_, nrhs_, gt::raw_pointer_cast(matrix_data_.data()), n_,
-    gt::raw_pointer_cast(pivot_data_.data()),
-    gt::raw_pointer_cast(rhs_data_.data()), n_, nbatches_,
-    gt::raw_pointer_cast(scratch_.data()), scratch_count_);
-  gt::synchronize();
-  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
-             gt::device_pointer_cast(result));
-}
-
-template class SolverDenseSYCL<float>;
-template class SolverDenseSYCL<double>;
-template class SolverDenseSYCL<gt::complex<float>>;
-template class SolverDenseSYCL<gt::complex<double>>;
-
-#endif
 
 } // namespace solver
 
