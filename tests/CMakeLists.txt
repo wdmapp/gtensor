@@ -68,6 +68,11 @@ if (GTENSOR_ENABLE_BLAS)
     add_gtensor_test(test_cblas)
     target_link_libraries(test_cblas cgtblas)
   endif()
+  if (GTENSOR_ENABLE_SOLVER)
+    add_gtensor_test(test_solver)
+    target_link_libraries(test_solver gtsolver)
+  endif()
+
 endif()
 
 if (GTENSOR_ENABLE_FFT)

@@ -32,6 +32,7 @@ option(GTENSOR_ENABLE_CLIB "Enable libcgtensor" OFF)
 option(GTENSOR_ENABLE_BLAS "Enable gtblas" OFF)
 option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 option(GTENSOR_ENABLE_FORTRAN "Enable Fortran interoperability" OFF)
+option(GTENSOR_ENABLE_SOLVER "Enable high level solver library" OFF)
 
 option(GTENSOR_PER_DIM_KERNELS
        "Enable per dim kernels (may break for large arrays)" OFF)
@@ -441,6 +442,15 @@ if (GTENSOR_ENABLE_BLAS)
     target_link_libraries(cgtblas gtblas)
     list(APPEND GTENSOR_TARGETS cgtblas)
     add_library(gtensor::cgtblas ALIAS cgtblas)
+  endif()
+
+  if (GTENSOR_ENABLE_SOLVER)
+    message(STATUS "${PROJECT_NAME}: SOLVER is ENABLED")
+    add_library(gtsolver)
+    target_gtensor_sources(gtsolver PRIVATE src/gtsolver.cxx)
+    target_link_libraries(gtsolver gtblas)
+    list(APPEND GTENSOR_TARGETS gtsolver)
+    add_library(gtensor::gtsolver ALIAS gtsolver)
   endif()
 endif()
 
