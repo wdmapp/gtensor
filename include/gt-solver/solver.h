@@ -18,9 +18,6 @@ public:
   using value_type = T;
 
   virtual void solve(T* rhs, T* result) = 0;
-
-protected:
-  virtual void prepare() = 0;
 };
 
 #ifdef GTENSOR_DEVICE_SYCL
@@ -41,8 +38,6 @@ public:
   virtual void solve(T* rhs, T* result);
 
 protected:
-  virtual void prepare();
-
   gt::blas::handle_t& h_;
   int n_;
   int nbatches_;
@@ -69,8 +64,6 @@ public:
   virtual void solve(T* rhs, T* result);
 
 protected:
-  virtual void prepare();
-
   gt::blas::handle_t& h_;
   int n_;
   int nbatches_;
@@ -98,8 +91,6 @@ public:
   virtual void solve(T* rhs, T* result);
 
 protected:
-  virtual void prepare();
-
   gt::blas::handle_t& h_;
   int n_;
   int nbatches_;

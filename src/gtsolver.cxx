@@ -59,12 +59,8 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
     scratch_(scratch_count_)
 {
   detail::copy_batch_data(matrix_batches, matrix_data_);
-  prepare();
-}
 
-template <typename T>
-void SolverDense<T>::prepare()
-{
+  // factor using strided API
   auto prep_scratch_count =
     gt::blas::getrf_strided_batched_scratchpad_size<T>(h_, n_, n_, nbatches_);
   gt::space::device_vector<T> prep_scratch(prep_scratch_count);
@@ -73,7 +69,7 @@ void SolverDense<T>::prepare()
     h_, n_, gt::raw_pointer_cast(matrix_data_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()), nbatches_,
     gt::raw_pointer_cast(prep_scratch.data()), prep_scratch_count);
-  // Note: synchronize so it's safe to garbage collect scratch
+  // Note: synchronize so it's safe to destroy scratch
   gt::synchronize();
 }
 
@@ -82,13 +78,11 @@ void SolverDense<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
-  gt::synchronize();
   gt::blas::getrs_strided_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_data_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()),
     gt::raw_pointer_cast(rhs_data_.data()), n_, nbatches_,
     gt::raw_pointer_cast(scratch_.data()), scratch_count_);
-  gt::synchronize();
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
@@ -113,16 +107,14 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
   detail::copy_batch_data(matrix_batches, matrix_data_);
   detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
   detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
-  prepare();
-}
 
-template <typename T>
-void SolverDense<T>::prepare()
-{
+  // dense LU factor with pivot
   gt::blas::getrf_batched<T>(h_, n_,
                              gt::raw_pointer_cast(matrix_pointers_.data()), n_,
                              gt::raw_pointer_cast(pivot_data_.data()),
                              gt::raw_pointer_cast(info_.data()), nbatches_);
+  // Note: synchronize for consistency with other implementations
+  gt::synchronize();
 }
 
 template <typename T>
@@ -130,12 +122,10 @@ void SolverDense<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
-  gt::synchronize();
   gt::blas::getrs_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()),
     gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
-  gt::synchronize();
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
@@ -167,29 +157,25 @@ SolverInvert<T>::SolverInvert(gt::blas::handle_t& h, int n, int nbatches,
   detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
   detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
   detail::init_device_pointer_array(rhs_input_pointers_, rhs_input_data_);
-  prepare();
-}
 
-template <typename T>
-void SolverInvert<T>::prepare()
-{
-  // factor into matrix_data_
+  // LU factor with pivot into matrix_data_
   gt::blas::getrf_batched<T>(h_, n_,
                              gt::raw_pointer_cast(matrix_pointers_.data()), n_,
                              gt::raw_pointer_cast(pivot_data_.data()),
                              gt::raw_pointer_cast(info_.data()), nbatches_);
 
-  // getri is not in place, copy input data to temporary, so inverted output
-  // goes to member matrix_data_
+  // invert using LU factors with getri.
+  // Note: getri is not in place, so we copy input data to temporary and have
+  // inverted output go into the matrix_data_ member variable
   gt::gtensor_device<T, 3> d_A(matrix_data_.shape());
   gt::gtensor_device<T*, 1> d_Aptr(matrix_pointers_.shape());
   detail::init_device_pointer_array(d_Aptr, d_A);
   gt::copy(matrix_data_, d_A);
-  gt::synchronize();
   gt::blas::getri_batched<T>(h_, n_, gt::raw_pointer_cast(d_Aptr.data()), n_,
                              gt::raw_pointer_cast(pivot_data_.data()),
                              gt::raw_pointer_cast(matrix_pointers_.data()), n_,
                              gt::raw_pointer_cast(info_.data()), nbatches_);
+  // Note: synchronize so it's safe to destroy temporaries
   gt::synchronize();
 }
 
