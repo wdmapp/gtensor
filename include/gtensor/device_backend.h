@@ -38,7 +38,7 @@ using clib = backend_ops<gt::space::host>;
 
 } // namespace backend
 
-using stream_view = gt::backend::backend_ops<gt::space::device>::stream_view;
+using stream_view = backend::clib::stream_view;
 
 template <typename T, typename S = gt::space::device>
 using device_allocator = typename backend::allocator_impl::selector<T, S>::type;
