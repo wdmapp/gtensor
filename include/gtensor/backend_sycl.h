@@ -289,6 +289,14 @@ public:
     using base_class::base_class;
 
     stream_view() : base_class(gt::backend::sycl::get_queue()) {}
+    stream_view(const stream_view& other) : base_class(other.stream_) {}
+
+    stream_view& operator=(const stream_view& other)
+    {
+      this->~stream_view();
+      new (this) stream_view(other);
+      return *this;
+    }
 
     bool is_default()
     {
