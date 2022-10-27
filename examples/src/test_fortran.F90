@@ -1,26 +1,14 @@
 
 module test_fortran_m
    use, intrinsic :: iso_c_binding
-   use :: flcl_ndarray_mod
    implicit none
-
-   private
-   public :: f_test_arr2d
 
    interface
       subroutine c_test_arr2d(arr) bind(c)
          import
-         type(nd_array_t) :: arr
+         real, dimension(:,:) :: arr
       end subroutine c_test_arr2d
    end interface
-
-contains
-
-   subroutine f_test_arr2d(arr)
-      real, dimension(:,:) :: arr
-
-      call c_test_arr2d(to_nd_array(arr))
-   end subroutine f_test_arr2d
 
 end module test_fortran_m
 
@@ -40,8 +28,8 @@ program main
    end do
 
    print *, 'arr2d', arr2d
-   call f_test_arr2d(arr2d)
+   call c_test_arr2d(arr2d)
 
    print *, 'arr2d(3:4, 1:2)', arr2d(3:4, 1:2)
-   call f_test_arr2d(arr2d(3:4, 1:2))
+   call c_test_arr2d(arr2d(3:4, 1:2))
 end program

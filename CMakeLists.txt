@@ -474,19 +474,10 @@ endif()
 if (GTENSOR_ENABLE_FORTRAN)
   # message(STATUS "${PROJECT_NAME}: Fortran is ENABLED")
   # enable_language(Fortran)
-  CPMAddPackage(
-    NAME flcl
-    GITHUB_REPOSITORY kokkos/kokkos-fortran-interop
-    GIT_TAG develop
-    VERSION 0.99
-    DOWNLOAD_ONLY TRUE)
-
   add_library(fgtensor)
   set_target_properties(fgtensor PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran)
   target_sources(fgtensor PRIVATE
-    src/fortran/gpu_api_interface.F90
-    ${flcl_SOURCE_DIR}/src/flcl-types-f.f90
-    ${flcl_SOURCE_DIR}/src/flcl-ndarray-f.f90)
+    src/fortran/gpu_api_interface.F90)
   target_gtensor_sources(fgtensor PRIVATE
     src/fortran/gpu_api.cxx)
 
