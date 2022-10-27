@@ -242,6 +242,21 @@ public:
     gtGpuCheck(
       cudaMemcpyAsync(dst, src, sizeof(T) * count, cudaMemcpyDeviceToDevice));
   }
+
+  class stream_view : public stream_interface::stream_view_base<cudaStream_t>
+  {
+  public:
+    using base_type = stream_view_base<cudaStream_t>;
+    using base_type::base_type;
+
+    stream_view() : base_type(cudaStreamDefault) {}
+
+    bool is_default() { return this->stream_ == cudaStreamDefault; };
+
+    void synchronize() { gtGpuCheck(cudaStreamSynchronize(this->stream_)); }
+
+    auto get_execution_policy() { return thrust::cuda::par.on(this->stream_); }
+  };
 };
 
 namespace stream_interface
@@ -256,47 +271,17 @@ inline cudaStream_t create<cudaStream_t>()
 }
 
 template <>
-inline cudaStream_t get_default<cudaStream_t>()
-{
-  return nullptr;
-}
-
-template <>
 inline void destroy<cudaStream_t>(cudaStream_t s)
 {
   gtGpuCheck(cudaStreamDestroy(s));
 }
 
-template <>
-inline bool is_default<cudaStream_t>(cudaStream_t s)
-{
-  return s == nullptr;
-}
-
-template <>
-inline void synchronize<cudaStream_t>(cudaStream_t s)
-{
-  gtGpuCheck(cudaStreamSynchronize(s));
-}
-
-template <typename Stream>
-class stream_view_cuda : public stream_view_base<Stream>
-{
-public:
-  using base_type = stream_view_base<Stream>;
-  using base_type::base_type;
-  using base_type::stream_;
-
-  auto get_execution_policy() { return thrust::cuda::par.on(stream_); }
-};
-
 } // namespace stream_interface
 
 } // namespace backend
 
-using stream_view = backend::stream_interface::stream_view_cuda<cudaStream_t>;
-using stream =
-  backend::stream_interface::stream_base<cudaStream_t, stream_view>;
+using stream = backend::stream_interface::stream_base<
+  cudaStream_t, backend::backend_ops<gt::space::cuda>::stream_view>;
 
 } // namespace gt
 

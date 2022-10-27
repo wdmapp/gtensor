@@ -109,15 +109,6 @@ Stream create();
 template <typename Stream>
 void destroy(Stream s);
 
-template <typename Stream>
-Stream get_default();
-
-template <typename Stream>
-bool is_default(Stream s);
-
-template <typename Stream>
-void synchronize(Stream s);
-
 /**
  * CRTP static interface for backend specific stream wrapper, non owning view.
  *
@@ -132,22 +123,9 @@ class stream_view_base
 public:
   using stream_t = Stream;
 
-  stream_view_base()
-    : stream_(gt::backend::stream_interface::get_default<stream_t>())
-  {}
   stream_view_base(stream_t s) : stream_(s) {}
 
   stream_t& get_backend_stream() { return stream_; }
-
-  bool is_default()
-  {
-    return gt::backend::stream_interface::is_default<stream_t>(stream_);
-  }
-
-  void synchronize()
-  {
-    gt::backend::stream_interface::synchronize<stream_t>(stream_);
-  }
 
 protected:
   Stream stream_;
@@ -208,7 +186,6 @@ protected:
   void sync_and_destroy(stream_t s)
   {
     if (!moved_from_) {
-      gt::backend::stream_interface::synchronize<stream_t>(s);
       gt::backend::stream_interface::destroy<stream_t>(s);
     }
   }

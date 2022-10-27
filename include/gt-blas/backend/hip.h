@@ -30,7 +30,6 @@ namespace blas
 // ======================================================================
 // types aliases
 
-using stream_t = hipStream_t;
 using index_t = int;
 
 // ======================================================================
@@ -49,7 +48,7 @@ public:
 
   gt::stream_view get_stream()
   {
-    stream_t s;
+    hipStream_t s;
     gtBlasCheck(rocblas_get_stream(handle_, &s));
     return gt::stream_view{s};
   }

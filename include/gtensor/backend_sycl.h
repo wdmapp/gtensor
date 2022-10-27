@@ -280,6 +280,31 @@ public:
     auto& q = gt::backend::sycl::get_queue();
     q.memcpy(dst, src, sizeof(T) * count);
   }
+
+  class stream_view
+    : public stream_interface::stream_view_base<cl::sycl::queue&>
+  {
+  public:
+    using base_class = stream_view_base<cl::sycl::queue&>;
+    using base_class::base_class;
+
+    stream_view() : base_class(gt::backend::sycl::get_queue()) {}
+    stream_view(const stream_view& other) : base_class(other.stream_) {}
+
+    stream_view& operator=(const stream_view& other)
+    {
+      this->~stream_view();
+      new (this) stream_view(other);
+      return *this;
+    }
+
+    bool is_default()
+    {
+      return this->stream_ == gt::backend::sycl::get_queue();
+    }
+
+    void synchronize() { stream_.wait(); }
+  };
 };
 
 namespace stream_interface
@@ -294,37 +319,17 @@ inline sycl_stream_t create<sycl_stream_t>()
 }
 
 template <>
-inline sycl_stream_t get_default<sycl_stream_t>()
-{
-  return gt::backend::sycl::get_queue();
-}
-
-template <>
 inline void destroy<sycl_stream_t>(sycl_stream_t q)
 {
   return gt::backend::sycl::delete_stream_queue(q);
-}
-
-template <>
-inline bool is_default<sycl_stream_t>(sycl_stream_t s)
-{
-  return s == gt::backend::sycl::get_queue();
-}
-
-template <>
-inline void synchronize<sycl_stream_t>(sycl_stream_t s)
-{
-  s.wait();
 }
 
 } // namespace stream_interface
 
 } // namespace backend
 
-using stream_view =
-  backend::stream_interface::stream_view_base<cl::sycl::queue&>;
-using stream =
-  backend::stream_interface::stream_base<cl::sycl::queue&, stream_view>;
+using stream = backend::stream_interface::stream_base<
+  cl::sycl::queue&, backend::backend_ops<gt::space::sycl>::stream_view>;
 
 } // namespace gt
 

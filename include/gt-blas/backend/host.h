@@ -21,8 +21,6 @@ namespace blas
 
 using index_t = int;
 
-using stream_t = dummy_stream;
-
 // ======================================================================
 // handle and stream management
 
