@@ -36,11 +36,11 @@ namespace device
 
 inline auto get_exception_handler()
 {
-  static auto exception_handler = [](cl::sycl::exception_list exceptions) {
+  static auto exception_handler = [](::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
       try {
         std::rethrow_exception(e);
-      } catch (cl::sycl::exception const& e) {
+      } catch (::sycl::exception const& e) {
         std::cerr << "Caught asynchronous SYCL exception:" << std::endl
                   << e.what() << std::endl;
         abort();
@@ -63,16 +63,16 @@ inline bool device_per_tile_enabled()
 
 // fallback if none of the backend specific methods succeed
 inline uint32_t get_unique_device_id_sycl(int device_index,
-                                          const cl::sycl::device& d)
+                                          const ::sycl::device& d)
 {
   // TODO: this will be unique, but is not useful for it's intended
   // purpose of varifying the MPI -> GPU mapping, since it would work
   // even if the runtime returned the same device multiple times.
-  return d.get_info<cl::sycl::info::device::vendor_id>() + device_index;
+  return d.get_info<::sycl::info::device::vendor_id>() + device_index;
 }
 
-template <cl::sycl::backend Backend>
-uint32_t get_unique_device_id(int device_index, const cl::sycl::device& d);
+template <::sycl::backend Backend>
+uint32_t get_unique_device_id(int device_index, const ::sycl::device& d);
 
 #ifdef GTENSOR_DEVICE_SYCL_OPENCL
 typedef struct _cl_device_pci_bus_info_khr
@@ -85,11 +85,11 @@ typedef struct _cl_device_pci_bus_info_khr
 #define CL_DEVICE_PCI_BUS_INFO_KHR 0x410F
 
 template <>
-inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
-  int device_index, const cl::sycl::device& d)
+inline uint32_t get_unique_device_id<::sycl::backend::opencl>(
+  int device_index, const ::sycl::device& d)
 {
   uint32_t unique_id = 0;
-  cl_device_id cl_dev = cl::sycl::get_native<cl::sycl::backend::opencl>(d);
+  cl_device_id cl_dev = ::sycl::get_native<::sycl::backend::opencl>(d);
   cl_device_pci_bus_info_khr pci_info;
   cl_int rval = clGetDeviceInfo(cl_dev, CL_DEVICE_PCI_BUS_INFO_KHR,
                                 sizeof(pci_info), &pci_info, NULL);
@@ -115,13 +115,13 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::opencl>(
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
 template <>
-inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
-  int device_index, const cl::sycl::device& d)
+inline uint32_t get_unique_device_id<::sycl::backend::ext_oneapi_level_zero>(
+  int device_index, const ::sycl::device& d)
 {
   uint32_t unique_id = 0;
 
   ze_device_handle_t ze_dev =
-    cl::sycl::get_native<cl::sycl::backend::ext_oneapi_level_zero>(d);
+    ::sycl::get_native<::sycl::backend::ext_oneapi_level_zero>(d);
   ze_device_properties_t ze_prop;
   zeDeviceGetProperties(ze_dev, &ze_prop);
 
@@ -165,21 +165,21 @@ inline uint32_t get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
 }
 #endif
 
-inline std::vector<cl::sycl::device> get_devices_with_numa_sub(
-  const cl::sycl::platform& p)
+inline std::vector<::sycl::device> get_devices_with_numa_sub(
+  const ::sycl::platform& p)
 {
-  std::vector<cl::sycl::device> result;
+  std::vector<::sycl::device> result;
   for (auto root_dev : p.get_devices()) {
     // Handle GPUs with multiple tiles, which can be partitioned based on numa
     // domain
     auto max_sub_devices =
-      root_dev.get_info<cl::sycl::info::device::partition_max_sub_devices>();
+      root_dev.get_info<::sycl::info::device::partition_max_sub_devices>();
     // NB: workaround bug in host backend, where max > 0 but it's not supported
     if (device_per_tile_enabled() && max_sub_devices > 0 &&
         (root_dev.is_gpu() || root_dev.is_cpu())) {
       auto sub_devices = root_dev.create_sub_devices<
-        cl::sycl::info::partition_property::partition_by_affinity_domain>(
-        cl::sycl::info::partition_affinity_domain::numa);
+        ::sycl::info::partition_property::partition_by_affinity_domain>(
+        ::sycl::info::partition_affinity_domain::numa);
       for (auto sub_dev : sub_devices) {
         result.push_back(sub_dev);
       }
@@ -198,7 +198,7 @@ public:
     // Get devices from default platform, which for Intel implementation
     // can be controlled with SYCL_DEVICE_FILTER env variable. This
     // allows flexible selection at runtime.
-    cl::sycl::platform p{cl::sycl::default_selector()};
+    ::sycl::platform p{::sycl::default_selector()};
 
     devices_ = get_devices_with_numa_sub(p);
 
@@ -206,7 +206,7 @@ public:
     // allocated on different queues with same device work as expected (similar
     // to CUDA). Note that l0 backend does not need this, but OpenCL does,
     // so more portable to do it this way.
-    context_ = cl::sycl::context(devices_, get_exception_handler());
+    context_ = ::sycl::context(devices_, get_exception_handler());
   }
 
   void valid_device_id_or_throw(int device_id)
@@ -216,36 +216,36 @@ public:
     }
   }
 
-  cl::sycl::queue& get_queue(int device_id)
+  ::sycl::queue& get_queue(int device_id)
   {
     valid_device_id_or_throw(device_id);
     if (default_queue_map_.count(device_id) == 0) {
-      default_queue_map_[device_id] = cl::sycl::queue{
-        context_, devices_[device_id], cl::sycl::property::queue::in_order()};
+      default_queue_map_[device_id] = ::sycl::queue{
+        context_, devices_[device_id], ::sycl::property::queue::in_order()};
     }
     return default_queue_map_[device_id];
   }
 
-  cl::sycl::queue& new_stream_queue(int device_id)
+  ::sycl::queue& new_stream_queue(int device_id)
   {
     valid_device_id_or_throw(device_id);
     stream_queue_map_[device_id].emplace_front(
-      context_, devices_[device_id], cl::sycl::property::queue::in_order());
+      context_, devices_[device_id], ::sycl::property::queue::in_order());
     return stream_queue_map_[device_id].front();
   }
 
-  cl::sycl::queue& new_stream_queue()
+  ::sycl::queue& new_stream_queue()
   {
     return new_stream_queue(current_device_id_);
   }
 
-  void delete_stream_queue(int device_id, cl::sycl::queue& q)
+  void delete_stream_queue(int device_id, ::sycl::queue& q)
   {
     valid_device_id_or_throw(device_id);
     stream_queue_map_[device_id].remove(q);
   }
 
-  void delete_stream_queue(cl::sycl::queue& q)
+  void delete_stream_queue(::sycl::queue& q)
   {
     delete_stream_queue(current_device_id_, q);
   }
@@ -261,19 +261,18 @@ public:
   uint32_t get_device_vendor_id(int device_id)
   {
     valid_device_id_or_throw(device_id);
-    const cl::sycl::device& sycl_dev = devices_[device_id];
-    const cl::sycl::platform& p = sycl_dev.get_platform();
-    std::string p_name = p.get_info<cl::sycl::info::platform::name>();
+    const ::sycl::device& sycl_dev = devices_[device_id];
+    const ::sycl::platform& p = sycl_dev.get_platform();
+    std::string p_name = p.get_info<::sycl::info::platform::name>();
     if (false) {
 #ifdef GTENSOR_DEVICE_SYCL_L0
     } else if (p_name.find("Level-Zero") != std::string::npos) {
-      return get_unique_device_id<cl::sycl::backend::ext_oneapi_level_zero>(
+      return get_unique_device_id<::sycl::backend::ext_oneapi_level_zero>(
         device_id, sycl_dev);
 #endif
 #ifdef GTENSOR_DEVICE_SYCL_OPENCL
     } else if (p_name.find("OpenCL") != std::string::npos) {
-      return get_unique_device_id<cl::sycl::backend::opencl>(device_id,
-                                                             sycl_dev);
+      return get_unique_device_id<::sycl::backend::opencl>(device_id, sycl_dev);
 #endif
     } else {
       return get_unique_device_id_sycl(device_id, sycl_dev);
@@ -292,19 +291,19 @@ public:
     return has_open_stream_queues(current_device_id_);
   }
 
-  cl::sycl::queue& get_queue() { return get_queue(current_device_id_); }
+  ::sycl::queue& get_queue() { return get_queue(current_device_id_); }
 
   bool is_host_backend()
   {
-    return (devices_[0].get_info<cl::sycl::info::device::device_type>() ==
-            cl::sycl::info::device_type::host);
+    return (devices_[0].get_info<::sycl::info::device::device_type>() ==
+            ::sycl::info::device_type::host);
   }
 
 private:
-  cl::sycl::context context_;
-  std::vector<cl::sycl::device> devices_;
-  std::unordered_map<int, cl::sycl::queue> default_queue_map_;
-  std::unordered_map<int, std::forward_list<cl::sycl::queue>> stream_queue_map_;
+  ::sycl::context context_;
+  std::vector<::sycl::device> devices_;
+  std::unordered_map<int, ::sycl::queue> default_queue_map_;
+  std::unordered_map<int, std::forward_list<::sycl::queue>> stream_queue_map_;
   int current_device_id_;
 };
 
@@ -317,36 +316,36 @@ inline SyclQueues& get_sycl_queues_instance()
 } // namespace device
 
 /*! Get the global singleton queue object used for all device operations.  */
-inline cl::sycl::queue& get_queue()
+inline ::sycl::queue& get_queue()
 {
   return device::get_sycl_queues_instance().get_queue();
 }
 
-inline cl::sycl::queue& get_queue(int device_id)
+inline ::sycl::queue& get_queue(int device_id)
 {
   return device::get_sycl_queues_instance().get_queue(device_id);
 }
 
 /*! Get a new queue different from the default, for use like alternate streams.
  */
-inline cl::sycl::queue& new_stream_queue()
+inline ::sycl::queue& new_stream_queue()
 {
   return device::get_sycl_queues_instance().new_stream_queue();
 }
 
-inline cl::sycl::queue& new_stream_queue(int device_id)
+inline ::sycl::queue& new_stream_queue(int device_id)
 {
   return device::get_sycl_queues_instance().new_stream_queue(device_id);
 }
 
 /*! Get a new queue different from the default, for use like alternate streams.
  */
-inline void delete_stream_queue(cl::sycl::queue& q)
+inline void delete_stream_queue(::sycl::queue& q)
 {
   device::get_sycl_queues_instance().delete_stream_queue(q);
 }
 
-inline void delete_stream_queue(int device_id, cl::sycl::queue& q)
+inline void delete_stream_queue(int device_id, ::sycl::queue& q)
 {
   device::get_sycl_queues_instance().delete_stream_queue(device_id, q);
 }

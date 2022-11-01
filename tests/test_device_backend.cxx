@@ -126,8 +126,8 @@ TEST(device_backend, get_memory_type)
 
 TEST(device_backend, sycl_new_stream_queue)
 {
-  cl::sycl::queue& q0 = gt::backend::sycl::get_queue();
-  cl::sycl::queue& q1 = gt::backend::sycl::new_stream_queue();
+  sycl::queue& q0 = gt::backend::sycl::get_queue();
+  sycl::queue& q1 = gt::backend::sycl::new_stream_queue();
 
   EXPECT_NE(q0, q1);
 

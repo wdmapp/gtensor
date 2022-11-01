@@ -18,7 +18,7 @@ using index_t = std::int64_t;
 // ======================================================================
 // handle and stream management
 
-class handle_sycl : public detail::handle_base<handle_sycl, cl::sycl::queue>
+class handle_sycl : public detail::handle_base<handle_sycl, sycl::queue>
 {
 public:
   handle_sycl() { handle_ = gt::backend::sycl::get_queue(); }
@@ -367,7 +367,7 @@ inline void gemm_batched(handle_t& h, int m, int n, int k, T alpha,
   sycl::span<const T*> sB{const_cast<const T**>(d_Barray), batchSize_size_t};
   sycl::span<T*> sC{d_Carray, batchSize_size_t};
 
-  cl::sycl::event gemm_batch_done;
+  sycl::event gemm_batch_done;
 
   gemm_batch_done = oneapi::mkl::blas::gemm_batch(
     q, strans, strans, sm, sn, sk, salpha, sA, slda, sB, sldb, sbeta, sC, sldc,

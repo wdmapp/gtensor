@@ -195,7 +195,7 @@ extern "C" void sycl_level_zero_mem_info(size_t* free, size_t* total)
 
   // Get level-zero device handle
   auto ze_dev =
-    cl::sycl::get_native<cl::sycl::backend::ext_oneapi_level_zero>(d);
+    sycl::get_native<sycl::backend::ext_oneapi_level_zero>(d);
 
   uint32_t n_mem_modules = 1;
   std::vector<zes_mem_handle_t> module_list(n_mem_modules);
