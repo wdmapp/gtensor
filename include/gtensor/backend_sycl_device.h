@@ -356,6 +356,39 @@ inline bool is_host_backend()
   return device::get_sycl_queues_instance().is_host_backend();
 }
 
+#ifdef GTENSOR_DEVICE_SYCL_L0
+
+inline void mem_info(size_t* free, size_t* total)
+{
+  zes_mem_state_t memory_props{
+    ZES_STRUCTURE_TYPE_MEM_PROPERTIES,
+  };
+
+  auto q = get_queue();
+  auto d = q.get_device();
+
+  // Get level-zero device handle
+  auto ze_dev = ::sycl::get_native<::sycl::backend::ext_oneapi_level_zero>(d);
+
+  uint32_t n_mem_modules = 1;
+  std::vector<zes_mem_handle_t> module_list(n_mem_modules);
+  zesDeviceEnumMemoryModules(ze_dev, &n_mem_modules, module_list.data());
+
+  zesMemoryGetState(module_list[0], &memory_props);
+  *total = memory_props.size;
+  *free = memory_props.free;
+}
+
+#else // no GTENSOR_DEVICE_SYCL_L0
+
+inline void mem_info(size_t* free, size_t* total)
+{
+  *free = 0;
+  *total = 0;
+}
+
+#endif // GTENSOR_DEVICE_SYCL_L0
+
 } // namespace sycl
 
 } // namespace backend

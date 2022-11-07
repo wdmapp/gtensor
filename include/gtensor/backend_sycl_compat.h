@@ -35,6 +35,6 @@
 #include "sycl/backend/opencl.hpp"
 #endif
 
-#endif // SYCL VERSIOn
+#endif // __INTEL_CLANG_COMPILER
 
 #endif // GTENSOR_BACKEND_SYCL_COMPAT_H
