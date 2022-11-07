@@ -1,7 +1,7 @@
 #ifndef GTENSOR_BLAS_HIP_H
 #define GTENSOR_BLAS_HIP_H
 
-#include "sycl/sycl.hpp"
+#include "gtensor/backend_sycl.h"
 #include "oneapi/mkl.hpp"
 
 namespace gt

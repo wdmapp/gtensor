@@ -7,18 +7,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include <sycl/sycl.hpp>
-
-#ifdef GTENSOR_DEVICE_SYCL_L0
-#include "level_zero/ze_api.h"
-#include "level_zero/zes_api.h"
-
-#include "sycl/ext/oneapi/backend/level_zero.hpp"
-#endif
-
-#ifdef GTENSOR_DEVICE_SYCL_OPENCL
-#include "sycl/backend/opencl.hpp"
-#endif
+#include "backend_sycl_compat.h"
 
 // ======================================================================
 // gt::backend::sycl::device

@@ -5,10 +5,8 @@
 #include <numeric>
 #include <stdexcept>
 
-#include <sycl/sycl.hpp>
-#include <oneapi/mkl.hpp>
-
 #include "gtensor/backend_sycl.h"
+#include <oneapi/mkl.hpp>
 
 // Should be possible to use MKL_LONG, but for somereason it is not defined
 // correctly even when MKL_ILP64 is set correctly.
