@@ -36,8 +36,6 @@
 
 #include "gtensor/gtensor.h"
 
-extern "C" void sycl_level_zero_mem_info(size_t* free, size_t* total);
-
 extern "C" void gpuMemGetInfo(size_t* free, size_t* total)
 {
 #ifdef GTENSOR_DEVICE_CUDA
@@ -46,7 +44,7 @@ extern "C" void gpuMemGetInfo(size_t* free, size_t* total)
   gtGpuCheck(hipMemGetInfo(free, total));
 #elif defined(GTENSOR_DEVICE_SYCL) && defined(GTENSOR_DEVICE_SYCL_L0)
   // Note: must set ZES_ENABLE_SYSMAN=1 in env for this to work
-  sycl_level_zero_mem_info(free, total);
+  gt::backend::sycl::mem_info(free, total);
 #else
   // fallback so compiles and not divide by zero
   *total = 1;
@@ -181,32 +179,6 @@ inline sycl::queue& sycl_get_queue(void* stream, int device_id)
     return *(static_cast<sycl::queue*>(stream));
   }
 }
-
-#ifdef GTENSOR_DEVICE_SYCL_L0
-
-extern "C" void sycl_level_zero_mem_info(size_t* free, size_t* total)
-{
-  zes_mem_state_t memory_props{
-    ZES_STRUCTURE_TYPE_MEM_PROPERTIES,
-  };
-
-  auto q = sycl_get_queue(nullptr);
-  auto d = q.get_device();
-
-  // Get level-zero device handle
-  auto ze_dev =
-    cl::sycl::get_native<cl::sycl::backend::ext_oneapi_level_zero>(d);
-
-  uint32_t n_mem_modules = 1;
-  std::vector<zes_mem_handle_t> module_list(n_mem_modules);
-  zesDeviceEnumMemoryModules(ze_dev, &n_mem_modules, module_list.data());
-
-  zesMemoryGetState(module_list[0], &memory_props);
-  *total = memory_props.size;
-  *free = memory_props.free;
-}
-
-#endif // GTENSOR_DEVICE_SYCL_L0
 
 extern "C" int gpuStreamSynchronize(sycl::queue* stream)
 {

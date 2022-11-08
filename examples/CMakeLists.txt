@@ -71,4 +71,8 @@ endif()
 if (GTENSOR_ENABLE_FORTRAN)
   add_executable(test_fortran src/test_fortran.F90 src/c_test_fortran.cxx)
   target_link_libraries(test_fortran PRIVATE gtensor::fgtensor)
+  if (GTENSOR_DEVICE_SYCL_INTEL)
+    target_link_options(test_fortran PRIVATE -Wl,--defsym,main=MAIN__ -lifcore
+                        -limf -fsycl-device-lib=all)
+  endif()
 endif()

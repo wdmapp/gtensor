@@ -7,19 +7,6 @@
 #include <iostream>
 #include <unordered_map>
 
-#include <CL/sycl.hpp>
-
-#ifdef GTENSOR_DEVICE_SYCL_L0
-#include "level_zero/ze_api.h"
-#include "level_zero/zes_api.h"
-
-#include "CL/sycl/backend/level_zero.hpp"
-#endif
-
-#ifdef GTENSOR_DEVICE_SYCL_OPENCL
-#include "CL/sycl/backend/opencl.hpp"
-#endif
-
 #include "backend_common.h"
 
 #include "gtensor/backend_sycl_device.h"
@@ -72,13 +59,13 @@ struct gallocator<gt::space::sycl>
   template <typename T>
   static T* allocate(size_type n)
   {
-    return cl::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
+    return ::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
   }
 
   template <typename T>
   static void deallocate(T* p)
   {
-    cl::sycl::free(p, gt::backend::sycl::get_queue());
+    ::sycl::free(p, gt::backend::sycl::get_queue());
   }
 };
 
@@ -90,9 +77,9 @@ struct gallocator<gt::space::sycl_managed>
   {
     auto mtype = gt::backend::get_managed_memory_type();
     if (mtype == gt::backend::managed_memory_type::managed) {
-      return cl::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
+      return ::sycl::malloc_shared<T>(n, gt::backend::sycl::get_queue());
     } else if (mtype == gt::backend::managed_memory_type::device) {
-      return cl::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
+      return ::sycl::malloc_device<T>(n, gt::backend::sycl::get_queue());
     } else {
       throw std::runtime_error("unsupported managed memory type for backend");
     }
@@ -101,7 +88,7 @@ struct gallocator<gt::space::sycl_managed>
   template <typename T>
   static void deallocate(T* p)
   {
-    cl::sycl::free(p, gt::backend::sycl::get_queue());
+    ::sycl::free(p, gt::backend::sycl::get_queue());
   }
 };
 
@@ -111,13 +98,13 @@ struct gallocator<gt::space::sycl_host>
   template <typename T>
   static T* allocate(size_t n)
   {
-    return cl::sycl::malloc_host<T>(n, gt::backend::sycl::get_queue());
+    return ::sycl::malloc_host<T>(n, gt::backend::sycl::get_queue());
   }
 
   template <typename T>
   static void deallocate(T* p)
   {
-    cl::sycl::free(p, gt::backend::sycl::get_queue());
+    ::sycl::free(p, gt::backend::sycl::get_queue());
   }
 };
 
@@ -129,7 +116,7 @@ namespace copy_impl
 template <typename InputPtr, typename OutputPtr>
 inline void sycl_copy_n(InputPtr in, size_type count, OutputPtr out)
 {
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
+  ::sycl::queue& q = gt::backend::sycl::get_queue();
   auto in_raw = gt::raw_pointer_cast(in);
   auto out_raw = gt::raw_pointer_cast(out);
 
@@ -185,8 +172,8 @@ template <typename Ptr, typename T>
 inline void fill(gt::space::sycl tag, Ptr first, Ptr last, const T& value)
 {
   using element_type = typename gt::pointer_traits<Ptr>::element_type;
-  cl::sycl::queue& q = gt::backend::sycl::get_queue();
-  cl::sycl::event e;
+  ::sycl::queue& q = gt::backend::sycl::get_queue();
+  ::sycl::event e;
   auto first_raw = gt::raw_pointer_cast(first);
   if (element_type(value) == element_type()) {
     e = q.memset(first_raw, 0, (last - first) * sizeof(element_type));
@@ -281,11 +268,10 @@ public:
     q.memcpy(dst, src, sizeof(T) * count);
   }
 
-  class stream_view
-    : public stream_interface::stream_view_base<cl::sycl::queue&>
+  class stream_view : public stream_interface::stream_view_base<::sycl::queue&>
   {
   public:
-    using base_class = stream_view_base<cl::sycl::queue&>;
+    using base_class = stream_view_base<::sycl::queue&>;
     using base_class::base_class;
 
     stream_view() : base_class(gt::backend::sycl::get_queue()) {}
@@ -310,7 +296,7 @@ public:
 namespace stream_interface
 {
 
-using sycl_stream_t = cl::sycl::queue&;
+using sycl_stream_t = ::sycl::queue&;
 
 template <>
 inline sycl_stream_t create<sycl_stream_t>()
@@ -329,7 +315,7 @@ inline void destroy<sycl_stream_t>(sycl_stream_t q)
 } // namespace backend
 
 using stream = backend::stream_interface::stream_base<
-  cl::sycl::queue&, backend::backend_ops<gt::space::sycl>::stream_view>;
+  ::sycl::queue&, backend::backend_ops<gt::space::sycl>::stream_view>;
 
 } // namespace gt
 
