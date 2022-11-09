@@ -36,6 +36,8 @@ using cufftReal = hipfftReal;
 #define cufftExecR2C hipfftExecR2C
 #define cufftExecC2R hipfftExecC2R
 
+#define cufftSetStream hipfftSetStream
+
 #include "gt-fft/backend/cuda.h"
 
 #endif // GTENSOR_FFT_HIP_H

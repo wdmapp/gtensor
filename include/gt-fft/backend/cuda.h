@@ -123,7 +123,8 @@ template <gt::fft::Domain D, typename R>
 class FFTPlanManyCUDA
 {
 public:
-  FFTPlanManyCUDA(std::vector<int> lengths, int batch_size = 1)
+  FFTPlanManyCUDA(std::vector<int> lengths, int batch_size = 1,
+                  gt::stream_view stream = gt::stream_view{})
     : is_valid_(true)
   {
     int rank = lengths.size();
@@ -135,14 +136,15 @@ public:
     } else {
       odist = idist;
     }
-    init(lengths, 1, idist, 1, odist, batch_size);
+    init(lengths, 1, idist, 1, odist, batch_size, stream);
   }
 
   FFTPlanManyCUDA(std::vector<int> lengths, int istride, int idist, int ostride,
-                  int odist, int batch_size = 1)
+                  int odist, int batch_size = 1,
+                  gt::stream_view stream = gt::stream_view{})
     : is_valid_(true)
   {
-    init(lengths, istride, idist, ostride, odist, batch_size);
+    init(lengths, istride, idist, ostride, odist, batch_size, stream);
   }
 
   // move only
@@ -214,7 +216,7 @@ public:
 
 private:
   void init(std::vector<int> lengths, int istride, int idist, int ostride,
-            int odist, int batch_size)
+            int odist, int batch_size, gt::stream_view stream)
   {
     int rank = lengths.size();
     int* n = lengths.data();
@@ -230,13 +232,16 @@ private:
     }
     int* nfreq = freq_lengths.data();
 
+    auto cuda_stream = stream.get_backend_stream();
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto type_inverse = detail::fft_config<D, R>::type_inverse;
     gtFFTCheck(cufftPlanMany(&plan_forward_, rank, n, n, istride, idist, nfreq,
                              ostride, odist, type_forward, batch_size));
+    gtFFTCheck(cufftSetStream(plan_forward_, cuda_stream));
     if (is_layout_asymmetric_) {
       gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, n, nfreq, ostride, odist,
                                n, istride, idist, type_inverse, batch_size));
+      gtFFTCheck(cufftSetStream(plan_inverse_, cuda_stream));
     }
   }
 
