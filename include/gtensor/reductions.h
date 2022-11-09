@@ -4,7 +4,9 @@
 #include "gtensor.h"
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+#include <thrust/extrema.h>
 #include <thrust/reduce.h>
+#include <thrust/transform_reduce.h>
 #endif
 
 #include <algorithm>
