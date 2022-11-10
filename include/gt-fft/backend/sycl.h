@@ -76,15 +76,17 @@ class FFTPlanManySYCL
   using Desc = typename detail::fft_config<D, R>::Desc;
 
 public:
-  FFTPlanManySYCL(std::vector<int> lengths, int batch_size = 1)
+  FFTPlanManySYCL(std::vector<int> lengths, int batch_size = 1,
+                  gt::stream_view stream = gt::stream_view{})
   {
-    init(lengths, 1, 0, 1, 0, batch_size);
+    init(lengths, 1, 0, 1, 0, batch_size, stream);
   }
 
   FFTPlanManySYCL(std::vector<int> lengths, int istride, int idist, int ostride,
-                  int odist, int batch_size = 1)
+                  int odist, int batch_size = 1,
+                  gt::stream_view stream = gt::stream_view{})
   {
-    init(lengths, istride, idist, ostride, odist, batch_size);
+    init(lengths, istride, idist, ostride, odist, batch_size, stream);
   }
 
   // move only
@@ -129,8 +131,10 @@ public:
 
 private:
   void init(std::vector<int> lengths_, int istride, int idist, int ostride,
-            int odist, int batch_size = 1)
+            int odist, int batch_size, gt::stream_view stream)
   {
+    auto& q = stream.get_backend_stream();
+
     int rank = lengths_.size();
 
     std::vector<MKL_FFT_LONG> lengths(rank);
@@ -230,7 +234,7 @@ private:
       plan_forward_->set_value(
         oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
         DFTI_COMPLEX_COMPLEX);
-      plan_forward_->commit(gt::backend::sycl::get_queue());
+      plan_forward_->commit(q);
 
       if (is_layout_asymmetric_) {
         plan_inverse_->set_value(
@@ -248,7 +252,7 @@ private:
         plan_inverse_->set_value(
           oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
           DFTI_COMPLEX_COMPLEX);
-        plan_inverse_->commit(gt::backend::sycl::get_queue());
+        plan_inverse_->commit(q);
       }
     } catch (std::exception const& e) {
       std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
