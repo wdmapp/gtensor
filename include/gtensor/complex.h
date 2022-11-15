@@ -10,6 +10,7 @@
 #include <complex>
 #endif
 
+#include "gtensor/device_ptr.h"
 #include "gtensor/meta.h"
 
 namespace gt
@@ -95,6 +96,80 @@ struct container_complex_subtype
 
 template <typename T>
 using container_complex_subtype_t = typename container_complex_subtype<T>::type;
+
+#ifdef GTENSOR_DEVICE_SYCL
+
+// oneMKL and possibly other APIs taking std::complex pointers do not work
+// well with sycl::ext::cplx::complex yet. As a stopgap, this provides
+// routines for casting between the two types.
+
+namespace complex_cast
+{
+
+// map gt::complex to std::complex, leave other types unchanged
+template <typename T>
+inline auto std_cast(T* p)
+{
+  return p;
+}
+
+template <typename T>
+inline auto std_cast(T** p)
+{
+  return p;
+}
+
+template <typename T>
+inline auto std_cast(gt::backend::device_ptr<T> p)
+{
+  return p.get();
+}
+
+template <typename T>
+inline auto std_cast(gt::complex<T>* p)
+{
+  return reinterpret_cast<std::complex<T>*>(p);
+}
+
+template <typename T>
+inline auto std_cast(const gt::complex<T>* p)
+{
+  return reinterpret_cast<const std::complex<T>*>(p);
+}
+
+template <typename T>
+inline auto std_cast(gt::complex<T>** p)
+{
+  return reinterpret_cast<std::complex<T>**>(p);
+}
+
+template <typename T>
+inline auto std_cast(const gt::complex<T>** p)
+{
+  return reinterpret_cast<const std::complex<T>**>(p);
+}
+
+template <typename T>
+inline auto std_cast(gt::backend::device_ptr<gt::complex<T>> p)
+{
+  return reinterpret_cast<std::complex<T>*>(p.get());
+}
+
+template <typename T>
+struct make_std
+{
+  using type = T;
+};
+
+template <typename R>
+struct make_std<gt::complex<R>>
+{
+  using type = std::complex<R>;
+};
+
+} // namespace complex_cast
+
+#endif // GTENSOR_DEVICE_SYCL
 
 } // namespace gt
 
