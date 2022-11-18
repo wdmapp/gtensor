@@ -244,14 +244,14 @@ template<class T> complex<T> tanh (const complex<T>&);
 
 // clang-format on
 
-#define _SYCL_EXT_CPLX_BEGIN_NAMESPACE_STD namespace sycl::ext::cplx {
+#define _SYCL_EXT_CPLX_BEGIN_NAMESPACE_STD namespace gt::sycl_cplx {
 #define _SYCL_EXT_CPLX_END_NAMESPACE_STD }
 #define _SYCL_EXT_CPLX_INLINE_VISIBILITY                                       \
   inline __attribute__((__visibility__("hidden"), __always_inline__))
 
 #include <complex>
 #include <sstream> // for std::basic_ostringstream
-#include "backend_sycl_compat.h" // changed from upstream for old oneAPI
+#include "backend_sycl_compat.h"
 #include <type_traits>
 
 _SYCL_EXT_CPLX_BEGIN_NAMESPACE_STD
@@ -1204,7 +1204,7 @@ SYCL_EXTERNAL
     _SYCL_EXT_CPLX_INLINE_VISIBILITY complex<typename __promote<_Tp, _Up>::type>
     pow(const complex<_Tp> &__x, const complex<_Up> &__y) {
   typedef complex<typename __promote<_Tp, _Up>::type> result_type;
-  return sycl::ext::cplx::pow(result_type(__x), result_type(__y));
+  return pow(result_type(__x), result_type(__y));
 }
 
 template <class _Tp, class _Up,
@@ -1214,7 +1214,7 @@ SYCL_EXTERNAL _SYCL_EXT_CPLX_INLINE_VISIBILITY
                             complex<typename __promote<_Tp, _Up>::type>>::type
     pow(const complex<_Tp> &__x, const _Up &__y) {
   typedef complex<typename __promote<_Tp, _Up>::type> result_type;
-  return sycl::ext::cplx::pow(result_type(__x), result_type(__y));
+  return pow(result_type(__x), result_type(__y));
 }
 
 template <class _Tp, class _Up,
@@ -1224,7 +1224,7 @@ SYCL_EXTERNAL _SYCL_EXT_CPLX_INLINE_VISIBILITY
                             complex<typename __promote<_Tp, _Up>::type>>::type
     pow(const _Tp &__x, const complex<_Up> &__y) {
   typedef complex<typename __promote<_Tp, _Up>::type> result_type;
-  return sycl::ext::cplx::pow(result_type(__x), result_type(__y));
+  return pow(result_type(__x), result_type(__y));
 }
 
 // __sqr, computes pow(x, 2)

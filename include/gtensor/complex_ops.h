@@ -59,10 +59,10 @@ GT_INLINE complex<T> exp(thrust::device_reference<const thrust::complex<T>> a)
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 
-using ::sycl::ext::cplx::abs;
-using ::sycl::ext::cplx::conj;
-using ::sycl::ext::cplx::exp;
-using ::sycl::ext::cplx::norm;
+using gt::sycl_cplx::abs;
+using gt::sycl_cplx::conj;
+using gt::sycl_cplx::exp;
+using gt::sycl_cplx::norm;
 
 // real version from stdlib
 using std::abs;
