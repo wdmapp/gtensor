@@ -5,6 +5,7 @@
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 #include <thrust/complex.h>
 #elif defined(GTENSOR_DEVICE_SYCL)
+#define _SYCL_CPLX_NAMESPACE gt::sycl_cplx
 #include "sycl_ext_complex.hpp"
 #else
 #include <complex>
