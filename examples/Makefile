@@ -14,7 +14,7 @@ GTENSOR_DEVICE_DEFINE := GTENSOR_DEVICE_$(shell echo $(GTENSOR_DEVICE) | tr a-z 
 GTENSOR_DEFINES = -D$(GTENSOR_DEVICE_DEFINE)
 GTENSOR_INCLUDES = -I$(GTENSOR_DIR)/include
 GTENSOR_LIBS =
-GTENSOR_OPTIONS = -std=c++14 -O3
+GTENSOR_OPTIONS = -std=c++14 -O2
 ifeq ($(GTENSOR_DEVICE),cuda)
   GTENSOR_CXX ?= nvcc
   GTENSOR_OPTIONS += -x cu --expt-extended-lambda --expt-relaxed-constexpr
@@ -35,11 +35,7 @@ else ifeq ($(GTENSOR_DEVICE),hip)
 else ifeq ($(GTENSOR_DEVICE),sycl)
   ONEAPI_PATH ?= /opt/intel/oneapi
   GTENSOR_CXX ?= $(ONEAPI_PATH)/compiler/latest/linux/bin/dpcpp
-  GTENSOR_OPTIONS += -fsycl
-
-  GTENSOR_DEVICE_SYCL_SELECTOR ?= gpu
-  GTENSOR_DEVICE_SYCL_SELECTOR_DEFINE := GTENSOR_DEVICE_SYCL_$(shell echo $(GTENSOR_DEVICE_SYCL_SELECTOR) | tr a-z A-Z)
-  GTENSOR_DEFINES += -D$(GTENSOR_DEVICE_SYCL_SELECTOR_DEFINE)
+  GTENSOR_OPTIONS = -fsycl -std=c++17 -O2
   # Note: SYCL doesn't support assert in device code
   GTENSOR_DEFINES += -DGTENSOR_HAVE_DEVICE -DNDEBUG
 else

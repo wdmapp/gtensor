@@ -2,6 +2,8 @@
 
 #include <gtensor/gtensor.h>
 
+#include "test_debug.h"
+
 TEST(complex, complex_ops)
 {
   using T = gt::complex<double>;
@@ -396,5 +398,56 @@ TEST(complex, device_exp)
 }
 
 #endif // CUDA or HIP
+
+#ifdef GTENSOR_DEVICE_SYCL
+
+TEST(complex, sycl_std_cast)
+{
+  using namespace gt::complex_cast;
+
+  gt::complex<double>* a_complex_double_p;
+  auto a_casted = std_cast(a_complex_double_p);
+  GT_DEBUG_TYPE(a_casted);
+  EXPECT_TRUE((std::is_same<decltype(a_casted), std::complex<double>*>::value));
+
+  double* b_double_p;
+  auto b_casted = std_cast(b_double_p);
+  GT_DEBUG_TYPE(b_casted);
+  EXPECT_TRUE((std::is_same<decltype(b_casted), double*>::value));
+
+  gt::backend::device_ptr<gt::complex<double>> c_complex_double_dp;
+  auto c_casted = std_cast(c_complex_double_dp);
+  GT_DEBUG_TYPE(c_casted);
+  EXPECT_TRUE((std::is_same<decltype(c_casted), std::complex<double>*>::value));
+
+  gt::complex<double>** d_complex_double_pp;
+  auto d_casted = std_cast(d_complex_double_pp);
+  GT_DEBUG_TYPE(d_casted);
+  EXPECT_TRUE(
+    (std::is_same<decltype(d_casted), std::complex<double>**>::value));
+
+  const gt::complex<double>* e_complex_double_p_const;
+  auto e_casted = std_cast(e_complex_double_p_const);
+  GT_DEBUG_TYPE(e_casted);
+  EXPECT_TRUE(
+    (std::is_same<decltype(e_casted), const std::complex<double>*>::value));
+}
+
+TEST(complex, sycl_make_std)
+{
+  using namespace gt::complex_cast;
+
+  using T1 = gt::complex<double>;
+  using T1std = typename make_std<T1>::type;
+  GT_DEBUG_TYPE_NAME(T1std);
+  EXPECT_TRUE((std::is_same<T1std, std::complex<double>>::value));
+
+  using T2 = float;
+  using T2std = typename make_std<float>::type;
+  GT_DEBUG_TYPE_NAME(T2std);
+  EXPECT_TRUE((std::is_same<T2std, float>::value));
+}
+
+#endif // GTENSOR_DEVICE_SYCL
 
 #endif

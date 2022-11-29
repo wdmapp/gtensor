@@ -57,7 +57,18 @@ GT_INLINE complex<T> exp(thrust::device_reference<const thrust::complex<T>> a)
   return thrust::exp(thrust::raw_reference_cast(a));
 }
 
-#else // not CUDA and GTENSOR_USE_THRUST not defined
+#elif defined(GTENSOR_DEVICE_SYCL)
+
+using gt::sycl_cplx::abs;
+using gt::sycl_cplx::conj;
+using gt::sycl_cplx::exp;
+using gt::sycl_cplx::norm;
+
+// real version from stdlib
+using std::abs;
+using std::exp;
+
+#else // host, use std lib
 
 template <typename T>
 GT_INLINE T norm(const complex<T>& a)

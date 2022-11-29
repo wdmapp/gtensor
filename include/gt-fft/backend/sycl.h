@@ -6,6 +6,8 @@
 #include <stdexcept>
 
 #include "gtensor/backend_sycl.h"
+#include "gtensor/complex.h"
+
 #include <oneapi/mkl.hpp>
 
 // Should be possible to use MKL_LONG, but for somereason it is not defined
@@ -31,8 +33,8 @@ struct fft_config<gt::fft::Domain::COMPLEX, double>
                                             oneapi::mkl::dft::domain::COMPLEX>;
   using Tin = gt::complex<double>;
   using Tout = gt::complex<double>;
-  using Bin = gt::complex<double>;
-  using Bout = gt::complex<double>;
+  using Bin = std::complex<double>;
+  using Bout = std::complex<double>;
 };
 
 template <>
@@ -42,8 +44,8 @@ struct fft_config<gt::fft::Domain::COMPLEX, float>
                                             oneapi::mkl::dft::domain::COMPLEX>;
   using Tin = gt::complex<float>;
   using Tout = gt::complex<float>;
-  using Bin = gt::complex<float>;
-  using Bout = gt::complex<float>;
+  using Bin = std::complex<float>;
+  using Bout = std::complex<float>;
 };
 
 template <>
