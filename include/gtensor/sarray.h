@@ -64,6 +64,41 @@ private:
 template <typename T, std::size_t N>
 inline std::ostream& operator<<(std::ostream& os, const sarray<T, N>& arr);
 
+// zero length array is UB, specialize the 0 dim case used by gscalar
+template <typename T>
+class sarray<T, 0>
+{
+public:
+  constexpr static std::size_t dimension = 0;
+
+  sarray() = default;
+
+  // all zero dim sarray's are equal, and not equal to nonzero dim
+  template <typename O>
+  bool operator==(const O& o) const
+  {
+    return O::dimension == 0;
+  }
+  template <typename O>
+  bool operator!=(const O& o) const
+  {
+    return O::dimension != 0;
+  }
+
+  GT_INLINE constexpr static std::size_t size() { return 0; }
+
+  GT_INLINE const T* data() const { return nullptr; }
+  GT_INLINE T* data() { return nullptr; }
+
+  GT_INLINE const T& operator[](T i) const { return data_[0]; }
+
+  GT_INLINE const T* begin() const { return nullptr; }
+  GT_INLINE const T* end() const { return nullptr; }
+
+private:
+  const T data_[1] = {0};
+};
+
 // ======================================================================
 // sarray implementation
 

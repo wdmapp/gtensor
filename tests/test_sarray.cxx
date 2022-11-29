@@ -141,6 +141,19 @@ TEST(sarray, host_launch_assign)
   test_launch_assign<gt::space::host>();
 }
 
+TEST(sarray, zero_dim)
+{
+  gt::sarray<int, 0> a{};
+  gt::sarray<int, 0> b{};
+  gt::sarray<int, 1> c{0};
+
+  EXPECT_EQ(a, b);
+  EXPECT_NE(a, c);
+  EXPECT_NE(b, c);
+
+  EXPECT_EQ(gt::to_string(a), "{}");
+}
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(sarray, device_launch_insert)
