@@ -90,13 +90,13 @@ public:
   GT_INLINE const T* data() const { return nullptr; }
   GT_INLINE T* data() { return nullptr; }
 
-  GT_INLINE const T& operator[](T i) const { return data_[0]; }
+  GT_INLINE const T& operator[](T i) const
+  {
+    gtGpuAssert(false, "zero length sarray does not support element access");
+  }
 
   GT_INLINE const T* begin() const { return nullptr; }
   GT_INLINE const T* end() const { return nullptr; }
-
-private:
-  const T data_[1] = {0};
 };
 
 // ======================================================================
