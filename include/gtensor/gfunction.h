@@ -104,7 +104,13 @@ using space_t = typename detail::space_type<S...>::type;
 template <typename S, typename S2>
 GT_INLINE void broadcast_shape(S& to, const S2& from)
 {
-  // FIXME, rev it
+  if (from.size() == 0) {
+    // broadcast from scalar is always allowed
+    return;
+  }
+  if (to.size() == 0) {
+    gtGpuAssert(false, "cannot broadcast to scalar from non-scalar");
+  }
   auto end_from = from.size() - 1;
   auto end_to = to.size() - 1;
   for (int i = 0; i < from.size(); i++) {
