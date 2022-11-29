@@ -38,10 +38,10 @@ jobs:
       run: cmake --build build-tests-${{ matrix.cxx }} -t test
 
   tests-cpu-cxx20:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        cxx: [ 'g++-10', 'clang++-11' ]
+        cxx: [ 'g++-12', 'clang++-14' ]
     name: tests-cpu-cxx20-${{ matrix.cxx }}
 
     steps:
