@@ -49,8 +49,8 @@ public:
   GT_INLINE const T* data() const { return data_; }
   GT_INLINE T* data() { return data_; }
 
-  GT_INLINE const T& operator[](T i) const;
-  GT_INLINE T& operator[](T i);
+  GT_INLINE const T& operator[](std::size_t i) const;
+  GT_INLINE T& operator[](std::size_t i);
 
   GT_INLINE const T* begin() const;
   GT_INLINE const T* end() const;
@@ -144,12 +144,12 @@ GT_INLINE constexpr std::size_t sarray<T, N>::size()
 }
 
 template <typename T, std::size_t N>
-GT_INLINE const T& sarray<T, N>::operator[](T i) const
+GT_INLINE const T& sarray<T, N>::operator[](std::size_t i) const
 {
   return data_[i];
 }
 template <typename T, std::size_t N>
-GT_INLINE T& sarray<T, N>::operator[](T i)
+GT_INLINE T& sarray<T, N>::operator[](std::size_t i)
 {
   return data_[i];
 }
