@@ -231,7 +231,7 @@ TEST(gview, newaxis_2d)
 
   auto b = a.view(gt::all, gt::all, gt::newaxis);
 
-  EXPECT_EQ(b.shape(), gt::shape(a.shape(0), b.shape(0), 1));
+  EXPECT_EQ(b.shape(), gt::shape(a.shape(0), b.shape(1), 1));
 
   GT_DEBUG_TYPE(b);
 

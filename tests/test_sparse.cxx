@@ -177,17 +177,55 @@ TEST(sparse, csr_matrix_host_s)
   test_csr_matrix<float, gt::space::host>();
 }
 
-TEST(sparse, csr_matrix_device_s)
-{
-  test_csr_matrix<float, gt::space::device>();
-}
-
 TEST(sparse, csr_matrix_host_c)
 {
   test_csr_matrix<gt::complex<float>, gt::space::host>();
 }
 
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(sparse, csr_matrix_device_s)
+{
+  test_csr_matrix<float, gt::space::device>();
+}
+
 TEST(sparse, csr_matrix_device_c)
 {
   test_csr_matrix<gt::complex<float>, gt::space::device>();
+}
+
+#endif
+
+TEST(sparse, csr_matrix_function)
+{
+  gt::gtensor<double, 2> a{
+    {2, -1, 0, 0}, {-1, 2, -1, 0}, {0, -1, 2, -1}, {0, 0, -1, 2}};
+  gt::sparse::csr_matrix<double, gt::space::host> s_a(a);
+
+  auto b = s_a * 2;
+  EXPECT_EQ(b.shape(), a.shape());
+
+  GT_DEBUG_TYPE(b);
+
+  auto beval = gt::eval(b);
+
+  GT_DEBUG_TYPE(beval);
+
+  GT_EXPECT_EQ(beval, (2 * a));
+}
+
+TEST(sparse, csr_matrix_view)
+{
+  gt::gtensor<double, 2> a{
+    {2, -1, 0, 0}, {-1, 2, -1, 0}, {0, -1, 2, -1}, {0, 0, -1, 2}};
+  gt::sparse::csr_matrix<double, gt::space::host> s_a(a);
+
+  auto s_aview = gt::view(s_a, gt::all, gt::slice(0, 2));
+
+  GT_DEBUG_TYPE(s_aview);
+  GT_EXPECT_EQ(s_aview, a.view(gt::all, gt::slice(0, 2)));
+
+  auto s_aview_eval = gt::eval(s_aview);
+  GT_DEBUG_TYPE(s_aview_eval);
+  EXPECT_EQ(s_aview_eval.shape(), gt::shape(4, 2));
 }

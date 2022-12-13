@@ -91,7 +91,7 @@ gt::gtensor<int, 1> batch_nnz_offsets(DataArray& d_a_batches, int nbatches)
 } // namespace detail
 
 template <typename T, typename S>
-class csr_matrix_span
+class csr_matrix_span : public expression<csr_matrix_span<T, S>>
 {
 public:
   using value_type = T;
@@ -100,6 +100,7 @@ public:
   using const_pointer = typename std::add_const<pointer>::type;
   using reference = typename std::add_lvalue_reference<value_type>::type;
   using const_reference = typename std::add_const<reference>::type;
+  using shape_type = gt::shape_type<2>;
 
   csr_matrix_span(gt::shape_type<2> shape, int nnz,
                   gt::gtensor_span<T, 1, S> values,
@@ -111,6 +112,8 @@ public:
       col_ind_(col_ind),
       row_ptr_(row_ptr)
   {}
+
+  constexpr static size_type dimension() { return 2; }
 
   GT_INLINE reference operator[](std::size_t idx) const { return values_(idx); }
 
@@ -143,16 +146,14 @@ public:
   GT_INLINE int col_ind(std::size_t i) const { return col_ind_(i); }
 
   GT_INLINE int nnz() const { return nnz_; }
+  GT_INLINE auto size() const { return calc_size(shape_); }
   GT_INLINE auto shape() const { return shape_; }
   GT_INLINE auto shape(int i) const { return shape_[i]; }
 
-  auto to_kernel()
-  {
-    return csr_matrix_span<T, S>(shape_, nnz_, values_, col_ind_, row_ptr_);
-  }
+  inline auto to_kernel() const { return *this; }
 
 private:
-  gt::shape_type<2> shape_;
+  shape_type shape_;
   int nnz_;
   gt::gtensor_span<value_type, 1, S> values_;
   gt::gtensor_span<int, 1, S> row_ptr_;
@@ -160,7 +161,7 @@ private:
 };
 
 template <typename T, typename S>
-class csr_matrix
+class csr_matrix : public expression<csr_matrix<T, S>>
 {
 public:
   using value_type = T;
@@ -169,6 +170,10 @@ public:
   using const_pointer = typename std::add_const<pointer>::type;
   using reference = typename std::add_lvalue_reference<value_type>::type;
   using const_reference = typename std::add_const<reference>::type;
+  using shape_type = gt::shape_type<2>;
+  using kernel_type = csr_matrix_span<value_type, space_type>;
+  using const_kernel_type =
+    csr_matrix_span<std::add_const_t<value_type>, space_type>;
 
   csr_matrix(gt::shape_type<2> shape, int nnz) : shape_(shape), nnz_(nnz)
   {
@@ -271,6 +276,8 @@ public:
       });
   }
 
+  constexpr static size_type dimension() { return 2; }
+
   GT_INLINE reference operator[](std::size_t idx) const { return values_(idx); }
 
   GT_INLINE value_type operator()(std::size_t i, std::size_t j) const
@@ -302,18 +309,25 @@ public:
   GT_INLINE int col_ind(std::size_t i) const { return col_ind_(i); }
 
   GT_INLINE int nnz() const { return nnz_; }
+  GT_INLINE auto size() const { return calc_size(shape_); }
   GT_INLINE auto shape() const { return shape_; }
   GT_INLINE auto shape(int i) const { return shape_[i]; }
 
-  auto to_kernel()
+  inline auto to_kernel() const
   {
-    return csr_matrix_span<T, S>(shape_, nnz_, values_.to_kernel(),
-                                 col_ind_.to_kernel(), row_ptr_.to_kernel());
+    return const_kernel_type(shape_, nnz_, values_.to_kernel(),
+                             col_ind_.to_kernel(), row_ptr_.to_kernel());
+  }
+
+  inline auto to_kernel()
+  {
+    return kernel_type(shape_, nnz_, values_.to_kernel(), col_ind_.to_kernel(),
+                       row_ptr_.to_kernel());
   }
 
 private:
   int nnz_;
-  gt::shape_type<2> shape_;
+  shape_type shape_;
   gt::gtensor<T, 1, S> values_;
   gt::gtensor<int, 1, S> col_ind_;
   gt::gtensor<int, 1, S> row_ptr_;
