@@ -209,12 +209,46 @@ TEST(gview, assign_sub)
   EXPECT_EQ(a, (gt::gtensor<double, 2>{{11., -12., -13.}, {21., -22., -23.}}));
 }
 
-TEST(gview, newaxis)
+TEST(gview, newaxis_1d)
+{
+  gt::gtensor<double, 1> a = {11., 12., 13.};
+
+  auto b = a.view(gt::all, gt::newaxis);
+
+  EXPECT_EQ(b.shape(), gt::shape(a.shape(0), 1));
+
+  GT_DEBUG_TYPE(b);
+
+  EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}}));
+
+  // make sure that no data was copied
+  EXPECT_EQ(std::addressof(a(0)), std::addressof(b(0, 0)));
+}
+
+TEST(gview, newaxis_2d)
+{
+  gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
+
+  auto b = a.view(gt::all, gt::all, gt::newaxis);
+
+  EXPECT_EQ(b.shape(), gt::shape(a.shape(0), b.shape(0), 1));
+
+  GT_DEBUG_TYPE(b);
+
+  EXPECT_EQ(b, (gt::gtensor<double, 3>{{{11., 12., 13.}, {21., 22., 23.}}}));
+
+  // make sure that no data was copied
+  EXPECT_EQ(std::addressof(a(0, 0)), std::addressof(b(0, 0, 0)));
+}
+
+TEST(gview, newaxis_sum)
 {
   gt::gtensor<double, 2> a = {{11., 12., 13.}, {21., 22., 23.}};
   gt::gtensor<double, 1> b = {100., 101., 102.};
 
   auto bv = b.view(_all, _newaxis);
+
+  EXPECT_EQ(bv.shape(), gt::shape(b.shape(0), 1));
 
   EXPECT_EQ(a + bv,
             (gt::gtensor<double, 2>{{111., 113., 115.}, {121., 123., 125.}}));
