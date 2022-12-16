@@ -1,12 +1,11 @@
 #ifndef GTENSOR_SPARSE_H
 #define GTENSOR_SPARSE_H
 
+#include <numeric>
 #include <type_traits>
 
 #include "gtensor.h"
 #include "reductions.h"
-
-#include <iostream>
 
 namespace gt
 {
@@ -17,75 +16,40 @@ namespace sparse
 namespace detail
 {
 
-template <typename Tin>
-struct UnaryOpNonzero
-{
-  GT_INLINE int operator()(Tin a) const { return a == Tin(0) ? 0 : 1; }
-};
-
-template <typename DataArray, typename S>
-struct offsets_helper;
-
 template <typename DataArray>
-struct offsets_helper<DataArray, gt::space::host>
-{
-  static gt::gtensor<int, 1> run(DataArray& d_a_batches, int nbatches)
-  {
-    using T = typename DataArray::value_type;
-    auto matrix_shape = gt::shape(d_a_batches.shape(0), d_a_batches.shape(1));
-    int matrix_size = calc_size(matrix_shape);
-    gt::gtensor<int, 1> nnz_offsets(gt::shape(nbatches + 1));
-    nnz_offsets(0) = 0;
-    for (int i = 1; i < nnz_offsets.shape(0); i++) {
-      // hack to workaround redutions not accepting views. This works because
-      // this particular view IS contiguous, so wrapping it in the span object
-      // will cause the reduction arg to match template deduction and it will
-      // produce the correct result. TODO: make this less ugly!
-      auto batch_span = gt::adapt<2, T>(
-        d_a_batches.data() + (i - 1) * matrix_size, matrix_shape);
-      nnz_offsets(i) = nnz_offsets(i - 1) +
-                       gt::transform_reduce(batch_span, 0, std::plus<int>{},
-                                            UnaryOpNonzero<T>{});
-    }
-    return nnz_offsets;
-  }
-};
-
-#ifdef GTENSOR_HAVE_DEVICE
-
-template <typename DataArray>
-struct offsets_helper<DataArray, gt::space::device>
-{
-  static gt::gtensor<int, 1> run(DataArray& d_a_batches, int nbatches)
-  {
-    using T = typename DataArray::value_type;
-    auto matrix_shape = gt::shape(d_a_batches.shape(0), d_a_batches.shape(1));
-    int matrix_size = calc_size(matrix_shape);
-    gt::gtensor<int, 1> nnz_offsets(gt::shape(nbatches + 1));
-    nnz_offsets(0) = 0;
-    for (int i = 1; i < nnz_offsets.shape(0); i++) {
-      // hack to workaround redutions not accepting views. This works because
-      // this particular view IS contiguous, so wrapping it in the span object
-      // will cause the reduction arg to match template deduction and it will
-      // produce the correct result. TODO: make this less ugly!
-      auto batch_span = gt::adapt_device<2, T>(
-        gt::raw_pointer_cast(d_a_batches.data()) + (i - 1) * matrix_size,
-        matrix_shape);
-      nnz_offsets(i) = nnz_offsets(i - 1) +
-                       gt::transform_reduce(batch_span, 0, std::plus<int>{},
-                                            UnaryOpNonzero<T>{});
-    }
-    return nnz_offsets;
-  }
-};
-
-#endif
-
-template <typename DataArray>
-gt::gtensor<int, 1> batch_nnz_offsets(DataArray& d_a_batches, int nbatches)
+gt::gtensor<int, 1> row_ptr_batches(DataArray& d_a_batches, int nbatches)
 {
   using S = typename DataArray::space_type;
-  return offsets_helper<DataArray, S>::run(d_a_batches, nbatches);
+  using T = typename DataArray::value_type;
+
+  int nrows = d_a_batches.shape(0);
+  int ncols = d_a_batches.shape(1);
+  gt::gtensor<int, 2, S> d_row_nnz_counts{gt::shape(nrows, nbatches)};
+  gt::gtensor<int, 2> h_row_nnz_counts{d_row_nnz_counts.shape()};
+  gt::gtensor<int, 1> h_row_ptr{gt::shape(nrows * nbatches + 1)};
+
+  auto k_row_nnz_counts = d_row_nnz_counts.to_kernel();
+  auto k_a_batches = d_a_batches.to_kernel();
+  gt::launch<2, S>(
+    d_row_nnz_counts.shape(), GT_LAMBDA(int i, int b) {
+      int nnz = 0;
+      for (int j = 0; j < ncols; j++) {
+        // Note: casting to T on lhs is needed for thrust backends because the
+        // thrust device reference object does not compare properly
+        if (T(k_a_batches(i, j, b)) != T(0)) {
+          nnz++;
+        }
+      }
+      k_row_nnz_counts(i, b) = nnz;
+    });
+  gt::copy(d_row_nnz_counts, h_row_nnz_counts);
+
+  // TODO: add scan or partial sum to reductions, keep on device?
+  h_row_ptr(0) = 0;
+  std::partial_sum(h_row_nnz_counts.data(),
+                   h_row_nnz_counts.data() + nrows * nbatches,
+                   h_row_ptr.data() + 1);
+  return h_row_ptr;
 }
 
 } // namespace detail
@@ -187,20 +151,19 @@ public:
   {
     static_assert(expr_dimension<MatrixType>() == 2,
                   "non-batched sparse construction requires a 2d object");
-    auto h_nnz_offsets = detail::batch_nnz_offsets(d_a, 1);
     shape_ = d_a.shape();
-    nnz_ = h_nnz_offsets(1);
+
+    auto d_batches_view = d_a.view(gt::all, gt::all, gt::newaxis);
+    auto h_row_ptr = detail::row_ptr_batches(d_batches_view, 1);
+    nnz_ = h_row_ptr(shape_[0]);
 
     values_.resize({nnz_});
     col_ind_.resize({nnz_});
     row_ptr_.resize({shape_[0] + 1});
 
-    gt::gtensor<int, 1, S> d_nnz_offsets{h_nnz_offsets.shape()};
-    gt::copy(h_nnz_offsets, d_nnz_offsets);
-    gt::synchronize();
+    gt::copy(h_row_ptr, row_ptr_);
 
-    auto d_batches_view = d_a.view(gt::all, gt::all, gt::newaxis);
-    convert_batches(d_batches_view, d_nnz_offsets);
+    convert_batches(d_batches_view, row_ptr_);
   }
 
   template <typename BatchData>
@@ -211,6 +174,7 @@ public:
     int nrows = d_matrix_batches.shape(0);
     int ncols = d_matrix_batches.shape(1);
     int nbatches = d_matrix_batches.shape(2);
+    /*
     auto h_nnz_offsets = detail::batch_nnz_offsets(d_matrix_batches, nbatches);
     gt::gtensor<int, 1, S> d_nnz_offsets{h_nnz_offsets.shape()};
     csr_matrix csr_mat(gt::shape(nrows * nbatches, ncols * nbatches),
@@ -220,15 +184,25 @@ public:
 
     csr_mat.convert_batches(d_matrix_batches, d_nnz_offsets);
     return csr_mat;
+    */
+    auto h_row_ptr = detail::row_ptr_batches(d_matrix_batches, nbatches);
+    csr_matrix csr_mat(gt::shape(nrows * nbatches, ncols * nbatches),
+                       h_row_ptr(nrows * nbatches));
+    gt::copy(h_row_ptr, csr_mat.row_ptr_);
+
+    csr_mat.convert_batches(d_matrix_batches, csr_mat.row_ptr_);
+    return csr_mat;
   }
+
+  constexpr static size_type dimension() { return 2; }
 
   template <typename BatchView>
   void convert_batches(BatchView& d_matrix_view,
-                       gt::gtensor<int, 1, S>& d_nnz_offsets)
+                       gt::gtensor<int, 1, S>& d_row_ptr)
   {
     static_assert(expr_dimension<BatchView>() == 3,
                   "3d view required for common dense conversion helper");
-    auto k_nnz_offsets = d_nnz_offsets.to_kernel();
+    auto k_row_ptr = d_row_ptr.to_kernel();
     auto k_matrix_view = d_matrix_view.to_kernel();
     int nrows = d_matrix_view.shape(0);
     int ncols = d_matrix_view.shape(1);
@@ -236,47 +210,24 @@ public:
 
     auto k_values_ = values_.to_kernel();
     auto k_col_ind_ = col_ind_.to_kernel();
-    auto k_row_ptr_ = row_ptr_.to_kernel();
-    int k_nnz_ = nnz_;
 
     // past all matrices along diagonal of sparse matrix
-    gt::launch<1, S>(
-      gt::shape(nbatches), GT_LAMBDA(int b) {
-        int value_offset = k_nnz_offsets(b);
+    gt::launch<2, S>(
+      gt::shape(nrows, nbatches), GT_LAMBDA(int i, int b) {
+        int value_offset = k_row_ptr(i + b * nrows);
         int col_offset = ncols * b;
-        int row_ptr_idx = nrows * b;
         T temp;
         // Note: we are doing a transpose, since CSR is row major
-        for (int i = 0; i < nrows; i++) {
-          bool row_first = true;
-          for (int j = 0; j < ncols; j++) {
-            temp = k_matrix_view(i, j, b);
-            if (temp != T(0)) {
-              k_values_(value_offset) = temp;
-              k_col_ind_(value_offset) = col_offset + j;
-              if (row_first) {
-                k_row_ptr_(row_ptr_idx) = value_offset;
-                row_first = false;
-              }
-              value_offset++;
-            }
+        for (int j = 0; j < ncols; j++) {
+          temp = k_matrix_view(i, j, b);
+          if (temp != T(0)) {
+            k_values_(value_offset) = temp;
+            k_col_ind_(value_offset) = col_offset + j;
+            value_offset++;
           }
-          if (row_first) { // empty row
-            if (b == 0 && i == 0) {
-              k_row_ptr_(row_ptr_idx) = 0;
-            } else {
-              k_row_ptr_(row_ptr_idx) = k_row_ptr_(row_ptr_idx - 1);
-            }
-          }
-          row_ptr_idx++;
-        }
-        if (b == nbatches - 1) {
-          k_row_ptr_(k_row_ptr_.shape(0) - 1) = k_nnz_;
         }
       });
   }
-
-  constexpr static size_type dimension() { return 2; }
 
   GT_INLINE reference operator[](std::size_t idx) const { return values_(idx); }
 

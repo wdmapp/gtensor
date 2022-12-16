@@ -29,6 +29,10 @@ add_executable(bench_stencil1d)
 target_gtensor_sources(bench_stencil1d PRIVATE bench_stencil1d.cxx)
 target_link_libraries(bench_stencil1d gtensor::gtensor benchmark::benchmark)
 
+add_executable(bench_sparse)
+target_gtensor_sources(bench_sparse PRIVATE bench_sparse.cxx)
+target_link_libraries(bench_sparse gtensor::gtensor benchmark::benchmark)
+
 if (GTENSOR_ENABLE_FFT)
   add_executable(bench_fft)
   target_gtensor_sources(bench_fft PRIVATE bench_fft.cxx)
