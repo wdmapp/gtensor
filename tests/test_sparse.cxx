@@ -8,27 +8,6 @@
 #include "gtest_predicates.h"
 #include "test_debug.h"
 
-namespace detail
-{
-
-template <typename T>
-GT_INLINE T norm(gt::complex<T> a)
-{
-  return gt::norm(a);
-}
-
-GT_INLINE double norm(double a)
-{
-  return gt::abs(a);
-}
-
-GT_INLINE float norm(float a)
-{
-  return gt::abs(a);
-}
-
-} // namespace detail
-
 template <typename T, typename S>
 void test_csr_matrix_batched()
 {
@@ -157,11 +136,11 @@ void test_csr_matrix()
       for (int j = 0; j < N; j++) {
         for (int i = 0; i < N; i++) {
           if (i == j) {
-            k_err(0) += detail::norm(k_Acsr(i, j) - T(2));
+            k_err(0) += gt::norm(k_Acsr(i, j) - T(2));
           } else if (std::abs(i - j) == 1) {
-            k_err(0) += detail::norm(k_Acsr(i, j) - T(-1));
+            k_err(0) += gt::norm(k_Acsr(i, j) - T(-1));
           } else {
-            k_err(0) += detail::norm(k_Acsr(i, j));
+            k_err(0) += gt::norm(k_Acsr(i, j));
           }
         }
       }

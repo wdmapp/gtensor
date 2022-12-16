@@ -1,6 +1,9 @@
 #ifndef GTENSOR_COMPLEX_OPS_H
 #define GTENSOR_COMPLEX_OPS_H
 
+#include <complex>
+#include <type_traits>
+
 #include "device_runtime.h"
 #include "macros.h"
 
@@ -9,52 +12,113 @@ namespace gt
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
+// ======================================================================
+// abs
+
 template <typename T>
-GT_INLINE T norm(const complex<T>& a)
+GT_INLINE T abs(const complex<T>& a)
 {
-  return thrust::norm(a);
+  return thrust::abs(a);
 }
 
 template <typename T>
-GT_INLINE complex<T> conj(const complex<T>& a)
+GT_INLINE std::enable_if_t<std::is_floating_point<T>::value, T> abs(const T a)
 {
-  return thrust::conj(a);
+  return gt::abs(complex<T>(a, 0));
 }
 
 template <typename T>
-GT_INLINE T norm(thrust::device_reference<complex<T>> a)
+GT_INLINE auto abs(const std::complex<T>& a)
 {
-  return thrust::norm(thrust::raw_reference_cast(a));
-}
-
-using std::abs;
-using thrust::abs;
-
-template <typename T>
-GT_INLINE T abs(thrust::device_reference<complex<T>> a)
-{
-  return thrust::abs(thrust::raw_reference_cast(a));
+  return gt::abs(complex<T>(a));
 }
 
 template <typename T>
-GT_INLINE complex<T> conj(thrust::device_reference<complex<T>> a)
+GT_INLINE auto abs(thrust::device_reference<T> a)
 {
-  return thrust::conj(thrust::raw_reference_cast(a));
+  return gt::abs(thrust::raw_reference_cast(a));
 }
+
+template <typename T>
+GT_INLINE auto abs(thrust::device_reference<const T> a)
+{
+  return gt::abs(thrust::raw_reference_cast(a));
+}
+
+// ======================================================================
+// conj
+
+using thrust::conj;
+
+template <typename T>
+GT_INLINE auto conj(const std::complex<T>& a)
+{
+  return std::complex<T>(gt::conj(complex<T>(a)));
+}
+
+template <typename T>
+GT_INLINE auto conj(thrust::device_reference<T> a)
+{
+  return gt::conj(thrust::raw_reference_cast(a));
+}
+
+template <typename T>
+GT_INLINE auto conj(thrust::device_reference<const T> a)
+{
+  return gt::conj(thrust::raw_reference_cast(a));
+}
+
+// ======================================================================
+// exp
 
 using std::exp;
 using thrust::exp;
 
 template <typename T>
-GT_INLINE complex<T> exp(thrust::device_reference<thrust::complex<T>> a)
+GT_INLINE auto exp(const std::complex<T>& a)
 {
-  return thrust::exp(thrust::raw_reference_cast(a));
+  return std::complex<T>(gt::exp(complex<T>(a)));
 }
 
 template <typename T>
-GT_INLINE complex<T> exp(thrust::device_reference<const thrust::complex<T>> a)
+GT_INLINE auto exp(thrust::device_reference<T> a)
 {
-  return thrust::exp(thrust::raw_reference_cast(a));
+  return gt::exp(thrust::raw_reference_cast(a));
+}
+
+template <typename T>
+GT_INLINE auto exp(thrust::device_reference<const T> a)
+{
+  return gt::exp(thrust::raw_reference_cast(a));
+}
+
+// ======================================================================
+// norm
+
+using thrust::norm;
+
+template <typename T>
+GT_INLINE std::enable_if_t<std::is_floating_point<T>::value, T> norm(const T a)
+{
+  return a * a;
+}
+
+template <typename T>
+GT_INLINE auto norm(const std::complex<T>& a)
+{
+  return gt::norm(complex<T>(a));
+}
+
+template <typename T>
+GT_INLINE auto norm(thrust::device_reference<T> a)
+{
+  return gt::norm(thrust::raw_reference_cast(a));
+}
+
+template <typename T>
+GT_INLINE auto norm(thrust::device_reference<const T> a)
+{
+  return gt::norm(thrust::raw_reference_cast(a));
 }
 
 #elif defined(GTENSOR_DEVICE_SYCL)
@@ -70,21 +134,10 @@ using std::exp;
 
 #else // host, use std lib
 
-template <typename T>
-GT_INLINE T norm(const complex<T>& a)
-{
-  return std::norm(a);
-}
-
 using std::abs;
-
-template <typename T>
-GT_INLINE complex<T> conj(const complex<T>& a)
-{
-  return std::conj(a);
-}
-
+using std::conj;
 using std::exp;
+using std::norm;
 
 #endif
 

@@ -364,6 +364,7 @@ static void run_device_exp(gt::gtensor_device<T, 1>& res,
 
   gt::launch<1>(
     x.shape(), GT_LAMBDA(int i) { k_res(i) = gt::exp(k_x(i)); });
+  gt::synchronize();
 }
 
 TEST(complex, device_exp_real)
@@ -395,6 +396,56 @@ TEST(complex, device_exp)
   gt::gtensor<T, 1> h_res(res.shape());
   copy(res, h_res);
   EXPECT_LT(gt::abs(h_res(0) - T(0., 1.)), 1e-14);
+}
+
+template <typename Tres, typename Tx>
+static void run_device_abs(gt::gtensor_device<Tres, 1>& res,
+                           const gt::gtensor_device<Tx, 1>& x)
+{
+  auto k_res = res.to_kernel();
+  auto k_x = x.to_kernel();
+
+  gt::launch<1>(
+    x.shape(), GT_LAMBDA(int i) { k_res(i) = gt::abs(k_x(i)); });
+  gt::synchronize();
+}
+
+TEST(complex, device_abs_real)
+{
+  using T = double;
+
+  gt::gtensor<T, 1> h_x = {-1.75, -0.001};
+  gt::gtensor_device<T, 1> x{h_x.shape()};
+
+  gt::copy(h_x, x);
+
+  auto res = gt::empty_like(x);
+  run_device_abs(res, x);
+
+  gt::gtensor<T, 1> h_res(res.shape());
+  gt::copy(res, h_res);
+  gt::synchronize();
+
+  EXPECT_EQ(h_res(0), std::abs(h_x(0)));
+  EXPECT_EQ(h_res(1), std::abs(h_x(1)));
+}
+
+TEST(complex, device_abs)
+{
+  using R = double;
+  using T = gt::complex<R>;
+
+  gt::gtensor_device<T, 1> x(gt::shape(1));
+  gt::gtensor<T, 1> h_x(x.shape());
+  h_x(0) = T(sqrt(2.) / 2., sqrt(2.) / 2.);
+  gt::copy(h_x, x);
+
+  gt::gtensor_device<R, 1> res(x.shape());
+  run_device_abs(res, x);
+
+  gt::gtensor<R, 1> h_res(res.shape());
+  gt::copy(res, h_res);
+  // EXPECT_EQ(h_res(0), R(1));
 }
 
 #endif // CUDA or HIP
