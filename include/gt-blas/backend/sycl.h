@@ -305,13 +305,11 @@ inline gt::blas::index_t getrf_strided_batched_scratchpad_size(handle_t& h,
 template <typename T>
 inline void getrf_strided_batched(handle_t& h, int n, T* d_A, int lda,
                                   gt::blas::index_t* d_PivotArray,
-                                  int batchSize,
-                                  typename make_std<T>::type* d_scratch,
+                                  int batchSize, T* d_scratch,
                                   gt::blas::index_t scratch_count)
 {
-  using T2 = typename make_std<T>::type;
   sycl::queue& q = h.get_backend_handle();
-  oneapi::mkl::lapack::getrf_batch(q, n, n, d_A, lda, n * n,
+  oneapi::mkl::lapack::getrf_batch(q, n, n, std_cast(d_A), lda, n * n,
                                    std_cast(d_PivotArray), n, batchSize,
                                    std_cast(d_scratch), scratch_count);
 }
@@ -332,16 +330,14 @@ inline gt::blas::index_t getrs_strided_batched_scratchpad_size(handle_t& h,
 template <typename T>
 inline void getrs_strided_batched(handle_t& h, int n, int nrhs, T* d_A, int lda,
                                   gt::blas::index_t* d_PivotArray, T* d_B,
-                                  int ldb, int batchSize,
-                                  typename make_std<T>::type* d_scratch,
+                                  int ldb, int batchSize, T* d_scratch,
                                   gt::blas::index_t scratch_count)
 {
-  using T2 = typename make_std<T>::type;
   sycl::queue& q = h.get_backend_handle();
-  oneapi::mkl::lapack::getrs_batch(q, oneapi::mkl::transpose::nontrans, n, nrhs,
-                                   d_A, lda, n * n, std_cast(d_PivotArray), n,
-                                   std_cast(d_B), ldb, n * nrhs, batchSize,
-                                   std_cast(d_scratch), scratch_count);
+  oneapi::mkl::lapack::getrs_batch(
+    q, oneapi::mkl::transpose::nontrans, n, nrhs, std_cast(d_A), lda, n * n,
+    std_cast(d_PivotArray), n, std_cast(d_B), ldb, n * nrhs, batchSize,
+    std_cast(d_scratch), scratch_count);
 }
 
 template <typename T>

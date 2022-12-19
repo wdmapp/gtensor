@@ -2,8 +2,6 @@
 
 #include "gt-solver/solver.h"
 
-using namespace gt::complex_cast;
-
 namespace gt
 {
 
@@ -23,7 +21,7 @@ void init_device_pointer_array(PtrArray& d_ptr_array, DataArray& d_data_array)
   gt::gtensor<P, 1> h_ptr_array(d_ptr_array.shape());
   int nbatches = d_data_array.shape(2);
   for (int i = 0; i < nbatches; i++) {
-    h_ptr_array(i) = &(d_data_array(0, 0, i));
+    h_ptr_array(i) = gt::raw_pointer_cast(&(d_data_array(0, 0, i)));
   }
   gt::copy(h_ptr_array, d_ptr_array);
 }
@@ -60,17 +58,17 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
       h, n, n, n, nrhs, nbatches)),
     scratch_(scratch_count_)
 {
-  using T2 = typename make_std<T>::type;
   detail::copy_batch_data(matrix_batches, matrix_data_);
 
   // factor using strided API
   auto prep_scratch_count =
-    gt::blas::getrf_strided_batched_scratchpad_size<T2>(h_, n_, n_, nbatches_);
-  gt::space::device_vector<T2> prep_scratch(prep_scratch_count);
+    gt::blas::getrf_strided_batched_scratchpad_size<T>(h_, n_, n_, nbatches_);
+  gt::space::device_vector<T> prep_scratch(prep_scratch_count);
 
-  gt::blas::getrf_strided_batched<T2>(
-    h_, n_, std_cast(matrix_data_.data()), n_, std_cast(pivot_data_.data()),
-    nbatches_, std_cast(prep_scratch.data()), prep_scratch_count);
+  gt::blas::getrf_strided_batched<T>(
+    h_, n_, gt::raw_pointer_cast(matrix_data_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()), nbatches_,
+    gt::raw_pointer_cast(prep_scratch.data()), prep_scratch_count);
   // Note: synchronize so it's safe to destroy scratch
   gt::synchronize();
 }
@@ -78,13 +76,13 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void SolverDense<T>::solve(T* rhs, T* result)
 {
-  using T2 = typename make_std<T>::type;
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
-  gt::blas::getrs_strided_batched<T2>(
-    h_, n_, nrhs_, std_cast(matrix_data_.data()), n_,
-    std_cast(pivot_data_.data()), std_cast(rhs_data_.data()), n_, nbatches_,
-    std_cast(scratch_.data()), scratch_count_);
+  gt::blas::getrs_strided_batched<T>(
+    h_, n_, nrhs_, gt::raw_pointer_cast(matrix_data_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()),
+    gt::raw_pointer_cast(rhs_data_.data()), n_, nbatches_,
+    gt::raw_pointer_cast(scratch_.data()), scratch_count_);
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
@@ -111,9 +109,10 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
   detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
 
   // dense LU factor with pivot
-  gt::blas::getrf_batched<T>(h_, n_, std_cast(matrix_pointers_.data()), n_,
-                             std_cast(pivot_data_.data()),
-                             std_cast(info_.data()), nbatches_);
+  gt::blas::getrf_batched<T>(h_, n_,
+                             gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+                             gt::raw_pointer_cast(pivot_data_.data()),
+                             gt::raw_pointer_cast(info_.data()), nbatches_);
   // Note: synchronize for consistency with other implementations
   gt::synchronize();
 }
@@ -123,9 +122,10 @@ void SolverDense<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
-  gt::blas::getrs_batched<T>(h_, n_, nrhs_, std_cast(matrix_pointers_.data()),
-                             n_, std_cast(pivot_data_.data()),
-                             std_cast(rhs_pointers_.data()), n_, nbatches_);
+  gt::blas::getrs_batched<T>(
+    h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()),
+    gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
@@ -159,9 +159,10 @@ SolverInvert<T>::SolverInvert(gt::blas::handle_t& h, int n, int nbatches,
   detail::init_device_pointer_array(rhs_input_pointers_, rhs_input_data_);
 
   // LU factor with pivot into matrix_data_
-  gt::blas::getrf_batched<T>(h_, n_, std_cast(matrix_pointers_.data()), n_,
-                             std_cast(pivot_data_.data()),
-                             std_cast(info_.data()), nbatches_);
+  gt::blas::getrf_batched<T>(h_, n_,
+                             gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+                             gt::raw_pointer_cast(pivot_data_.data()),
+                             gt::raw_pointer_cast(info_.data()), nbatches_);
 
   // invert using LU factors with getri.
   // Note: getri is not in place, so we copy input data to temporary and have
@@ -170,9 +171,10 @@ SolverInvert<T>::SolverInvert(gt::blas::handle_t& h, int n, int nbatches,
   gt::gtensor_device<T*, 1> d_Aptr(matrix_pointers_.shape());
   detail::init_device_pointer_array(d_Aptr, d_A);
   gt::copy(matrix_data_, d_A);
-  gt::blas::getri_batched<T>(
-    h_, n_, std_cast(d_Aptr.data()), n_, std_cast(pivot_data_.data()),
-    std_cast(matrix_pointers_.data()), n_, std_cast(info_.data()), nbatches_);
+  gt::blas::getri_batched<T>(h_, n_, gt::raw_pointer_cast(d_Aptr.data()), n_,
+                             gt::raw_pointer_cast(pivot_data_.data()),
+                             gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+                             gt::raw_pointer_cast(info_.data()), nbatches_);
   // Note: synchronize so it's safe to destroy temporaries
   gt::synchronize();
 }
@@ -182,10 +184,10 @@ void SolverInvert<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_input_data_.data());
-  gt::blas::gemm_batched<T>(h_, n_, nrhs_, n_, 1.0,
-                            std_cast(matrix_pointers_.data()), n_,
-                            std_cast(rhs_input_pointers_.data()), n_, 0.0,
-                            std_cast(rhs_pointers_.data()), n_, nbatches_);
+  gt::blas::gemm_batched<T>(
+    h_, n_, nrhs_, n_, 1.0, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+    gt::raw_pointer_cast(rhs_input_pointers_.data()), n_, 0.0,
+    gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
 }
