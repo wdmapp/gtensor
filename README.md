@@ -455,3 +455,67 @@ native stream object is a `sycl::queue`.
 
 See also `tests/test_stream.cxx`. Note that this API is likely to change; in
 particular, the stream objects will become templated on space type.
+
+# Library Wrapper Extensions
+
+## gt-blas
+
+Provides wrappers around commonly used blas routines. Requires cuBLAS, rocblas,
+or oneMKL, depending on the GPU backend. Interface is mostly C style taking
+raw pointers, for easy interoperability with Fortran, with a few higher level
+gtensor specific helpers.
+
+```
+#include "gt-blas/blas.h"
+
+void blas()
+{
+  gt::blas::handle_t h;
+  gt::gtensor_device<double, 1> x = gt::arange<double>(1, 11);
+  gt::gtensor_device<double, 1> y = gt::arange<double>(1, 11);
+  gt::blas::axpy(h, 2.0, x, y);
+  std::cout << "a*x+y = " << y << std::endl;
+  /* a*x+y = { 3 6 9 12 15 18 21 24 27 30 } */
+}
+```
+
+A naive banded LU solver implementation is also provided, useful in cases where
+the matrices are banded and the native GPU batched LU solve has not been
+optimized yet. Parallelism for this implementaiton is on batch only.
+
+## gt-fft
+
+Provides high level C++ style interface around cuFFT, rocFFT, and oneMKL DFT.
+
+```
+#include "gt-fft/fft.h"
+
+void fft()
+{
+  // python: x = np.array([2., 3., -1., 4.])
+  gt::gtensor_device<double, 1> x = {2, 3, -1, 4};
+  auto y = gt::empty_device<gt::complex<double>>({3});
+
+  // python: y = np.fft.fft(x)
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, double> plan({x.shape(0)}, 1);
+  plan(x, y);
+  std::cout << y << std::endl;
+  /* { (8,0) (3,1) (-6,0) } */
+}
+```
+
+## gt-solver
+
+Provides a high level C++ style interface around batched LU solve, in
+particular the case where a single set of matrices is used repeatedly to solve
+with different right hand side vectors. It maintains it's own contiguous copy
+of the factored matrices in device memory, and device buffers for staging input
+and output right hand side vectors. This allows the application to build the
+matrices on host and pass them off to the solver interface for all the device
+specific handling. On some platforms, there are performance issues with solving
+out of managed memory, and the internal device buffers can significantly
+improve performance on these platforms.
+
+This should be preferred over directly calling gt-blas routines like getrf and
+getrs, when the use case matches (single factor and many solves with different
+right hand sides).
