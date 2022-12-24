@@ -185,6 +185,11 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
                         "${ROCM_PATH}/lib/librocsolver.so")
   target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
 
+  add_library(rocsparse INTERFACE IMPORTED)
+  target_link_libraries(rocsparse INTERFACE
+                        "${ROCM_PATH}/lib/librocsparse.so")
+  target_include_directories(rocsparse INTERFACE "${ROCM_PATH}/include")
+
   # NB: in ROCm, rocfft library / package was deprecated in favor of
   # hipfft library / package.
   add_library(hipfft INTERFACE IMPORTED)
@@ -449,6 +454,11 @@ if (GTENSOR_ENABLE_BLAS)
     add_library(gtsolver)
     target_gtensor_sources(gtsolver PRIVATE src/gtsolver.cxx)
     target_link_libraries(gtsolver gtblas)
+    if (${GTENSOR_DEVICE} STREQUAL "cuda")
+      target_link_libraries(gtsolver CUDA::cusparse)
+    elseif (${GTENSOR_DEVICE} STREQUAL "hip")
+      target_link_libraries(gtsolver rocsparse)
+    endif()
     list(APPEND GTENSOR_TARGETS gtsolver)
     add_library(gtensor::gtsolver ALIAS gtsolver)
   endif()

@@ -1,5 +1,7 @@
 #include "gtensor/gtensor.h"
 
+#include "gt-blas/blas.h"
+
 #include "gt-solver/solver.h"
 
 namespace gt
@@ -196,6 +198,58 @@ template class SolverInvert<float>;
 template class SolverInvert<double>;
 template class SolverInvert<gt::complex<float>>;
 template class SolverInvert<gt::complex<double>>;
+
+template <typename T>
+SolverSparse<T>::SolverSparse(gt::blas::handle_t& blas_h, int n, int nbatches,
+                              int nrhs, T* const* matrix_batches)
+  : n_(n),
+    nbatches_(nbatches),
+    nrhs_(nrhs),
+    csr_mat_(lu_factor_batches_to_csr(blas_h, n, nbatches, matrix_batches)),
+    csr_mat_lu_(csr_mat_, T(1.0), nrhs)
+{}
+
+template <typename T>
+void SolverSparse<T>::solve(T* rhs, T* result)
+{
+  csr_mat_lu_.solve(rhs, result);
+}
+
+template <typename T>
+gt::sparse::csr_matrix<T, gt::space::device>
+SolverSparse<T>::lu_factor_batches_to_csr(gt::blas::handle_t& h, int n,
+                                          int nbatches,
+                                          T* const* matrix_batches)
+{
+  // temporary arrays to do dense factoring in contiguous device memory
+  gt::gtensor_device<T, 3> matrix_data(gt::shape(n, n, nbatches));
+  gt::gtensor_device<T*, 1> matrix_pointers(gt::shape(nbatches));
+  gt::gtensor_device<int, 1> info(gt::shape(nbatches));
+
+  // copy non-contiguous host memory to contiguous device memory
+  detail::copy_batch_data(matrix_batches, matrix_data);
+  detail::init_device_pointer_array(matrix_pointers, matrix_data);
+
+  // dense LU factor without pivot
+  gt::blas::getrf_npvt_batched<T>(
+    h, n, gt::raw_pointer_cast(matrix_pointers.data()), n,
+    gt::raw_pointer_cast(info.data()), nbatches);
+  gt::synchronize();
+
+  // convert to single sparse CSR format matrix, with each batch matrix
+  // along the diagonal
+  return gt::sparse::csr_matrix<T, gt::space::device>::join_matrix_batches(
+    matrix_data);
+}
+
+template class SolverSparse<float>;
+template class SolverSparse<double>;
+
+// Note: oneMKL sparse API does not support complex yet
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+template class SolverSparse<gt::complex<float>>;
+template class SolverSparse<gt::complex<double>>;
+#endif
 
 } // namespace solver
 

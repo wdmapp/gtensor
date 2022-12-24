@@ -110,3 +110,28 @@ TEST(solver, zfull_invert_solve)
 {
   test_full_solve<gt::solver::SolverInvert<gt::complex<double>>>();
 }
+
+TEST(solver, sfull_sparse_solve)
+{
+  test_full_solve<gt::solver::SolverSparse<float>>();
+}
+
+TEST(solver, dfull_sparse_solve)
+{
+  test_full_solve<gt::solver::SolverSparse<double>>();
+}
+
+// Note: oneMKL sparse API does not support complex yet
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+
+TEST(solver, cfull_sparse_solve)
+{
+  test_full_solve<gt::solver::SolverSparse<gt::complex<float>>>();
+}
+
+TEST(solver, zfull_sparse_solve)
+{
+  test_full_solve<gt::solver::SolverSparse<gt::complex<double>>>();
+}
+
+#endif

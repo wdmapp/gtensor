@@ -2,8 +2,23 @@
 #define GTENSOR_SOLVE_H
 
 #include "gtensor/gtensor.h"
+#include "gtensor/sparse.h"
 
 #include "gt-blas/blas.h"
+
+#ifdef GTENSOR_DEVICE_CUDA
+#if CUDART_VERSION >= 11031
+#include "gt-solver/backend/cuda2.h"
+#else
+#include "gt-solver/backend/cuda.h"
+#endif // CUDA_VERSION
+
+#elif defined(GTENSOR_DEVICE_HIP)
+#include "gt-solver/backend/hip.h"
+
+#elif defined(GTENSOR_DEVICE_SYCL)
+#include "gt-solver/backend/sycl.h"
+#endif
 
 namespace gt
 {
@@ -103,6 +118,30 @@ protected:
   gt::gtensor_device<T*, 1> rhs_pointers_;
   gt::gtensor_device<T, 3> rhs_input_data_;
   gt::gtensor_device<T*, 1> rhs_input_pointers_;
+};
+
+template <typename T>
+class SolverSparse : public Solver<T>
+{
+public:
+  using base_type = Solver<T>;
+  using typename base_type::value_type;
+
+  SolverSparse(gt::blas::handle_t& blas_h, int n, int nbatches, int nrhs,
+               T* const* matrix_batches);
+
+  virtual void solve(T* rhs, T* result);
+
+protected:
+  int n_;
+  int nbatches_;
+  int nrhs_;
+  gt::sparse::csr_matrix<T, gt::space::device> csr_mat_;
+  csr_matrix_lu<T> csr_mat_lu_;
+
+private:
+  static gt::sparse::csr_matrix<T, gt::space::device> lu_factor_batches_to_csr(
+    gt::blas::handle_t& h, int n, int nbatches, T* const* matrix_batches);
 };
 
 } // namespace solver
