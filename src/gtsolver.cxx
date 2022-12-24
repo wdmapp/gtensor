@@ -47,8 +47,8 @@ void copy_batch_data(T* const* in_matrix_batches, DataArray& out_data)
 #ifdef GTENSOR_DEVICE_SYCL
 
 template <typename T>
-SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
-                            int nrhs, T* const* matrix_batches)
+solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
+                              int nrhs, T* const* matrix_batches)
   : h_(h),
     n_(n),
     nbatches_(nbatches),
@@ -76,7 +76,7 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
 }
 
 template <typename T>
-void SolverDense<T>::solve(T* rhs, T* result)
+void solver_dense<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
@@ -92,8 +92,8 @@ void SolverDense<T>::solve(T* rhs, T* result)
 #else // CUDA and HIP
 
 template <typename T>
-SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
-                            int nrhs, T* const* matrix_batches)
+solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
+                              int nrhs, T* const* matrix_batches)
   : h_(h),
     n_(n),
     nbatches_(nbatches),
@@ -120,7 +120,7 @@ SolverDense<T>::SolverDense(gt::blas::handle_t& h, int n, int nbatches,
 }
 
 template <typename T>
-void SolverDense<T>::solve(T* rhs, T* result)
+void solver_dense<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_data_.data());
@@ -134,14 +134,14 @@ void SolverDense<T>::solve(T* rhs, T* result)
 
 #endif
 
-template class SolverDense<float>;
-template class SolverDense<double>;
-template class SolverDense<gt::complex<float>>;
-template class SolverDense<gt::complex<double>>;
+template class solver_dense<float>;
+template class solver_dense<double>;
+template class solver_dense<gt::complex<float>>;
+template class solver_dense<gt::complex<double>>;
 
 template <typename T>
-SolverInvert<T>::SolverInvert(gt::blas::handle_t& h, int n, int nbatches,
-                              int nrhs, T* const* matrix_batches)
+solver_invert<T>::solver_invert(gt::blas::handle_t& h, int n, int nbatches,
+                                int nrhs, T* const* matrix_batches)
   : h_(h),
     n_(n),
     nbatches_(nbatches),
@@ -182,7 +182,7 @@ SolverInvert<T>::SolverInvert(gt::blas::handle_t& h, int n, int nbatches,
 }
 
 template <typename T>
-void SolverInvert<T>::solve(T* rhs, T* result)
+void solver_invert<T>::solve(T* rhs, T* result)
 {
   gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
              rhs_input_data_.data());
@@ -194,14 +194,14 @@ void SolverInvert<T>::solve(T* rhs, T* result)
              gt::device_pointer_cast(result));
 }
 
-template class SolverInvert<float>;
-template class SolverInvert<double>;
-template class SolverInvert<gt::complex<float>>;
-template class SolverInvert<gt::complex<double>>;
+template class solver_invert<float>;
+template class solver_invert<double>;
+template class solver_invert<gt::complex<float>>;
+template class solver_invert<gt::complex<double>>;
 
 template <typename T>
-SolverSparse<T>::SolverSparse(gt::blas::handle_t& blas_h, int n, int nbatches,
-                              int nrhs, T* const* matrix_batches)
+solver_sparse<T>::solver_sparse(gt::blas::handle_t& blas_h, int n, int nbatches,
+                                int nrhs, T* const* matrix_batches)
   : n_(n),
     nbatches_(nbatches),
     nrhs_(nrhs),
@@ -210,16 +210,16 @@ SolverSparse<T>::SolverSparse(gt::blas::handle_t& blas_h, int n, int nbatches,
 {}
 
 template <typename T>
-void SolverSparse<T>::solve(T* rhs, T* result)
+void solver_sparse<T>::solve(T* rhs, T* result)
 {
   csr_mat_lu_.solve(rhs, result);
 }
 
 template <typename T>
 gt::sparse::csr_matrix<T, gt::space::device>
-SolverSparse<T>::lu_factor_batches_to_csr(gt::blas::handle_t& h, int n,
-                                          int nbatches,
-                                          T* const* matrix_batches)
+solver_sparse<T>::lu_factor_batches_to_csr(gt::blas::handle_t& h, int n,
+                                           int nbatches,
+                                           T* const* matrix_batches)
 {
   // temporary arrays to do dense factoring in contiguous device memory
   gt::gtensor_device<T, 3> matrix_data(gt::shape(n, n, nbatches));
@@ -242,13 +242,13 @@ SolverSparse<T>::lu_factor_batches_to_csr(gt::blas::handle_t& h, int n,
     matrix_data);
 }
 
-template class SolverSparse<float>;
-template class SolverSparse<double>;
+template class solver_sparse<float>;
+template class solver_sparse<double>;
 
 // Note: oneMKL sparse API does not support complex yet
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
-template class SolverSparse<gt::complex<float>>;
-template class SolverSparse<gt::complex<double>>;
+template class solver_sparse<gt::complex<float>>;
+template class solver_sparse<gt::complex<double>>;
 #endif
 
 } // namespace solver

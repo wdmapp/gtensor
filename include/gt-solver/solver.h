@@ -27,7 +27,7 @@ namespace solver
 {
 
 template <typename T>
-class Solver
+class solver
 {
 public:
   using value_type = T;
@@ -41,14 +41,14 @@ public:
 // optimized
 
 template <typename T>
-class SolverDense : public Solver<T>
+class solver_dense : public solver<T>
 {
 public:
-  using base_type = Solver<T>;
+  using base_type = solver<T>;
   using typename base_type::value_type;
 
-  SolverDense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-              T* const* matrix_batches);
+  solver_dense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+               T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
@@ -67,14 +67,14 @@ protected:
 #else // HIP and CUDA
 
 template <typename T>
-class SolverDense : public Solver<T>
+class solver_dense : public solver<T>
 {
 public:
-  using base_type = Solver<T>;
+  using base_type = solver<T>;
   using typename base_type::value_type;
 
-  SolverDense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-              T* const* matrix_batches);
+  solver_dense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+               T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
@@ -94,14 +94,14 @@ protected:
 #endif
 
 template <typename T>
-class SolverInvert : Solver<T>
+class solver_invert : solver<T>
 {
 public:
-  using base_type = Solver<T>;
+  using base_type = solver<T>;
   using typename base_type::value_type;
 
-  SolverInvert(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-               T* const* matrix_batches);
+  solver_invert(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+                T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
@@ -121,14 +121,14 @@ protected:
 };
 
 template <typename T>
-class SolverSparse : public Solver<T>
+class solver_sparse : public solver<T>
 {
 public:
-  using base_type = Solver<T>;
+  using base_type = solver<T>;
   using typename base_type::value_type;
 
-  SolverSparse(gt::blas::handle_t& blas_h, int n, int nbatches, int nrhs,
-               T* const* matrix_batches);
+  solver_sparse(gt::blas::handle_t& blas_h, int n, int nbatches, int nrhs,
+                T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
 
