@@ -65,11 +65,13 @@ public:
   using reference = typename std::add_lvalue_reference<value_type>::type;
   using const_reference = typename std::add_const<reference>::type;
   using shape_type = gt::shape_type<2>;
+  using index_type =
+    typename std::conditional<std::is_const<T>::value, const int, int>::type;
 
-  csr_matrix_span(gt::shape_type<2> shape, int nnz,
+  csr_matrix_span(const gt::shape_type<2> shape, const int nnz,
                   gt::gtensor_span<T, 1, S> values,
-                  gt::gtensor_span<int, 1, S> col_ind,
-                  gt::gtensor_span<int, 1, S> row_ptr)
+                  gt::gtensor_span<index_type, 1, S> col_ind,
+                  gt::gtensor_span<index_type, 1, S> row_ptr)
     : shape_(shape),
       nnz_(nnz),
       values_(values),
@@ -114,14 +116,27 @@ public:
   GT_INLINE auto shape() const { return shape_; }
   GT_INLINE auto shape(int i) const { return shape_[i]; }
 
+  GT_INLINE auto values_data() const
+  {
+    return gt::raw_pointer_cast(values_.data());
+  }
+  GT_INLINE auto row_ptr_data() const
+  {
+    return gt::raw_pointer_cast(row_ptr_.data());
+  }
+  GT_INLINE auto col_ind_data() const
+  {
+    return gt::raw_pointer_cast(col_ind_.data());
+  }
+
   inline auto to_kernel() const { return *this; }
 
 private:
   shape_type shape_;
   int nnz_;
   gt::gtensor_span<value_type, 1, S> values_;
-  gt::gtensor_span<int, 1, S> row_ptr_;
-  gt::gtensor_span<int, 1, S> col_ind_;
+  gt::gtensor_span<index_type, 1, S> row_ptr_;
+  gt::gtensor_span<index_type, 1, S> col_ind_;
 };
 
 template <typename T, typename S>
@@ -174,17 +189,7 @@ public:
     int nrows = d_matrix_batches.shape(0);
     int ncols = d_matrix_batches.shape(1);
     int nbatches = d_matrix_batches.shape(2);
-    /*
-    auto h_nnz_offsets = detail::batch_nnz_offsets(d_matrix_batches, nbatches);
-    gt::gtensor<int, 1, S> d_nnz_offsets{h_nnz_offsets.shape()};
-    csr_matrix csr_mat(gt::shape(nrows * nbatches, ncols * nbatches),
-                       h_nnz_offsets(nbatches));
 
-    gt::copy(h_nnz_offsets, d_nnz_offsets);
-
-    csr_mat.convert_batches(d_matrix_batches, d_nnz_offsets);
-    return csr_mat;
-    */
     auto h_row_ptr = detail::row_ptr_batches(d_matrix_batches, nbatches);
     csr_matrix csr_mat(gt::shape(nrows * nbatches, ncols * nbatches),
                        h_row_ptr(nrows * nbatches));
@@ -263,6 +268,31 @@ public:
   GT_INLINE auto size() const { return calc_size(shape_); }
   GT_INLINE auto shape() const { return shape_; }
   GT_INLINE auto shape(int i) const { return shape_[i]; }
+
+  GT_INLINE auto values_data() const
+  {
+    return gt::raw_pointer_cast(values_.data());
+  }
+  GT_INLINE auto row_ptr_data() const
+  {
+    return gt::raw_pointer_cast(row_ptr_.data());
+  }
+  GT_INLINE auto col_ind_data() const
+  {
+    return gt::raw_pointer_cast(col_ind_.data());
+  }
+
+  // Note: the non-const versions with the same body are needed for SYCL
+  // backend, and possibly for C++17 in general
+  GT_INLINE auto values_data() { return gt::raw_pointer_cast(values_.data()); }
+  GT_INLINE auto row_ptr_data()
+  {
+    return gt::raw_pointer_cast(row_ptr_.data());
+  }
+  GT_INLINE auto col_ind_data()
+  {
+    return gt::raw_pointer_cast(col_ind_.data());
+  }
 
   inline auto to_kernel() const
   {
