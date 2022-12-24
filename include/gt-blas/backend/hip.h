@@ -319,6 +319,8 @@ CREATE_GETRF_NPVT_BATCHED(rocsolver_zgetrf_npvt_batched, gt::complex<double>,
                           rocblas_double_complex)
 CREATE_GETRF_NPVT_BATCHED(rocsolver_cgetrf_npvt_batched, gt::complex<float>,
                           rocblas_float_complex)
+CREATE_GETRF_NPVT_BATCHED(rocsolver_dgetrf_npvt_batched, double, double)
+CREATE_GETRF_NPVT_BATCHED(rocsolver_sgetrf_npvt_batched, float, float)
 
 #undef CREATE_GETRF_NPVT_BATCHED
 
