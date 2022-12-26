@@ -7,10 +7,13 @@
 #include "gt-blas/blas.h"
 
 #ifdef GTENSOR_DEVICE_CUDA
-#if CUDART_VERSION >= 11031
-#include "gt-solver/backend/cuda2.h"
+#if CUDART_VERSION >= 12000
+// new generic MPI; available since 11.3.1, but performance
+// is worse than old csrsm2 API in many cases pre-12.
+#include "gt-solver/backend/cuda-generic.h"
 #else
-#include "gt-solver/backend/cuda.h"
+// legacy API, deprecated since 11.3.1 but still supported until 12
+#include "gt-solver/backend/cuda-csrsm2.h"
 #endif // CUDA_VERSION
 
 #elif defined(GTENSOR_DEVICE_HIP)

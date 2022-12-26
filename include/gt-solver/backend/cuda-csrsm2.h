@@ -142,15 +142,15 @@ public:
 using sparse_handle_t = sparse_handle_cuda;
 
 template <typename T>
-class csr_matrix_lu_cuda
+class csr_matrix_lu_cuda_csrsm2
 {
 public:
   using value_type = T;
   using space_type = gt::space::device;
 
-  csr_matrix_lu_cuda(gt::sparse::csr_matrix<T, space_type>& csr_mat,
-                     const T alpha, int nrhs,
-                     gt::stream_view sview = gt::stream_view{})
+  csr_matrix_lu_cuda_csrsm2(gt::sparse::csr_matrix<T, space_type>& csr_mat,
+                            const T alpha, int nrhs,
+                            gt::stream_view sview = gt::stream_view{})
     : csr_mat_(csr_mat),
       alpha_(alpha),
       nrhs_(nrhs),
@@ -212,7 +212,7 @@ public:
       csr_mat_.shape(0), u_info_, policy_, FN::cast_pointer(u_buf_.data())));
   }
 
-  ~csr_matrix_lu_cuda()
+  ~csr_matrix_lu_cuda_csrsm2()
   {
     cusparseDestroyCsrsm2Info(l_info_);
     cusparseDestroyCsrsm2Info(u_info_);
@@ -259,7 +259,7 @@ public:
 };
 
 template <typename T>
-using csr_matrix_lu = csr_matrix_lu_cuda<T>;
+using csr_matrix_lu = csr_matrix_lu_cuda_csrsm2<T>;
 
 } // namespace solver
 
