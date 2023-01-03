@@ -2,6 +2,7 @@
 #ifndef GTENSOR_SOLVER_CUDA_H
 #define GTENSOR_SOLVER_CUDA_H
 
+#include <cstdint>
 #include <type_traits>
 
 #include "gtensor/gtensor.h"
@@ -229,10 +230,10 @@ public:
 
   std::size_t get_device_memory_usage()
   {
-    size_t nelements = csr_mat_.nnz() + rhs_tmp_.size() + result_tmp_.size() +
-                       l_buf_.size() + u_buf_.size();
+    size_t nelements = csr_mat_.nnz() + rhs_tmp_.size() + result_tmp_.size();
+    size_t nbuf = l_buf_.size() + u_buf_.size();
     size_t nint = csr_mat_.nnz() + csr_mat_.shape(0) + 1;
-    return nelements * sizeof(T) + nint * sizeof(int);
+    return nelements * sizeof(T) + nint * sizeof(int) + nbuf;
   }
 
 private:
@@ -249,8 +250,8 @@ private:
   cusparseDnMatDescr_t result_desc_;
   cusparseSpSMDescr_t l_spsm_desc_;
   cusparseSpSMDescr_t u_spsm_desc_;
-  gt::gtensor_device<T, 1> l_buf_;
-  gt::gtensor_device<T, 1> u_buf_;
+  gt::gtensor_device<uint8_t, 1> l_buf_;
+  gt::gtensor_device<uint8_t, 1> u_buf_;
 
   const cusparseSpSMAlg_t algo_ = CUSPARSE_SPSM_ALG_DEFAULT;
 
