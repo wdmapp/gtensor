@@ -89,6 +89,14 @@ void solver_dense<T>::solve(T* rhs, T* result)
              gt::device_pointer_cast(result));
 }
 
+template <typename T>
+std::size_t solver_dense<T>::get_device_memory_usage()
+{
+  size_t nelements = matrix_data_.size() + rhs_data_.size() + scratch_count_;
+  size_t nindex = pivot_data_.size();
+  return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t);
+}
+
 #else // CUDA and HIP
 
 template <typename T>
@@ -130,6 +138,16 @@ void solver_dense<T>::solve(T* rhs, T* result)
     gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
   gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
              gt::device_pointer_cast(result));
+}
+
+template <typename T>
+std::size_t solver_dense<T>::get_device_memory_usage()
+{
+  size_t nelements = matrix_data_.size() + rhs_data_.size();
+  size_t nindex = pivot_data_.size();
+  size_t nptr = matrix_pointers_.size() + rhs_pointers_.size();
+  return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t) +
+         nptr * sizeof(T*) + info_.size() * sizeof(int);
 }
 
 #endif
@@ -194,6 +212,18 @@ void solver_invert<T>::solve(T* rhs, T* result)
              gt::device_pointer_cast(result));
 }
 
+template <typename T>
+std::size_t solver_invert<T>::get_device_memory_usage()
+{
+  size_t nelements =
+    matrix_data_.size() + rhs_data_.size() + rhs_input_data_.size();
+  size_t nindex = pivot_data_.size();
+  size_t nptr =
+    matrix_pointers_.size() + rhs_pointers_.size() + rhs_input_pointers_.size();
+  return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t) +
+         nptr * sizeof(T*) + info_.size() * sizeof(int);
+}
+
 template class solver_invert<float>;
 template class solver_invert<double>;
 template class solver_invert<gt::complex<float>>;
@@ -213,6 +243,12 @@ template <typename T>
 void solver_sparse<T>::solve(T* rhs, T* result)
 {
   csr_mat_lu_.solve(rhs, result);
+}
+
+template <typename T>
+std::size_t solver_sparse<T>::get_device_memory_usage()
+{
+  return csr_mat_lu_.get_device_memory_usage();
 }
 
 template <typename T>

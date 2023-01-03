@@ -77,6 +77,10 @@ static void BM_solver(benchmark::State& state)
 
   Solver s(h, N, NBATCH, NRHS, gt::raw_pointer_cast(h_Aptr.data()));
 
+  std::cout << typeid(Solver).name() << " devmem bytes "
+            << static_cast<double>(s.get_device_memory_usage()) / (1024 * 1024)
+            << " MB" << std::endl;
+
   auto fn = [&]() {
     s.solve(d_rhs.data().get(), d_result.data().get());
     gt::synchronize();

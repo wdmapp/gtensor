@@ -36,6 +36,7 @@ public:
   using value_type = T;
 
   virtual void solve(T* rhs, T* result) = 0;
+  virtual std::size_t get_device_memory_usage() = 0;
 };
 
 #ifdef GTENSOR_DEVICE_SYCL
@@ -54,6 +55,7 @@ public:
                T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
+  virtual std::size_t get_device_memory_usage();
 
 protected:
   gt::blas::handle_t& h_;
@@ -80,6 +82,7 @@ public:
                T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
+  virtual std::size_t get_device_memory_usage();
 
 protected:
   gt::blas::handle_t& h_;
@@ -107,6 +110,7 @@ public:
                 T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
+  virtual std::size_t get_device_memory_usage();
 
 protected:
   gt::blas::handle_t& h_;
@@ -134,6 +138,7 @@ public:
                 T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
+  virtual std::size_t get_device_memory_usage();
 
 protected:
   int n_;

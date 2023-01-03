@@ -238,6 +238,15 @@ public:
                gt::device_pointer_cast(result));
   }
 
+  std::size_t get_device_memory_usage()
+  {
+    size_t nelements =
+      csr_mat_.nnz() + rhs_tmp_.size() + l_buf_.size() + u_buf_.size();
+    size_t nint = csr_mat_.nnz() + csr_mat_.shape(0) + 1;
+    return nelements * sizeof(T) + nint * sizeof(int);
+  }
+
+private:
   gt::sparse::csr_matrix<T, space_type>& csr_mat_;
   const T alpha_;
   int nrhs_;
