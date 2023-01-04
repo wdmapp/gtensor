@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -207,4 +208,21 @@ TEST(sparse, csr_matrix_view)
   auto s_aview_eval = gt::eval(s_aview);
   GT_DEBUG_TYPE(s_aview_eval);
   EXPECT_EQ(s_aview_eval.shape(), gt::shape(4, 2));
+}
+
+TEST(sparse, csr_matrix_streamop)
+{
+  gt::gtensor<double, 2> a{
+    {1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
+  gt::sparse::csr_matrix<double, gt::space::host> s_a(a);
+
+  std::stringstream ss_dense, ss_sparse;
+
+  ss_dense << a;
+  std::cout << "dense\n" << ss_dense.str() << std::endl;
+
+  ss_sparse << s_a;
+  std::cout << "sparse\n" << ss_sparse.str() << std::endl;
+
+  EXPECT_EQ(ss_dense.str(), ss_sparse.str());
 }

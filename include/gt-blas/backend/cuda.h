@@ -317,6 +317,8 @@ inline void getrf_npvt_batched(handle_t& h, int n, T** d_Aarray, int lda,
 CREATE_GETRF_NPVT_BATCHED(cublasZgetrfBatched, gt::complex<double>,
                           cuDoubleComplex)
 CREATE_GETRF_NPVT_BATCHED(cublasCgetrfBatched, gt::complex<float>, cuComplex)
+CREATE_GETRF_NPVT_BATCHED(cublasDgetrfBatched, double, double)
+CREATE_GETRF_NPVT_BATCHED(cublasSgetrfBatched, float, float)
 
 #undef CREATE_GETRF_NPVT_BATCHED
 

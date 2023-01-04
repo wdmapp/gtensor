@@ -95,6 +95,11 @@ public:
     gtGpuAssert(false, "zero length sarray does not support element access");
   }
 
+  GT_INLINE T& operator[](T i)
+  {
+    gtGpuAssert(false, "zero length sarray does not support element access");
+  }
+
   GT_INLINE const T* begin() const { return nullptr; }
   GT_INLINE const T* end() const { return nullptr; }
 };
