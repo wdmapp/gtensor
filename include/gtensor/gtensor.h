@@ -870,6 +870,16 @@ inline auto arange(T start, T end, T step = 1)
   return generator<1, T>(shape, detail::arange_generator_1d<T>(start, step));
 }
 
+// ======================================================================
+// host_mirror
+
+template <typename E>
+auto host_mirror(const E& e)
+{
+  // FIXME, empty_like with space would be helpful
+  return gt::empty<gt::expr_value_type<E>>(e.shape());
+}
+
 } // namespace gt
 
 #endif
