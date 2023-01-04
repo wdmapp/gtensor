@@ -808,7 +808,14 @@ TYPED_TEST(gtensor_space, host_mirror)
 
   auto a = gt::zeros<double, space_type>({3, 2});
   // initialize on host
-  auto h_a = gt::host_mirror(a);
+  auto&& h_a = gt::host_mirror(a);
+
+  if (std::is_same<space_type, gt::space::host>::value) {
+    // make sure if a is already on the host, we're not actually allocating a
+    // mirror
+    EXPECT_EQ(gt::raw_pointer_cast(a.data()), h_a.data());
+  }
+
   h_a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
   gt::copy(h_a, a);
 
@@ -817,7 +824,7 @@ TYPED_TEST(gtensor_space, host_mirror)
   b = a;
 
   // check result on host
-  auto h_b = gt::host_mirror(b);
+  auto&& h_b = gt::host_mirror(b);
   gt::copy(b, h_b);
   EXPECT_EQ(h_b, h_a);
 }

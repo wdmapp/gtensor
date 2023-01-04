@@ -96,7 +96,12 @@ template <typename InputPtr, typename OutputPtr>
 inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
-  std::copy_n(in, count, out);
+  // This may be used to copy between a gtensor and its host mirror, which are
+  // the same object if compiling for host only, so in that case, we don't need
+  // to actually copy anything
+  if (in != out) {
+    std::copy_n(in, count, out);
+  }
 }
 } // namespace copy_impl
 
