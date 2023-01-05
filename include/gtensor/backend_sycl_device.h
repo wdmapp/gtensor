@@ -193,7 +193,7 @@ public:
     // Get devices from default platform, which for Intel implementation
     // can be controlled with SYCL_DEVICE_FILTER env variable. This
     // allows flexible selection at runtime.
-#if (__INTEL_CLANG_COMPILER && __INTEL_CLANG_COMPILER < 20230100)
+#if (__INTEL_CLANG_COMPILER && __INTEL_CLANG_COMPILER < 20230000)
     ::sycl::platform p{::sycl::default_selector()};
 #else
     ::sycl::platform p{::sycl::default_selector_v};
