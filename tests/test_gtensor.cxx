@@ -799,6 +799,16 @@ using gtensor_space_types = ::testing::Types<
 
 TYPED_TEST_SUITE(gtensor_space, gtensor_space_types);
 
+TYPED_TEST(gtensor_space, copy_gtensor_gtensor_hh)
+{
+  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::empty_like(a);
+
+  EXPECT_NE(b, a);
+  gt::copy(a, b);
+  EXPECT_EQ(b, a);
+}
+
 // host_mirror should basically be a no-op when compiling host only (space_type
 // == host), but will handle the situation where something really lives on the
 // device but needs to be manipulated on the host
