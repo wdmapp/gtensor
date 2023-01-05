@@ -870,6 +870,39 @@ inline auto arange(T start, T end, T step = 1)
   return generator<1, T>(shape, detail::arange_generator_1d<T>(start, step));
 }
 
+// ======================================================================
+// host_mirror
+
+namespace detail
+{
+
+template <typename E, typename Enable = void>
+struct host_mirror
+{
+  static auto run(const E& e)
+  {
+    // FIXME, empty_like with space would be helpful
+    return gt::empty<gt::expr_value_type<E>>(e.shape());
+  }
+};
+
+// specialization if the expression is already on the host: just return a
+// reference to it
+template <typename E>
+struct host_mirror<E, std::enable_if_t<std::is_same<gt::expr_space_type<E>,
+                                                    gt::space::host>::value>>
+{
+  static E& run(E& e) { return e; }
+};
+
+} // namespace detail
+
+template <typename E>
+decltype(auto) host_mirror(E& e)
+{
+  return detail::host_mirror<E>::run(e);
+}
+
 } // namespace gt
 
 #endif
