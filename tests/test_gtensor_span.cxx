@@ -14,6 +14,18 @@ TEST(gtensor_span, adapt_ctor_init_2d)
   EXPECT_EQ(b, (gt::gtensor<double, 2>({{11., 12.}, {13., 21.}, {22., 23.}})));
 }
 
+TEST(gtensor_span, adapt_ctor_init_2d_space_type)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  auto a_data = a.data();
+
+  auto b = gt::adapt<2, gt::space::host>(a_data, {2, 3});
+  static_assert(
+    std::is_same<gt::expr_space_type<decltype(b)>, gt::space::host>::value,
+    "space mismatch");
+  EXPECT_EQ(b, (gt::gtensor<double, 2>({{11., 12.}, {13., 21.}, {22., 23.}})));
+}
+
 // Note: the implicit conversion from gtensor won't work if this
 // is templates on the gtensor_span types.
 inline double first_element(const gt::gtensor_span<double, 2>& a)
@@ -141,3 +153,20 @@ TEST(gtensor_span, DISABLED_fill_from_strides_0)
   EXPECT_EQ(a_span, (gt::gtensor<double, 2>({{0., 0.}, {0., 0.}})));
   EXPECT_EQ(a, (gt::gtensor<double, 2>({{0., 0., 13.}, {0., 0., 23.}})));
 }
+
+#ifdef GTENSOR_HAVE_DEVICE
+
+TEST(gtensor_span, adapt_ctor_init_2d_space_type_device)
+{
+  gt::gtensor_device<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  auto a_data = a.data();
+
+  auto b = gt::adapt<2, gt::space::device>(a_data, {2, 3});
+  static_assert(
+    std::is_same<gt::expr_space_type<decltype(b)>, gt::space::device>::value,
+    "space mismatch");
+  EXPECT_EQ(
+    b, (gt::gtensor_device<double, 2>({{11., 12.}, {13., 21.}, {22., 23.}})));
+}
+
+#endif

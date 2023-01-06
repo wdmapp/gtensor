@@ -220,30 +220,36 @@ inline std::string gtensor_span<T, N, S>::typestr() const&
 // ======================================================================
 // adapt
 
-template <size_type N, typename T>
-GT_INLINE gtensor_span<T, N> adapt(T* data, const shape_type<N>& shape)
+template <size_type N, typename S, typename T>
+GT_INLINE auto adapt(gt::space_pointer<T, S> data, const shape_type<N>& shape)
 {
-  return gtensor_span<T, N>(data, shape, calc_strides(shape));
+  return gtensor_span<T, N, S>(data, shape, calc_strides(shape));
+}
+
+// host
+template <size_type N, typename T>
+GT_INLINE auto adapt(T* data, const shape_type<N>& shape)
+{
+  return adapt<N, gt::space::host, T>(data, shape);
 }
 
 template <size_type N, typename T>
-gtensor_span<T, N> adapt(T* data, const int* shape_data)
+GT_INLINE auto adapt(T* data, const int* shape_data)
 {
-  return adapt<N, T>(data, {shape_data, N});
+  return adapt<N, gt::space::host, T>(data, {shape_data, N});
+}
+
+// device
+template <size_type N, typename T>
+GT_INLINE auto adapt_device(T* data, const shape_type<N>& shape)
+{
+  return adapt<N, gt::space::device>(gt::device_pointer_cast(data), shape);
 }
 
 template <size_type N, typename T>
-GT_INLINE gtensor_span<T, N, space::device> adapt_device(
-  T* data, const shape_type<N>& shape)
+GT_INLINE auto adapt_device(T* data, const int* shape_data)
 {
-  return gtensor_span<T, N, space::device>(gt::device_pointer_cast(data), shape,
-                                           calc_strides(shape));
-}
-
-template <size_type N, typename T>
-gtensor_span<T, N, space::device> adapt_device(T* data, const int* shape_data)
-{
-  return adapt_device<N, T>(data, {shape_data, N});
+  return adapt<N, gt::space::device, T>(data, {shape_data, N});
 }
 
 // ======================================================================
