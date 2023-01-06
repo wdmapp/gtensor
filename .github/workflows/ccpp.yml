@@ -25,6 +25,8 @@ jobs:
       matrix:
         cxx: [ 'g++-7', 'g++-9', 'clang++-9' ]
     name: tests-cpu-${{ matrix.cxx }}
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -43,6 +45,8 @@ jobs:
       matrix:
         cxx: [ 'g++-12', 'clang++-14' ]
     name: tests-cpu-cxx20-${{ matrix.cxx }}
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -61,6 +65,8 @@ jobs:
       matrix:
         cxx: [ 'g++-7', 'g++-9', 'clang++-9' ]
     name: examples-cpu-${{ matrix.cxx }}
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -83,6 +89,8 @@ jobs:
       matrix:
         cxx: [ 'clang++-14' ]
     name: examples-cpu-ub-${{ matrix.cxx }}
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -101,6 +109,8 @@ jobs:
 
   examples-cpu-gnu-make:
     runs-on: ubuntu-latest
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -125,6 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       cxx: 'clang++-9'
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
     defaults:
       run:
         working-directory: ${{ github.workspace }}/examples
@@ -147,6 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       cxx: 'clang++-9'
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -179,6 +191,7 @@ jobs:
     env:
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2
@@ -227,6 +240,7 @@ jobs:
       HCC_AMDGPU_TARGET: gfx90a
       GTEST_VERSION: 1.12.1
       GTEST_ROOT: ${{ github.workspace }}/googletest
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
     - uses: actions/checkout@v2

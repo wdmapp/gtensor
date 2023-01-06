@@ -161,18 +161,24 @@ inline std::vector<::sycl::device> get_devices_with_numa_sub(
   for (auto root_dev : p.get_devices()) {
     // Handle GPUs with multiple tiles, which can be partitioned based on numa
     // domain
-    auto max_sub_devices =
-      root_dev.get_info<::sycl::info::device::partition_max_sub_devices>();
-    // NB: workaround bug in host backend, where max > 0 but it's not supported
-    if (device_per_tile_enabled() && max_sub_devices > 0 &&
-        (root_dev.is_gpu() || root_dev.is_cpu())) {
-      auto sub_devices = root_dev.create_sub_devices<
-        ::sycl::info::partition_property::partition_by_affinity_domain>(
-        ::sycl::info::partition_affinity_domain::numa);
-      for (auto sub_dev : sub_devices) {
-        result.push_back(sub_dev);
+    if (device_per_tile_enabled()) {
+      auto max_sub_devices =
+        root_dev.get_info<::sycl::info::device::partition_max_sub_devices>();
+      auto aff_domains =
+        root_dev.get_info<::sycl::info::device::partition_affinity_domains>();
+      // NB: device type check is a workaround for bug in host backend, where
+      // max > 0 but it's not supported
+      if (max_sub_devices > 0 && aff_domains.size() > 0 &&
+          (root_dev.is_gpu() || root_dev.is_cpu())) {
+        auto sub_devices = root_dev.create_sub_devices<
+          ::sycl::info::partition_property::partition_by_affinity_domain>(
+          ::sycl::info::partition_affinity_domain::numa);
+        for (auto sub_dev : sub_devices) {
+          result.push_back(sub_dev);
+        }
       }
-    } else {
+    }
+    if (result.size() == 0) {
       result.push_back(root_dev);
     }
   }
@@ -187,7 +193,7 @@ public:
     // Get devices from default platform, which for Intel implementation
     // can be controlled with SYCL_DEVICE_FILTER env variable. This
     // allows flexible selection at runtime.
-#if (__INTEL_CLANG_COMPILER && __INTEL_CLANG_COMPILER < 20230100)
+#if (__INTEL_CLANG_COMPILER && __INTEL_CLANG_COMPILER < 20230000)
     ::sycl::platform p{::sycl::default_selector()};
 #else
     ::sycl::platform p{::sycl::default_selector_v};

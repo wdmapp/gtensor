@@ -10,15 +10,15 @@ on:
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-20.04:20221119
+    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-22.04:20230104
     env:
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
-      SYCL_DEVICE_FILTER: host
       DEBIAN_FRONTEND: noninteractive
       GTENSOR_TEST_EXCLUDE: test_fft test_reductions
-      LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.7.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mkl/2022.2.1/lib/intel64:/opt/intel/oneapi/debugger/2021.7.1/gdb/intel64/lib:/opt/intel/oneapi/debugger/2021.7.1/libipt/intel64/lib:/opt/intel/oneapi/debugger/2021.7.1/dep/lib:/opt/intel/oneapi/compiler/2022.2.1/linux/lib:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/x64:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2022.2.1/linux/compiler/lib/intel64_lin
-      PATH: /opt/intel/oneapi/mkl/2022.2.1/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.7.1/bin:/opt/intel/oneapi/debugger/2021.7.1/gdb/intel64/bin:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2022.2.1/linux/bin/intel64:/opt/intel/oneapi/compiler/2022.2.1/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.8.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.8.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.8.0//lib/release:/opt/intel/oneapi/mpi/2021.8.0//lib:/opt/intel/oneapi/mkl/2023.0.0/lib/intel64:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/dep/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/x64:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/compiler/lib/intel64_lin
+      PATH: /opt/intel/oneapi/mpi/2021.8.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.8.0//bin:/opt/intel/oneapi/mkl/2023.0.0/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.8.0/bin:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2023.0.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
     steps:
     - uses: actions/checkout@v2
     - name: clinfo
@@ -29,7 +29,7 @@ jobs:
     - name: sycl-ls
       run: |
         which sycl-ls
-        SYCL_DEVICE_FILTER="*" sycl-ls
+        sycl-ls
     - name: setup compiler env
       run: |
         which icpx
@@ -46,38 +46,54 @@ jobs:
         cmake -S googletest-release-${{ env.GTEST_VERSION }} -B build -DCMAKE_INSTALL_PREFIX=${{ env.GTEST_ROOT }}
         cmake --build build -t install
       env:
-        CXX: clang++-9
-    - name: cmake host
-      run: cmake -S . -B build-sycl-host -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=On -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON -DGTENSOR_DEVICE_SYCL_ILP64=ON
-    - name: cmake host build
-      run: cmake --build build-sycl-host -v
+        CXX: clang++-11
+    - name: cmake
+      run: cmake -S . -B build-sycl -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON -DGTENSOR_TEST_DEBUG=ON
+    - name: cmake build
+      run: cmake --build build-sycl -v
     - name: cmake debug
-      run: cmake -S . -B build-sycl-debug -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON -DGTENSOR_DEVICE_SYCL_ILP64=ON
+      run: cmake -S . -B build-sycl-debug -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_TEST_DEBUG=ON
     - name: cmake debug build
       run: cmake --build build-sycl-debug -v
-    - name: cmake host run tests
-      run: ./run-gtests.sh build-sycl-host
-    - name: cmake host run daxpy
+    - name: cmake cpu run tests
+      run: ./run-gtests.sh build-sycl
+      env:
+        SYCL_DEVICE_FILTER: cpu
+    - name: cmake cpu run daxpy
       run: ./daxpy
-      working-directory: ${{ github.workspace }}/build-sycl-host/examples
-    - name: cmake host run stencil1d
+      working-directory: ${{ github.workspace }}/build-sycl/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu
+    - name: cmake cpu run stencil1d
       run: ./stencil1d
-      working-directory: ${{ github.workspace }}/build-sycl-host/examples
-    - name: cmake host run mult_table
+      working-directory: ${{ github.workspace }}/build-sycl/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu
+    - name: cmake cpu run mult_table
       run: ./mult_table
-      working-directory: ${{ github.workspace }}/build-sycl-host/examples
+      working-directory: ${{ github.workspace }}/build-sycl/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu
     - name: GNU make setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu
     - name: GNU make build
       run: make GTENSOR_DEVICE=sycl
       working-directory: ${{ github.workspace }}/examples
     - name: GNU make run daxpy
       run: ./daxpy
       working-directory: ${{ github.workspace }}/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu
     - name: GNU make run stencil1d
       run: ./stencil1d
       working-directory: ${{ github.workspace }}/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu
     - name: GNU make run mult_table
       run: ./mult_table
       working-directory: ${{ github.workspace }}/examples
+      env:
+        SYCL_DEVICE_FILTER: cpu

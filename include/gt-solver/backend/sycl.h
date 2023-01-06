@@ -90,8 +90,7 @@ public:
 
   std::size_t get_device_memory_usage()
   {
-    size_t nelements = csr_mat_.nnz() + rhs_tmp_.size() + result_tmp_.size() +
-                       l_buf_.size() + u_buf_.size();
+    size_t nelements = csr_mat_.nnz() + rhs_tmp_.size() + result_tmp_.size();
     size_t nint = csr_mat_.nnz() + csr_mat_.shape(0) + 1;
     return nelements * sizeof(T) + nint * sizeof(int);
   }
