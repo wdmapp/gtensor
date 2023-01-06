@@ -787,6 +787,89 @@ TEST(gtensor_kernel, kernel_lambda_call)
 
 #endif
 
+// ======================================================================
+
+template <typename SA, typename SB>
+struct gtensor_copy_config
+{
+  using a_space_type = SA;
+  using b_space_type = SB;
+};
+
+template <typename S>
+class gtensor_copy : public ::testing::Test
+{};
+
+using gtensor_copy_types = ::testing::Types<
+#ifdef GTENSOR_HAVE_DEVICE
+  gtensor_copy_config<gt::space::device, gt::space::device>,
+  gtensor_copy_config<gt::space::host, gt::space::device>,
+  gtensor_copy_config<gt::space::device, gt::space::host>,
+#endif
+  gtensor_copy_config<gt::space::host, gt::space::host>>;
+
+TYPED_TEST_SUITE(gtensor_copy, gtensor_copy_types);
+
+TYPED_TEST(gtensor_copy, gtensor_gtensor)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  EXPECT_NE(b, a);
+  gt::copy(a, b);
+  EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_copy, gtensor_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+  auto s_a = gt::adapt<2, a_space_type>(a.data(), a.shape());
+  auto s_b = gt::adapt<2, b_space_type>(b.data(), b.shape());
+
+  EXPECT_NE(a, s_b);
+  gt::copy(a, s_b);
+  EXPECT_EQ(a, s_b);
+}
+
+TYPED_TEST(gtensor_copy, span_gtensor)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+  auto s_a = gt::adapt<2, a_space_type>(a.data(), a.shape());
+  auto s_b = gt::adapt<2, b_space_type>(b.data(), b.shape());
+
+  EXPECT_NE(s_a, b);
+  gt::copy(s_a, b);
+  EXPECT_EQ(s_a, b);
+}
+
+TYPED_TEST(gtensor_copy, span_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+  auto s_a = gt::adapt<2, a_space_type>(a.data(), a.shape());
+  auto s_b = gt::adapt<2, b_space_type>(b.data(), b.shape());
+
+  EXPECT_NE(s_a, s_b);
+  gt::copy(s_a, s_b);
+  EXPECT_EQ(s_a, s_b);
+}
+
+// ======================================================================
+
 template <typename S>
 class gtensor_space : public ::testing::Test
 {};
@@ -798,85 +881,6 @@ using gtensor_space_types = ::testing::Types<
   gt::space::host>;
 
 TYPED_TEST_SUITE(gtensor_space, gtensor_space_types);
-
-TYPED_TEST(gtensor_space, copy_gtensor_gtensor_hh)
-{
-  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
-
-  EXPECT_NE(b, a);
-  gt::copy(a, b);
-  EXPECT_EQ(b, a);
-}
-
-TYPED_TEST(gtensor_space, copy_gtensor_gtensor_dh)
-{
-  using device = TypeParam;
-  auto a = gt::gtensor<double, 2, device>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
-
-  EXPECT_NE(b, a);
-  gt::copy(a, b);
-  EXPECT_EQ(b, a);
-}
-
-TYPED_TEST(gtensor_space, copy_gtensor_gtensor_hd)
-{
-  using device = TypeParam;
-  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2, device>(a.shape(), 0.);
-
-  EXPECT_NE(b, a);
-  gt::copy(a, b);
-  EXPECT_EQ(b, a);
-}
-
-TYPED_TEST(gtensor_space, copy_gtensor_gtensor_dd)
-{
-  using device = TypeParam;
-  auto a = gt::gtensor<double, 2, device>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2, device>(a.shape(), 0.);
-
-  EXPECT_NE(b, a);
-  gt::copy(a, b);
-  EXPECT_EQ(b, a);
-}
-
-TYPED_TEST(gtensor_space, copy_gtensor_span_hh)
-{
-  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
-  auto s_a = gt::adapt<2>(a.data(), a.shape());
-  auto s_b = gt::adapt<2>(b.data(), b.shape());
-
-  EXPECT_NE(s_b, a);
-  gt::copy(a, s_b);
-  EXPECT_EQ(s_b, a);
-}
-
-TYPED_TEST(gtensor_space, copy_span_gtensor_hh)
-{
-  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
-  auto s_a = gt::adapt<2>(a.data(), a.shape());
-  auto s_b = gt::adapt<2>(b.data(), b.shape());
-
-  EXPECT_NE(b, s_a);
-  gt::copy(s_a, b);
-  EXPECT_EQ(b, s_a);
-}
-
-TYPED_TEST(gtensor_space, copy_span_span_hh)
-{
-  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
-  auto s_a = gt::adapt<2>(a.data(), a.shape());
-  auto s_b = gt::adapt<2>(b.data(), b.shape());
-
-  EXPECT_NE(s_b, s_a);
-  gt::copy(s_a, s_b);
-  EXPECT_EQ(s_b, s_a);
-}
 
 // host_mirror should basically be a no-op when compiling host only (space_type
 // == host), but will handle the situation where something really lives on the
