@@ -802,11 +802,80 @@ TYPED_TEST_SUITE(gtensor_space, gtensor_space_types);
 TYPED_TEST(gtensor_space, copy_gtensor_gtensor_hh)
 {
   auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
-  auto b = gt::empty_like(a);
+  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
 
   EXPECT_NE(b, a);
   gt::copy(a, b);
   EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_space, copy_gtensor_gtensor_dh)
+{
+  using device = TypeParam;
+  auto a = gt::gtensor<double, 2, device>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
+
+  EXPECT_NE(b, a);
+  gt::copy(a, b);
+  EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_space, copy_gtensor_gtensor_hd)
+{
+  using device = TypeParam;
+  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, device>(a.shape(), 0.);
+
+  EXPECT_NE(b, a);
+  gt::copy(a, b);
+  EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_space, copy_gtensor_gtensor_dd)
+{
+  using device = TypeParam;
+  auto a = gt::gtensor<double, 2, device>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, device>(a.shape(), 0.);
+
+  EXPECT_NE(b, a);
+  gt::copy(a, b);
+  EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_space, copy_gtensor_span_hh)
+{
+  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
+  auto s_a = gt::adapt<2>(a.data(), a.shape());
+  auto s_b = gt::adapt<2>(b.data(), b.shape());
+
+  EXPECT_NE(s_b, a);
+  gt::copy(a, s_b);
+  EXPECT_EQ(s_b, a);
+}
+
+TYPED_TEST(gtensor_space, copy_span_gtensor_hh)
+{
+  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
+  auto s_a = gt::adapt<2>(a.data(), a.shape());
+  auto s_b = gt::adapt<2>(b.data(), b.shape());
+
+  EXPECT_NE(b, s_a);
+  gt::copy(s_a, b);
+  EXPECT_EQ(b, s_a);
+}
+
+TYPED_TEST(gtensor_space, copy_span_span_hh)
+{
+  auto a = gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2>(a.shape(), 0.);
+  auto s_a = gt::adapt<2>(a.data(), a.shape());
+  auto s_b = gt::adapt<2>(b.data(), b.shape());
+
+  EXPECT_NE(s_b, s_a);
+  gt::copy(s_a, s_b);
+  EXPECT_EQ(s_b, s_a);
 }
 
 // host_mirror should basically be a no-op when compiling host only (space_type
