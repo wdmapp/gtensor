@@ -840,7 +840,9 @@ copy(const SRC& src, DST& dst)
       assert(src.size() == dst.size());
       gt::copy_n(src.data(), src.size(), dst.data());
     } else {
-      assert(0);
+      auto dst_tmp = gt::empty_like(dst);
+      gt::copy(src, dst_tmp);
+      dst = dst_tmp;
     }
   } else {
     if (dst.is_f_contiguous()) {
@@ -851,9 +853,21 @@ copy(const SRC& src, DST& dst)
   }
 }
 
+// if both expressions are in the same space, we can just assign
 template <typename SRC, typename DST>
-std::enable_if_t<!gt::has_data_and_size<SRC>::value &&
-                 gt::has_data_and_size<DST>::value>
+std::enable_if_t<
+  std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
+  !(gt::has_data_and_size<SRC>::value && gt::has_data_and_size<DST>::value)>
+copy(const SRC& src, DST& dst)
+{
+  dst = src;
+}
+
+// different spaces, destination is storage-like
+template <typename SRC, typename DST>
+std::enable_if_t<
+  !std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
+  (!gt::has_data_and_size<SRC>::value && gt::has_data_and_size<DST>::value)>
 copy(const SRC& src, DST& dst)
 {
   if (dst.is_f_contiguous()) {
