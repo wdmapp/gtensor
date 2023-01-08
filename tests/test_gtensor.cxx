@@ -954,6 +954,25 @@ TYPED_TEST(gtensor_copy, to_expr)
   EXPECT_EQ(b, a);
 }
 
+TYPED_TEST(gtensor_copy, expr_to_non_contiguous)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  // use a view on the source side
+  auto v_a = a.view(gt::slice(1, 3), gt::slice(0, 2));
+  // make a noncontiguous subset gtensor_span for destination
+  auto s_b = gt::gtensor_span<double, 2, b_space_type>(
+    b.data() + 1, gt::shape(2, 2), b.strides());
+
+  gt::copy(v_a, s_b);
+  EXPECT_EQ(
+    b, (gt::gtensor<double, 2, b_space_type>{{0., 12., 13.}, {0., 22., 23.}}));
+}
+
 // ======================================================================
 
 template <typename S>
