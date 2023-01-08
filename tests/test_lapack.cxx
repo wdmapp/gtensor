@@ -204,15 +204,9 @@ void test_getrf_batch_real()
   }
 }
 
-TEST(lapack, sgetrf_batch)
-{
-  test_getrf_batch_real<float>();
-}
+TEST(lapack, sgetrf_batch) { test_getrf_batch_real<float>(); }
 
-TEST(lapack, dgetrf_batch)
-{
-  test_getrf_batch_real<double>();
-}
+TEST(lapack, dgetrf_batch) { test_getrf_batch_real<double>(); }
 
 template <typename T>
 void test_getrs_batch_real()
@@ -274,15 +268,9 @@ void test_getrs_batch_real()
   EXPECT_EQ(h_B(2, 1, 0), 31.0);
 }
 
-TEST(lapack, sgetrs_batch)
-{
-  test_getrs_batch_real<float>();
-}
+TEST(lapack, sgetrs_batch) { test_getrs_batch_real<float>(); }
 
-TEST(lapack, dgetrs_batch)
-{
-  test_getrs_batch_real<double>();
-}
+TEST(lapack, dgetrs_batch) { test_getrs_batch_real<double>(); }
 
 template <typename R>
 void test_getrf_batch_complex()
@@ -371,15 +359,9 @@ void test_getrf_batch_complex()
   }
 }
 
-TEST(lapack, cgetrf_batch)
-{
-  test_getrf_batch_complex<float>();
-}
+TEST(lapack, cgetrf_batch) { test_getrf_batch_complex<float>(); }
 
-TEST(lapack, zgetrf_batch)
-{
-  test_getrf_batch_complex<double>();
-}
+TEST(lapack, zgetrf_batch) { test_getrf_batch_complex<double>(); }
 
 #ifdef GTENSOR_HAVE_DEVICE
 template <typename R>
@@ -451,15 +433,9 @@ void test_getrf_npvt_batch_complex()
   }
 }
 
-TEST(lapack, cgetrf_npvt_batch)
-{
-  test_getrf_npvt_batch_complex<float>();
-}
+TEST(lapack, cgetrf_npvt_batch) { test_getrf_npvt_batch_complex<float>(); }
 
-TEST(lapack, zgetrf_npvt_batch)
-{
-  test_getrf_npvt_batch_complex<double>();
-}
+TEST(lapack, zgetrf_npvt_batch) { test_getrf_npvt_batch_complex<double>(); }
 #endif
 
 namespace test
@@ -566,15 +542,9 @@ void test_getrs_batch_complex()
   expect_complex_near(h_B(2, 1, 1), 31.0);
 }
 
-TEST(lapack, cgetrs_batch)
-{
-  test_getrs_batch_complex<float>();
-}
+TEST(lapack, cgetrs_batch) { test_getrs_batch_complex<float>(); }
 
-TEST(lapack, zgetrs_batch)
-{
-  test_getrs_batch_complex<double>();
-}
+TEST(lapack, zgetrs_batch) { test_getrs_batch_complex<double>(); }
 
 TEST(lapack, cgetrs_batch_managed)
 {
@@ -663,15 +633,9 @@ void test_getri_batch_complex()
   expect_complex_near(h_C(2, 2, 1), T(0.036, 0.052));
 }
 
-TEST(lapack, cgetri_batch)
-{
-  test_getri_batch_complex<float>();
-}
+TEST(lapack, cgetri_batch) { test_getri_batch_complex<float>(); }
 
-TEST(lapack, zgetri_batch)
-{
-  test_getri_batch_complex<double>();
-}
+TEST(lapack, zgetri_batch) { test_getri_batch_complex<double>(); }
 
 TEST(lapack, cgetri_batch_managed)
 {

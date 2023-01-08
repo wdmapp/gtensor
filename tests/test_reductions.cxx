@@ -187,20 +187,11 @@ void test_min(int n)
   EXPECT_EQ(amin, 1);
 }
 
-TEST(reductions, sum_1d)
-{
-  test_sum<gt::space::host>(2048);
-}
+TEST(reductions, sum_1d) { test_sum<gt::space::host>(2048); }
 
-TEST(reductions, max_1d)
-{
-  test_max<gt::space::host>(2048);
-}
+TEST(reductions, max_1d) { test_max<gt::space::host>(2048); }
 
-TEST(reductions, min_1d)
-{
-  test_min<gt::space::host>(2048);
-}
+TEST(reductions, min_1d) { test_min<gt::space::host>(2048); }
 
 TEST(reductions, norm)
 {
@@ -216,20 +207,11 @@ TEST(reductions, norm_expr)
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-TEST(reductions, device_sum_1d)
-{
-  test_sum<gt::space::device>(2048);
-}
+TEST(reductions, device_sum_1d) { test_sum<gt::space::device>(2048); }
 
-TEST(reductions, device_max_1d)
-{
-  test_max<gt::space::device>(2048);
-}
+TEST(reductions, device_max_1d) { test_max<gt::space::device>(2048); }
 
-TEST(reductions, device_min_1d)
-{
-  test_min<gt::space::device>(2048);
-}
+TEST(reductions, device_min_1d) { test_min<gt::space::device>(2048); }
 
 #endif // GTENSOR_HAVE_DEVICE
 

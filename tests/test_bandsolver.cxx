@@ -208,15 +208,9 @@ void test_getrs_batch_real()
   EXPECT_EQ(h_B(2, 1, 0), 31.0);
 }
 
-TEST(bandsolve, sgetrs_batch)
-{
-  test_getrs_batch_real<float>();
-}
+TEST(bandsolve, sgetrs_batch) { test_getrs_batch_real<float>(); }
 
-TEST(bandsolve, dgetrs_batch)
-{
-  test_getrs_batch_real<double>();
-}
+TEST(bandsolve, dgetrs_batch) { test_getrs_batch_real<double>(); }
 
 namespace test
 {
@@ -323,15 +317,9 @@ void test_getrs_batch_complex()
   expect_complex_near(h_B(2, 1, 1), 31.0);
 }
 
-TEST(bandsolve, cgetrs_batch)
-{
-  test_getrs_batch_complex<float>();
-}
+TEST(bandsolve, cgetrs_batch) { test_getrs_batch_complex<float>(); }
 
-TEST(bandsolve, zgetrs_batch)
-{
-  test_getrs_batch_complex<double>();
-}
+TEST(bandsolve, zgetrs_batch) { test_getrs_batch_complex<double>(); }
 
 TEST(bandsolve, cgetrs_batch_managed)
 {
@@ -386,15 +374,9 @@ void test_get_max_bandwidth()
   EXPECT_EQ(bw.upper, 1);
 }
 
-TEST(bandsolve, sget_max_bandwidth)
-{
-  test_get_max_bandwidth<double>();
-}
+TEST(bandsolve, sget_max_bandwidth) { test_get_max_bandwidth<double>(); }
 
-TEST(bandsolve, dget_max_bandwidth)
-{
-  test_get_max_bandwidth<double>();
-}
+TEST(bandsolve, dget_max_bandwidth) { test_get_max_bandwidth<double>(); }
 
 TEST(bandsolve, cget_max_bandwidth)
 {
@@ -499,15 +481,9 @@ void test_invert_batch_complex()
   GT_EXPECT_NEAR_ARRAY(h_Ainv.view(gt::all, gt::all, 1), h_Ainv_expected);
 }
 
-TEST(bandsolve, cinvert_batch)
-{
-  test_invert_batch_complex<float>();
-}
+TEST(bandsolve, cinvert_batch) { test_invert_batch_complex<float>(); }
 
-TEST(bandsolve, zinvert_batch)
-{
-  test_invert_batch_complex<double>();
-}
+TEST(bandsolve, zinvert_batch) { test_invert_batch_complex<double>(); }
 
 template <typename R, typename S = gt::space::device>
 void test_solve_inverted_batch_complex()
@@ -804,15 +780,9 @@ void test_full_solve_real(gt::stream_view stream = gt::stream_view{})
   GT_EXPECT_NEAR_ARRAY(h_C.view(gt::all, 1, 0), h_C_expected);
 }
 
-TEST(bandsolve, sfull_invert_solve)
-{
-  test_full_solve_real<float>();
-}
+TEST(bandsolve, sfull_invert_solve) { test_full_solve_real<float>(); }
 
-TEST(bandsolve, dfull_invert_solve)
-{
-  test_full_solve_real<double>();
-}
+TEST(bandsolve, dfull_invert_solve) { test_full_solve_real<double>(); }
 
 TEST(bandsolve, cfull_invert_solve)
 {

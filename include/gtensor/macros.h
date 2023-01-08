@@ -78,10 +78,7 @@ inline void doCudaCheck(cudaError_t code, const char* file, int line)
   }
 }
 
-inline auto gpuGetLastError()
-{
-  return cudaGetLastError();
-}
+inline auto gpuGetLastError() { return cudaGetLastError(); }
 
 #elif defined(GTENSOR_DEVICE_HIP)
 
@@ -116,10 +113,7 @@ inline void doHipCheck(hipError_t code, const char* file, int line)
   }
 }
 
-inline auto gpuGetLastError()
-{
-  return hipGetLastError();
-}
+inline auto gpuGetLastError() { return hipGetLastError(); }
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 

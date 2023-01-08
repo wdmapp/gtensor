@@ -36,15 +36,9 @@ void test_real_axpy(F&& f)
   }
 }
 
-TEST(cblas, saxpy)
-{
-  test_real_axpy<float>(&gtblas_saxpy);
-}
+TEST(cblas, saxpy) { test_real_axpy<float>(&gtblas_saxpy); }
 
-TEST(cblas, daxpy)
-{
-  test_real_axpy<double>(&gtblas_daxpy);
-}
+TEST(cblas, daxpy) { test_real_axpy<double>(&gtblas_daxpy); }
 
 template <typename R, typename F>
 void test_complex_axpy(F&& f)
@@ -79,15 +73,9 @@ void test_complex_axpy(F&& f)
   }
 }
 
-TEST(cblas, caxpy)
-{
-  test_complex_axpy<float>(&gtblas_caxpy);
-}
+TEST(cblas, caxpy) { test_complex_axpy<float>(&gtblas_caxpy); }
 
-TEST(cblas, zaxpy)
-{
-  test_complex_axpy<double>(&gtblas_zaxpy);
-}
+TEST(cblas, zaxpy) { test_complex_axpy<double>(&gtblas_zaxpy); }
 
 template <typename T, typename F>
 void test_real_scal(F&& f)
@@ -116,15 +104,9 @@ void test_real_scal(F&& f)
   }
 }
 
-TEST(cblas, sscal)
-{
-  test_real_scal<float>(&gtblas_sscal);
-}
+TEST(cblas, sscal) { test_real_scal<float>(&gtblas_sscal); }
 
-TEST(cblas, dscal)
-{
-  test_real_scal<double>(&gtblas_dscal);
-}
+TEST(cblas, dscal) { test_real_scal<double>(&gtblas_dscal); }
 
 template <typename R, typename F, typename F2>
 void test_complex_scal(F&& f, F2&& f2)
@@ -161,15 +143,9 @@ void test_complex_scal(F&& f, F2&& f2)
   }
 }
 
-TEST(cblas, cscal)
-{
-  test_complex_scal<float>(&gtblas_cscal, &gtblas_csscal);
-}
+TEST(cblas, cscal) { test_complex_scal<float>(&gtblas_cscal, &gtblas_csscal); }
 
-TEST(cblas, zscal)
-{
-  test_complex_scal<double>(&gtblas_zscal, &gtblas_zdscal);
-}
+TEST(cblas, zscal) { test_complex_scal<double>(&gtblas_zscal, &gtblas_zdscal); }
 
 template <typename T, typename F>
 void test_gemv_real(F&& f)
@@ -240,15 +216,9 @@ void test_gemv_real(F&& f)
   }
 }
 
-TEST(cblas, sgemv)
-{
-  test_gemv_real<float>(&gtblas_sgemv);
-}
+TEST(cblas, sgemv) { test_gemv_real<float>(&gtblas_sgemv); }
 
-TEST(cblas, dgemv)
-{
-  test_gemv_real<double>(&gtblas_dgemv);
-}
+TEST(cblas, dgemv) { test_gemv_real<double>(&gtblas_dgemv); }
 
 template <typename R, typename F>
 void test_gemv_complex(F&& f)
@@ -294,12 +264,6 @@ void test_gemv_complex(F&& f)
   }
 }
 
-TEST(cblas, cgemv)
-{
-  test_gemv_complex<float>(&gtblas_cgemv);
-}
+TEST(cblas, cgemv) { test_gemv_complex<float>(&gtblas_cgemv); }
 
-TEST(cblas, zgemv)
-{
-  test_gemv_complex<double>(&gtblas_zgemv);
-}
+TEST(cblas, zgemv) { test_gemv_complex<double>(&gtblas_zgemv); }

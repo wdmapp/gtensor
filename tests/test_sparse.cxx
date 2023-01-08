@@ -152,10 +152,7 @@ void test_csr_matrix()
   EXPECT_EQ(h_err(0), 0);
 }
 
-TEST(sparse, csr_matrix_host_s)
-{
-  test_csr_matrix<float, gt::space::host>();
-}
+TEST(sparse, csr_matrix_host_s) { test_csr_matrix<float, gt::space::host>(); }
 
 TEST(sparse, csr_matrix_host_c)
 {
