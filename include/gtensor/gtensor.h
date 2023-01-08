@@ -203,6 +203,18 @@ inline bool gtensor_container<T, N>::is_f_contiguous() const
   return true;
 }
 
+// ======================================================================
+
+template <typename E, typename Enable = void>
+struct has_data_and_size : std::false_type
+{};
+
+template <typename E>
+struct has_data_and_size<E,
+                         gt::meta::void_t<decltype(std::declval<E>().data()),
+                                          decltype(std::declval<E>().size())>>
+  : std::true_type
+{};
 
 // ======================================================================
 // copies
@@ -210,35 +222,21 @@ inline bool gtensor_container<T, N>::is_f_contiguous() const
 // FIXME, there should be only one, more general version,
 // and maybe this should be .assign or operator=
 
-template <typename EC_from, typename EC_to, size_type N>
-void copy(const gtensor_container<EC_from, N>& from,
-          gtensor_container<EC_to, N>& to)
+template <typename SRC, typename DST>
+std::enable_if_t<gt::has_data_and_size<SRC>::value &&
+                 gt::has_data_and_size<DST>::value>
+copy(const SRC& src, DST& dst)
 {
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
-}
-
-template <typename EC_to, size_type N, typename S_from>
-void copy(const gtensor_span<typename EC_to::value_type, N, S_from>& from,
-          gtensor_container<EC_to, N>& to)
-{
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
-}
-
-template <typename EC_from, size_type N, typename S_to>
-void copy(const gtensor_container<EC_from, N>& from,
-          gtensor_span<typename EC_from::value_type, N, S_to>& to)
-{
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
-}
-
-template <typename T, size_type N, typename S_from, typename S_to>
-void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
-{
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
+  if (src.is_f_contiguous()) {
+    if (dst.is_f_contiguous()) {
+      assert(src.size() == dst.size());
+      gt::copy_n(src.data(), src.size(), dst.data());
+    } else {
+      assert(0);
+    }
+  } else {
+    assert(0);
+  }
 }
 
 // ======================================================================
