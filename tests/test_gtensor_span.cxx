@@ -124,6 +124,19 @@ TEST(gtensor_span, index_by_shape)
   EXPECT_EQ(aspan[gt::shape(2, 1)], 32.);
 }
 
+TEST(gtensor_span, is_f_contiguous)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+
+  auto b = gt::adapt<2>(a.data(), a.shape());
+  EXPECT_TRUE(b.is_f_contiguous());
+
+  auto c =
+    gt::gtensor_span<double, 2>(a.data() + 1, gt::shape(2, 2), a.strides());
+  EXPECT_EQ(c, (gt::gtensor<double, 2>{{12., 13.}, {22., 23.}}));
+  EXPECT_FALSE(c.is_f_contiguous());
+}
+
 TEST(gtensor_span, fill_full)
 {
   gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});

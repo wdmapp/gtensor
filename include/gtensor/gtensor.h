@@ -81,6 +81,8 @@ public:
 
   std::string typestr() const&;
 
+  bool is_f_contiguous() const;
+
 private:
   GT_INLINE const storage_type& storage_impl() const;
   GT_INLINE storage_type& storage_impl();
@@ -194,6 +196,13 @@ inline std::string gtensor_container<T, N>::typestr() const&
     << this->shape() << this->strides();
   return s.str();
 }
+
+template <typename T, size_type N>
+inline bool gtensor_container<T, N>::is_f_contiguous() const
+{
+  return true;
+}
+
 
 // ======================================================================
 // copies

@@ -69,6 +69,12 @@ TEST(gtensor, indexing_2d)
   EXPECT_EQ(a(2, 1), adata[5]);
 }
 
+TEST(gtensor, is_f_contiguous)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  EXPECT_TRUE(a.is_f_contiguous());
+}
+
 TEST(gtensor, op_equal)
 {
   gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
@@ -868,6 +874,18 @@ TYPED_TEST(gtensor_copy, span_span)
   EXPECT_EQ(s_a, s_b);
 }
 
+TYPED_TEST(gtensor_copy, expr_gtensor)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  // gt::copy(a + a, b);
+  // EXPECT_EQ(b, a + a);
+}
+
 TYPED_TEST(gtensor_copy, non_contig_span)
 {
   using a_space_type = typename TypeParam::a_space_type;
@@ -882,7 +900,6 @@ TYPED_TEST(gtensor_copy, non_contig_span)
 
   EXPECT_EQ(s_a,
             (gt::gtensor<double, 2, a_space_type>{{12., 13.}, {22., 23.}}));
-  std::cout << s_a << "\n";
 
   // FIXME!!!
   //  gt::copy(s_a, b);

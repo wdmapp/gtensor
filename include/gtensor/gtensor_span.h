@@ -112,6 +112,8 @@ public:
 
   inline std::string typestr() const&;
 
+  inline bool is_f_contiguous() const;
+
 private:
   storage_type storage_;
 
@@ -215,6 +217,12 @@ inline std::string gtensor_span<T, N, S>::typestr() const&
   s << "s" << N << "<" << get_type_name<T>() << ">" << this->shape()
     << this->strides();
   return s.str();
+}
+
+template <typename T, size_type N, typename S>
+inline bool gtensor_span<T, N, S>::is_f_contiguous() const
+{
+  return this->strides() == calc_strides(this->shape());
 }
 
 // ======================================================================
