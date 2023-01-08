@@ -126,20 +126,11 @@ TEST(sarray, remove)
   EXPECT_EQ(a3[2], 3);
 }
 
-TEST(sarray, host_launch_insert)
-{
-  test_launch_insert<gt::space::host>();
-}
+TEST(sarray, host_launch_insert) { test_launch_insert<gt::space::host>(); }
 
-TEST(sarray, host_launch_remove)
-{
-  test_launch_remove<gt::space::host>();
-}
+TEST(sarray, host_launch_remove) { test_launch_remove<gt::space::host>(); }
 
-TEST(sarray, host_launch_assign)
-{
-  test_launch_assign<gt::space::host>();
-}
+TEST(sarray, host_launch_assign) { test_launch_assign<gt::space::host>(); }
 
 TEST(sarray, zero_dim)
 {
@@ -156,19 +147,10 @@ TEST(sarray, zero_dim)
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-TEST(sarray, device_launch_insert)
-{
-  test_launch_insert<gt::space::device>();
-}
+TEST(sarray, device_launch_insert) { test_launch_insert<gt::space::device>(); }
 
-TEST(sarray, device_launch_remove)
-{
-  test_launch_remove<gt::space::device>();
-}
+TEST(sarray, device_launch_remove) { test_launch_remove<gt::space::device>(); }
 
-TEST(sarray, device_launch_assign)
-{
-  test_launch_assign<gt::space::device>();
-}
+TEST(sarray, device_launch_assign) { test_launch_assign<gt::space::device>(); }
 
 #endif

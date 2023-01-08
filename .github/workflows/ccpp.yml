@@ -13,11 +13,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: DoozyX/clang-format-lint-action@v0.5
+    - uses: DoozyX/clang-format-lint-action@v0.14
       with:
         source: '.'
         extensions: 'h,cxx'
         clangFormatVersion: 9
+    - uses: DoozyX/clang-format-lint-action@v0.14
+      with:
+        source: '.'
+        extensions: 'h,cxx'
+        clangFormatVersion: 14
 
   tests-cpu:
     runs-on: ubuntu-18.04

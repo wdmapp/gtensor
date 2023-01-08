@@ -83,10 +83,7 @@ inline void copy_n(InputPtr in, gt::size_type count, OutputPtr out)
 // ======================================================================
 // synchronize
 
-void inline synchronize()
-{
-  gt::backend::clib::device_synchronize();
-}
+void inline synchronize() { gt::backend::clib::device_synchronize(); }
 
 } // namespace gt
 

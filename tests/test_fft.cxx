@@ -95,15 +95,9 @@ void fft_r2c_1d()
   GT_EXPECT_NEAR(h_B(2, 1), T(38, 0));
 }
 
-TEST(fft, d2z_1d)
-{
-  fft_r2c_1d<double>();
-}
+TEST(fft, d2z_1d) { fft_r2c_1d<double>(); }
 
-TEST(fft, r2c_1d)
-{
-  fft_r2c_1d<float>();
-}
+TEST(fft, r2c_1d) { fft_r2c_1d<float>(); }
 
 template <typename E>
 void fft_r2c_1d_strided()
@@ -169,15 +163,9 @@ void fft_r2c_1d_strided()
   GT_EXPECT_EQ(h_A, h_A2 / N);
 }
 
-TEST(fft, d2z_1d_strided)
-{
-  fft_r2c_1d_strided<double>();
-}
+TEST(fft, d2z_1d_strided) { fft_r2c_1d_strided<double>(); }
 
-TEST(fft, r2c_1d_strided)
-{
-  fft_r2c_1d_strided<float>();
-}
+TEST(fft, r2c_1d_strided) { fft_r2c_1d_strided<float>(); }
 
 template <typename E>
 void fft_c2r_1d()
@@ -222,15 +210,9 @@ void fft_c2r_1d()
   EXPECT_EQ(h_A(3, 1) / N, 1);
 }
 
-TEST(fft, z2d_1d)
-{
-  fft_c2r_1d<double>();
-}
+TEST(fft, z2d_1d) { fft_c2r_1d<double>(); }
 
-TEST(fft, c2r_1d)
-{
-  fft_c2r_1d<float>();
-}
+TEST(fft, c2r_1d) { fft_c2r_1d<float>(); }
 
 template <typename E>
 void fft_c2c_1d_forward()
@@ -292,15 +274,9 @@ void fft_c2c_1d_forward()
   }
 }
 
-TEST(fft, z2z_1d_forward)
-{
-  fft_c2c_1d_forward<double>();
-}
+TEST(fft, z2z_1d_forward) { fft_c2c_1d_forward<double>(); }
 
-TEST(fft, c2c_1d_forward)
-{
-  fft_c2c_1d_forward<float>();
-}
+TEST(fft, c2c_1d_forward) { fft_c2c_1d_forward<float>(); }
 
 template <typename E>
 void fft_c2c_1d_forward_strided()
@@ -365,15 +341,9 @@ void fft_c2c_1d_forward_strided()
   GT_EXPECT_NEAR(h_A, h_A2 / T(N, 0));
 }
 
-TEST(fft, z2z_1d_forward_strided)
-{
-  fft_c2c_1d_forward_strided<double>();
-}
+TEST(fft, z2z_1d_forward_strided) { fft_c2c_1d_forward_strided<double>(); }
 
-TEST(fft, c2c_1d_forward_strided)
-{
-  fft_c2c_1d_forward_strided<float>();
-}
+TEST(fft, c2c_1d_forward_strided) { fft_c2c_1d_forward_strided<float>(); }
 
 template <typename E>
 void fft_c2c_1d_inverse()
@@ -422,15 +392,9 @@ void fft_c2c_1d_inverse()
   GT_EXPECT_NEAR(h_B(3, 1), dN * T(1, 0));
 }
 
-TEST(fft, z2z_1d_inverse)
-{
-  fft_c2c_1d_inverse<double>();
-}
+TEST(fft, z2z_1d_inverse) { fft_c2c_1d_inverse<double>(); }
 
-TEST(fft, c2c_1d_inverse)
-{
-  fft_c2c_1d_inverse<float>();
-}
+TEST(fft, c2c_1d_inverse) { fft_c2c_1d_inverse<float>(); }
 
 TEST(fft, move_only)
 {
@@ -539,15 +503,9 @@ void fft_r2c_2d()
   GT_EXPECT_NEAR(h_A, h_A2 / (Nx * Ny));
 }
 
-TEST(fft, r2c_2d)
-{
-  fft_r2c_2d<float>();
-}
+TEST(fft, r2c_2d) { fft_r2c_2d<float>(); }
 
-TEST(fft, d2z_2d)
-{
-  fft_r2c_2d<double>();
-}
+TEST(fft, d2z_2d) { fft_r2c_2d<double>(); }
 
 template <typename E>
 void fft_c2c_2d()
@@ -592,15 +550,9 @@ void fft_c2c_2d()
   }
 }
 
-TEST(fft, c2c_2d)
-{
-  fft_c2c_2d<float>();
-}
+TEST(fft, c2c_2d) { fft_c2c_2d<float>(); }
 
-TEST(fft, z2z_2d)
-{
-  fft_c2c_2d<double>();
-}
+TEST(fft, z2z_2d) { fft_c2c_2d<double>(); }
 
 template <typename E>
 void fft_r2c_3d()
@@ -638,12 +590,6 @@ void fft_r2c_3d()
   GT_EXPECT_NEAR(h_A, h_A2 / (Nx * Ny * Nz));
 }
 
-TEST(fft, r2c_3d)
-{
-  fft_r2c_3d<float>();
-}
+TEST(fft, r2c_3d) { fft_r2c_3d<float>(); }
 
-TEST(fft, d2z_3d)
-{
-  fft_r2c_3d<double>();
-}
+TEST(fft, d2z_3d) { fft_r2c_3d<double>(); }

@@ -37,15 +37,9 @@ void test_axpy_real()
   }
 }
 
-TEST(blas, saxpy)
-{
-  test_axpy_real<float>();
-}
+TEST(blas, saxpy) { test_axpy_real<float>(); }
 
-TEST(blas, daxpy)
-{
-  test_axpy_real<double>();
-}
+TEST(blas, daxpy) { test_axpy_real<double>(); }
 
 template <typename R>
 void test_axpy_complex()
@@ -78,15 +72,9 @@ void test_axpy_complex()
   }
 }
 
-TEST(blas, caxpy)
-{
-  test_axpy_complex<float>();
-}
+TEST(blas, caxpy) { test_axpy_complex<float>(); }
 
-TEST(blas, zaxpy)
-{
-  test_axpy_complex<double>();
-}
+TEST(blas, zaxpy) { test_axpy_complex<double>(); }
 
 template <typename R>
 void test_scal_complex()
@@ -122,15 +110,9 @@ void test_scal_complex()
   }
 }
 
-TEST(blas, cscal)
-{
-  test_scal_complex<float>();
-}
+TEST(blas, cscal) { test_scal_complex<float>(); }
 
-TEST(blas, zscal)
-{
-  test_scal_complex<double>();
-}
+TEST(blas, zscal) { test_scal_complex<double>(); }
 
 template <typename T>
 void test_scal_real()
@@ -158,15 +140,9 @@ void test_scal_real()
   }
 }
 
-TEST(blas, sscal)
-{
-  test_scal_real<float>();
-}
+TEST(blas, sscal) { test_scal_real<float>(); }
 
-TEST(blas, dscal)
-{
-  test_scal_real<double>();
-}
+TEST(blas, dscal) { test_scal_real<double>(); }
 
 template <typename R>
 void test_copy_complex()
@@ -197,15 +173,9 @@ void test_copy_complex()
   }
 }
 
-TEST(blas, ccopy)
-{
-  test_copy_complex<float>();
-}
+TEST(blas, ccopy) { test_copy_complex<float>(); }
 
-TEST(blas, zcopy)
-{
-  test_copy_complex<double>();
-}
+TEST(blas, zcopy) { test_copy_complex<double>(); }
 
 template <typename T>
 void test_dot_real()
@@ -232,15 +202,9 @@ void test_dot_real()
   EXPECT_EQ(result, (N - 1) * N);
 }
 
-TEST(blas, sdot)
-{
-  test_dot_real<float>();
-}
+TEST(blas, sdot) { test_dot_real<float>(); }
 
-TEST(blas, ddot)
-{
-  test_dot_real<double>();
-}
+TEST(blas, ddot) { test_dot_real<double>(); }
 
 template <typename R>
 void test_dot_complex()
@@ -272,15 +236,9 @@ void test_dot_complex()
   EXPECT_EQ(resultc, T(sum, sum));
 }
 
-TEST(blas, cdot)
-{
-  test_dot_complex<float>();
-}
+TEST(blas, cdot) { test_dot_complex<float>(); }
 
-TEST(blas, zdot)
-{
-  test_dot_complex<double>();
-}
+TEST(blas, zdot) { test_dot_complex<double>(); }
 
 template <typename T>
 void test_gemv_real()
@@ -350,15 +308,9 @@ void test_gemv_real()
   }
 }
 
-TEST(blas, sgemv)
-{
-  test_gemv_real<float>();
-}
+TEST(blas, sgemv) { test_gemv_real<float>(); }
 
-TEST(blas, dgemv)
-{
-  test_gemv_real<double>();
-}
+TEST(blas, dgemv) { test_gemv_real<double>(); }
 
 template <typename R>
 void test_gemv_complex()
@@ -403,15 +355,9 @@ void test_gemv_complex()
   }
 }
 
-TEST(blas, cgemv)
-{
-  test_gemv_complex<float>();
-}
+TEST(blas, cgemv) { test_gemv_complex<float>(); }
 
-TEST(blas, zgemv)
-{
-  test_gemv_complex<double>();
-}
+TEST(blas, zgemv) { test_gemv_complex<double>(); }
 
 template <typename R>
 void test_gemm_batched_real()
@@ -473,15 +419,9 @@ void test_gemm_batched_real()
   }
 }
 
-TEST(blas, sgemm_batched)
-{
-  test_gemm_batched_real<float>();
-}
+TEST(blas, sgemm_batched) { test_gemm_batched_real<float>(); }
 
-TEST(blas, dgemm_batched)
-{
-  test_gemm_batched_real<double>();
-}
+TEST(blas, dgemm_batched) { test_gemm_batched_real<double>(); }
 
 template <typename R>
 void test_gemm_batched_complex()
@@ -560,15 +500,9 @@ void test_gemm_batched_complex()
   }
 }
 
-TEST(blas, cgemm_batched)
-{
-  test_gemm_batched_complex<float>();
-}
+TEST(blas, cgemm_batched) { test_gemm_batched_complex<float>(); }
 
-TEST(blas, zgemm_batched)
-{
-  test_gemm_batched_complex<double>();
-}
+TEST(blas, zgemm_batched) { test_gemm_batched_complex<double>(); }
 
 template <typename R>
 void test_gemm_batched_b0_complex()
@@ -647,12 +581,6 @@ void test_gemm_batched_b0_complex()
   }
 }
 
-TEST(blas, cgemm_batched_b0)
-{
-  test_gemm_batched_b0_complex<float>();
-}
+TEST(blas, cgemm_batched_b0) { test_gemm_batched_b0_complex<float>(); }
 
-TEST(blas, zgemm_batched_b0)
-{
-  test_gemm_batched_b0_complex<double>();
-}
+TEST(blas, zgemm_batched_b0) { test_gemm_batched_b0_complex<double>(); }
