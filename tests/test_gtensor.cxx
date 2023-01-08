@@ -882,8 +882,8 @@ TYPED_TEST(gtensor_copy, expr_gtensor)
     gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
   auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
 
-  // gt::copy(a + a, b);
-  // EXPECT_EQ(b, a + a);
+  gt::copy(a + a, b);
+  EXPECT_EQ(b, a + a);
 }
 
 TYPED_TEST(gtensor_copy, non_contig_span)
