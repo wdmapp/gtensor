@@ -835,22 +835,16 @@ std::enable_if_t<gt::has_data_and_size<SRC>::value &&
                  gt::has_data_and_size<DST>::value>
 copy(const SRC& src, DST& dst)
 {
-  if (src.is_f_contiguous()) {
-    if (dst.is_f_contiguous()) {
+  if (!dst.is_f_contiguous()) {
+    auto dst_tmp = gt::empty_like(dst);
+    gt::copy(src, dst_tmp);
+    dst = dst_tmp;
+  } else {
+    if (src.is_f_contiguous()) {
       assert(src.size() == dst.size());
       gt::copy_n(src.data(), src.size(), dst.data());
     } else {
-      auto dst_tmp = gt::empty_like(dst);
-      gt::copy(src, dst_tmp);
-      dst = dst_tmp;
-    }
-  } else {
-    if (dst.is_f_contiguous()) {
       gt::copy(gt::eval(src), dst);
-    } else {
-      auto dst_tmp = gt::empty_like(dst);
-      gt::copy(src, dst_tmp);
-      dst = dst_tmp;
     }
   }
 }
