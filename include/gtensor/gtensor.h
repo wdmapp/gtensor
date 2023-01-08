@@ -204,42 +204,6 @@ inline bool gtensor_container<T, N>::is_f_contiguous() const
 }
 
 // ======================================================================
-
-template <typename E, typename Enable = void>
-struct has_data_and_size : std::false_type
-{};
-
-template <typename E>
-struct has_data_and_size<E,
-                         gt::meta::void_t<decltype(std::declval<E>().data()),
-                                          decltype(std::declval<E>().size())>>
-  : std::true_type
-{};
-
-// ======================================================================
-// copies
-//
-// FIXME, there should be only one, more general version,
-// and maybe this should be .assign or operator=
-
-template <typename SRC, typename DST>
-std::enable_if_t<gt::has_data_and_size<SRC>::value &&
-                 gt::has_data_and_size<DST>::value>
-copy(const SRC& src, DST& dst)
-{
-  if (src.is_f_contiguous()) {
-    if (dst.is_f_contiguous()) {
-      assert(src.size() == dst.size());
-      gt::copy_n(src.data(), src.size(), dst.data());
-    } else {
-      assert(0);
-    }
-  } else {
-    assert(0);
-  }
-}
-
-// ======================================================================
 // launch
 
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
@@ -847,6 +811,40 @@ inline std::enable_if_t<
 eval(E&& e)
 {
   return {std::forward<E>(e)};
+}
+
+// ======================================================================
+// has_data_and_size
+
+template <typename E, typename Enable = void>
+struct has_data_and_size : std::false_type
+{};
+
+template <typename E>
+struct has_data_and_size<E,
+                         gt::meta::void_t<decltype(std::declval<E>().data()),
+                                          decltype(std::declval<E>().size())>>
+  : std::true_type
+{};
+
+// ======================================================================
+// copies
+
+template <typename SRC, typename DST>
+std::enable_if_t<gt::has_data_and_size<SRC>::value &&
+                 gt::has_data_and_size<DST>::value>
+copy(const SRC& src, DST& dst)
+{
+  if (src.is_f_contiguous()) {
+    if (dst.is_f_contiguous()) {
+      assert(src.size() == dst.size());
+      gt::copy_n(src.data(), src.size(), dst.data());
+    } else {
+      assert(0);
+    }
+  } else {
+    assert(0);
+  }
 }
 
 // ======================================================================
