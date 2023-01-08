@@ -843,7 +843,11 @@ copy(const SRC& src, DST& dst)
       assert(0);
     }
   } else {
-    assert(0);
+    if (dst.is_f_contiguous()) {
+      gt::copy(gt::eval(src), dst);
+    } else {
+      assert(0);
+    }
   }
 }
 

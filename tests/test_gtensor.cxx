@@ -901,10 +901,8 @@ TYPED_TEST(gtensor_copy, non_contig_span)
   EXPECT_EQ(s_a,
             (gt::gtensor<double, 2, a_space_type>{{12., 13.}, {22., 23.}}));
 
-  // FIXME!!!
-  //  gt::copy(s_a, b);
-  //  EXPECT_EQ(b, (gt::gtensor<double, 2, b_space_type>{{12., 13.},
-  //  {22., 23.}}));
+  gt::copy(s_a, b);
+  EXPECT_EQ(b, (gt::gtensor<double, 2, b_space_type>{{12., 13.}, {22., 23.}}));
 }
 
 // ======================================================================
