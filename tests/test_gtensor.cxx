@@ -923,6 +923,25 @@ TYPED_TEST(gtensor_copy, to_non_contiguous_span)
     b, (gt::gtensor<double, 2, b_space_type>{{0., 12., 13.}, {0., 22., 23.}}));
 }
 
+TYPED_TEST(gtensor_copy, from_to_non_contiguous_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  // make a noncontiguous subset gtensor_spans
+  auto s_a = gt::gtensor_span<double, 2, a_space_type>(
+    a.data() + 1, gt::shape(2, 2), a.strides());
+  auto s_b = gt::gtensor_span<double, 2, b_space_type>(
+    b.data() + 1, gt::shape(2, 2), b.strides());
+
+  gt::copy(s_a, s_b);
+  EXPECT_EQ(
+    b, (gt::gtensor<double, 2, b_space_type>{{0., 12., 13.}, {0., 22., 23.}}));
+}
+
 // ======================================================================
 
 template <typename S>
