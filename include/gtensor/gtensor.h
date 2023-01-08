@@ -833,7 +833,7 @@ struct has_data_and_size<E,
 template <typename SRC, typename DST>
 std::enable_if_t<gt::has_data_and_size<SRC>::value &&
                  gt::has_data_and_size<DST>::value>
-copy(const SRC& src, DST& dst)
+copy(const SRC& src, DST&& dst)
 {
   if (!dst.is_f_contiguous()) {
     auto dst_tmp = gt::empty_like(dst);
@@ -854,23 +854,35 @@ template <typename SRC, typename DST>
 std::enable_if_t<
   std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
   !(gt::has_data_and_size<SRC>::value && gt::has_data_and_size<DST>::value)>
-copy(const SRC& src, DST& dst)
+copy(const SRC& src, DST&& dst)
 {
   dst = src;
 }
 
-// different spaces, destination is storage-like
+// different spaces, source not storage like, destination is storage-like
 template <typename SRC, typename DST>
 std::enable_if_t<
   !std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
   (!gt::has_data_and_size<SRC>::value && gt::has_data_and_size<DST>::value)>
-copy(const SRC& src, DST& dst)
+copy(const SRC& src, DST&& dst)
 {
   if (dst.is_f_contiguous()) {
     gt::copy(gt::eval(src), dst);
   } else {
     assert(0);
   }
+}
+
+// different spaces, destination is not storage-like
+template <typename SRC, typename DST>
+std::enable_if_t<
+  !std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
+  !gt::has_data_and_size<DST>::value>
+copy(const SRC& src, DST&& dst)
+{
+  auto dst_tmp = gt::empty_like(dst);
+  gt::copy(src, dst_tmp);
+  dst = dst_tmp;
 }
 
 // ======================================================================
