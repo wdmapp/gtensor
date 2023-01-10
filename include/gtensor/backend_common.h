@@ -248,6 +248,13 @@ GT_INLINE auto device_pointer_cast(T* p)
   return pointer(p);
 }
 
+template <typename S = gt::space::device, typename T>
+GT_INLINE auto space_pointer_cast(T* p)
+{
+  using pointer = typename gt::device_ptr<T, S>;
+  return pointer(p);
+}
+
 namespace backend
 {
 namespace allocator_impl

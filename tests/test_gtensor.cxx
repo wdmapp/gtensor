@@ -69,6 +69,12 @@ TEST(gtensor, indexing_2d)
   EXPECT_EQ(a(2, 1), adata[5]);
 }
 
+TEST(gtensor, is_f_contiguous)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+  EXPECT_TRUE(a.is_f_contiguous());
+}
+
 TEST(gtensor, op_equal)
 {
   gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
@@ -786,6 +792,188 @@ TEST(gtensor_kernel, kernel_lambda_call)
 }
 
 #endif
+
+// ======================================================================
+
+template <typename SA, typename SB>
+struct gtensor_copy_config
+{
+  using a_space_type = SA;
+  using b_space_type = SB;
+};
+
+template <typename S>
+class gtensor_copy : public ::testing::Test
+{};
+
+using gtensor_copy_types = ::testing::Types<
+#ifdef GTENSOR_HAVE_DEVICE
+  gtensor_copy_config<gt::space::device, gt::space::device>,
+  gtensor_copy_config<gt::space::host, gt::space::device>,
+  gtensor_copy_config<gt::space::device, gt::space::host>,
+#endif
+  gtensor_copy_config<gt::space::host, gt::space::host>>;
+
+TYPED_TEST_SUITE(gtensor_copy, gtensor_copy_types);
+
+TYPED_TEST(gtensor_copy, gtensor_gtensor)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  EXPECT_NE(b, a);
+  gt::copy(a, b);
+  EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_copy, gtensor_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+  auto s_a = gt::adapt<2, a_space_type>(a.data(), a.shape());
+  auto s_b = gt::adapt<2, b_space_type>(b.data(), b.shape());
+
+  EXPECT_NE(a, s_b);
+  gt::copy(a, s_b);
+  EXPECT_EQ(a, s_b);
+}
+
+TYPED_TEST(gtensor_copy, span_gtensor)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+  auto s_a = gt::adapt<2, a_space_type>(a.data(), a.shape());
+  auto s_b = gt::adapt<2, b_space_type>(b.data(), b.shape());
+
+  EXPECT_NE(s_a, b);
+  gt::copy(s_a, b);
+  EXPECT_EQ(s_a, b);
+}
+
+TYPED_TEST(gtensor_copy, span_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+  auto s_a = gt::adapt<2, a_space_type>(a.data(), a.shape());
+  auto s_b = gt::adapt<2, b_space_type>(b.data(), b.shape());
+
+  EXPECT_NE(s_a, s_b);
+  gt::copy(s_a, s_b);
+  EXPECT_EQ(s_a, s_b);
+}
+
+TYPED_TEST(gtensor_copy, from_non_contiguous_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(gt::shape(2, 2), 0.);
+
+  // make a noncontiguous subset gtensor_span
+  auto s_a = gt::gtensor_span<double, 2, a_space_type>(
+    a.data() + 1, gt::shape(2, 2), a.strides());
+
+  EXPECT_EQ(s_a,
+            (gt::gtensor<double, 2, a_space_type>{{12., 13.}, {22., 23.}}));
+
+  gt::copy(s_a, b);
+  EXPECT_EQ(b, (gt::gtensor<double, 2, b_space_type>{{12., 13.}, {22., 23.}}));
+}
+
+TYPED_TEST(gtensor_copy, to_non_contiguous_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a = gt::gtensor<double, 2, a_space_type>{{12., 13.}, {22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(gt::shape(3, 2), 0.);
+
+  // make a noncontiguous subset gtensor_span
+  auto s_b = gt::gtensor_span<double, 2, b_space_type>(
+    b.data() + 1, gt::shape(2, 2), b.strides());
+
+  gt::copy(a, s_b);
+  EXPECT_EQ(s_b,
+            (gt::gtensor<double, 2, b_space_type>{{12., 13.}, {22., 23.}}));
+  EXPECT_EQ(
+    b, (gt::gtensor<double, 2, b_space_type>{{0., 12., 13.}, {0., 22., 23.}}));
+}
+
+TYPED_TEST(gtensor_copy, from_to_non_contiguous_span)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  // make a noncontiguous subset gtensor_spans
+  auto s_a = gt::gtensor_span<double, 2, a_space_type>(
+    a.data() + 1, gt::shape(2, 2), a.strides());
+  auto s_b = gt::gtensor_span<double, 2, b_space_type>(
+    b.data() + 1, gt::shape(2, 2), b.strides());
+
+  gt::copy(s_a, s_b);
+  EXPECT_EQ(
+    b, (gt::gtensor<double, 2, b_space_type>{{0., 12., 13.}, {0., 22., 23.}}));
+}
+
+TYPED_TEST(gtensor_copy, from_expr)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  gt::copy(a + a, b);
+  EXPECT_EQ(b, a + a);
+}
+
+TYPED_TEST(gtensor_copy, to_expr)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  gt::copy(a, b.view());
+  EXPECT_EQ(b, a);
+}
+
+TYPED_TEST(gtensor_copy, expr_to_non_contiguous)
+{
+  using a_space_type = typename TypeParam::a_space_type;
+  using b_space_type = typename TypeParam::b_space_type;
+  auto a =
+    gt::gtensor<double, 2, a_space_type>{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::gtensor<double, 2, b_space_type>(a.shape(), 0.);
+
+  // use a view on the source side
+  auto v_a = a.view(gt::slice(1, 3), gt::slice(0, 2));
+  // make a noncontiguous subset gtensor_span for destination
+  auto s_b = gt::gtensor_span<double, 2, b_space_type>(
+    b.data() + 1, gt::shape(2, 2), b.strides());
+
+  gt::copy(v_a, s_b);
+  EXPECT_EQ(
+    b, (gt::gtensor<double, 2, b_space_type>{{0., 12., 13.}, {0., 22., 23.}}));
+}
+
+// ======================================================================
 
 template <typename S>
 class gtensor_space : public ::testing::Test

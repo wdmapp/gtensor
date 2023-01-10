@@ -81,6 +81,8 @@ public:
 
   std::string typestr() const&;
 
+  bool is_f_contiguous() const;
+
 private:
   GT_INLINE const storage_type& storage_impl() const;
   GT_INLINE storage_type& storage_impl();
@@ -195,41 +197,10 @@ inline std::string gtensor_container<T, N>::typestr() const&
   return s.str();
 }
 
-// ======================================================================
-// copies
-//
-// FIXME, there should be only one, more general version,
-// and maybe this should be .assign or operator=
-
-template <typename EC_from, typename EC_to, size_type N>
-void copy(const gtensor_container<EC_from, N>& from,
-          gtensor_container<EC_to, N>& to)
+template <typename T, size_type N>
+inline bool gtensor_container<T, N>::is_f_contiguous() const
 {
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
-}
-
-template <typename EC_to, size_type N, typename S_from>
-void copy(const gtensor_span<typename EC_to::value_type, N, S_from>& from,
-          gtensor_container<EC_to, N>& to)
-{
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
-}
-
-template <typename EC_from, size_type N, typename S_to>
-void copy(const gtensor_container<EC_from, N>& from,
-          gtensor_span<typename EC_from::value_type, N, S_to>& to)
-{
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
-}
-
-template <typename T, size_type N, typename S_from, typename S_to>
-void copy(const gtensor_span<T, N, S_from>& from, gtensor_span<T, N, S_to>& to)
-{
-  assert(from.size() == to.size());
-  gt::copy_n(from.data(), from.size(), to.data());
+  return true;
 }
 
 // ======================================================================
@@ -840,6 +811,74 @@ inline std::enable_if_t<
 eval(E&& e)
 {
   return {std::forward<E>(e)};
+}
+
+// ======================================================================
+// has_data_and_size
+
+template <typename E, typename Enable = void>
+struct has_data_and_size : std::false_type
+{};
+
+template <typename E>
+struct has_data_and_size<E,
+                         gt::meta::void_t<decltype(std::declval<E>().data()),
+                                          decltype(std::declval<E>().size())>>
+  : std::true_type
+{};
+
+// ======================================================================
+// copies
+
+template <typename SRC, typename DST>
+std::enable_if_t<gt::has_data_and_size<SRC>::value &&
+                 gt::has_data_and_size<DST>::value>
+copy(const SRC& src, DST&& dst)
+{
+  if (!dst.is_f_contiguous()) {
+    auto dst_tmp = gt::empty_like(dst);
+    gt::copy(src, dst_tmp);
+    dst = dst_tmp;
+  } else {
+    if (src.is_f_contiguous()) {
+      assert(src.size() == dst.size());
+      gt::copy_n(src.data(), src.size(), dst.data());
+    } else {
+      gt::copy(gt::eval(src), dst);
+    }
+  }
+}
+
+// if both expressions are in the same space, we can just assign
+template <typename SRC, typename DST>
+std::enable_if_t<
+  std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
+  !(gt::has_data_and_size<SRC>::value && gt::has_data_and_size<DST>::value)>
+copy(const SRC& src, DST&& dst)
+{
+  dst = src;
+}
+
+// different spaces, source not storage like, destination is storage-like
+template <typename SRC, typename DST>
+std::enable_if_t<
+  !std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
+  (!gt::has_data_and_size<SRC>::value && gt::has_data_and_size<DST>::value)>
+copy(const SRC& src, DST&& dst)
+{
+  gt::copy(gt::eval(src), dst);
+}
+
+// different spaces, destination is not storage-like
+template <typename SRC, typename DST>
+std::enable_if_t<
+  !std::is_same<expr_space_type<SRC>, expr_space_type<DST>>::value &&
+  !gt::has_data_and_size<DST>::value>
+copy(const SRC& src, DST&& dst)
+{
+  auto dst_tmp = gt::empty_like(dst);
+  gt::copy(src, dst_tmp);
+  dst = dst_tmp;
 }
 
 // ======================================================================
