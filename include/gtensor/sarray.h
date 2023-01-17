@@ -93,11 +93,27 @@ public:
   GT_INLINE const T& operator[](T i) const
   {
     gtGpuAssert(false, "zero length sarray does not support element access");
+#if defined(GTENSOR_DEVICE_SYCL) || defined(GTENSOR_DEVICE_HIP) ||             \
+  (defined(GTENSOR_DEVICE_CUDA) && CUDART_VERSION >= 11300)
+    __builtin_unreachable();
+#else
+    // unreacheable
+    static T a = 0;
+    return a;
+#endif
   }
 
   GT_INLINE T& operator[](T i)
   {
     gtGpuAssert(false, "zero length sarray does not support element access");
+#if defined(GTENSOR_DEVICE_SYCL) || defined(GTENSOR_DEVICE_HIP) ||             \
+  (defined(GTENSOR_DEVICE_CUDA) && CUDART_VERSION >= 11300)
+    __builtin_unreachable();
+#else
+    // unreacheable
+    static T a = 0;
+    return a;
+#endif
   }
 
   GT_INLINE const T* begin() const { return nullptr; }
