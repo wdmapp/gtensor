@@ -7,7 +7,7 @@ list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
 set(GTENSOR_BUILD_DEVICES "@GTENSOR_BUILD_DEVICES@")
 
-if (NOT TARGET gtensor::gtensor_@GTENSOR_DEFAULT_DEVICE@)
+if (NOT TARGET gtensor::gtensor_@GTENSOR_DEVICE@)
   message(STATUS "include targets ${GTENSOR_BUILD_DEVICES}")
   include("${GTENSOR_CMAKE_DIR}/gtensor-targets.cmake")
   # Promote all targets to global so we can alias them below. See also
@@ -27,8 +27,8 @@ if (GTENSOR_DEVICE)
   endif()
   add_library(gtensor::gtensor ALIAS gtensor::gtensor_${GTENSOR_DEVICE})
 else()
-  set(GTENSOR_DEVICE @GTENSOR_DEFAULT_DEVICE@)
-  add_library(gtensor::gtensor ALIAS gtensor::gtensor_@GTENSOR_DEFAULT_DEVICE@)
+  set(GTENSOR_DEVICE @GTENSOR_DEVICE@)
+  add_library(gtensor::gtensor ALIAS gtensor::gtensor_@GTENSOR_DEVICE@)
 endif()
 
 if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
