@@ -52,8 +52,12 @@ endif()
 
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
-set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
-set(HIP_PATH "/opt/rocm/hip" CACHE STRING "path to HIP installation")
+if (DEFINED ENV{ROCM_PATH})
+   set(ROCM_PATH $ENV{ROCM_PATH} CACHE STRING "path to ROCm installation")
+else()
+   set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
+endif()
+set(HIP_PATH "${ROCM_PATH}/hip" CACHE STRING "path to HIP installation")
 set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
 
@@ -203,9 +207,9 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
 
   target_link_libraries(gtensor_hip INTERFACE rocthrust)
   target_compile_options(gtensor_hip INTERFACE
-    $<$<COMPILE_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+    $<$<COMPILE_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
   target_link_options(gtensor_hip INTERFACE
-    $<$<LINK_LANGUAGE:CXX>:--amdgpu-target=${HIP_GPU_ARCHITECTURES}>)
+    $<$<LINK_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
 
   if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE
