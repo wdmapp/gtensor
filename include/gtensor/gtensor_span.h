@@ -251,13 +251,14 @@ GT_INLINE auto adapt(T* data, const int* shape_data)
 template <size_type N, typename T>
 GT_INLINE auto adapt_device(T* data, const shape_type<N>& shape)
 {
-  return adapt<N, gt::space::device>(gt::device_pointer_cast(data), shape);
+  return adapt<N, gt::space::device, T>(gt::device_pointer_cast(data), shape);
 }
 
 template <size_type N, typename T>
 GT_INLINE auto adapt_device(T* data, const int* shape_data)
 {
-  return adapt<N, gt::space::device, T>(data, {shape_data, N});
+  return adapt<N, gt::space::device, T>(gt::device_pointer_cast(data),
+                                        {shape_data, N});
 }
 
 // ======================================================================
