@@ -66,7 +66,7 @@ TEST(adapt, adapt_device_2d)
 {
   constexpr int N = 4;
   constexpr int M = 2;
-  gt::backend::device_storage<int> a(N*M);
+  gt::backend::device_storage<int> a(N * M);
   auto aview = gt::adapt_device<2>(gt::raw_pointer_cast(a.data()), {N, M});
 
   aview = gt::scalar(7);
