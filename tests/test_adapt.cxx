@@ -44,3 +44,38 @@ TEST(adapt, adapt_device)
 
   EXPECT_EQ(aview, h_expected);
 }
+
+TEST(adapt, adapt_device_1d)
+{
+  constexpr int N = 10;
+  gt::backend::device_storage<int> a(N);
+  auto aview = gt::adapt_device<1>(gt::raw_pointer_cast(a.data()), {N});
+
+  aview = gt::scalar(7);
+
+  gt::gtensor<int, 1> h_a{gt::shape(N)};
+
+  gt::copy(aview, h_a);
+
+  gt::gtensor<int, 1> h_expected{7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
+
+  EXPECT_EQ(aview, h_expected);
+}
+
+TEST(adapt, adapt_device_2d)
+{
+  constexpr int N = 4;
+  constexpr int M = 2;
+  gt::backend::device_storage<int> a(N*M);
+  auto aview = gt::adapt_device<2>(gt::raw_pointer_cast(a.data()), {N, M});
+
+  aview = gt::scalar(7);
+
+  gt::gtensor<int, 2> h_a{gt::shape(N, M)};
+
+  gt::copy(aview, h_a);
+
+  gt::gtensor<int, 2> h_expected{{7, 7, 7, 7}, {7, 7, 7, 7}};
+
+  EXPECT_EQ(aview, h_expected);
+}
