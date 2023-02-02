@@ -585,8 +585,6 @@ TEST(fft, move_only)
   GT_EXPECT_NEAR(h_B(2, 0), T(-6, 0));
 }
 
-#ifndef GTENSOR_DEVICE_SYCL_BBFFT
-
 template <typename E>
 void fft_r2c_2d()
 {
@@ -734,5 +732,3 @@ void fft_r2c_3d()
 TEST(fft, r2c_3d) { fft_r2c_3d<float>(); }
 
 TEST(fft, d2z_3d) { fft_r2c_3d<double>(); }
-
-#endif
