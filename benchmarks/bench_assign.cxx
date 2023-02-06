@@ -9,11 +9,81 @@ using real_t = double;
 using complex_t = gt::complex<double>;
 
 // ======================================================================
+// BM_device_assign_1d
+
+static void BM_device_assign_1d(benchmark::State& state)
+{
+  int n = state.range(0);
+  int N = n * n * n * n;
+  auto a = gt::zeros_device<real_t>(gt::shape(N));
+  auto b = gt::empty_like(a);
+
+  // warmup, device compile
+  b = a;
+  gt::synchronize();
+
+  for (auto _ : state) {
+    b = a;
+    gt::synchronize();
+  }
+}
+
+BENCHMARK(BM_device_assign_1d)->Arg(127)->Arg(128)->Unit(benchmark::kMillisecond);
+
+
+// ======================================================================
 // BM_device_assign_4d
 
 static void BM_device_assign_4d(benchmark::State& state)
 {
-  auto a = gt::zeros_device<real_t>(gt::shape(100, 100, 100, 100));
+  int n = state.range(0);
+  auto a = gt::zeros_device<real_t>(gt::shape(n, n, n, n));
+  auto b = gt::empty_like(a);
+
+  // warmup, device compile
+  b = a;
+  gt::synchronize();
+
+  for (auto _ : state) {
+    b = a;
+    gt::synchronize();
+  }
+}
+
+BENCHMARK(BM_device_assign_4d)->Arg(127)->Arg(128)->Unit(benchmark::kMillisecond);
+
+
+// ======================================================================
+// BM_device_assign_1d_op
+
+static void BM_device_assign_1d_op(benchmark::State& state)
+{
+  int n = state.range(0);
+  int N = n * n * n * n;
+  auto a = gt::zeros_device<real_t>(gt::shape(N));
+  auto b = gt::empty_like(a);
+
+  // warmup, device compile
+  auto expr = a + 2 * a;
+  b = expr;
+  gt::synchronize();
+
+  for (auto _ : state) {
+    b = expr;
+    gt::synchronize();
+  }
+}
+
+BENCHMARK(BM_device_assign_1d_op)->Arg(127)->Arg(128)->Unit(benchmark::kMillisecond);
+
+
+// ======================================================================
+// BM_device_assign_4d_op
+
+static void BM_device_assign_4d_op(benchmark::State& state)
+{
+  int n = state.range(0);
+  auto a = gt::zeros_device<real_t>(gt::shape(n, n, n, n));
   auto b = gt::empty_like(a);
 
   // warmup, device compile
@@ -26,7 +96,7 @@ static void BM_device_assign_4d(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_device_assign_4d)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_4d_op)->Arg(127)->Arg(128)->Unit(benchmark::kMillisecond);
 
 // ======================================================================
 // BM_add_ij_sten
