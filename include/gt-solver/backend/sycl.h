@@ -53,11 +53,19 @@ public:
       result_tmp_(gt::shape(csr_mat.shape(0), nrhs))
   {
     oneapi::mkl::sparse::init_matrix_handle(&mat_h_);
+#if (__INTEL_MKL_BUILD_DATE < 20221128)
+    oneapi::mkl::sparse::set_csr_data(
+      mat_h_, csr_mat_.shape(0), csr_mat_.shape(1),
+      oneapi::mkl::index_base::zero, csr_mat_.row_ptr_data(),
+      csr_mat_.col_ind_data(), std_cast(csr_mat_.values_data()));
+    q_.wait();
+#else
     auto e = oneapi::mkl::sparse::set_csr_data(
       q_, mat_h_, csr_mat_.shape(0), csr_mat_.shape(1),
       oneapi::mkl::index_base::zero, csr_mat_.row_ptr_data(),
       csr_mat_.col_ind_data(), std_cast(csr_mat_.values_data()));
     e.wait();
+#endif
   }
 
   ~csr_matrix_lu_sycl()

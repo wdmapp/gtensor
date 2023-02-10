@@ -168,6 +168,72 @@ TEST(fft, d2z_1d_strided) { fft_r2c_1d_strided<double>(); }
 TEST(fft, r2c_1d_strided) { fft_r2c_1d_strided<float>(); }
 
 template <typename E>
+void fft_r2c_1d_strided_dist()
+{
+  constexpr int N = 4;
+  constexpr int Nout = N / 2 + 1;
+  constexpr int rstride = 2;
+  constexpr int cstride = 3;
+  constexpr int rdist = N * rstride + 7;
+  constexpr int cdist = Nout * cstride + 2;
+  constexpr int batch_size = 2;
+  using T = gt::complex<E>;
+
+  auto h_A = gt::zeros<E>({rdist, batch_size});
+  auto d_A = gt::empty_device<E>(h_A.shape());
+
+  auto h_A2 = gt::empty<E>(h_A.shape());
+  auto d_A2 = gt::zeros_device<E>(h_A.shape());
+
+  auto h_B = gt::zeros<T>({cdist, batch_size});
+  auto h_B_expected = gt::zeros<T>(h_B.shape());
+  auto d_B = gt::zeros_device<T>(h_B.shape());
+
+  // x = [2 3 -1 4];
+  h_A(0 * rstride, 0) = 2;
+  h_A(1 * rstride, 0) = 3;
+  h_A(2 * rstride, 0) = -1;
+  h_A(3 * rstride, 0) = 4;
+
+  // y = [7 -21 11 1];
+  h_A(0 * rstride, 1) = 7;
+  h_A(1 * rstride, 1) = -21;
+  h_A(2 * rstride, 1) = 11;
+  h_A(3 * rstride, 1) = 1;
+
+  h_B_expected(0 * cstride, 0) = T(8, 0);
+  h_B_expected(1 * cstride, 0) = T(3, 1);
+  h_B_expected(2 * cstride, 0) = T(-6, 0);
+
+  h_B_expected(0 * cstride, 1) = T(-2, 0);
+  h_B_expected(1 * cstride, 1) = T(-4, 22);
+  h_B_expected(2 * cstride, 1) = T(38, 0);
+
+  gt::copy(h_A, d_A);
+
+  // fft(x) -> [8+0i 3+1i -6+0i 3-1i]
+  // but with fftw convention for real transforms, the last term is
+  // conjugate of second and set to 0 to save storage / computation
+  gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(
+    {N}, rstride, rdist, cstride, cdist, batch_size);
+  // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
+  plan(d_A, d_B);
+  gt::copy(d_B, h_B);
+
+  // test roundtripping data
+  plan.inverse(d_B, d_A2);
+  gt::copy(d_A2, h_A2);
+
+  GT_EXPECT_EQ(h_B_expected, h_B);
+  GT_EXPECT_EQ(h_A, h_A2 / N);
+}
+
+TEST(fft, d2z_1d_strided_dist) { fft_r2c_1d_strided_dist<double>(); }
+
+TEST(fft, r2c_1d_strided_dist) { fft_r2c_1d_strided_dist<float>(); }
+
+template <typename E>
 void fft_c2r_1d()
 {
   constexpr int N = 4;
@@ -344,6 +410,79 @@ void fft_c2c_1d_forward_strided()
 TEST(fft, z2z_1d_forward_strided) { fft_c2c_1d_forward_strided<double>(); }
 
 TEST(fft, c2c_1d_forward_strided) { fft_c2c_1d_forward_strided<float>(); }
+
+template <typename E>
+void fft_c2c_1d_forward_strided_dist()
+{
+  constexpr int N = 4;
+  constexpr int istride = 2;
+  constexpr int ostride = 3;
+  constexpr int idist = N * istride + 1;
+  constexpr int odist = N * ostride + 11;
+  constexpr int batch_size = 2;
+  using T = gt::complex<E>;
+
+  auto h_A = gt::zeros<T>({idist, batch_size});
+  auto d_A = gt::empty_device<T>(h_A.shape());
+
+  auto h_A2 = gt::empty<T>(h_A.shape());
+  auto d_A2 = gt::zeros_device<T>(h_A.shape());
+
+  auto d_B = gt::zeros_device<T>({odist, batch_size});
+  auto h_B = gt::empty<T>(d_B.shape());
+  auto h_B_expected = gt::zeros<T>(d_B.shape());
+
+  // x = [2 3 -1 4];
+  h_A(0 * istride, 0) = 2;
+  h_A(1 * istride, 0) = 3;
+  h_A(2 * istride, 0) = -1;
+  h_A(3 * istride, 0) = 4;
+
+  // y = [7 -21 11 1];
+  h_A(0 * istride, 1) = 7;
+  h_A(1 * istride, 1) = -21;
+  h_A(2 * istride, 1) = 11;
+  h_A(3 * istride, 1) = 1;
+
+  h_B_expected(0 * ostride, 0) = T(8, 0);
+  h_B_expected(1 * ostride, 0) = T(3, 1);
+  h_B_expected(2 * ostride, 0) = T(-6, 0);
+  h_B_expected(3 * ostride, 0) = T(3, -1);
+
+  h_B_expected(0 * ostride, 1) = T(-2, 0);
+  h_B_expected(1 * ostride, 1) = T(-4, 22);
+  h_B_expected(2 * ostride, 1) = T(38, 0);
+  h_B_expected(3 * ostride, 1) = T(-4, -22);
+
+  gt::copy(h_A, d_A);
+
+  gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(
+    {N}, istride, idist, ostride, odist, batch_size);
+
+  // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
+  // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
+  //                  gt::raw_pointer_cast(d_B.data()));
+  plan(d_A, d_B);
+
+  gt::copy(d_B, h_B);
+
+  // test round trip
+  plan.inverse(d_B, d_A2);
+  gt::copy(d_A2, h_A2);
+
+  GT_EXPECT_NEAR(h_B_expected, h_B);
+  GT_EXPECT_NEAR(h_A, h_A2 / T(N, 0));
+}
+
+TEST(fft, z2z_1d_forward_strided_dist)
+{
+  fft_c2c_1d_forward_strided_dist<double>();
+}
+
+TEST(fft, c2c_1d_forward_strided_dist)
+{
+  fft_c2c_1d_forward_strided_dist<float>();
+}
 
 template <typename E>
 void fft_c2c_1d_inverse()
