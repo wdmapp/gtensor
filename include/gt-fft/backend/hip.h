@@ -137,7 +137,7 @@ public:
     info_forward_ = other.info_forward_;
     info_inverse_ = other.info_inverse_;
     work_buffer_ = other.work_buffer_;
-    work_buffer_size_ = other.work_buffer_size_;
+    work_buffer_bytes_ = other.work_buffer_bytes_;
     is_valid_ = true;
     other.is_valid_ = false;
   }
@@ -149,7 +149,7 @@ public:
     info_forward_ = other.info_forward_;
     info_inverse_ = other.info_inverse_;
     work_buffer_ = other.work_buffer_;
-    work_buffer_size_ = other.work_buffer_size_;
+    work_buffer_bytes_ = other.work_buffer_bytes_;
     is_valid_ = true;
     other.is_valid_ = false;
     return *this;
@@ -189,6 +189,8 @@ public:
     void* out[1] = {(void*)outdata};
     gtFFTCheck(rocfft_execute(plan_inverse_, in, out, info_inverse_));
   }
+
+  std::size_t get_work_buffer_bytes() { return work_buffer_bytes_; }
 
 private:
   void init(std::vector<int> lengths_int, int istride, int idist, int ostride,
@@ -270,11 +272,11 @@ private:
     gtFFTCheck(
       rocfft_plan_get_work_buffer_size(plan_inverse_, &work_size_inverse));
 
-    work_buffer_size_ = std::max(work_size_forward, work_size_inverse);
+    work_buffer_bytes_ = std::max(work_size_forward, work_size_inverse);
 
-    if (work_buffer_size_ > 0) {
+    if (work_buffer_bytes_ > 0) {
       // use same work buffer for forward and inverse plans
-      hipError_t malloc_result = hipMalloc(&work_buffer_, work_buffer_size_);
+      hipError_t malloc_result = hipMalloc(&work_buffer_, work_buffer_bytes_);
       if (malloc_result != hipSuccess) {
         fprintf(stderr, "gpuCheck: %d (%s) %s %d\n", malloc_result,
                 hipGetErrorString(malloc_result), __FILE__, __LINE__);
@@ -300,7 +302,7 @@ private:
   rocfft_execution_info info_forward_;
   rocfft_execution_info info_inverse_;
   void* work_buffer_;
-  size_t work_buffer_size_;
+  size_t work_buffer_bytes_;
 
   bool is_valid_;
 };
