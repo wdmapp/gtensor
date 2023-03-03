@@ -12,11 +12,44 @@ using complex_t = gt::complex<double>;
 #define GTENSOR_BENCHMARK_PER_DIM_SIZE 128
 #endif
 
+namespace gt
+{
+
+namespace bm
+{
+
+template <int Dim>
+auto get_shape(int n_per_dim)
+{
+  gt::shape_type<Dim> shape;
+  int N = n_per_dim * n_per_dim * n_per_dim * n_per_dim;
+  if (Dim == 1) {
+    shape[0] = N;
+  } else if (Dim == 2) {
+    shape[0] = n_per_dim * n_per_dim;
+    shape[1] = n_per_dim * n_per_dim;
+  } else if (Dim == 3) {
+    shape[0] = n_per_dim * n_per_dim;
+    shape[1] = n_per_dim;
+    shape[2] = n_per_dim;
+  } else {
+    shape[0] = n_per_dim;
+    shape[1] = n_per_dim;
+    shape[2] = n_per_dim;
+    shape[3] = n_per_dim;
+  }
+  return shape;
+}
+
+} // namespace bm
+
+} // namespace gt
+
 // ======================================================================
-// BM_gt_device_memcpy
+// BM_device_memcpy
 
 template <typename T>
-static void BM_gt_device_memcpy(benchmark::State& state)
+static void BM_device_memcpy(benchmark::State& state)
 {
   int n = state.range(0);
   int N = n * n * n * n;
@@ -30,20 +63,20 @@ static void BM_gt_device_memcpy(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_gt_device_memcpy<double>)
+BENCHMARK(BM_device_memcpy<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_gt_device_memcpy<float>)
+BENCHMARK(BM_device_memcpy<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
 
 // ======================================================================
-// BM_gt_device_copy
+// BM_device_copy
 
 template <typename T>
-static void BM_gt_device_copy(benchmark::State& state)
+static void BM_device_copy(benchmark::State& state)
 {
   int n = state.range(0);
   int N = n * n * n * n;
@@ -57,24 +90,25 @@ static void BM_gt_device_copy(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_gt_device_copy<double>)
+BENCHMARK(BM_device_copy<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_gt_device_copy<float>)
+BENCHMARK(BM_device_copy<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
 
 // ======================================================================
-// BM_device_assign_1d
+// BM_device_assign
 
-template <typename T>
-static void BM_device_assign_1d(benchmark::State& state)
+template <typename T, int Dim>
+static void BM_device_assign(benchmark::State& state)
 {
   int n = state.range(0);
-  int N = n * n * n * n;
-  auto a = gt::zeros_device<T>(gt::shape(N));
+  gt::shape_type<Dim> shape = gt::bm::get_shape<Dim>(n);
+
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
   // warmup, device compile
@@ -87,111 +121,122 @@ static void BM_device_assign_1d(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_device_assign_1d<double>)
+BENCHMARK(BM_device_assign<double, 1>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_1d<float>)
+BENCHMARK(BM_device_assign<float, 1>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign<double, 2>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign<float, 2>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign<double, 3>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign<float, 3>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign<double, 4>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign<float, 4>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
 
 // ======================================================================
-// BM_device_assign_2d
+// BM_device_assign_launch
 
 template <typename T>
-static void BM_device_assign_2d(benchmark::State& state)
+static void BM_device_assign_launch_1d(benchmark::State& state)
 {
   int n = state.range(0);
-  int N = n * n;
-  auto a = gt::zeros_device<T>(gt::shape(N, N));
+  gt::shape_type<1> shape = gt::bm::get_shape<1>(n);
+
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  auto assign_lambda = GT_LAMBDA(int i0) { k_b(i0) = k_a(i0); };
   // warmup, device compile
-  b = a;
+  gt::launch<1>(a.shape(), assign_lambda);
   gt::synchronize();
 
   for (auto _ : state) {
-    b = a;
+    gt::launch<1>(a.shape(), assign_lambda);
     gt::synchronize();
   }
 }
 
-BENCHMARK(BM_device_assign_2d<double>)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
-  ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_2d<float>)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
-  ->Unit(benchmark::kMillisecond);
-
-// ======================================================================
-// BM_device_assign_3d
-
 template <typename T>
-static void BM_device_assign_3d(benchmark::State& state)
+static void BM_device_assign_launch_2d(benchmark::State& state)
 {
   int n = state.range(0);
-  auto a = gt::zeros_device<T>(gt::shape(n * n, n, n));
+  gt::shape_type<2> shape = gt::bm::get_shape<2>(n);
+
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  auto assign_lambda = GT_LAMBDA(int i0, int i1) { k_b(i0, i1) = k_a(i0, i1); };
   // warmup, device compile
-  b = a;
+  gt::launch<2>(a.shape(), assign_lambda);
   gt::synchronize();
 
   for (auto _ : state) {
-    b = a;
+    gt::launch<2>(a.shape(), assign_lambda);
     gt::synchronize();
   }
 }
 
-BENCHMARK(BM_device_assign_3d<double>)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
-  ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_3d<float>)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
-  ->Unit(benchmark::kMillisecond);
-
-// ======================================================================
-// BM_device_assign_4d
-
 template <typename T>
-static void BM_device_assign_4d(benchmark::State& state)
+static void BM_device_assign_launch_3d(benchmark::State& state)
 {
   int n = state.range(0);
-  auto a = gt::zeros_device<T>(gt::shape(n, n, n, n));
+  gt::shape_type<3> shape = gt::bm::get_shape<3>(n);
+
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  auto assign_lambda = GT_LAMBDA(int i0, int i1, int i2)
+  {
+    k_b(i0, i1, i2) = k_a(i0, i1, i2);
+  };
+
   // warmup, device compile
-  b = a;
+  gt::launch<3>(a.shape(), assign_lambda);
   gt::synchronize();
 
   for (auto _ : state) {
-    b = a;
+    gt::launch<3>(a.shape(), assign_lambda);
     gt::synchronize();
   }
 }
 
-BENCHMARK(BM_device_assign_4d<double>)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
-  ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_4d<float>)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
-  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
-  ->Unit(benchmark::kMillisecond);
-
-// ======================================================================
-// BM_device_assign_4d_launch
-
 template <typename T>
-static void BM_device_assign_4d_launch(benchmark::State& state)
+static void BM_device_assign_launch_4d(benchmark::State& state)
 {
   int n = state.range(0);
-  auto a = gt::zeros_device<T>(gt::shape(n, n, n, n));
+  gt::shape_type<4> shape = gt::bm::get_shape<4>(n);
+
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
   auto k_a = a.to_kernel();
@@ -212,24 +257,52 @@ static void BM_device_assign_4d_launch(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_device_assign_4d_launch<double>)
+BENCHMARK(BM_device_assign_launch_1d<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_4d_launch<float>)
+BENCHMARK(BM_device_assign_launch_1d<float>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+
+BENCHMARK(BM_device_assign_launch_2d<double>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_launch_2d<float>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+
+BENCHMARK(BM_device_assign_launch_3d<double>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_launch_3d<float>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+
+BENCHMARK(BM_device_assign_launch_4d<double>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_launch_4d<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
 
 // ======================================================================
-// BM_device_assign_1d_op
+// BM_device_assign_op
 
-template <typename T>
-static void BM_device_assign_1d_op(benchmark::State& state)
+template <typename T, int Dim>
+static void BM_device_assign_op(benchmark::State& state)
 {
   int n = state.range(0);
-  int N = n * n * n * n;
-  auto a = gt::zeros_device<T>(gt::shape(N));
+  gt::shape_type<Dim> shape = gt::bm::get_shape<Dim>(n);
+
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
   // warmup, device compile
@@ -243,113 +316,150 @@ static void BM_device_assign_1d_op(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_device_assign_1d_op<double>)
+BENCHMARK(BM_device_assign_op<double, 1>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_1d_op<float>)
+BENCHMARK(BM_device_assign_op<float, 1>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_op<double, 2>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_op<float, 2>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_op<double, 3>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_op<float, 3>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_op<double, 4>)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
+  ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
+  ->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_device_assign_op<float, 4>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
 
 // ======================================================================
-// BM_device_assign_2d_op
+// BM_device_assign_[1-4]d_op_launch
 
 template <typename T>
-static void BM_device_assign_2d_op(benchmark::State& state)
+static void BM_device_assign_op_launch_1d(benchmark::State& state)
 {
   int n = state.range(0);
-  int N = n * n;
-  auto a = gt::zeros_device<T>(gt::shape(N, N));
+  gt::shape_type<1> shape = gt::bm::get_shape<1>(n);
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  auto op_lambda = GT_LAMBDA(int i0) { k_b(i0) = k_a(i0) + 2 * k_a(i0); };
+
   // warmup, device compile
-  auto expr = a + 2 * a;
-  b = expr;
+  gt::launch<1>(a.shape(), op_lambda);
   gt::synchronize();
 
   for (auto _ : state) {
-    b = expr;
+    gt::launch<1>(a.shape(), op_lambda);
     gt::synchronize();
   }
 }
 
-BENCHMARK(BM_device_assign_2d_op<double>)
+BENCHMARK(BM_device_assign_op_launch_1d<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_2d_op<float>)
+BENCHMARK(BM_device_assign_op_launch_1d<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-
-// ======================================================================
-// BM_device_assign_3d_op
 
 template <typename T>
-static void BM_device_assign_3d_op(benchmark::State& state)
+static void BM_device_assign_op_launch_2d(benchmark::State& state)
 {
   int n = state.range(0);
-  auto a = gt::zeros_device<T>(gt::shape(n * n, n, n));
+  gt::shape_type<2> shape = gt::bm::get_shape<2>(n);
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  auto op_lambda = GT_LAMBDA(int i0, int i1)
+  {
+    k_b(i0, i1) = k_a(i0, i1) + 2 * k_a(i0, i1);
+  };
+
   // warmup, device compile
-  auto expr = a + 2 * a;
-  b = expr;
+  gt::launch<2>(a.shape(), op_lambda);
   gt::synchronize();
 
   for (auto _ : state) {
-    b = expr;
+    gt::launch<2>(a.shape(), op_lambda);
     gt::synchronize();
   }
 }
 
-BENCHMARK(BM_device_assign_3d_op<double>)
+BENCHMARK(BM_device_assign_op_launch_2d<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_3d_op<float>)
+BENCHMARK(BM_device_assign_op_launch_2d<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-
-// ======================================================================
-// BM_device_assign_4d_op
 
 template <typename T>
-static void BM_device_assign_4d_op(benchmark::State& state)
+static void BM_device_assign_op_launch_3d(benchmark::State& state)
 {
   int n = state.range(0);
-  auto a = gt::zeros_device<T>(gt::shape(n, n, n, n));
+  gt::shape_type<3> shape = gt::bm::get_shape<3>(n);
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
+  auto k_a = a.to_kernel();
+  auto k_b = b.to_kernel();
+
+  auto op_lambda = GT_LAMBDA(int i0, int i1, int i2)
+  {
+    k_b(i0, i1, i2) = k_a(i0, i1, i2) + 2 * k_a(i0, i1, i2);
+  };
+
   // warmup, device compile
-  b = a + 2 * a;
+  gt::launch<3>(a.shape(), op_lambda);
   gt::synchronize();
 
   for (auto _ : state) {
-    b = a + 2 * a;
+    gt::launch<3>(a.shape(), op_lambda);
     gt::synchronize();
   }
 }
 
-BENCHMARK(BM_device_assign_4d_op<double>)
+BENCHMARK(BM_device_assign_op_launch_3d<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_4d_op<float>)
+BENCHMARK(BM_device_assign_op_launch_3d<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-
-// ======================================================================
-// BM_device_assign_4d_op_launch
 
 template <typename T>
-static void BM_device_assign_4d_op_launch(benchmark::State& state)
+static void BM_device_assign_op_launch_4d(benchmark::State& state)
 {
   int n = state.range(0);
-  auto a = gt::zeros_device<T>(gt::shape(n, n, n, n));
+  gt::shape_type<4> shape = gt::bm::get_shape<4>(n);
+  auto a = gt::zeros_device<T>(shape);
   auto b = gt::empty_like(a);
 
   auto k_a = a.to_kernel();
@@ -370,11 +480,11 @@ static void BM_device_assign_4d_op_launch(benchmark::State& state)
   }
 }
 
-BENCHMARK(BM_device_assign_4d_op_launch<double>)
+BENCHMARK(BM_device_assign_op_launch_4d<double>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_device_assign_4d_op_launch<float>)
+BENCHMARK(BM_device_assign_op_launch_4d<float>)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE - 1)
   ->Arg(GTENSOR_BENCHMARK_PER_DIM_SIZE)
   ->Unit(benchmark::kMillisecond);
