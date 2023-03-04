@@ -36,8 +36,8 @@ public:
     : e_(std::forward<E>(e)), strides_(calc_strides(e.shape()))
   {}
 
-  shape_type shape() const { return e_.shape(); }
-  shape_type strides() const { return strides_; }
+  GT_INLINE shape_type shape() const { return e_.shape(); }
+  GT_INLINE shape_type strides() const { return strides_; }
 
   decltype(auto) to_kernel() const
   {
@@ -168,6 +168,7 @@ public:
   using const_reference = typename inner_types::const_reference;
   using reference = typename inner_types::reference;
   using value_type = typename inner_types::value_type;
+  using pointer = typename std::add_pointer<value_type>::type;
 
   using typename base_type::shape_type;
   using typename base_type::strides_type;
@@ -215,7 +216,11 @@ public:
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
 
+  inline decltype(auto) data() const;
+
   inline std::string typestr() const&;
+
+  inline bool is_f_contiguous() const;
 
 private:
   EC e_;
@@ -297,12 +302,32 @@ GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 }
 
 template <typename EC, size_type N>
+inline decltype(auto) gview<EC, N>::data() const
+{
+  if (!is_f_contiguous()) {
+#ifdef GTENSOR_DEVICE_ONLY
+    printf("cannot get data pointer for non-contiguous view");
+    assert(0);
+#else
+    throw std::runtime_error("cannot get data pointer for non-contiguous view");
+#endif
+  }
+  return &(data_access(0));
+}
+
+template <typename EC, size_type N>
 inline std::string gview<EC, N>::typestr() const&
 {
   std::stringstream s;
   s << "v" << N << "(" << e_.typestr() << ")" << this->shape()
     << this->strides();
   return s.str();
+}
+
+template <typename EC, size_type N>
+inline bool gview<EC, N>::is_f_contiguous() const
+{
+  return this->strides() == calc_strides(this->shape());
 }
 
 template <typename EC, size_type N>

@@ -241,8 +241,8 @@ TEST(helper, has_data_method)
   EXPECT_TRUE(gt::has_data_method_v<decltype(aspan)>);
   EXPECT_TRUE(gt::has_data_method<decltype(aspan)>::value);
 
-  EXPECT_FALSE(gt::has_data_method_v<decltype(aview)>);
-  EXPECT_FALSE(gt::has_data_method<decltype(aview)>::value);
+  EXPECT_TRUE(gt::has_data_method_v<decltype(aview)>);
+  EXPECT_TRUE(gt::has_data_method<decltype(aview)>::value);
 }
 
 TEST(helper, has_size_method)
@@ -273,8 +273,8 @@ TEST(helper, has_container_methods)
   EXPECT_TRUE(gt::has_container_methods_v<decltype(aspan)>);
   EXPECT_TRUE(gt::has_container_methods<decltype(aspan)>::value);
 
-  EXPECT_FALSE(gt::has_container_methods_v<decltype(aview)>);
-  EXPECT_FALSE(gt::has_container_methods<decltype(aview)>::value);
+  EXPECT_TRUE(gt::has_container_methods_v<decltype(aview)>);
+  EXPECT_TRUE(gt::has_container_methods<decltype(aview)>::value);
 }
 
 TEST(helper, is_allowed_element_type_conversion)

@@ -908,4 +908,43 @@ TEST(gview, device_flatten_gtensor_lhs_launch)
   test_flatten_lhs_launch();
 }
 
+TEST(gview, device_is_contiguous)
+{
+  gt::gtensor_device<double, 2> a{
+    {11., 21., 31.}, {12., 22., 32.}, {13., 23., 33.}};
+
+  GT_DEBUG_VAR(a.data().get());
+  GT_DEBUG_VAR(a.data().get() + a.size() - 1);
+
+  auto inner_slice = a.view(_s(1, 3), _all);
+  EXPECT_EQ(inner_slice,
+            (gt::gtensor<double, 2>{{21., 31.}, {22., 32.}, {23., 33.}}));
+  auto inner_first = &(inner_slice.data_access(0));
+  auto inner_last =
+    &(inner_slice(inner_slice.shape(0) - 1, inner_slice.shape(1) - 1));
+  EXPECT_NE(inner_last - inner_first + 1, inner_slice.size());
+  EXPECT_NE(inner_slice.strides(), calc_strides(inner_slice.shape()));
+  EXPECT_FALSE(inner_slice.is_f_contiguous());
+
+  auto outer_slice = a.view(_all, _s(1, 3));
+  EXPECT_EQ(outer_slice,
+            (gt::gtensor<double, 2>{{12., 22., 32.}, {13., 23., 33.}}));
+  auto outer_first = &(outer_slice.data_access(0));
+  auto outer_last =
+    &(outer_slice(outer_slice.shape(0) - 1, outer_slice.shape(1) - 1));
+  EXPECT_EQ(outer_last - outer_first + 1, outer_slice.size());
+  EXPECT_EQ(outer_slice.strides(), calc_strides(outer_slice.shape()));
+  EXPECT_TRUE(outer_slice.is_f_contiguous());
+  EXPECT_EQ(outer_slice.data(), &(a(0, 1)));
+
+  auto a_trans = gt::transpose(a, gt::shape(1, 0));
+  EXPECT_EQ(a_trans, (gt::gtensor<double, 2>{
+                       {11., 12., 13.}, {21., 22., 23.}, {31., 32., 33.}}));
+  auto trans_first = &(a_trans.data_access(0));
+  auto trans_last = &(a_trans(a_trans.shape(0) - 1, a_trans.shape(1) - 1));
+  EXPECT_EQ(trans_last - trans_first + 1, a_trans.size());
+  EXPECT_NE(a_trans.strides(), calc_strides(a_trans.shape()));
+  EXPECT_FALSE(a_trans.is_f_contiguous());
+}
+
 #endif
