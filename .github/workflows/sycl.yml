@@ -20,7 +20,7 @@ jobs:
       PATH: /opt/intel/oneapi/mpi/2021.8.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.8.0//bin:/opt/intel/oneapi/mkl/2023.0.0/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.8.0/bin:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2023.0.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       CMAKE_BUILD_PARALLEL_LEVEL: 8
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: clinfo
       run: |
         mkdir -p /etc/OpenCL/vendors

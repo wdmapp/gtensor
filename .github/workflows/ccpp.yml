@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: DoozyX/clang-format-lint-action@v0.14
       with:
         source: '.'
@@ -34,7 +34,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: cmake
       run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
       env:
@@ -54,7 +54,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: cmake
       run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_STANDARD=20
       env:
@@ -74,7 +74,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: cmake
       run: cmake -S . -B build-examples-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF -DGTENSOR_ENABLE_CLIB=ON
       env:
@@ -98,7 +98,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: cmake
       run: cmake -S . -B build-examples-ub-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF -DGTENSOR_ENABLE_CLIB=ON -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O1 -g -fsanitize=address,undefined,implicit-conversion,integer,nullability -fno-sanitize-recover=address,undefined,implicit-conversion,integer,nullability -fno-omit-frame-pointer -fno-optimize-sibling-calls"
       env:
@@ -118,7 +118,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples
@@ -146,7 +146,7 @@ jobs:
         working-directory: ${{ github.workspace }}/examples
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: cmake
       run: cmake -S . -B build-subdir -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: build
@@ -166,7 +166,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: gtensor cmake
       run: cmake -S . -B build-install -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/gtensor-install -DBUILD_TESTING=OFF -DGTENSOR_ENABLE_FORTRAN=ON
     - name: gtensor install
@@ -199,7 +199,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install packages
       run: apt-get update && apt-get install -y wget git
     - name: install cmake
@@ -282,7 +282,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install core packages
       run: apt-get update -y && apt-get install -y wget git cmake clang
     - name: install extra ROCm packages
