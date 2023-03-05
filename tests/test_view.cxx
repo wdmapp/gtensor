@@ -935,7 +935,7 @@ TEST(gview, device_is_contiguous)
   EXPECT_EQ(outer_last - outer_first + 1, outer_slice.size());
   EXPECT_EQ(outer_slice.strides(), calc_strides(outer_slice.shape()));
   EXPECT_TRUE(outer_slice.is_f_contiguous());
-  EXPECT_EQ(outer_slice.data(), &(a(0, 1)));
+  EXPECT_EQ(outer_slice.data().get(), &(a(0, 1)));
 
   auto a_trans = gt::transpose(a, gt::shape(1, 0));
   EXPECT_EQ(a_trans, (gt::gtensor<double, 2>{

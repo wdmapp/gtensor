@@ -168,7 +168,8 @@ public:
   using const_reference = typename inner_types::const_reference;
   using reference = typename inner_types::reference;
   using value_type = typename inner_types::value_type;
-  using pointer = typename std::add_pointer<value_type>::type;
+  using space_type = gt::expr_space_type<EC>;
+  using pointer = gt::space_pointer<value_type, space_type>;
 
   using typename base_type::shape_type;
   using typename base_type::strides_type;
@@ -216,7 +217,7 @@ public:
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
 
-  inline decltype(auto) data() const;
+  inline pointer data() const;
 
   inline std::string typestr() const&;
 
@@ -302,7 +303,7 @@ GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 }
 
 template <typename EC, size_type N>
-inline decltype(auto) gview<EC, N>::data() const
+inline typename gview<EC, N>::pointer gview<EC, N>::data() const
 {
   if (!is_f_contiguous()) {
 #ifdef GTENSOR_DEVICE_ONLY
@@ -312,7 +313,7 @@ inline decltype(auto) gview<EC, N>::data() const
     throw std::runtime_error("cannot get data pointer for non-contiguous view");
 #endif
   }
-  return &(data_access(0));
+  return pointer(&(data_access(0)));
 }
 
 template <typename EC, size_type N>
