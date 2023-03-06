@@ -6,10 +6,6 @@
 
 #include "gt-blas/blas.h"
 
-#ifdef GTENSOR_DEVICE_SYCL
-#include <CL/sycl.hpp>
-#endif
-
 namespace gt
 {
 
