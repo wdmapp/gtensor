@@ -135,3 +135,23 @@ TEST(solver, zfull_sparse_solve)
 }
 
 #endif
+
+TEST(solver, sfull_band_solve)
+{
+  test_full_solve<gt::solver::solver_band<float>>();
+}
+
+TEST(solver, dfull_band_solve)
+{
+  test_full_solve<gt::solver::solver_band<double>>();
+}
+
+TEST(solver, cfull_band_solve)
+{
+  test_full_solve<gt::solver::solver_band<gt::complex<float>>>();
+}
+
+TEST(solver, zfull_band_solve)
+{
+  test_full_solve<gt::solver::solver_band<gt::complex<double>>>();
+}
