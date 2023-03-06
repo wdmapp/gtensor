@@ -130,6 +130,8 @@ inline void getrs_banded_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
   auto work_group_size = sycl::range<3>{1, 1, blockSize};
   const auto local_mem_size =
     q.get_device().get_info<sycl::info::device::local_mem_size>();
+  // clang format butchers the lambdas for some reason
+  // clang-format off
   if (n <= local_mem_size / sizeof(T)) {
 #if __INTEL_CLANG_COMPILER < 20230000
     using local_accessor_t =
@@ -237,6 +239,7 @@ inline void getrs_banded_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
         });
     });
   }
+  // clang-format off
 #else
   auto stream = h.get_stream();
   auto launch_shape = gt::shape(nrhs, batchSize);
