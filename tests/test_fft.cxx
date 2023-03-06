@@ -51,6 +51,8 @@ void fft_r2c_1d()
   // but with fftw convention for real transforms, the last term is
   // conjugate of second and set to 0 to save storage / computation
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
   //                  gt::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
@@ -150,6 +152,8 @@ void fft_r2c_1d_strided()
   // conjugate of second and set to 0 to save storage / computation
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(
     {N}, rstride, rdist, cstride, cdist, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
   //                  gt::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
@@ -216,6 +220,8 @@ void fft_r2c_1d_strided_dist()
   // conjugate of second and set to 0 to save storage / computation
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan(
     {N}, rstride, rdist, cstride, cdist, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
   //                  gt::raw_pointer_cast(d_B.data()));
   plan(d_A, d_B);
@@ -259,6 +265,8 @@ void fft_c2r_1d()
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({N}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   // plan.exec_inverse(gt::raw_pointer_cast(d_B.data()),
   //                  gt::raw_pointer_cast(d_A.data()));
   plan.inverse(d_B, d_A);
@@ -311,6 +319,7 @@ void fft_c2c_1d_forward()
   gt::copy(h_A, d_A);
 
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
@@ -391,6 +400,7 @@ void fft_c2c_1d_forward_strided()
 
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(
     {N}, istride, idist, ostride, odist, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
@@ -458,6 +468,7 @@ void fft_c2c_1d_forward_strided_dist()
 
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan(
     {N}, istride, idist, ostride, odist, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // plan.exec_forward(gt::raw_pointer_cast(d_A.data()),
@@ -510,6 +521,7 @@ void fft_c2c_1d_inverse()
   gt::copy(h_A, d_A);
 
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({N}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
 
   // ifft(x) -> [8+0i 3+1i -6+0i 3-1i]
   // plan.exec_inverse(gt::raw_pointer_cast(d_A.data()),
@@ -617,6 +629,8 @@ void fft_r2c_2d()
   gt::copy(h_A, d_A);
 
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({Ny, Nx}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
@@ -669,6 +683,8 @@ void fft_c2c_2d()
   gt::copy(h_A, d_A);
 
   gt::fft::FFTPlanMany<gt::fft::Domain::COMPLEX, E> plan({Ny, Nx}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 
@@ -717,6 +733,8 @@ void fft_r2c_3d()
   gt::copy(h_A, d_A);
 
   gt::fft::FFTPlanMany<gt::fft::Domain::REAL, E> plan({Nz, Ny, Nx}, batch_size);
+  std::cout << "plan work bytes: " << plan.get_work_buffer_bytes() << std::endl;
+
   plan(d_A, d_B);
   gt::copy(d_B, h_B);
 

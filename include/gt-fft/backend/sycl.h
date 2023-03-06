@@ -131,11 +131,15 @@ public:
     }
   }
 
+  std::size_t get_work_buffer_bytes() { return work_buffer_bytes_; }
+
 private:
   void init(std::vector<int> lengths_, int istride, int idist, int ostride,
             int odist, int batch_size, gt::stream_view stream)
   {
     auto& q = stream.get_backend_stream();
+
+    work_buffer_bytes_ = 0;
 
     int rank = lengths_.size();
 
@@ -221,6 +225,8 @@ private:
         cs *= freq_lengths[i - 1];
       }
 
+      std::size_t plan_work_buffer_bytes = 0;
+
       plan_forward_->set_value(
         oneapi::mkl::dft::config_param::NUMBER_OF_TRANSFORMS, batch_size);
       plan_forward_->set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES,
@@ -237,6 +243,9 @@ private:
         oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
         DFTI_COMPLEX_COMPLEX);
       plan_forward_->commit(q);
+      plan_forward_->get_value(oneapi::mkl::dft::config_param::WORKSPACE_BYTES,
+                               &plan_work_buffer_bytes);
+      work_buffer_bytes_ += plan_work_buffer_bytes;
 
       if (is_layout_asymmetric_) {
         plan_inverse_->set_value(
@@ -255,6 +264,10 @@ private:
           oneapi::mkl::dft::config_param::CONJUGATE_EVEN_STORAGE,
           DFTI_COMPLEX_COMPLEX);
         plan_inverse_->commit(q);
+        plan_inverse_->get_value(
+          oneapi::mkl::dft::config_param::WORKSPACE_BYTES,
+          &plan_work_buffer_bytes);
+        work_buffer_bytes_ += plan_work_buffer_bytes;
       }
     } catch (std::exception const& e) {
       std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
@@ -267,6 +280,8 @@ private:
 
   // flag to keep track of whether a separate inverse plan is required
   bool is_layout_asymmetric_;
+
+  std::size_t work_buffer_bytes_;
 };
 
 template <gt::fft::Domain D, typename R>

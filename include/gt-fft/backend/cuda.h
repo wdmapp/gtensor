@@ -214,12 +214,16 @@ public:
     }
   }
 
+  std::size_t get_work_buffer_bytes() { return work_buffer_bytes_; }
+
 private:
   void init(std::vector<int> lengths, int istride, int idist, int ostride,
             int odist, int batch_size, gt::stream_view stream)
   {
     int rank = lengths.size();
     int* n = lengths.data();
+
+    work_buffer_bytes_ = 0;
 
     std::vector<int> freq_lengths = lengths;
     if (D == gt::fft::Domain::REAL) {
@@ -232,16 +236,22 @@ private:
     }
     int* nfreq = freq_lengths.data();
 
+    std::size_t plan_work_bytes = 0;
+
     auto cuda_stream = stream.get_backend_stream();
     auto type_forward = detail::fft_config<D, R>::type_forward;
     auto type_inverse = detail::fft_config<D, R>::type_inverse;
     gtFFTCheck(cufftPlanMany(&plan_forward_, rank, n, n, istride, idist, nfreq,
                              ostride, odist, type_forward, batch_size));
     gtFFTCheck(cufftSetStream(plan_forward_, cuda_stream));
+    gtFFTCheck(cufftGetSize(plan_forward_, &plan_work_bytes));
+    work_buffer_bytes_ += plan_work_bytes;
     if (is_layout_asymmetric_) {
       gtFFTCheck(cufftPlanMany(&plan_inverse_, rank, n, nfreq, ostride, odist,
                                n, istride, idist, type_inverse, batch_size));
       gtFFTCheck(cufftSetStream(plan_inverse_, cuda_stream));
+      gtFFTCheck(cufftGetSize(plan_inverse_, &plan_work_bytes));
+      work_buffer_bytes_ += plan_work_bytes;
     }
   }
 
@@ -252,6 +262,8 @@ private:
   // when the input and output layout are different, which is always true for
   // REAL domain and sometimes for COMPLEX
   bool is_layout_asymmetric_;
+
+  std::size_t work_buffer_bytes_;
 };
 
 template <gt::fft::Domain D, typename R>
