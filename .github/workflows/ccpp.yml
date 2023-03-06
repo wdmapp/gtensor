@@ -238,7 +238,7 @@ jobs:
 
   build-hip:
     runs-on: ubuntu-latest
-    container: rocm/dev-ubuntu-22.04:5.3
+    container: rocm/dev-ubuntu-22.04:5.4.2-complete
     env:
       CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
       CXX: /opt/rocm/bin/hipcc

@@ -70,6 +70,8 @@ set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL
     "Using Intel OneAPI SYCL implementation")
 set(GTENSOR_DEVICE_SYCL_ILP64 OFF CACHE BOOL
     "Link to ILP64 MKL; typically required for host/cpu backends")
+set(GTENSOR_DEVICE_SYCL_BBFFT OFF CACHE BOOL
+  "Using bbfft lib instead of oneMKL DFT for gt-fft")
 set(ONEAPI_PATH "/opt/intel/oneapi" CACHE STRING "path to oneAPI installation")
 set(DPCPP_PATH "${ONEAPI_PATH}/compiler/latest/linux" CACHE STRING
     "Path to DPCPP compiler")
@@ -195,10 +197,10 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_include_directories(rocsparse INTERFACE "${ROCM_PATH}/include")
 
   # NB: in ROCm, rocfft library / package was deprecated in favor of
-  # hipfft library / package.
-  add_library(hipfft INTERFACE IMPORTED)
-  target_link_libraries(hipfft INTERFACE "${ROCM_PATH}/lib/libhipfft.so")
-  target_include_directories(hipfft INTERFACE "${ROCM_PATH}/hipfft/include")
+  # rocfft library / package.
+  add_library(rocfft INTERFACE IMPORTED)
+  target_link_libraries(rocfft INTERFACE "${ROCM_PATH}/lib/librocfft.so")
+  target_include_directories(rocfft INTERFACE "${ROCM_PATH}/rocfft/include")
 
   #find_package(rocprim REQUIRED CONFIG
   #             PATHS "${ROCM_PATH}/rocprim")
@@ -476,9 +478,26 @@ if (GTENSOR_ENABLE_FFT)
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     target_link_libraries(gtfft INTERFACE CUDA::cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gtfft INTERFACE hipfft)
+    target_link_libraries(gtfft INTERFACE rocfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
-    target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
+    if (GTENSOR_DEVICE_SYCL_BBFFT)
+      #find_package(bbfft-sycl REQUIRED)
+      CPMAddPackage(
+        NAME bbfft
+        GITHUB_REPOSITORY intel/double-batched-fft-library
+        GIT_TAG v0.3.6
+        OPTIONS
+          "BUILD_SYCL ON"
+          "BUILD_TESTING OFF"
+          "SYCL_COMPILE_OPTIONS -fsycl"
+          "SYCL_LINK_OPTIONS -fsycl"
+        FIND_PACKAGE_ARGUMENTS "CONFIG"
+      )
+      target_compile_definitions(gtfft INTERFACE GTENSOR_DEVICE_SYCL_BBFFT)
+      target_link_libraries(gtfft INTERFACE bbfft::bbfft-sycl)
+    else()
+      target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
+    endif()
   endif()
 
   list(APPEND GTENSOR_TARGETS gtfft)

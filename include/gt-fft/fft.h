@@ -28,7 +28,11 @@ enum class Domain
 #elif defined(GTENSOR_DEVICE_HIP)
 #include "backend/hip.h"
 #elif defined(GTENSOR_DEVICE_SYCL)
+#ifdef GTENSOR_DEVICE_SYCL_BBFFT
+#include "backend/bbfft.h"
+#else
 #include "backend/sycl.h"
+#endif // GTENSOR_DEVICE_SYCL_BBFFT
 #endif
 
 namespace gt
