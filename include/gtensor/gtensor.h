@@ -942,6 +942,55 @@ decltype(auto) host_mirror(E& e)
   return detail::host_mirror<E>::run(e);
 }
 
+// ======================================================================
+// allocator_clear_caches
+
+template <typename T, typename S = gt::space::device>
+using caching_device_allocator =
+  gt::allocator::caching_allocator<T, device_allocator<T, S>>;
+
+template <typename T, typename S = gt::space::host>
+using caching_host_allocator =
+  gt::allocator::caching_allocator<T, host_allocator<T, S>>;
+
+template <typename T, typename S = gt::space::managed>
+using caching_managed_allocator =
+  gt::allocator::caching_allocator<T, managed_allocator<T, S>>;
+
+// TODO: this is a hack, we should re-write caching_allocator to better
+// support this use case, i.e. clearing cache after initialization
+// and auto-parallelization but before main time loop in an app like
+// GENE
+inline void allocator_clear_caches()
+{
+  // Note: thrust allocators have a non-static deallocate
+#if defined(GTENSOR_HAVE_DEVICE) && !defined(GTENSOR_USE_THRUST)
+  gt::caching_device_allocator<double>::clear_cache();
+  gt::caching_device_allocator<float>::clear_cache();
+  gt::caching_device_allocator<gt::complex<double>>::clear_cache();
+  gt::caching_device_allocator<gt::complex<float>>::clear_cache();
+  gt::caching_device_allocator<uint8_t>::clear_cache();
+  gt::caching_device_allocator<int>::clear_cache();
+  gt::caching_device_allocator<std::size_t>::clear_cache();
+
+  gt::caching_managed_allocator<double>::clear_cache();
+  gt::caching_managed_allocator<float>::clear_cache();
+  gt::caching_managed_allocator<gt::complex<double>>::clear_cache();
+  gt::caching_managed_allocator<gt::complex<float>>::clear_cache();
+  gt::caching_managed_allocator<uint8_t>::clear_cache();
+  gt::caching_managed_allocator<int>::clear_cache();
+  gt::caching_managed_allocator<std::size_t>::clear_cache();
+
+  gt::caching_host_allocator<double>::clear_cache();
+  gt::caching_host_allocator<float>::clear_cache();
+  gt::caching_host_allocator<gt::complex<double>>::clear_cache();
+  gt::caching_host_allocator<gt::complex<float>>::clear_cache();
+  gt::caching_host_allocator<uint8_t>::clear_cache();
+  gt::caching_host_allocator<int>::clear_cache();
+  gt::caching_host_allocator<std::size_t>::clear_cache();
+#endif
+}
+
 } // namespace gt
 
 #endif

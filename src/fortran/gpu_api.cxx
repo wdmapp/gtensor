@@ -196,3 +196,5 @@ extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
 }
 
 #endif
+
+extern "C" void gpuAllocatorClearCache() { gt::allocator_clear_caches(); }
