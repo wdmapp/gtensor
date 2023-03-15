@@ -56,6 +56,33 @@ TEST(gtensor_span, gtensor_implicit_conversion_ctor)
   EXPECT_EQ(first, a(0, 0));
 }
 
+TEST(gtensor_span, value_type)
+{
+  gt::gtensor<double, 2> a({{11., 12., 13.}, {21., 22., 23.}});
+  gt::gtensor_span<double, 2> aspan = a;
+  gt::gtensor_span<const double, 2> aspan_const = a;
+
+  GT_DEBUG_TYPE(aspan);
+  GT_DEBUG_TYPE_NAME(decltype(aspan)::value_type);
+  GT_DEBUG_TYPE_NAME(decltype(aspan)::pointer);
+  GT_DEBUG_TYPE_NAME(decltype(aspan)::const_pointer);
+  GT_DEBUG_TYPE_NAME(decltype(aspan)::reference);
+  GT_DEBUG_TYPE_NAME(decltype(aspan)::const_reference);
+
+  GT_DEBUG_TYPE(aspan_const);
+  GT_DEBUG_TYPE_NAME(decltype(aspan_const)::value_type);
+  GT_DEBUG_TYPE_NAME(decltype(aspan_const)::pointer);
+  GT_DEBUG_TYPE_NAME(decltype(aspan_const)::const_pointer);
+  GT_DEBUG_TYPE_NAME(decltype(aspan_const)::reference);
+  GT_DEBUG_TYPE_NAME(decltype(aspan_const)::const_reference);
+
+  static_assert(std::is_same<decltype(aspan)::value_type, double>::value,
+                "wrong value_type");
+  static_assert(
+    std::is_same<decltype(aspan_const)::value_type, const double>::value,
+    "wrong value_type (const)");
+}
+
 TEST(gtensor_span, adapt_vector)
 {
   std::vector<double> v = {2., 3.};

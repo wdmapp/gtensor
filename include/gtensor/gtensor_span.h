@@ -27,7 +27,10 @@ struct gtensor_inner_types<gtensor_span<T, N, S>>
   constexpr static size_type dimension = N;
 
   using storage_type = typename gt::span<T, gt::space_pointer<T, S>>;
-  using value_type = typename storage_type::value_type;
+  // NB: gt::span, following std::span, strips const for value_type, and keeps
+  // original template param in element_type. We want the original param for
+  // the value type of gtensor_span, to have container-like behavior.
+  using value_type = typename storage_type::element_type;
   using pointer = typename storage_type::pointer;
   using const_pointer = typename storage_type::const_pointer;
   using reference = typename storage_type::reference;
@@ -43,11 +46,11 @@ public:
   using inner_types = gtensor_inner_types<self_type>;
   using storage_type = typename inner_types::storage_type;
 
-  using value_type = typename storage_type::value_type;
-  using pointer = typename storage_type::pointer;
-  using const_pointer = typename storage_type::const_pointer;
-  using reference = typename storage_type::reference;
-  using const_reference = typename storage_type::const_reference;
+  using value_type = typename inner_types::value_type;
+  using pointer = typename inner_types::pointer;
+  using const_pointer = typename inner_types::const_pointer;
+  using reference = typename inner_types::reference;
+  using const_reference = typename inner_types::const_reference;
 
   using base_type::dimension;
   using typename base_type::shape_type;
