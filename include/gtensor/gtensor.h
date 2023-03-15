@@ -805,6 +805,12 @@ inline std::enable_if_t<is_gcontainer<E>::value, E> eval(E&& e)
 }
 
 template <typename E>
+inline std::enable_if_t<is_gcontainer<E>::value, E&> eval(E& e)
+{
+  return e;
+}
+
+template <typename E>
 inline std::enable_if_t<
   !is_gcontainer<E>::value,
   gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>

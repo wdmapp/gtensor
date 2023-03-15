@@ -545,8 +545,7 @@ template <size_type N, typename E,
 inline auto reshape(E& e, gt::shape_type<N> shape)
 {
   detail::calc_reshape(e.shape(), shape);
-  return gtensor_span<expr_value_type<E>, N, expr_space_type<E>>(
-    e.data(), shape, calc_strides(shape));
+  return adapt<N, expr_space_type<E>>(e.data(), shape);
 }
 
 // ======================================================================
