@@ -117,6 +117,22 @@ struct select_reshape_gview_adaptor
   using type = detail::gview_adaptor<E>;
 };
 
+template <typename E>
+constexpr bool is_data_stride_expr()
+{
+  return is_gcontainer<E>::value || is_gtensor_span<E>::value;
+}
+
+/*
+template <typename E>
+struct is_data_stride_expr : std::false_type
+{};
+
+template <typename T, size_type N, typename S>
+struct is_data_stride_expr<gtensor_span<T, N, S>> : std::true_type
+{};
+*/
+
 // gcontainers and gtensor_spans have the default stride and layout, so they
 // are safe to override without layering via an adaptor
 template <typename E>
@@ -362,17 +378,17 @@ inline void gview<EC, N>::fill(const value_type v)
 // ======================================================================
 // view
 
-template <size_type N, typename E>
-auto view(E&& _e, const std::vector<gdesc>& descs)
+namespace detail
 {
-  using EC = select_gview_adaptor_t<E>;
 
-  EC e(std::forward<E>(_e));
-
-  size_type offset = 0;
-  const auto& old_shape = e.shape();
-  const auto& old_strides = e.strides();
-  gt::shape_type<N> shape, strides;
+template <size_type OldN, size_type NewN>
+inline void calc_view(const std::vector<gdesc>& descs,
+                      const shape_type<OldN>& old_shape,
+                      const shape_type<OldN>& old_strides,
+                      shape_type<NewN>& shape, shape_type<NewN>& strides,
+                      size_type& offset)
+{
+  offset = 0;
   int new_i = 0, old_i = 0;
   for (int i = 0; i < descs.size(); i++) {
     // std::cout << "slice " << descs[i] << " old_shape " << old_shape[i]
@@ -452,7 +468,22 @@ auto view(E&& _e, const std::vector<gdesc>& descs)
   //   "\n";
   // }
 
-  assert(new_i == N);
+  assert(new_i == NewN);
+}
+
+} // namespace detail
+
+template <size_type N, typename E, typename = void>
+auto view(E&& _e, const std::vector<gdesc>& descs)
+{
+  using EC = select_gview_adaptor_t<E>;
+
+  EC e(std::forward<E>(_e));
+
+  size_type offset;
+  gt::shape_type<N> shape, strides;
+  detail::calc_view(descs, e.shape(), e.strides(), shape, strides, offset);
+
   return gview<EC, N>(std::forward<EC>(e), offset, shape, strides);
 }
 
@@ -464,11 +495,60 @@ auto view(E&& e, Args&&... args)
   return view<N>(std::forward<E>(e), descs);
 }
 
+template <size_type N, typename E,
+          typename = std::enable_if_t<detail::is_data_stride_expr<E>()>>
+auto view_strided(E& e, const std::vector<gdesc>& descs)
+{
+  size_type offset;
+  gt::shape_type<N> shape, strides;
+  detail::calc_view(descs, e.shape(), e.strides(), shape, strides, offset);
+
+  return gtensor_span<expr_value_type<E>, N, expr_space_type<E>>(
+    e.data() + offset, shape, strides);
+}
+
+template <typename E, typename... Args>
+auto view_strided(E& e, Args&&... args)
+{
+  constexpr std::size_t N = view_dimension<E, Args...>();
+  std::vector<gdesc> descs{std::forward<Args>(args)...};
+  return view_strided<N>(e, descs);
+}
+
 // ======================================================================
 // reshape
 //
+//
+namespace detail
+{
 
-template <size_type N, typename E>
+template <size_type OldN, size_type NewN>
+inline void calc_reshape(const shape_type<OldN>& old_shape,
+                         shape_type<NewN>& shape)
+{
+  size_type old_size = calc_size(old_shape);
+  size_type size = 1;
+  int dim_adjust = -1;
+  for (int d = 0; d < NewN; d++) {
+    if (shape[d] == -1) {
+      assert(dim_adjust == -1); // can at most have one placeholder
+      dim_adjust = d;
+    } else {
+      size *= shape[d];
+    }
+  }
+  if (dim_adjust == -1) {
+    assert(size == old_size);
+  } else {
+    assert(old_size % size == 0);
+    shape[dim_adjust] = old_size / size;
+  }
+  assert(calc_size(shape) == old_size);
+}
+
+} // namespace detail
+
+template <size_type N, typename E, typename = void>
 inline auto reshape(E&& _e, gt::shape_type<N> shape)
 {
   // Note: use gview adapter more broadly, in particular for nested views,
@@ -479,25 +559,18 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
 
   EC e(std::forward<E>(_e));
 
-  size_type size_e = e.size();
-  size_type size = 1;
-  int dim_adjust = -1;
-  for (int d = 0; d < N; d++) {
-    if (shape[d] == -1) {
-      assert(dim_adjust == -1); // can at most have one placeholder
-      dim_adjust = d;
-    } else {
-      size *= shape[d];
-    }
-  }
-  if (dim_adjust == -1) {
-    assert(size == e.size());
-  } else {
-    assert(e.size() % size == 0);
-    shape[dim_adjust] = e.size() / size;
-  }
-  assert(calc_size(shape) == calc_size(e.shape()));
+  detail::calc_reshape(e.shape(), shape);
+
   return gview<EC, N>(std::forward<EC>(e), 0, shape, calc_strides(shape));
+}
+
+template <size_type N, typename E,
+          typename = std::enable_if_t<detail::is_data_stride_expr<E>()>>
+inline auto reshape(E& e, gt::shape_type<N> shape)
+{
+  detail::calc_reshape(e.shape(), shape);
+  return gtensor_span<expr_value_type<E>, N, expr_space_type<E>>(
+    e.data(), shape, calc_strides(shape));
 }
 
 // ======================================================================
@@ -506,12 +579,12 @@ inline auto reshape(E&& _e, gt::shape_type<N> shape)
 namespace detail
 {
 
-template <typename E, bool DimGreaterThanZero>
+template <typename E, bool DimGreaterThanZero, bool IsDataStrideExpr>
 struct flatten_impl
 {};
 
 template <typename E>
-struct flatten_impl<E, true>
+struct flatten_impl<E, true, false>
 {
   static inline decltype(auto) run(E&& e)
   {
@@ -520,24 +593,67 @@ struct flatten_impl<E, true>
 };
 
 template <typename E>
-struct flatten_impl<E, false>
+struct flatten_impl<E, true, true>
+{
+  static inline decltype(auto) run(E& e) { return reshape(e, shape(e.size())); }
+};
+
+template <typename E>
+struct flatten_impl<E, false, false>
 {
   static inline decltype(auto) run(E&& e) { return std::forward<E>(e); }
 };
 
+template <typename E>
+struct flatten_impl<E, false, true>
+{
+  static inline decltype(auto) run(E& e) { return e; }
+};
+
 } // end namespace detail
 
-template <typename E>
+template <typename E, typename = void>
 inline decltype(auto) flatten(E&& e)
 {
-  return detail::flatten_impl<E, (expr_dimension<E>() > 0)>::run(
+  return detail::flatten_impl<E, (expr_dimension<E>() > 0), false>::run(
     std::forward<E>(e));
+}
+
+template <typename E,
+          typename = std::enable_if_t<detail::is_data_stride_expr<E>()>>
+inline decltype(auto) flatten(E& e)
+{
+  return detail::flatten_impl<E, (expr_dimension<E>() > 0), true>::run(e);
 }
 
 // ======================================================================
 // swapaxes
 
-template <typename E>
+namespace detail
+{
+
+template <typename Shape>
+inline void calc_swapaxes(int axis1, int axis2, const Shape& old_shape,
+                          const Shape& old_strides, Shape& shape,
+                          Shape& strides)
+{
+  for (int d = 0; d < shape.size(); d++) {
+    if (d == axis1) {
+      shape[d] = old_shape[axis2];
+      strides[d] = old_strides[axis2];
+    } else if (d == axis2) {
+      shape[d] = old_shape[axis1];
+      strides[d] = old_strides[axis1];
+    } else {
+      shape[d] = old_shape[d];
+      strides[d] = old_strides[d];
+    }
+  }
+}
+
+} // namespace detail
+
+template <typename E, typename = void>
 inline auto swapaxes(E&& _e, int axis1, int axis2)
 {
   using EC = select_gview_adaptor_t<E>;
@@ -548,28 +664,48 @@ inline auto swapaxes(E&& _e, int axis1, int axis2)
   expr_shape_type<E> shape;
   expr_shape_type<E> strides;
 
-  for (int d = 0; d < shape.size(); d++) {
-    if (d == axis1) {
-      shape[d] = e.shape()[axis2];
-      strides[d] = e.strides()[axis2];
-    } else if (d == axis2) {
-      shape[d] = e.shape()[axis1];
-      strides[d] = e.strides()[axis1];
-    } else {
-      shape[d] = e.shape()[d];
-      strides[d] = e.strides()[d];
-    }
-  }
+  detail::calc_swapaxes(axis1, axis2, e.shape(), e.strides(), shape, strides);
+
   // FIXME, afterwards it's not col-major order anymore, os unravel will go
   // wrong
   // FIXME, could use sanity checks
   return gview<EC, N>(std::forward<EC>(e), 0, shape, strides);
 }
 
+template <typename E,
+          typename = std::enable_if_t<detail::is_data_stride_expr<E>()>>
+inline auto swapaxes(E& e, int axis1, int axis2)
+{
+  constexpr int N = expr_dimension<E>();
+  expr_shape_type<E> shape;
+  expr_shape_type<E> strides;
+
+  detail::calc_swapaxes(axis1, axis2, e.shape(), e.strides(), shape, strides);
+
+  return gtensor_span<expr_value_type<E>, expr_dimension<E>(),
+                      expr_space_type<E>>(e.data(), shape, strides);
+}
+
 // ======================================================================
 // transpose
 
-template <typename E>
+namespace detail
+{
+
+template <typename Shape>
+inline void calc_transpose(const Shape& axes, const Shape& old_shape,
+                           const Shape& old_strides, Shape& shape,
+                           Shape& strides)
+{
+  for (int d = 0; d < shape.size(); d++) {
+    shape[d] = old_shape[axes[d]];
+    strides[d] = old_strides[axes[d]];
+  }
+}
+
+} // namespace detail
+
+template <typename E, typename = void>
 inline auto transpose(E&& _e, expr_shape_type<E> axes)
 {
   using EC = select_gview_adaptor_t<E>;
@@ -579,13 +715,22 @@ inline auto transpose(E&& _e, expr_shape_type<E> axes)
   constexpr int N = expr_dimension<E>();
   expr_shape_type<E> shape;
   expr_shape_type<E> strides;
+  detail::calc_transpose(axes, e.shape(), e.strides(), shape, strides);
 
-  for (int d = 0; d < shape.size(); d++) {
-    shape[d] = e.shape()[axes[d]];
-    strides[d] = e.strides()[axes[d]];
-  }
   // FIXME, could use sanity checks
   return gview<EC, N>(std::forward<E>(e), 0, shape, strides);
+}
+
+template <typename E,
+          typename = std::enable_if_t<detail::is_data_stride_expr<E>()>>
+inline auto transpose(E& e, expr_shape_type<E> axes)
+{
+  expr_shape_type<E> shape;
+  expr_shape_type<E> strides;
+  detail::calc_transpose(axes, e.shape(), e.strides(), shape, strides);
+
+  return gtensor_span<expr_value_type<E>, expr_dimension<E>(),
+                      expr_space_type<E>>(e.data(), shape, strides);
 }
 
 } // namespace gt
