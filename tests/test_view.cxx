@@ -977,37 +977,7 @@ TEST(gview, device_is_contiguous)
   EXPECT_FALSE(a_trans.is_f_contiguous());
 }
 
-TEST(gview, sum_ne_strides_contiguous)
-{
-  gt::gtensor_device<double, 2> a{
-    {11., 21., 31.}, {12., 22., 32.}, {13., 23., 33.}, {14., 24., 34.}};
-  gt::gtensor_device<double, 2> b{{11., 21.}, {31., 12.}, {22., 32.},
-                                  {13., 23.}, {33., 14.}, {24., 34.}};
-
-  auto aplusb = a + gt::reshape(b, a.shape());
-
-  GT_DEBUG_VAR(a.shape());
-  GT_DEBUG_VAR(b.shape());
-  GT_DEBUG_VAR(aplusb.shape());
-
-  GT_DEBUG_VAR(a.strides());
-  GT_DEBUG_VAR(b.strides());
-
-  GT_DEBUG_TYPE(aplusb);
-
-  auto inner_slice = aplusb.view(_s(1, 3), _all);
-  GT_DEBUG_TYPE(inner_slice);
-  GT_DEBUG_VAR(inner_slice.shape());
-  GT_DEBUG_VAR(inner_slice.strides());
-
-  EXPECT_EQ(inner_slice,
-            (2 * gt::gtensor<double, 2>{
-                   {21., 31.}, {22., 32.}, {23., 33.}, {24., 34.}}));
-
-  EXPECT_FALSE(inner_slice.is_f_contiguous());
-}
-
-TEST(gview, fn_view_contiguous)
+TEST(gview, device_fn_view_nodata)
 {
   gt::gtensor_device<double, 2> a{
     {11., 21., 31.}, {12., 22., 32.}, {13., 23., 33.}, {14., 24., 34.}};
@@ -1030,7 +1000,7 @@ TEST(gview, fn_view_contiguous)
             (2 * gt::gtensor<double, 2>{
                    {21., 31.}, {22., 32.}, {23., 33.}, {24., 34.}}));
 
-  EXPECT_FALSE(inner_slice.is_f_contiguous());
+  EXPECT_FALSE(gt::has_data_method_v<decltype(inner_slice)>);
 }
 
 #endif

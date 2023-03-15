@@ -233,11 +233,7 @@ public:
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
 
-  inline pointer data() const;
-
   inline std::string typestr() const&;
-
-  inline bool is_f_contiguous() const;
 
 private:
   EC e_;
@@ -319,32 +315,12 @@ GT_INLINE decltype(auto) gview<EC, N>::data_access(size_t i)
 }
 
 template <typename EC, size_type N>
-inline typename gview<EC, N>::pointer gview<EC, N>::data() const
-{
-  if (!is_f_contiguous()) {
-#ifdef GTENSOR_DEVICE_ONLY
-    printf("cannot get data pointer for non-contiguous view");
-    assert(0);
-#else
-    throw std::runtime_error("cannot get data pointer for non-contiguous view");
-#endif
-  }
-  return pointer(&(data_access(0)));
-}
-
-template <typename EC, size_type N>
 inline std::string gview<EC, N>::typestr() const&
 {
   std::stringstream s;
   s << "v" << N << "(" << e_.typestr() << ")" << this->shape()
     << this->strides();
   return s.str();
-}
-
-template <typename EC, size_type N>
-inline bool gview<EC, N>::is_f_contiguous() const
-{
-  return this->strides() == calc_strides(this->shape());
 }
 
 template <typename EC, size_type N>
