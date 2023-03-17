@@ -207,20 +207,70 @@ TEST(gtensor, assign_expression_2d)
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{22., 24., 26.}, {42., 44., 46.}}));
 }
 
-TEST(gtensor, eval_lvalue)
+TEST(gtensor, eval_lvalue_passthrough)
 {
   gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
   auto&& b = gt::eval(a);
   gt::assert_is_same<gt::gtensor<double, 2>&, decltype(b)>();
 
+  EXPECT_EQ(gt::raw_pointer_cast(a.data()), gt::raw_pointer_cast(b.data()));
+
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
 }
 
-TEST(gtensor, eval_rvalue)
+TEST(gtensor, eval_lvalue_const_copy)
+{
+  // Note: this comes up when const reference params are evaluated
+  const gt::gtensor<double, 2> a_{{11., 12., 13.}, {21., 22., 23.}};
+  auto a = a_.to_kernel(); // makes a const value_type span
+  GT_DEBUG_TYPE(a);
+  auto b = gt::eval(a);
+  gt::assert_is_same<gt::gtensor<double, 2>, decltype(b)>();
+
+  EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
+TEST(gtensor, eval_lvalue_const_copy2)
+{
+  const gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::eval(a);
+  gt::assert_is_same<gt::gtensor<double, 2>, decltype(b)>();
+
+  EXPECT_NE(gt::raw_pointer_cast(a.data()), gt::raw_pointer_cast(b.data()));
+
+  EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
+TEST(gtensor, eval_rvalue_passthrough)
 {
   gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  auto adata = gt::raw_pointer_cast(a.data());
   auto&& b = gt::eval(std::move(a));
   gt::assert_is_same<decltype(b), gt::gtensor<double, 2>&&>();
+
+  EXPECT_EQ(adata, gt::raw_pointer_cast(b.data()));
+
+  EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
+TEST(gtensor, eval_rvalue_const_copy)
+{
+  const gt::gtensor<double, 2> a_{{11., 12., 13.}, {21., 22., 23.}};
+  auto a = a_.to_kernel(); // makes a const value_type span
+  GT_DEBUG_TYPE(a);
+  auto b = gt::eval(std::move(a));
+  gt::assert_is_same<decltype(b), gt::gtensor<double, 2>>();
+
+  EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
+}
+
+TEST(gtensor, eval_rvalue_const_copy2)
+{
+  const gt::gtensor<double, 2> a{{11., 12., 13.}, {21., 22., 23.}};
+  auto b = gt::eval(std::move(a));
+  gt::assert_is_same<decltype(b), gt::gtensor<double, 2>>();
+
+  EXPECT_NE(gt::raw_pointer_cast(a.data()), gt::raw_pointer_cast(b.data()));
 
   EXPECT_EQ(b, (gt::gtensor<double, 2>{{11., 12., 13.}, {21., 22., 23.}}));
 }

@@ -799,21 +799,26 @@ inline auto zeros_like(const expression<E>& _e)
 // eval
 
 template <typename E>
-inline std::enable_if_t<is_gcontainer<E>::value, E> eval(E&& e)
+inline std::enable_if_t<
+  is_gcontainer<E>::value && !std::is_const<expr_value_type<E>>::value, E>
+eval(E&& e)
 {
   return std::forward<E>(e);
 }
 
 template <typename E>
-inline std::enable_if_t<is_gcontainer<E>::value, E&> eval(E& e)
+inline std::enable_if_t<
+  is_gcontainer<E>::value && !std::is_const<expr_value_type<E>>::value, E&>
+eval(E& e)
 {
   return e;
 }
 
 template <typename E>
-inline std::enable_if_t<
-  !is_gcontainer<E>::value,
-  gtensor<expr_value_type<E>, expr_dimension<E>(), expr_space_type<E>>>
+inline std::enable_if_t<!is_gcontainer<E>::value ||
+                          std::is_const<expr_value_type<E>>::value,
+                        gtensor<std::remove_cv_t<expr_value_type<E>>,
+                                expr_dimension<E>(), expr_space_type<E>>>
 eval(E&& e)
 {
   return {std::forward<E>(e)};
