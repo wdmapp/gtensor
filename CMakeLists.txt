@@ -24,6 +24,7 @@ set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
+option(GTENSOR_USE_RMM "Use RMM (cuda devices only)" OFF)
 option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
 option(GTENSOR_BUILD_EXAMPLES "Build example programs" OFF)
 
@@ -147,6 +148,17 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
   endif()
   target_compile_options(gtensor_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-extended-lambda>)
   target_compile_options(gtensor_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+
+  if (GTENSOR_USE_RMM)
+    message(STATUS "${PROJECT_NAME}: RMM is enabled")
+    CPMAddPackage(
+      NAME rmm
+      GITHUB_REPOSITORY rapidsai/rmm
+      VERSION 23.02.00
+    )
+    target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_USE_RMM)
+    target_link_libraries(gtensor_cuda INTERFACE rmm::rmm)
+  endif()
 endif()
 
 if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
@@ -309,7 +321,7 @@ else()
   message(STATUS "${PROJECT_NAME}: using N-d -> 1d assign/launch kernels")
 endif()
 
-if (GTENSOR_ALLOCATOR_CACHING)
+if (GTENSOR_ALLOCATOR_CACHING AND NOT GTENSOR_USE_RMM)
   message(STATUS "${PROJECT_NAME}: caching allocator enabled")
 else()
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
