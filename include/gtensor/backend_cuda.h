@@ -40,7 +40,9 @@ public:
       mr_cuda_managed_{},
       mr_device_{&mr_cuda_device_},
       mr_managed_{&mr_cuda_managed_},
-      allocated_{}
+      allocated_host_{},
+      allocated_device_{},
+      allocated_managed_{}
   {}
 
   void* allocate_host(size_type nbytes)
@@ -49,17 +51,17 @@ public:
     if (p == nullptr) {
       throw std::runtime_error("host allocate failed");
     }
-    allocated_.emplace(std::make_pair(p, nbytes));
+    allocated_host_.emplace(std::make_pair(p, nbytes));
     return p;
   }
 
   void deallocate_host(void* p)
   {
     assert(p != nullptr);
-    auto it = allocated_.find(p);
-    assert(it != allocated_.end());
+    auto it = allocated_host_.find(p);
+    assert(it != allocated_host_.end());
     mr_host_.deallocate(p, it->second);
-    allocated_.erase(it);
+    allocated_host_.erase(it);
   }
 
   void* allocate_device(size_type nbytes)
@@ -68,17 +70,17 @@ public:
     if (p == nullptr) {
       throw std::runtime_error("device allocate failed");
     }
-    allocated_.emplace(std::make_pair(p, nbytes));
+    allocated_device_.emplace(std::make_pair(p, nbytes));
     return p;
   }
 
   void deallocate_device(void* p)
   {
     assert(p != nullptr);
-    auto it = allocated_.find(p);
-    assert(it != allocated_.end());
+    auto it = allocated_device_.find(p);
+    assert(it != allocated_device_.end());
     mr_device_.deallocate(p, it->second);
-    allocated_.erase(it);
+    allocated_device_.erase(it);
   }
 
   void* allocate_managed(size_type nbytes)
@@ -87,17 +89,17 @@ public:
     if (p == nullptr) {
       throw std::runtime_error("managed allocate failed");
     }
-    allocated_.emplace(std::make_pair(p, nbytes));
+    allocated_managed_.emplace(std::make_pair(p, nbytes));
     return p;
   }
 
   void deallocate_managed(void* p)
   {
     assert(p != nullptr);
-    auto it = allocated_.find(p);
-    assert(it != allocated_.end());
+    auto it = allocated_managed_.find(p);
+    assert(it != allocated_managed_.end());
     mr_managed_.deallocate(p, it->second);
-    allocated_.erase(it);
+    allocated_managed_.erase(it);
   }
 
 private:
@@ -107,7 +109,9 @@ private:
   rmm::mr::pool_memory_resource<rmm::mr::cuda_memory_resource> mr_device_;
   rmm::mr::pool_memory_resource<rmm::mr::managed_memory_resource> mr_managed_;
 
-  std::map<void*, size_type> allocated_;
+  std::map<void*, size_type> allocated_host_;
+  std::map<void*, size_type> allocated_device_;
+  std::map<void*, size_type> allocated_managed_;
 };
 
 inline memory_resources& rmm_get_mr_instance()
