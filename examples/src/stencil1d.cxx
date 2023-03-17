@@ -21,8 +21,6 @@
 
 #include <gtensor/gtensor.h>
 
-using namespace std;
-
 // provides convenient shortcuts for commont gtensor functions, for example
 // _s for gt::gslice
 using namespace gt::placeholders;
@@ -72,47 +70,47 @@ void test_stencils(int n, double dx, double (*fn)(double),
     y(i) = fn(xtmp);
     dydx_analytic(i) = dydx(xtmp);
   }
-  cout << "x            = " << x << endl;
-  cout << "y            = " << y << endl;
-  cout << "dydx_analytic = " << dydx_analytic << endl;
+  std::cout << "x            = " << x << std::endl;
+  std::cout << "y            = " << y << std::endl;
+  std::cout << "dydx_analytic = " << dydx_analytic << std::endl;
 
-  cout << endl;
+  std::cout << std::endl;
   dydx_numeric_3 = stencil1d_3(y, stencil3) / dx;
-  cout << "dydx_numeric3 =   " << dydx_numeric_3 << endl;
-  cout << "err 3         =   " << dydx_analytic.view(_s(1, -1)) - dydx_numeric_3
-       << endl;
+  std::cout << "dydx_numeric3 =   " << dydx_numeric_3 << std::endl;
+  std::cout << "err 3         =   "
+            << dydx_analytic.view(_s(1, -1)) - dydx_numeric_3 << std::endl;
 
-  cout << endl;
+  std::cout << std::endl;
   dydx_numeric_5 = stencil1d_5(y, stencil5) / dx;
-  cout << "dydx_numeric5 =     " << dydx_numeric_5 << endl;
-  cout << "err 5         =     "
-       << dydx_analytic.view(_s(2, -2)) - dydx_numeric_5 << endl;
+  std::cout << "dydx_numeric5 =     " << dydx_numeric_5 << std::endl;
+  std::cout << "err 5         =     "
+            << dydx_analytic.view(_s(2, -2)) - dydx_numeric_5 << std::endl;
 
-  cout << endl;
+  std::cout << std::endl;
   dydx_numeric_7 = stencil1d_7(y, stencil7) / dx;
-  cout << "dydx_numeric7 =     " << dydx_numeric_7 << endl;
-  cout << "err 7         =     "
-       << dydx_analytic.view(_s(3, -3)) - dydx_numeric_7 << endl;
+  std::cout << "dydx_numeric7 =     " << dydx_numeric_7 << std::endl;
+  std::cout << "err 7         =     "
+            << dydx_analytic.view(_s(3, -3)) - dydx_numeric_7 << std::endl;
 }
 
 int main(int argc, char** argv)
 {
   double dx = 0.1;
   int n = 20;
-  cout << "y = x^2" << endl;
+  std::cout << "y = x^2" << std::endl;
   test_stencils(
     n, dx, [](double x) { return x * x; }, [](double x) { return 2.0 * x; });
-  cout << endl;
+  std::cout << std::endl;
 
-  cout << "y = x^3" << endl;
+  std::cout << "y = x^3" << std::endl;
   test_stencils(
     n, dx, [](double x) { return x * x * x; },
     [](double x) { return 3.0 * x * x; });
-  cout << endl;
+  std::cout << std::endl;
 
-  cout << "y = x^5" << endl;
+  std::cout << "y = x^5" << std::endl;
   test_stencils(
     n, dx, [](double x) { return pow(x, 5); },
     [](double x) { return 5.0 * pow(x, 4); });
-  cout << endl;
+  std::cout << std::endl;
 }
