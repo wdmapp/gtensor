@@ -19,6 +19,7 @@
 #elif GTENSOR_USE_UMPIRE
 #include <umpire/Allocator.hpp>
 #include <umpire/ResourceManager.hpp>
+#include <umpire/strategy/MixedPool.hpp>
 #endif
 
 // ======================================================================
@@ -195,9 +196,12 @@ class memory_resources
 public:
   memory_resources()
     : rm_{umpire::ResourceManager::getInstance()},
-      a_host_{rm_.getAllocator("PINNED")},
-      a_device_{rm_.getAllocator("DEVICE")},
-      a_managed_{rm_.getAllocator("UM")}
+      a_host_{rm_.makeAllocator<umpire::strategy::MixedPool>(
+        "PINNED_pool", rm_.getAllocator("PINNED"))},
+      a_device_{rm_.makeAllocator<umpire::strategy::MixedPool>(
+        "DEVICE_pool", rm_.getAllocator("DEVICE"))},
+      a_managed_{rm_.makeAllocator<umpire::strategy::MixedPool>(
+        "UM_pool", rm_.getAllocator("UM"))}
   {}
 
   void* allocate_host(size_type nbytes)
