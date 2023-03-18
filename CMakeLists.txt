@@ -25,6 +25,7 @@ set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
 option(GTENSOR_USE_RMM "Use RMM (cuda devices only)" OFF)
+option(GTENSOR_USE_UMPIRE "Use Umpire (cuda and hip devices only)" OFF)
 option(GTENSOR_TEST_DEBUG "Turn on debug printing for unit tests" OFF)
 option(GTENSOR_BUILD_EXAMPLES "Build example programs" OFF)
 
@@ -321,12 +322,19 @@ else()
   message(STATUS "${PROJECT_NAME}: using N-d -> 1d assign/launch kernels")
 endif()
 
-if (GTENSOR_ALLOCATOR_CACHING AND NOT GTENSOR_USE_RMM)
+if (GTENSOR_ALLOCATOR_CACHING AND NOT GTENSOR_USE_RMM AND NOT GTENSOR_USE_UMPIRE)
   message(STATUS "${PROJECT_NAME}: caching allocator enabled")
 else()
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
                              INTERFACE GTENSOR_ALLOCATOR_NO_CACHING)
   message(STATUS "${PROJECT_NAME}: caching allocator disabled")
+endif()
+
+if (GTENSOR_USE_UMPIRE)
+  message(STATUS "${PROJECT_NAME}: UMPIRE enabled")
+  find_package(umpire REQUIRED)
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE GTENSOR_USE_UMPIRE)
+  target_link_libraries(gtensor_${GTENSOR_DEVICE} INTERFACE umpire)
 endif()
 
 if (GTENSOR_BOUNDS_CHECK)

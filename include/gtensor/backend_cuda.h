@@ -16,6 +16,9 @@
 #include <rmm/mr/device/managed_memory_resource.hpp>
 #include <rmm/mr/device/pool_memory_resource.hpp>
 #include <rmm/mr/host/pinned_memory_resource.hpp>
+#elif GTENSOR_USE_UMPIRE
+#include <umpire/Allocator.hpp>
+#include <umpire/ResourceManager.hpp>
 #endif
 
 // ======================================================================
@@ -182,6 +185,141 @@ struct gallocator<gt::space::cuda_host>
   static void deallocate(T* p)
   {
     rmm_get_mr_instance().deallocate_host(p);
+  }
+};
+
+#elif GTENSOR_USE_UMPIRE
+
+class memory_resources
+{
+public:
+  memory_resources()
+    : rm_{umpire::ResourceManager::getInstance()},
+      a_host_{rm_.getAllocator("PINNED")},
+      a_device_{rm_.getAllocator("DEVICE")},
+      a_managed_{rm_.getAllocator("UM")}
+  {}
+
+  void* allocate_host(size_type nbytes)
+  {
+    void* p = a_host_.allocate(nbytes);
+    if (p == nullptr) {
+      throw std::runtime_error("host allocate failed");
+    }
+    return p;
+  }
+
+  void deallocate_host(void* p)
+  {
+    assert(p != nullptr);
+    a_host_.deallocate(p);
+  }
+
+  void* allocate_device(size_type nbytes)
+  {
+    void* p = a_device_.allocate(nbytes);
+    if (p == nullptr) {
+      throw std::runtime_error("device allocate failed");
+    }
+    return p;
+  }
+
+  void deallocate_device(void* p)
+  {
+    assert(p != nullptr);
+    a_device_.deallocate(p);
+  }
+
+  void* allocate_managed(size_type nbytes)
+  {
+    void* p = a_managed_.allocate(nbytes);
+    if (p == nullptr) {
+      throw std::runtime_error("managed allocate failed");
+    }
+    return p;
+  }
+
+  void deallocate_managed(void* p)
+  {
+    assert(p != nullptr);
+    a_managed_.deallocate(p);
+  }
+
+private:
+  umpire::ResourceManager& rm_;
+  umpire::Allocator a_host_;
+  umpire::Allocator a_device_;
+  umpire::Allocator a_managed_;
+};
+
+inline memory_resources& umpire_get_mr_instance()
+{
+  static memory_resources mr;
+  return mr;
+}
+
+template <>
+struct gallocator<gt::space::cuda>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    auto nbytes = sizeof(T) * n;
+    return static_cast<T*>(umpire_get_mr_instance().allocate_device(nbytes));
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    umpire_get_mr_instance().deallocate_device(p);
+  }
+};
+
+template <>
+struct gallocator<gt::space::cuda_managed>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    auto nbytes = sizeof(T) * n;
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype == gt::backend::managed_memory_type::managed) {
+      return static_cast<T*>(umpire_get_mr_instance().allocate_managed(nbytes));
+    } else if (mtype == gt::backend::managed_memory_type::device) {
+      return static_cast<T*>(umpire_get_mr_instance().allocate_device(nbytes));
+    } else {
+      throw std::runtime_error("unsupported managed memory type for backend");
+    }
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype == gt::backend::managed_memory_type::managed) {
+      umpire_get_mr_instance().deallocate_managed(p);
+    } else if (mtype == gt::backend::managed_memory_type::device) {
+      umpire_get_mr_instance().deallocate_device(p);
+    } else {
+      throw std::runtime_error("unsupported managed memory type for backend");
+    }
+  }
+};
+
+template <>
+struct gallocator<gt::space::cuda_host>
+{
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    auto nbytes = sizeof(T) * n;
+    return static_cast<T*>(umpire_get_mr_instance().allocate_host(nbytes));
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    umpire_get_mr_instance().deallocate_host(p);
   }
 };
 
