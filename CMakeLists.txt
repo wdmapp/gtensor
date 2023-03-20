@@ -22,6 +22,8 @@ set(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed" CACHE STRING
 set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
              PROPERTY STRINGS "managed" "device" "managed_coarse" "managed_fine")
 
+set(GTENSOR_UMPIRE_STRATEGY "DynamicPoolList" CACHE STRING "class in umpire::strategy")
+
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 option(GTENSOR_USE_THRUST "Use thrust (cuda and hip devices)" OFF)
 option(GTENSOR_USE_RMM "Use RMM (cuda devices only)" OFF)
@@ -331,9 +333,11 @@ else()
 endif()
 
 if (GTENSOR_USE_UMPIRE)
-  message(STATUS "${PROJECT_NAME}: UMPIRE enabled")
+  message(STATUS "${PROJECT_NAME}: UMPIRE enabled (${GTENSOR_UMPIRE_STRATEGY})")
   find_package(umpire REQUIRED)
   target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE GTENSOR_USE_UMPIRE)
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
+    GTENSOR_UMPIRE_STRATEGY=${GTENSOR_UMPIRE_STRATEGY})
   target_link_libraries(gtensor_${GTENSOR_DEVICE} INTERFACE umpire)
 endif()
 

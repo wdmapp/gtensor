@@ -19,6 +19,7 @@
 #elif GTENSOR_USE_UMPIRE
 #include <umpire/Allocator.hpp>
 #include <umpire/ResourceManager.hpp>
+#include <umpire/strategy/DynamicPoolList.hpp>
 #include <umpire/strategy/MixedPool.hpp>
 #endif
 
@@ -191,17 +192,25 @@ struct gallocator<gt::space::cuda_host>
 
 #elif GTENSOR_USE_UMPIRE
 
+#ifndef GTENSOR_UMPIRE_STRATEGY
+#define GTENSOR_UMPIRE_STRATEGY DynamicPoolList
+#endif
+
+#define QUALIFY_UMPIRE_STRATEGY(x) umpire::strategy::x
+
 class memory_resources
 {
 public:
+  // using strategy = umpire::strategy::MixedPool;
+  // using strategy = umpire::strategy::DynamicPoolList;
+  using strategy = QUALIFY_UMPIRE_STRATEGY(GTENSOR_UMPIRE_STRATEGY);
   memory_resources()
     : rm_{umpire::ResourceManager::getInstance()},
-      a_host_{rm_.makeAllocator<umpire::strategy::MixedPool>(
-        "PINNED_pool", rm_.getAllocator("PINNED"))},
-      a_device_{rm_.makeAllocator<umpire::strategy::MixedPool>(
-        "DEVICE_pool", rm_.getAllocator("DEVICE"))},
-      a_managed_{rm_.makeAllocator<umpire::strategy::MixedPool>(
-        "UM_pool", rm_.getAllocator("UM"))}
+      a_host_{
+        rm_.makeAllocator<strategy>("PINNED_pool", rm_.getAllocator("PINNED"))},
+      a_device_{
+        rm_.makeAllocator<strategy>("DEVICE_pool", rm_.getAllocator("DEVICE"))},
+      a_managed_{rm_.makeAllocator<strategy>("UM_pool", rm_.getAllocator("UM"))}
   {}
 
   void* allocate_host(size_type nbytes)
@@ -255,6 +264,8 @@ private:
   umpire::Allocator a_device_;
   umpire::Allocator a_managed_;
 };
+
+#undef QUALIFY_UMPIRE_STRATEGY
 
 inline memory_resources& umpire_get_mr_instance()
 {
