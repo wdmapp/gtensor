@@ -20,6 +20,10 @@
 #include "pointer_traits.h"
 #include "space_forward.h"
 
+#ifdef GTENSOR_USE_MEMORY_POOL
+#include "memory_pool.h"
+#endif
+
 namespace gt
 {
 
@@ -282,6 +286,69 @@ struct selector
 {
   using type = wrap_allocator<T, gallocator<S>, S>;
 };
+
+#ifdef GTENSOR_USE_MEMORY_POOL
+
+template <typename Space, gt::memory_pool::memory_type MemType>
+struct pool_gallocator
+{
+  using space_type = Space;
+
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    auto nbytes = sizeof(T) * n;
+    return static_cast<T*>(
+      gt::memory_pool::get_instance().allocate<MemType>(nbytes));
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    gt::memory_pool::get_instance().deallocate<MemType>(p);
+  }
+};
+
+template <typename Space>
+struct pool_gallocator<Space, gt::memory_pool::memory_type::managed>
+{
+  using space_type = Space;
+
+  template <typename T>
+  static T* allocate(size_type n)
+  {
+    auto nbytes = sizeof(T) * n;
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype == gt::backend::managed_memory_type::managed) {
+      return static_cast<T*>(
+        gt::memory_pool::get_instance()
+          .allocate<gt::memory_pool::memory_type::managed>(nbytes));
+    } else if (mtype == gt::backend::managed_memory_type::device) {
+      return static_cast<T*>(
+        gt::memory_pool::get_instance()
+          .allocate<gt::memory_pool::memory_type::device>(nbytes));
+    } else {
+      throw std::runtime_error("unsupported managed memory type for backend");
+    }
+  }
+
+  template <typename T>
+  static void deallocate(T* p)
+  {
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype == gt::backend::managed_memory_type::managed) {
+      gt::memory_pool::get_instance()
+        .deallocate<gt::memory_pool::memory_type::managed>(p);
+    } else if (mtype == gt::backend::managed_memory_type::device) {
+      gt::memory_pool::get_instance()
+        .deallocate<gt::memory_pool::memory_type::device>(p);
+    } else {
+      throw std::runtime_error("unsupported managed memory type for backend");
+    }
+  }
+};
+
+#endif // GTENSOR_USE_MEMORY_POOL
 
 } // namespace allocator_impl
 

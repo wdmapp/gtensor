@@ -160,7 +160,7 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
       VERSION 23.02.00
     )
     target_compile_definitions(gtensor_cuda INTERFACE
-      GTENSOR_USE_MEMORY_MANAGER GTENSOR_USE_RMM)
+      GTENSOR_USE_MEMORY_POOL GTENSOR_USE_RMM)
     target_link_libraries(gtensor_cuda INTERFACE rmm::rmm)
   endif()
 endif()
@@ -185,6 +185,11 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
 
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
+
+  if (GTENSOR_USE_UMPIRE)
+    # needed by blt which is used by umpire
+    find_package(hip REQUIRED)
+  endif()
 
   if (GTENSOR_USE_THRUST)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
@@ -337,7 +342,7 @@ if (GTENSOR_USE_UMPIRE)
   message(STATUS "${PROJECT_NAME}: UMPIRE enabled (${GTENSOR_UMPIRE_STRATEGY})")
   find_package(umpire REQUIRED)
   target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
-    GTENSOR_USE_MEMORY_MANAGER GTENSOR_USE_UMPIRE)
+    GTENSOR_USE_MEMORY_POOL GTENSOR_USE_UMPIRE)
   target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
     GTENSOR_UMPIRE_STRATEGY=${GTENSOR_UMPIRE_STRATEGY})
   target_link_libraries(gtensor_${GTENSOR_DEVICE} INTERFACE umpire)

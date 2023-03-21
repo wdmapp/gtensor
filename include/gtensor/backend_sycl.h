@@ -53,6 +53,28 @@ class Min;
 
 namespace allocator_impl
 {
+
+#ifdef GTENSOR_USE_MEMORY_POOL
+
+template <>
+struct gallocator<gt::space::sycl>
+  : pool_gallocator<gt::space::sycl, gt::memory_pool::memory_type::device>
+{};
+
+template <>
+struct gallocator<gt::space::sycl_managed>
+  : pool_gallocator<gt::space::sycl_managed,
+                    gt::memory_pool::memory_type::managed>
+{};
+
+template <>
+struct gallocator<gt::space::sycl_host>
+  : pool_gallocator<gt::space::sycl_host,
+                    gt::memory_pool::memory_type::host_pinned>
+{};
+
+#else // GTENSOR_USE_MEMORY_POOL
+
 template <>
 struct gallocator<gt::space::sycl>
 {
@@ -107,6 +129,8 @@ struct gallocator<gt::space::sycl_host>
     ::sycl::free(p, gt::backend::sycl::get_queue());
   }
 };
+
+#endif // GTENSOR_USE_MEMORY_POOL
 
 } // namespace allocator_impl
 

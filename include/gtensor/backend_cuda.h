@@ -9,10 +9,6 @@
 // #include "thrust/cuda/system/execution_policy.h"
 #include "thrust/execution_policy.h"
 
-#ifdef GTENSOR_USE_MEMORY_MANAGER
-#include "gtensor/memory_manager.h"
-#endif
-
 // ======================================================================
 // gt::backend::cuda
 
@@ -24,78 +20,26 @@ namespace backend
 namespace allocator_impl
 {
 
-#ifdef GTENSOR_USE_MEMORY_MANAGER
+#ifdef GTENSOR_USE_MEMORY_POOL
 
 template <>
 struct gallocator<gt::space::cuda>
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    auto nbytes = sizeof(T) * n;
-    return static_cast<T*>(
-      gt::memory_manager::get_instance().allocate_device(nbytes));
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gt::memory_manager::get_instance().deallocate_device(p);
-  }
-};
+  : pool_gallocator<gt::space::cuda, gt::memory_pool::memory_type::device>
+{};
 
 template <>
 struct gallocator<gt::space::cuda_managed>
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    auto nbytes = sizeof(T) * n;
-    auto mtype = gt::backend::get_managed_memory_type();
-    if (mtype == gt::backend::managed_memory_type::managed) {
-      return static_cast<T*>(
-        gt::memory_manager::get_instance().allocate_managed(nbytes));
-    } else if (mtype == gt::backend::managed_memory_type::device) {
-      return static_cast<T*>(
-        gt::memory_manager::get_instance().allocate_device(nbytes));
-    } else {
-      throw std::runtime_error("unsupported managed memory type for backend");
-    }
-  }
-
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    auto mtype = gt::backend::get_managed_memory_type();
-    if (mtype == gt::backend::managed_memory_type::managed) {
-      gt::memory_manager::get_instance().deallocate_managed(p);
-    } else if (mtype == gt::backend::managed_memory_type::device) {
-      gt::memory_manager::get_instance().deallocate_device(p);
-    } else {
-      throw std::runtime_error("unsupported managed memory type for backend");
-    }
-  }
-};
+  : pool_gallocator<gt::space::cuda_managed,
+                    gt::memory_pool::memory_type::managed>
+{};
 
 template <>
 struct gallocator<gt::space::cuda_host>
-{
-  template <typename T>
-  static T* allocate(size_type n)
-  {
-    auto nbytes = sizeof(T) * n;
-    return static_cast<T*>(
-      gt::memory_manager::get_instance().allocate_host(nbytes));
-  }
+  : pool_gallocator<gt::space::cuda_host,
+                    gt::memory_pool::memory_type::host_pinned>
+{};
 
-  template <typename T>
-  static void deallocate(T* p)
-  {
-    gt::memory_manager::get_instance().deallocate_host(p);
-  }
-};
-
-#else // GTENSOR_USE_MEMORY_MANAGER
+#else // GTENSOR_USE_MEMORY_POOL
 
 template <>
 struct gallocator<gt::space::cuda>
@@ -159,7 +103,7 @@ struct gallocator<gt::space::cuda_host>
   }
 };
 
-#endif // GTENSOR_USE_MEMORY_MANAGER
+#endif // GTENSOR_USE_MEMORY_POOL
 
 } // namespace allocator_impl
 
