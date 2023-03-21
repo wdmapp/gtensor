@@ -159,7 +159,8 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
       GITHUB_REPOSITORY rapidsai/rmm
       VERSION 23.02.00
     )
-    target_compile_definitions(gtensor_cuda INTERFACE GTENSOR_USE_RMM)
+    target_compile_definitions(gtensor_cuda INTERFACE
+      GTENSOR_USE_MEMORY_MANAGER GTENSOR_USE_RMM)
     target_link_libraries(gtensor_cuda INTERFACE rmm::rmm)
   endif()
 endif()
@@ -335,7 +336,8 @@ endif()
 if (GTENSOR_USE_UMPIRE)
   message(STATUS "${PROJECT_NAME}: UMPIRE enabled (${GTENSOR_UMPIRE_STRATEGY})")
   find_package(umpire REQUIRED)
-  target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE GTENSOR_USE_UMPIRE)
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
+    GTENSOR_USE_MEMORY_MANAGER GTENSOR_USE_UMPIRE)
   target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
     GTENSOR_UMPIRE_STRATEGY=${GTENSOR_UMPIRE_STRATEGY})
   target_link_libraries(gtensor_${GTENSOR_DEVICE} INTERFACE umpire)
