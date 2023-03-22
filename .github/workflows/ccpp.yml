@@ -236,7 +236,7 @@ jobs:
       working-directory: ${{ github.workspace }}/examples
 
 
-  build-cuda-rmm:
+  build-cuda-rmm-umpire:
     runs-on: ubuntu-latest
     container: nvidia/cuda:12.0.1-devel-ubuntu22.04
     env:
@@ -245,6 +245,7 @@ jobs:
       GTEST_ROOT: ${{ github.workspace }}/googletest
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       DEBIAN_FRONTEND: noninteractive
+      UMPIRE_ROOT: ${{ github.workspace }}/umpire
 
     steps:
     - uses: actions/checkout@v3
@@ -268,7 +269,19 @@ jobs:
       run: cmake -S . -B build-cuda-rmm -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON -DGTENSOR_USE_RMM=ON
     - name: cmake nothrust rmm  build
       run: cmake --build build-cuda-rmm -v
-
+    - name: install umpire
+      run: |
+        mkdir -p ${{ env.UMPIRE_ROOT }}
+        cd ${{ env.UMPIRE_ROOT }}
+        git clone --recursive https://github.com/LLNL/Umpire.git src
+        cmake -S src -B build -DCMAKE_INSTALL_PREFIX=${{ env.UMPIRE_ROOT }}/install -DENABLE_CUDA=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake --build build -t install
+    - name: cmake nothrust umpire
+      run: cmake -S . -B build-cuda-umpire -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON
+      env:
+        CMAKE_PREFIX_PATH: ${{env.CMAKE_PREFIX_PATH}}:${{ env.UMPIRE_ROOT }}/install
+    - name: cmake nothrust umpire build
+      run: cmake --build build-cuda-umpire -v
 
   build-hip:
     runs-on: ubuntu-latest
