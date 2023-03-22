@@ -319,16 +319,15 @@ struct pool_gallocator<Space, gt::memory_pool::memory_type::managed>
   {
     auto nbytes = sizeof(T) * n;
     auto mtype = gt::backend::get_managed_memory_type();
-    if (mtype == gt::backend::managed_memory_type::managed) {
-      return static_cast<T*>(
-        gt::memory_pool::get_instance()
-          .allocate<gt::memory_pool::memory_type::managed>(nbytes));
-    } else if (mtype == gt::backend::managed_memory_type::device) {
+    if (mtype == gt::backend::managed_memory_type::device) {
       return static_cast<T*>(
         gt::memory_pool::get_instance()
           .allocate<gt::memory_pool::memory_type::device>(nbytes));
     } else {
-      throw std::runtime_error("unsupported managed memory type for backend");
+      // Note: HIP specialization calls this for managed_* types
+      return static_cast<T*>(
+        gt::memory_pool::get_instance()
+          .allocate<gt::memory_pool::memory_type::managed>(nbytes));
     }
   }
 
