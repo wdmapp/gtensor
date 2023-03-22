@@ -12,13 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-22.04:20230104
     env:
-      GTEST_VERSION: 1.10.0
+      GTEST_VERSION: 1.12.1
       GTEST_ROOT: ${{ github.workspace }}/googletest
       DEBIAN_FRONTEND: noninteractive
       GTENSOR_TEST_EXCLUDE: test_fft test_reductions
       LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.8.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.8.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.8.0//lib/release:/opt/intel/oneapi/mpi/2021.8.0//lib:/opt/intel/oneapi/mkl/2023.0.0/lib/intel64:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/dep/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/x64:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/compiler/lib/intel64_lin
       PATH: /opt/intel/oneapi/mpi/2021.8.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.8.0//bin:/opt/intel/oneapi/mkl/2023.0.0/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.8.0/bin:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2023.0.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       CMAKE_BUILD_PARALLEL_LEVEL: 8
+      UMPIRE_ROOT: ${{ github.workspace }}/umpire
     steps:
     - uses: actions/checkout@v3
     - name: clinfo
@@ -97,3 +98,16 @@ jobs:
       working-directory: ${{ github.workspace }}/examples
       env:
         SYCL_DEVICE_FILTER: cpu
+    - name: install umpire
+      run: |
+        mkdir -p ${{ env.UMPIRE_ROOT }}
+        cd ${{ env.UMPIRE_ROOT }}
+        git clone -b feature/oneapi-2023 --recursive https://github.com/bd4/Umpire.git src
+        cmake -S src -B build -DCMAKE_INSTALL_PREFIX=${{ env.UMPIRE_ROOT }}/install -DUMPIRE_ENABLE_SYCL=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake --build build -t install
+    - name: cmake umpire
+      run: cmake -S . -B build-sycl-umpire -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON
+      env:
+        CMAKE_PREFIX_PATH: ${{env.CMAKE_PREFIX_PATH}}:${{ env.UMPIRE_ROOT }}/install
+    - name: cmake umpire build
+      run: cmake --build build-sycl-umpire -v
