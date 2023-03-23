@@ -37,7 +37,12 @@ public:
   }
   gtensor_storage() : gtensor_storage(0) {}
 
-  ~gtensor_storage() { allocator_.deallocate(data_, capacity_); }
+  ~gtensor_storage()
+  {
+    if (capacity_ > 0) {
+      allocator_.deallocate(data_, capacity_);
+    }
+  }
 
   // copy and move constructors
   gtensor_storage(const gtensor_storage& dv)

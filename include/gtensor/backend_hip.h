@@ -19,6 +19,50 @@ namespace backend
 namespace allocator_impl
 {
 
+#ifdef GTENSOR_USE_MEMORY_POOL
+
+template <>
+struct gallocator<gt::space::hip>
+  : pool_gallocator<gt::space::hip, gt::memory_pool::memory_type::device>
+{};
+
+template <>
+struct gallocator<gt::space::hip_managed>
+  : pool_gallocator<gt::space::hip_managed,
+                    gt::memory_pool::memory_type::managed>
+{
+  using base_type = pool_gallocator<gt::space::hip_managed,
+                                    gt::memory_pool::memory_type::managed>;
+  template <typename T>
+  static T* allocate(size_t n)
+  {
+    T* p;
+    auto nbytes = sizeof(T) * n;
+    auto mtype = gt::backend::get_managed_memory_type();
+    // Note: parent method will use device mem when configured
+    p = base_type::allocate<T>(n);
+#if HIP_VERSION_MAJOR >= 5
+    if (mtype == gt::backend::managed_memory_type::managed_coarse ||
+        mtype == gt::backend::managed_memory_type::managed) {
+      int device_id;
+      gtGpuCheck(hipGetDevice(&device_id));
+      gtGpuCheck(
+        hipMemAdvise(p, nbytes, hipMemAdviseSetCoarseGrain, device_id));
+    }
+#endif
+
+    return p;
+  }
+};
+
+template <>
+struct gallocator<gt::space::hip_host>
+  : pool_gallocator<gt::space::hip_host,
+                    gt::memory_pool::memory_type::host_pinned>
+{};
+
+#else // GTENSOR_USE_MEMORY_POOL
+
 template <>
 struct gallocator<gt::space::hip>
 {
@@ -94,6 +138,8 @@ struct gallocator<gt::space::hip_host>
     gtGpuCheck(hipHostFree(p));
   }
 };
+
+#endif // GTENSOR_USE_MEMORY_POOL
 
 } // namespace allocator_impl
 

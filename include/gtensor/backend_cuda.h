@@ -6,7 +6,7 @@
 
 #include <cuda_runtime_api.h>
 
-//#include "thrust/cuda/system/execution_policy.h"
+// #include "thrust/cuda/system/execution_policy.h"
 #include "thrust/execution_policy.h"
 
 // ======================================================================
@@ -19,6 +19,27 @@ namespace backend
 
 namespace allocator_impl
 {
+
+#ifdef GTENSOR_USE_MEMORY_POOL
+
+template <>
+struct gallocator<gt::space::cuda>
+  : pool_gallocator<gt::space::cuda, gt::memory_pool::memory_type::device>
+{};
+
+template <>
+struct gallocator<gt::space::cuda_managed>
+  : pool_gallocator<gt::space::cuda_managed,
+                    gt::memory_pool::memory_type::managed>
+{};
+
+template <>
+struct gallocator<gt::space::cuda_host>
+  : pool_gallocator<gt::space::cuda_host,
+                    gt::memory_pool::memory_type::host_pinned>
+{};
+
+#else // GTENSOR_USE_MEMORY_POOL
 
 template <>
 struct gallocator<gt::space::cuda>
@@ -42,7 +63,7 @@ template <>
 struct gallocator<gt::space::cuda_managed>
 {
   template <typename T>
-  static T* allocate(size_t n)
+  static T* allocate(size_type n)
   {
     T* p;
     auto nbytes = sizeof(T) * n;
@@ -81,6 +102,8 @@ struct gallocator<gt::space::cuda_host>
     gtGpuCheck(cudaFreeHost(p));
   }
 };
+
+#endif // GTENSOR_USE_MEMORY_POOL
 
 } // namespace allocator_impl
 

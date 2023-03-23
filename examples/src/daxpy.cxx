@@ -20,13 +20,11 @@
 
 #include <gtensor/gtensor.h>
 
-using namespace std;
-
 // provides convenient shortcuts for common gtensor functions, for example
 // underscore ('_') to represent open slice ends.
 using namespace gt::placeholders;
 
-//#define EXPLICIT_KERNEL
+// #define EXPLICIT_KERNEL
 
 /**
  * Templated function for daxpy that can work with host gtensor or device
@@ -70,7 +68,7 @@ int main(int argc, char** argv)
   }
 
 #ifdef GTENSOR_HAVE_DEVICE
-  cout << "gtensor have device" << endl;
+  std::cout << "gtensor have device" << std::endl;
 
   // Define and allocate device versions of h_x and h_y, and declare
   // a varaible for the result on gpu.
@@ -83,8 +81,8 @@ int main(int argc, char** argv)
   // std::copy which has a different signature. The source is the first
   // argument and destination the second argument. Currently thrust::copy is
   // used under the hood in the implementation.
-  copy(h_x, d_x);
-  copy(h_y, d_y);
+  gt::copy(h_x, d_x);
+  gt::copy(h_y, d_y);
 
 #ifdef EXPLICIT_KERNEL
   // Alternate, more explicit definition of GPU kernel. Note that the
@@ -105,7 +103,7 @@ int main(int argc, char** argv)
 
   // Explicit copy of result to host
   h_axpy = gt::empty_like(h_x);
-  copy(d_axpy, h_axpy);
+  gt::copy(d_axpy, h_axpy);
 #else
   // host implementation - simply call directly using host gtensors
   h_axpy = daxpy(a, h_x, h_y);
@@ -114,8 +112,8 @@ int main(int argc, char** argv)
   // Define a slice to print a subset of elements for spot checking the
   // result.
   auto print_slice = gt::gslice(_, _, n / nprint);
-  cout << "a       = " << a << endl;
-  cout << "x       = " << h_x.view(print_slice) << endl;
-  cout << "y       = " << h_y.view(print_slice) << endl;
-  cout << "a*x + y = " << h_axpy.view(print_slice) << endl;
+  std::cout << "a       = " << a << std::endl;
+  std::cout << "x       = " << h_x.view(print_slice) << std::endl;
+  std::cout << "y       = " << h_y.view(print_slice) << std::endl;
+  std::cout << "a*x + y = " << h_axpy.view(print_slice) << std::endl;
 }
