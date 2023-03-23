@@ -121,6 +121,126 @@ inline void getrs_banded_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
                                  int lda, index_t* d_PivotArray, T** d_Barray,
                                  int ldb, int batchSize, int lbw, int ubw)
 {
+#ifdef GTENSOR_DEVICE_SYCL
+  sycl::queue& q = h.get_backend_handle();
+  constexpr size_t blockSize = 32u;
+  auto range =
+    sycl::range<3>{static_cast<size_t>(nrhs), static_cast<size_t>(batchSize),
+                   static_cast<size_t>(blockSize)};
+  auto work_group_size = sycl::range<3>{1, 1, blockSize};
+  const auto local_mem_size =
+    q.get_device().get_info<sycl::info::device::local_mem_size>();
+  // clang format butchers the lambdas for some reason
+  // clang-format off
+  if (n <= local_mem_size / sizeof(T)) {
+#if __INTEL_CLANG_COMPILER < 20230000
+    using local_accessor_t =
+      sycl::accessor<T, 1, access::mode::read_write, access::target::local>;
+#else
+    using local_accessor_t = sycl::local_accessor<T, 1>;
+#endif
+    q.submit([&](sycl::handler& h) {
+      auto sol = local_accessor_t({static_cast<size_t>(n)}, h);
+      h.parallel_for(
+        sycl::nd_range{range, work_group_size},
+        [=](sycl::nd_item<3> idx) [[sycl::reqd_sub_group_size(blockSize)]] {
+          auto rhs = idx.get_global_id(0);
+          auto batch = idx.get_global_id(1);
+          int o = idx.get_global_id(2);
+          auto sg = idx.get_sub_group();
+          T* A = d_Aarray[batch];
+          T* B = d_Barray[batch] + ldb * rhs;
+          index_t* piv = d_PivotArray + batch * n;
+          T tmp;
+
+          for (int b = o; b < n; b += blockSize) {
+            sol[b] = B[b];
+          }
+          sycl::group_barrier(sg);
+
+          if (o == 0) {
+            for (int i = 0; i < n; i++) {
+              std::swap(sol[i], sol[piv[i] - 1]);
+            }
+          }
+          sycl::group_barrier(sg);
+
+          for (int i = 0; i < n; ++i) {
+            T x = sol[i];
+            for (int b = i + o + 1; b <= i + lbw && b < n; b += blockSize) {
+              sol[b] -= A[i * lda + b] * x;
+            }
+            sycl::group_barrier(sg);
+          }
+
+          for (int i = n - 1; i >= 0; --i) {
+            T x = sol[i] / A[i * lda + i];
+            int b = i + o - ubw;
+            for (; b < i; b += blockSize) {
+              if (b >= 0) {
+                sol[b] -= A[i * lda + b] * x;
+              }
+            }
+            sycl::group_barrier(sg);
+            if (o == 0) {
+              sol[i] = x;
+            }
+          }
+
+          sycl::group_barrier(sg);
+          for (int b = o; b < n; b += blockSize) {
+            B[b] = sol[b];
+          }
+          sycl::group_barrier(sg);
+        });
+    });
+  } else {
+    q.submit([&](sycl::handler& h) {
+      h.parallel_for(
+        sycl::nd_range{range, work_group_size},
+        [=](sycl::nd_item<3> idx) [[sycl::reqd_sub_group_size(blockSize)]] {
+          auto rhs = idx.get_global_id(0);
+          auto batch = idx.get_global_id(1);
+          int o = idx.get_global_id(2);
+          auto sg = idx.get_sub_group();
+          T* A = d_Aarray[batch];
+          T* B = d_Barray[batch] + ldb * rhs;
+          index_t* piv = d_PivotArray + batch * n;
+          T tmp;
+
+          if (o == 0) {
+            for (int i = 0; i < n; i++) {
+              std::swap(B[i], B[piv[i] - 1]);
+            }
+          }
+          sycl::group_barrier(sg);
+
+          for (int i = 0; i < n; ++i) {
+            T x = B[i];
+            for (int b = i + o + 1; b <= i + lbw && b < n; b += blockSize) {
+              B[b] -= A[i * lda + b] * x;
+            }
+            sycl::group_barrier(sg);
+          }
+
+          for (int i = n - 1; i >= 0; --i) {
+            T x = B[i] / A[i * lda + i];
+            int b = i + o - ubw;
+            for (; b < i; b += blockSize) {
+              if (b >= 0) {
+                B[b] -= A[i * lda + b] * x;
+              }
+            }
+            sycl::group_barrier(sg);
+            if (o == 0) {
+              B[i] = x;
+            }
+          }
+        });
+    });
+  }
+  // clang-format off
+#else
   auto stream = h.get_stream();
   auto launch_shape = gt::shape(nrhs, batchSize);
   gt::launch<2>(
@@ -170,6 +290,7 @@ inline void getrs_banded_batched(handle_t& h, int n, int nrhs, T** d_Aarray,
       }
     },
     stream);
+#endif
 }
 
 /**

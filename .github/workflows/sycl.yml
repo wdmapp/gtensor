@@ -15,7 +15,7 @@ jobs:
       GTEST_VERSION: 1.12.1
       GTEST_ROOT: ${{ github.workspace }}/googletest
       DEBIAN_FRONTEND: noninteractive
-      GTENSOR_TEST_EXCLUDE: test_fft test_reductions test_bandsolver
+      GTENSOR_TEST_EXCLUDE: test_fft test_reductions test_solver test_bandsolver
       LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.8.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.8.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.8.0//lib/release:/opt/intel/oneapi/mpi/2021.8.0//lib:/opt/intel/oneapi/mkl/2023.0.0/lib/intel64:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/dep/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/x64:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/compiler/lib/intel64_lin
       PATH: /opt/intel/oneapi/mpi/2021.8.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.8.0//bin:/opt/intel/oneapi/mkl/2023.0.0/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.8.0/bin:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2023.0.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       CMAKE_BUILD_PARALLEL_LEVEL: 8

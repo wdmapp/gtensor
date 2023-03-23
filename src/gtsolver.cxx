@@ -287,6 +287,67 @@ template class solver_sparse<gt::complex<float>>;
 template class solver_sparse<gt::complex<double>>;
 #endif
 
+template <typename T>
+solver_band<T>::solver_band(gt::blas::handle_t& h, int n, int nbatches,
+                            int nrhs, T* const* matrix_batches)
+  : h_(h),
+    n_(n),
+    nbatches_(nbatches),
+    nrhs_(nrhs),
+    matrix_data_(gt::shape(n, n, nbatches)),
+    matrix_pointers_(gt::shape(nbatches)),
+    pivot_data_(gt::shape(n, nbatches)),
+    info_(gt::shape(nbatches)),
+    rhs_data_(gt::shape(n, nrhs, nbatches)),
+    rhs_pointers_(gt::shape(nbatches))
+{
+  // copy non-contiguous host memory to contiguous device memory
+  detail::copy_batch_data(matrix_batches, matrix_data_);
+  detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
+  detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
+
+  // band LU factor with pivot
+  gt::blas::getrf_batched<T>(h_, n_,
+                             gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+                             gt::raw_pointer_cast(pivot_data_.data()),
+                             gt::raw_pointer_cast(info_.data()), nbatches_);
+  // Note: synchronize for consistency with other implementations
+  gt::synchronize();
+
+  auto bw = gt::blas::get_max_bandwidth(
+    h_, n_, gt::raw_pointer_cast(matrix_pointers_.data()), n_, nbatches_);
+  lbw_ = bw.lower;
+  ubw_ = bw.upper;
+}
+
+template <typename T>
+void solver_band<T>::solve(T* rhs, T* result)
+{
+  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+             rhs_data_.data());
+  gt::blas::getrs_banded_batched<T>(
+    h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
+    gt::raw_pointer_cast(pivot_data_.data()),
+    gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_, lbw_, ubw_);
+  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
+             gt::device_pointer_cast(result));
+}
+
+template <typename T>
+std::size_t solver_band<T>::get_device_memory_usage()
+{
+  size_t nelements = matrix_data_.size() + rhs_data_.size();
+  size_t nindex = pivot_data_.size();
+  size_t nptr = matrix_pointers_.size() + rhs_pointers_.size();
+  return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t) +
+         nptr * sizeof(T*) + info_.size() * sizeof(int);
+}
+
+template class solver_band<float>;
+template class solver_band<double>;
+template class solver_band<gt::complex<float>>;
+template class solver_band<gt::complex<double>>;
+
 } // namespace solver
 
 } // namespace gt

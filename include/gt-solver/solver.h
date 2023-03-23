@@ -161,6 +161,34 @@ private:
     gt::blas::handle_t& h, int n, int nbatches, T* const* matrix_batches);
 };
 
+template <typename T>
+class solver_band : public solver<T>
+{
+public:
+  using base_type = solver<T>;
+  using typename base_type::value_type;
+
+  solver_band(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+              T* const* matrix_batches);
+
+  virtual void solve(T* rhs, T* result);
+  virtual std::size_t get_device_memory_usage();
+
+protected:
+  gt::blas::handle_t& h_;
+  int n_;
+  int nbatches_;
+  int nrhs_;
+  int lbw_;
+  int ubw_;
+  gt::gtensor_device<T, 3> matrix_data_;
+  gt::gtensor_device<T*, 1> matrix_pointers_;
+  gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
+  gt::gtensor_device<int, 1> info_;
+  gt::gtensor_device<T, 3> rhs_data_;
+  gt::gtensor_device<T*, 1> rhs_pointers_;
+};
+
 } // namespace solver
 
 } // namespace gt
