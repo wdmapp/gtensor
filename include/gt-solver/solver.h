@@ -73,7 +73,6 @@ protected:
   int nrhs_;
   gt::gtensor_device<T, 3> matrix_data_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::blas::index_t scratch_count_;
   gt::space::device_vector<T> scratch_;
 };
@@ -102,8 +101,8 @@ protected:
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
+  gt::gtensor<T*, 1> h_rhs_pointers_;
 };
 
 #endif
@@ -130,10 +129,10 @@ protected:
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
-  gt::gtensor_device<T, 3> rhs_input_data_;
-  gt::gtensor_device<T*, 1> rhs_input_pointers_;
+  gt::gtensor<T*, 1> h_rhs_pointers_;
+  gt::gtensor_device<T*, 1> result_pointers_;
+  gt::gtensor<T*, 1> h_result_pointers_;
 };
 
 template <typename T>
@@ -185,8 +184,8 @@ protected:
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
+  gt::gtensor<T*, 1> h_rhs_pointers_;
 };
 
 } // namespace solver

@@ -138,10 +138,7 @@ public:
   csr_matrix_lu_hip(gt::sparse::csr_matrix<T, space_type>& csr_mat,
                     const T alpha, int nrhs,
                     gt::stream_view sview = gt::stream_view{})
-    : csr_mat_(csr_mat),
-      alpha_(alpha),
-      nrhs_(nrhs),
-      rhs_tmp_(gt::shape(csr_mat.shape(0), nrhs))
+    : csr_mat_(csr_mat), alpha_(alpha), nrhs_(nrhs)
   {
     gtSparseCheck(rocsparse_set_stream(h_.get_backend_handle(),
                                        sview.get_backend_stream()));
@@ -169,6 +166,8 @@ public:
     gtSparseCheck(rocsparse_create_mat_info(&l_info_));
     gtSparseCheck(rocsparse_create_mat_info(&u_info_));
 
+    gt::gtensor<T, 2, space_type> rhs_tmp(gt::shape(csr_mat.shape(0), nrhs));
+
     // analyze
     std::size_t l_buf_size, u_buf_size;
     gtSparseCheck(FN::buffer_size(
@@ -176,7 +175,7 @@ public:
       rocsparse_operation_none, csr_mat_.shape(0), nrhs_, csr_mat_.nnz(),
       FN::cast_pointer(&alpha_), l_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), l_info_, solve_policy_, &l_buf_size));
 
     gtSparseCheck(FN::buffer_size(
@@ -184,7 +183,7 @@ public:
       rocsparse_operation_none, csr_mat_.shape(0), nrhs_, csr_mat_.nnz(),
       FN::cast_pointer(&alpha_), u_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), u_info_, solve_policy_, &u_buf_size));
 
     l_buf_.resize(gt::shape(l_buf_size));
@@ -195,7 +194,7 @@ public:
       rocsparse_operation_none, csr_mat_.shape(0), nrhs_, csr_mat_.nnz(),
       FN::cast_pointer(&alpha_), l_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), l_info_, analysis_policy_, solve_policy_,
       FN::cast_pointer(l_buf_.data())));
 
@@ -204,7 +203,7 @@ public:
       rocsparse_operation_none, csr_mat_.shape(0), nrhs_, csr_mat_.nnz(),
       FN::cast_pointer(&alpha_), u_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), u_info_, analysis_policy_, solve_policy_,
       FN::cast_pointer(u_buf_.data())));
   }
@@ -217,31 +216,29 @@ public:
 
   void solve(T* rhs, T* result)
   {
-    gt::copy_n(gt::device_pointer_cast(rhs), rhs_tmp_.size(), rhs_tmp_.data());
     gtSparseCheck(FN::solve(h_.get_backend_handle(), rocsparse_operation_none,
                             rocsparse_operation_none, csr_mat_.shape(0), nrhs_,
                             csr_mat_.nnz(), FN::cast_pointer(&alpha_), l_desc_,
                             FN::cast_pointer(csr_mat_.values_data()),
                             csr_mat_.row_ptr_data(), csr_mat_.col_ind_data(),
-                            FN::cast_pointer(rhs_tmp_.data()),
-                            csr_mat_.shape(0), l_info_, solve_policy_,
-                            FN::cast_pointer(l_buf_.data())));
+                            FN::cast_pointer(rhs), csr_mat_.shape(0), l_info_,
+                            solve_policy_, FN::cast_pointer(l_buf_.data())));
     gtSparseCheck(FN::solve(h_.get_backend_handle(), rocsparse_operation_none,
                             rocsparse_operation_none, csr_mat_.shape(0), nrhs_,
                             csr_mat_.nnz(), FN::cast_pointer(&alpha_), u_desc_,
                             FN::cast_pointer(csr_mat_.values_data()),
                             csr_mat_.row_ptr_data(), csr_mat_.col_ind_data(),
-                            FN::cast_pointer(rhs_tmp_.data()),
-                            csr_mat_.shape(0), u_info_, solve_policy_,
-                            FN::cast_pointer(u_buf_.data())));
-    gt::copy_n(rhs_tmp_.data(), rhs_tmp_.size(),
-               gt::device_pointer_cast(result));
+                            FN::cast_pointer(rhs), csr_mat_.shape(0), u_info_,
+                            solve_policy_, FN::cast_pointer(u_buf_.data())));
+    if (rhs != result && result != nullptr) {
+      gt::copy_n(gt::device_pointer_cast(rhs), csr_mat_.shape(0) * nrhs_,
+                 gt::device_pointer_cast(result));
+    }
   }
 
   std::size_t get_device_memory_usage()
   {
-    size_t nelements =
-      csr_mat_.nnz() + rhs_tmp_.size() + l_buf_.size() + u_buf_.size();
+    size_t nelements = csr_mat_.nnz() + l_buf_.size() + u_buf_.size();
     size_t nint = csr_mat_.nnz() + csr_mat_.shape(0) + 1;
     return nelements * sizeof(T) + nint * sizeof(int);
   }
@@ -250,7 +247,6 @@ private:
   gt::sparse::csr_matrix<T, space_type>& csr_mat_;
   const T alpha_;
   int nrhs_;
-  gt::gtensor<T, 2, space_type> rhs_tmp_;
 
   sparse_handle_t h_;
   rocsparse_mat_descr l_desc_;

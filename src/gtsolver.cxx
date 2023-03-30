@@ -28,6 +28,24 @@ void init_device_pointer_array(PtrArray& d_ptr_array, DataArray& d_data_array)
   gt::copy(h_ptr_array, d_ptr_array);
 }
 
+template <typename HPtrArray, typename DPtrArray, typename T>
+void set_device_pointer_array_rhs(HPtrArray& h_ptr_array,
+                                  DPtrArray& d_ptr_array, T* rhs, int n,
+                                  int nrhs)
+{
+  assert(h_ptr_array.shape() == d_ptr_array.shape());
+  if (h_ptr_array(0) == rhs) {
+    // optimize case where same pointer is passed repeatedly
+    return;
+  }
+  int nbatches = d_ptr_array.shape(0);
+  int stride = n * nrhs;
+  for (int i = 0; i < nbatches; i++) {
+    h_ptr_array(i) = rhs + i * stride;
+  }
+  gt::copy(h_ptr_array, d_ptr_array);
+}
+
 template <typename T, typename DataArray>
 void copy_batch_data(T* const* in_matrix_batches, DataArray& out_data)
 {
@@ -55,7 +73,6 @@ solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
     nrhs_(nrhs),
     matrix_data_(gt::shape(n, n, nbatches)),
     pivot_data_(gt::shape(n, nbatches)),
-    rhs_data_(gt::shape(n, nrhs, nbatches)),
     scratch_count_(gt::blas::getrs_strided_batched_scratchpad_size<T>(
       h, n, n, n, nrhs, nbatches)),
     scratch_(scratch_count_)
@@ -78,21 +95,20 @@ solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void solver_dense<T>::solve(T* rhs, T* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-             rhs_data_.data());
   gt::blas::getrs_strided_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_data_.data()), n_,
-    gt::raw_pointer_cast(pivot_data_.data()),
-    gt::raw_pointer_cast(rhs_data_.data()), n_, nbatches_,
+    gt::raw_pointer_cast(pivot_data_.data()), rhs, n_, nbatches_,
     gt::raw_pointer_cast(scratch_.data()), scratch_count_);
-  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
-             gt::device_pointer_cast(result));
+  if (rhs != result) {
+    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+               gt::device_pointer_cast(result));
+  }
 }
 
 template <typename T>
 std::size_t solver_dense<T>::get_device_memory_usage()
 {
-  size_t nelements = matrix_data_.size() + rhs_data_.size() + scratch_count_;
+  size_t nelements = matrix_data_.size() + scratch_count_;
   size_t nindex = pivot_data_.size();
   return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t);
 }
@@ -110,13 +126,12 @@ solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
     matrix_pointers_(gt::shape(nbatches)),
     pivot_data_(gt::shape(n, nbatches)),
     info_(gt::shape(nbatches)),
-    rhs_data_(gt::shape(n, nrhs, nbatches)),
-    rhs_pointers_(gt::shape(nbatches))
+    rhs_pointers_(gt::shape(nbatches)),
+    h_rhs_pointers_(gt::shape(nbatches))
 {
   // copy non-contiguous host memory to contiguous device memory
   detail::copy_batch_data(matrix_batches, matrix_data_);
   detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
-  detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
 
   // dense LU factor with pivot
   gt::blas::getrf_batched<T>(h_, n_,
@@ -130,20 +145,22 @@ solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void solver_dense<T>::solve(T* rhs, T* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-             rhs_data_.data());
+  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, rhs, n_,
+                                       nrhs_);
   gt::blas::getrs_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()),
     gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
-  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
-             gt::device_pointer_cast(result));
+  if (rhs != result && result != nullptr) {
+    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+               gt::device_pointer_cast(result));
+  }
 }
 
 template <typename T>
 std::size_t solver_dense<T>::get_device_memory_usage()
 {
-  size_t nelements = matrix_data_.size() + rhs_data_.size();
+  size_t nelements = matrix_data_.size();
   size_t nindex = pivot_data_.size();
   size_t nptr = matrix_pointers_.size() + rhs_pointers_.size();
   return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t) +
@@ -168,15 +185,13 @@ solver_invert<T>::solver_invert(gt::blas::handle_t& h, int n, int nbatches,
     matrix_pointers_(gt::shape(nbatches)),
     pivot_data_(gt::shape(n, nbatches)),
     info_(gt::shape(nbatches)),
-    rhs_data_(gt::shape(n, nrhs, nbatches)),
     rhs_pointers_(gt::shape(nbatches)),
-    rhs_input_data_(gt::shape(n, nrhs, nbatches)),
-    rhs_input_pointers_(gt::shape(nbatches))
+    h_rhs_pointers_(gt::shape(nbatches)),
+    result_pointers_(gt::shape(nbatches)),
+    h_result_pointers_(gt::shape(nbatches))
 {
   detail::copy_batch_data(matrix_batches, matrix_data_);
   detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
-  detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
-  detail::init_device_pointer_array(rhs_input_pointers_, rhs_input_data_);
 
   // LU factor with pivot into matrix_data_
   gt::blas::getrf_batched<T>(h_, n_,
@@ -202,24 +217,25 @@ solver_invert<T>::solver_invert(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void solver_invert<T>::solve(T* rhs, T* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-             rhs_input_data_.data());
+  // in place is not supported
+  assert(rhs != result && result != nullptr);
+  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, rhs, n_,
+                                       nrhs_);
+  detail::set_device_pointer_array_rhs(h_result_pointers_, result_pointers_,
+                                       result, n_, nrhs_);
   gt::blas::gemm_batched<T>(
     h_, n_, nrhs_, n_, 1.0, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
-    gt::raw_pointer_cast(rhs_input_pointers_.data()), n_, 0.0,
-    gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
-  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
-             gt::device_pointer_cast(result));
+    gt::raw_pointer_cast(rhs_pointers_.data()), n_, 0.0,
+    gt::raw_pointer_cast(result_pointers_.data()), n_, nbatches_);
 }
 
 template <typename T>
 std::size_t solver_invert<T>::get_device_memory_usage()
 {
-  size_t nelements =
-    matrix_data_.size() + rhs_data_.size() + rhs_input_data_.size();
+  size_t nelements = matrix_data_.size();
   size_t nindex = pivot_data_.size();
   size_t nptr =
-    matrix_pointers_.size() + rhs_pointers_.size() + rhs_input_pointers_.size();
+    matrix_pointers_.size() + rhs_pointers_.size() + result_pointers_.size();
   return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t) +
          nptr * sizeof(T*) + info_.size() * sizeof(int);
 }
@@ -298,13 +314,12 @@ solver_band<T>::solver_band(gt::blas::handle_t& h, int n, int nbatches,
     matrix_pointers_(gt::shape(nbatches)),
     pivot_data_(gt::shape(n, nbatches)),
     info_(gt::shape(nbatches)),
-    rhs_data_(gt::shape(n, nrhs, nbatches)),
-    rhs_pointers_(gt::shape(nbatches))
+    rhs_pointers_(gt::shape(nbatches)),
+    h_rhs_pointers_(gt::shape(nbatches))
 {
   // copy non-contiguous host memory to contiguous device memory
   detail::copy_batch_data(matrix_batches, matrix_data_);
   detail::init_device_pointer_array(matrix_pointers_, matrix_data_);
-  detail::init_device_pointer_array(rhs_pointers_, rhs_data_);
 
   // band LU factor with pivot
   gt::blas::getrf_batched<T>(h_, n_,
@@ -323,20 +338,22 @@ solver_band<T>::solver_band(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void solver_band<T>::solve(T* rhs, T* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-             rhs_data_.data());
+  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, rhs, n_,
+                                       nrhs_);
   gt::blas::getrs_banded_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()),
     gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_, lbw_, ubw_);
-  gt::copy_n(rhs_data_.data(), n_ * nrhs_ * nbatches_,
-             gt::device_pointer_cast(result));
+  if (rhs != result && result != nullptr) {
+    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+               gt::device_pointer_cast(result));
+  }
 }
 
 template <typename T>
 std::size_t solver_band<T>::get_device_memory_usage()
 {
-  size_t nelements = matrix_data_.size() + rhs_data_.size();
+  size_t nelements = matrix_data_.size();
   size_t nindex = pivot_data_.size();
   size_t nptr = matrix_pointers_.size() + rhs_pointers_.size();
   return nelements * sizeof(T) + nindex * sizeof(gt::blas::index_t) +

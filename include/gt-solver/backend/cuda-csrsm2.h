@@ -114,7 +114,7 @@ void csrsm_buffer_size(sparse_handle_t& h, int algorithm, csr_matrix<T, S>& mat,
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
 csr_mat_.nnz(), &alpha_, l_desc_,
       detail::csrsm_functions<T>::cast_pointer(csr_mat_.values_data()),
-      csr_mat_.row_ptr_data(), csr_mat_.col_ind_data(), rhs_tmp_.data(), 1,
+      csr_mat_.row_ptr_data(), csr_mat_.col_ind_data(), rhs_tmp.data(), 1,
 l_info_, detail::csrsm_functions<T>::cast_pointer(buf_.data())));
       */
 
@@ -152,10 +152,7 @@ public:
   csr_matrix_lu_cuda_csrsm2(gt::sparse::csr_matrix<T, space_type>& csr_mat,
                             const T alpha, int nrhs,
                             gt::stream_view sview = gt::stream_view{})
-    : csr_mat_(csr_mat),
-      alpha_(alpha),
-      nrhs_(nrhs),
-      rhs_tmp_(gt::shape(csr_mat.shape(0), nrhs))
+    : csr_mat_(csr_mat), alpha_(alpha), nrhs_(nrhs)
   {
     gtSparseCheck(
       cusparseSetStream(h_.get_backend_handle(), sview.get_backend_stream()));
@@ -175,6 +172,8 @@ public:
     gtSparseCheck(cusparseCreateCsrsm2Info(&l_info_));
     gtSparseCheck(cusparseCreateCsrsm2Info(&u_info_));
 
+    gt::gtensor<T, 2, space_type> rhs_tmp(gt::shape(csr_mat.shape(0), nrhs));
+
     // analyze
     std::size_t l_buf_size, u_buf_size;
     gtSparseCheck(FN::buffer_size(
@@ -182,7 +181,7 @@ public:
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), l_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), l_info_, policy_, &l_buf_size));
 
     gtSparseCheck(FN::buffer_size(
@@ -190,7 +189,7 @@ public:
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), u_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), u_info_, policy_, &u_buf_size));
 
     l_buf_.resize(gt::shape(l_buf_size));
@@ -201,7 +200,7 @@ public:
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), l_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), l_info_, policy_, FN::cast_pointer(l_buf_.data())));
 
     gtSparseCheck(FN::analysis(
@@ -209,7 +208,7 @@ public:
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), u_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp.data()),
       csr_mat_.shape(0), u_info_, policy_, FN::cast_pointer(u_buf_.data())));
   }
 
@@ -221,28 +220,30 @@ public:
 
   void solve(T* rhs, T* result)
   {
-    gt::copy_n(gt::device_pointer_cast(rhs), rhs_tmp_.size(), rhs_tmp_.data());
     gtSparseCheck(FN::solve(
       h_.get_backend_handle(), algo_, CUSPARSE_OPERATION_NON_TRANSPOSE,
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), l_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
-      csr_mat_.shape(0), l_info_, policy_, FN::cast_pointer(l_buf_.data())));
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs), csr_mat_.shape(0),
+      l_info_, policy_, FN::cast_pointer(l_buf_.data())));
     gtSparseCheck(FN::solve(
       h_.get_backend_handle(), algo_, CUSPARSE_OPERATION_NON_TRANSPOSE,
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), u_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs_tmp_.data()),
-      csr_mat_.shape(0), u_info_, policy_, FN::cast_pointer(u_buf_.data())));
-    gt::copy_n(rhs_tmp_.data(), rhs_tmp_.size(),
-               gt::device_pointer_cast(result));
+      csr_mat_.col_ind_data(), FN::cast_pointer(rhs), csr_mat_.shape(0),
+      u_info_, policy_, FN::cast_pointer(u_buf_.data())));
+
+    if (rhs != result && result != nullptr) {
+      gt::copy_n(gt::device_pointer_cast(rhs), csr_mat_.shape(0) * nrhs_,
+                 gt::device_pointer_cast(result));
+    }
   }
 
   std::size_t get_device_memory_usage()
   {
-    size_t nelements = csr_mat_.nnz() + rhs_tmp_.size();
+    size_t nelements = csr_mat_.nnz();
     size_t nbuf = l_buf_.size() + u_buf_.size();
     size_t nint = csr_mat_.nnz() + csr_mat_.shape(0) + 1;
     return nelements * sizeof(T) + nint * sizeof(int) + nbuf;
@@ -252,7 +253,6 @@ private:
   gt::sparse::csr_matrix<T, space_type>& csr_mat_;
   const T alpha_;
   int nrhs_;
-  gt::gtensor<T, 2, space_type> rhs_tmp_;
 
   sparse_handle_t h_;
   cusparseMatDescr_t l_desc_;

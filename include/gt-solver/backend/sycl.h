@@ -48,9 +48,8 @@ public:
     : csr_mat_(csr_mat),
       alpha_(alpha),
       nrhs_(nrhs),
-      q_(sview.get_backend_stream()),
-      rhs_tmp_(gt::shape(csr_mat.shape(0), nrhs)),
-      result_tmp_(gt::shape(csr_mat.shape(0), nrhs))
+      nrows_(csr_mat_.shape(0)),
+      q_(sview.get_backend_stream())
   {
     oneapi::mkl::sparse::init_matrix_handle(&mat_h_);
 #if (__INTEL_MKL_BUILD_DATE < 20221128)
@@ -75,16 +74,15 @@ public:
 
   void solve(T* rhs, T* result)
   {
-    gt::copy_n(gt::device_pointer_cast(rhs), result_tmp_.size(),
-               result_tmp_.data());
+    gt::copy_n(gt::device_pointer_cast(rhs), nrows_ * nrhs_,
+               gt::device_pointer_cast(result));
     // Note: this oneAPI MKL sparse API does not support multiple right
     // hand sides directly, so instead loop. Since we use in-order queues
     // to make behavior more like CUDA/HIP, this will likely not run each
     // rhs in parallel and not perform very well for multi-rhs solves.
     for (int irhs = 0; irhs < nrhs_; irhs++) {
-      auto result_ptr =
-        std_cast(result_tmp_.data() + irhs * result_tmp_.shape(0));
-      auto rhs_ptr = std_cast(rhs_tmp_.data() + irhs * rhs_tmp_.shape(0));
+      auto result_ptr = std_cast(result + irhs * nrows_);
+      auto rhs_ptr = std_cast(rhs + irhs * nrows_);
       auto e = oneapi::mkl::sparse::trsv(
         q_, oneapi::mkl::uplo::lower, oneapi::mkl::transpose::nontrans,
         oneapi::mkl::diag::unit, mat_h_, result_ptr, rhs_ptr);
@@ -92,13 +90,11 @@ public:
         q_, oneapi::mkl::uplo::upper, oneapi::mkl::transpose::nontrans,
         oneapi::mkl::diag::nonunit, mat_h_, rhs_ptr, result_ptr);
     }
-    gt::copy_n(result_tmp_.data(), result_tmp_.size(),
-               gt::device_pointer_cast(result));
   }
 
   std::size_t get_device_memory_usage()
   {
-    size_t nelements = csr_mat_.nnz() + rhs_tmp_.size() + result_tmp_.size();
+    size_t nelements = csr_mat_.nnz();
     size_t nint = csr_mat_.nnz() + csr_mat_.shape(0) + 1;
     return nelements * sizeof(T) + nint * sizeof(int);
   }
@@ -107,10 +103,9 @@ private:
   gt::sparse::csr_matrix<T, space_type>& csr_mat_;
   T alpha_;
   int nrhs_;
+  int nrows_;
   sparse_handle_t h_;
   sycl::queue& q_;
-  gt::gtensor<T, 2, space_type> rhs_tmp_;
-  gt::gtensor<T, 2, space_type> result_tmp_;
   oneapi::mkl::sparse::matrix_handle_t mat_h_;
 };
 
