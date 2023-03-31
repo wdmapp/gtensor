@@ -365,6 +365,60 @@ template class solver_band<double>;
 template class solver_band<gt::complex<float>>;
 template class solver_band<gt::complex<double>>;
 
+template <typename Solver>
+staging_solver<Solver>::staging_solver(gt::blas::handle_t& h, int n,
+                                       int nbatches, int nrhs,
+                                       value_type* const* matrix_batches)
+  : n_(n),
+    nbatches_(nbatches),
+    nrhs_(nrhs),
+    solver_(h, n, nbatches, nrhs, matrix_batches),
+    rhs_stage_(gt::shape(n, nrhs, nbatches)),
+    result_stage_(gt::shape(n, nrhs, nbatches)),
+    rhs_stage_p_(gt::raw_pointer_cast(rhs_stage_.data())),
+    result_stage_p_(gt::raw_pointer_cast(result_stage_.data()))
+{}
+
+template <typename Solver>
+void staging_solver<Solver>::solve(value_type* rhs, value_type* result)
+{
+  gt::copy_n(gt::device_pointer_cast(rhs), rhs_stage_.size(),
+             rhs_stage_.data());
+  solver_.solve(rhs_stage_p_, result_stage_p_);
+  gt::copy_n(result_stage_.data(), result_stage_.size(),
+             gt::device_pointer_cast(result));
+}
+
+template <typename Solver>
+std::size_t staging_solver<Solver>::get_device_memory_usage()
+{
+  size_t nelements = rhs_stage_.size() + result_stage_.size();
+  return solver_.get_device_memory_usage() + nelements * sizeof(value_type);
+}
+
+template class staging_solver<solver_dense<float>>;
+template class staging_solver<solver_dense<double>>;
+template class staging_solver<solver_dense<gt::complex<float>>>;
+template class staging_solver<solver_dense<gt::complex<double>>>;
+
+template class staging_solver<solver_invert<float>>;
+template class staging_solver<solver_invert<double>>;
+template class staging_solver<solver_invert<gt::complex<float>>>;
+template class staging_solver<solver_invert<gt::complex<double>>>;
+
+template class staging_solver<solver_sparse<float>>;
+template class staging_solver<solver_sparse<double>>;
+// Note: oneMKL sparse API does not support complex yet
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+template class staging_solver<solver_sparse<gt::complex<float>>>;
+template class staging_solver<solver_sparse<gt::complex<double>>>;
+#endif
+
+template class staging_solver<solver_band<float>>;
+template class staging_solver<solver_band<double>>;
+template class staging_solver<solver_band<gt::complex<float>>>;
+template class staging_solver<solver_band<gt::complex<double>>>;
+
 } // namespace solver
 
 } // namespace gt

@@ -48,6 +48,29 @@ public:
   virtual std::size_t get_device_memory_usage() = 0;
 };
 
+template <typename Solver>
+class staging_solver : solver<typename Solver::value_type>
+{
+public:
+  using value_type = typename Solver::value_type;
+
+  staging_solver(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+                 value_type* const* matrix_batches);
+
+  virtual void solve(value_type* rhs, value_type* result);
+  virtual std::size_t get_device_memory_usage();
+
+private:
+  int n_;
+  int nbatches_;
+  int nrhs_;
+  Solver solver_;
+  gt::gtensor_device<value_type, 3> rhs_stage_;
+  gt::gtensor_device<value_type, 3> result_stage_;
+  value_type* rhs_stage_p_;
+  value_type* result_stage_p_;
+};
+
 #ifdef GTENSOR_DEVICE_SYCL
 
 // use contiguous strided dense API for SYCL, it has been better

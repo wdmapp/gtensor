@@ -155,3 +155,27 @@ TEST(solver, zfull_band_solve)
 {
   test_full_solve<gt::solver::solver_band<gt::complex<double>>>();
 }
+
+TEST(solver, sfull_staging_dense_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_dense<float>>>();
+}
+
+TEST(solver, dfull_staging_dense_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_dense<double>>>();
+}
+
+TEST(solver, cfull_staging_dense_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_dense<gt::complex<float>>>>();
+}
+
+TEST(solver, zfull_staging_dense_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_dense<gt::complex<double>>>>();
+}
