@@ -48,6 +48,30 @@ public:
   virtual std::size_t get_device_memory_usage() = 0;
 };
 
+template <typename Solver>
+class staging_solver : solver<typename Solver::value_type>
+{
+public:
+  using value_type = typename Solver::value_type;
+  static constexpr bool inplace = Solver::inplace;
+
+  staging_solver(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+                 value_type* const* matrix_batches);
+
+  virtual void solve(value_type* rhs, value_type* result);
+  virtual std::size_t get_device_memory_usage();
+
+private:
+  int n_;
+  int nbatches_;
+  int nrhs_;
+  Solver solver_;
+  gt::gtensor_device<value_type, 3> rhs_stage_;
+  value_type* rhs_stage_p_;
+  gt::gtensor_device<value_type, 3> result_stage_;
+  value_type* result_stage_p_;
+};
+
 #ifdef GTENSOR_DEVICE_SYCL
 
 // use contiguous strided dense API for SYCL, it has been better
@@ -59,6 +83,7 @@ class solver_dense : public solver<T>
 public:
   using base_type = solver<T>;
   using typename base_type::value_type;
+  static constexpr bool inplace = true;
 
   solver_dense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
                T* const* matrix_batches);
@@ -73,7 +98,6 @@ protected:
   int nrhs_;
   gt::gtensor_device<T, 3> matrix_data_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::blas::index_t scratch_count_;
   gt::space::device_vector<T> scratch_;
 };
@@ -86,6 +110,7 @@ class solver_dense : public solver<T>
 public:
   using base_type = solver<T>;
   using typename base_type::value_type;
+  static constexpr bool inplace = true;
 
   solver_dense(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
                T* const* matrix_batches);
@@ -102,8 +127,8 @@ protected:
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
+  gt::gtensor<T*, 1> h_rhs_pointers_;
 };
 
 #endif
@@ -114,6 +139,7 @@ class solver_invert : solver<T>
 public:
   using base_type = solver<T>;
   using typename base_type::value_type;
+  static constexpr bool inplace = false;
 
   solver_invert(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
                 T* const* matrix_batches);
@@ -130,10 +156,10 @@ protected:
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
-  gt::gtensor_device<T, 3> rhs_input_data_;
-  gt::gtensor_device<T*, 1> rhs_input_pointers_;
+  gt::gtensor<T*, 1> h_rhs_pointers_;
+  gt::gtensor_device<T*, 1> result_pointers_;
+  gt::gtensor<T*, 1> h_result_pointers_;
 };
 
 template <typename T>
@@ -142,6 +168,8 @@ class solver_sparse : public solver<T>
 public:
   using base_type = solver<T>;
   using typename base_type::value_type;
+  using csr_matrix_type = gt::sparse::csr_matrix<T, gt::space::device>;
+  static constexpr bool inplace = csr_matrix_lu<T>::inplace;
 
   solver_sparse(gt::blas::handle_t& blas_h, int n, int nbatches, int nrhs,
                 T* const* matrix_batches);
@@ -153,7 +181,7 @@ protected:
   int n_;
   int nbatches_;
   int nrhs_;
-  gt::sparse::csr_matrix<T, gt::space::device> csr_mat_;
+  csr_matrix_type csr_mat_;
   csr_matrix_lu<T> csr_mat_lu_;
 
 private:
@@ -167,6 +195,7 @@ class solver_band : public solver<T>
 public:
   using base_type = solver<T>;
   using typename base_type::value_type;
+  static constexpr bool inplace = true;
 
   solver_band(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
               T* const* matrix_batches);
@@ -185,8 +214,8 @@ protected:
   gt::gtensor_device<T*, 1> matrix_pointers_;
   gt::gtensor_device<gt::blas::index_t, 2> pivot_data_;
   gt::gtensor_device<int, 1> info_;
-  gt::gtensor_device<T, 3> rhs_data_;
   gt::gtensor_device<T*, 1> rhs_pointers_;
+  gt::gtensor<T*, 1> h_rhs_pointers_;
 };
 
 } // namespace solver
