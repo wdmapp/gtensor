@@ -41,6 +41,7 @@ class csr_matrix_lu_sycl
 public:
   using value_type = T;
   using space_type = gt::space::device;
+  static constexpr bool inplace = false;
 
   csr_matrix_lu_sycl(gt::sparse::csr_matrix<T, space_type>& csr_mat,
                      const T alpha, int nrhs,

@@ -134,6 +134,7 @@ class csr_matrix_lu_hip
 public:
   using value_type = T;
   using space_type = gt::space::device;
+  static constexpr bool inplace = true;
 
   csr_matrix_lu_hip(gt::sparse::csr_matrix<T, space_type>& csr_mat,
                     const T alpha, int nrhs,

@@ -179,3 +179,54 @@ TEST(solver, zfull_staging_dense_solve)
   test_full_solve<gt::solver::staging_solver<
     gt::solver::solver_dense<gt::complex<double>>>>();
 }
+
+TEST(solver, sfull_staging_invert_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_invert<float>>>();
+}
+
+TEST(solver, dfull_staging_invert_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_invert<double>>>();
+}
+
+TEST(solver, cfull_staging_invert_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_invert<gt::complex<float>>>>();
+}
+
+TEST(solver, zfull_staging_invert_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_invert<gt::complex<double>>>>();
+}
+
+TEST(solver, sfull_staging_sparse_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_sparse<float>>>();
+}
+
+TEST(solver, dfull_staging_sparse_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_sparse<double>>>();
+}
+
+// Note: oneMKL sparse API does not support complex yet
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
+TEST(solver, cfull_staging_sparse_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_sparse<gt::complex<float>>>>();
+}
+
+TEST(solver, zfull_staging_sparse_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_sparse<gt::complex<double>>>>();
+}
+#endif
