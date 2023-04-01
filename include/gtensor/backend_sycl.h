@@ -276,8 +276,13 @@ public:
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {
-    auto& q = gt::backend::sycl::get_queue();
-    q.prefetch(p, n);
+#ifndef GTENSOR_DISABLE_PREFETCH
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype != gt::backend::managed_memory_type::device) {
+      auto& q = gt::backend::sycl::get_queue();
+      q.prefetch(p, n);
+    }
+#endif
   }
 
   // Not available in SYCL 2020, make it a no-op
