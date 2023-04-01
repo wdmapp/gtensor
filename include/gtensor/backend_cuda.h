@@ -247,16 +247,26 @@ public:
   template <typename T>
   static void prefetch_device(T* p, size_type n)
   {
-    int device_id;
-    gtGpuCheck(cudaGetDevice(&device_id));
-    gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+#ifndef GTENSOR_DISABLE_PREFETCH
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype != gt::backend::managed_memory_type::device) {
+      int device_id;
+      gtGpuCheck(cudaGetDevice(&device_id));
+      gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+    }
+#endif
   }
 
   template <typename T>
   static void prefetch_host(T* p, size_type n)
   {
-    gtGpuCheck(
-      cudaMemPrefetchAsync(p, n * sizeof(T), cudaCpuDeviceId, nullptr));
+#ifndef GTENSOR_DISABLE_PREFETCH
+    auto mtype = gt::backend::get_managed_memory_type();
+    if (mtype != gt::backend::managed_memory_type::device) {
+      gtGpuCheck(
+        cudaMemPrefetchAsync(p, n * sizeof(T), cudaCpuDeviceId, nullptr));
+    }
+#endif
   }
 
   template <typename T>

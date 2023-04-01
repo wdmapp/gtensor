@@ -41,6 +41,9 @@ option(GTENSOR_ENABLE_SOLVER "Enable high level solver library" OFF)
 option(GTENSOR_PER_DIM_KERNELS
        "Enable per dim kernels (may break for large arrays)" OFF)
 
+option(GTENSOR_DISABLE_PREFETCH
+       "Make prefetch operations a no-op. Improves performance in some cases." OFF)
+
 option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 
 option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
@@ -328,6 +331,14 @@ if (GTENSOR_PER_DIM_KERNELS)
                              INTERFACE GTENSOR_PER_DIM_KERNELS)
 else()
   message(STATUS "${PROJECT_NAME}: using N-d -> 1d assign/launch kernels")
+endif()
+
+if (GTENSOR_DISABLE_PREFETCH)
+  message(STATUS "${PROJECT_NAME}: prefetch is DISABLED")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_DISABLE_PREFETCH)
+else()
+  message(STATUS "${PROJECT_NAME}: prefetch is ENABLED")
 endif()
 
 if (GTENSOR_ALLOCATOR_CACHING AND NOT GTENSOR_USE_RMM AND NOT GTENSOR_USE_UMPIRE)
