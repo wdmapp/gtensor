@@ -440,6 +440,30 @@ TEST(gview, view_of_view)
   EXPECT_EQ(aview3, (gt::gtensor<double, 2>{{31.}, {32.}}));
 }
 
+TEST(gview, transpose_container)
+{
+  gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
+
+  auto atranspose = gt::transpose(a, gt::shape(1, 0));
+
+  GT_DEBUG_TYPE(atranspose);
+
+  EXPECT_EQ(atranspose,
+            (gt::gtensor<double, 2>{{11., 12.}, {21., 22.}, {31., 32.}}));
+}
+
+TEST(gview, transpose_container_rval)
+{
+  auto atranspose =
+    gt::transpose(gt::gtensor<double, 2>({{11., 21., 31.}, {12., 22., 32.}}),
+                  gt::shape(1, 0));
+
+  GT_DEBUG_TYPE(atranspose);
+
+  EXPECT_EQ(atranspose,
+            (gt::gtensor<double, 2>{{11., 12.}, {21., 22.}, {31., 32.}}));
+}
+
 TEST(gview, transpose_view)
 {
   gt::gtensor<double, 2> a{{11., 21., 31.}, {12., 22., 32.}};
@@ -448,6 +472,9 @@ TEST(gview, transpose_view)
   EXPECT_EQ(aview, (gt::gtensor<double, 2>{{21.}, {22.}}));
 
   auto avtranspose = gt::transpose(aview, gt::shape(1, 0));
+
+  GT_DEBUG_TYPE(avtranspose);
+
   EXPECT_EQ(avtranspose, (gt::gtensor<double, 2>{{21., 22.}}));
 }
 
@@ -906,6 +933,74 @@ TEST(gview, device_flatten_gtensor_lhs_launch)
 {
   // NB: can't define GT lambda's inside google tests
   test_flatten_lhs_launch();
+}
+
+TEST(gview, device_is_contiguous)
+{
+  gt::gtensor_device<double, 2> a{
+    {11., 21., 31.}, {12., 22., 32.}, {13., 23., 33.}};
+
+  GT_DEBUG_VAR(a.data().get());
+  GT_DEBUG_VAR(a.data().get() + a.size() - 1);
+
+  auto inner_slice = gt::view_strided(a, _s(1, 3), _all);
+  GT_DEBUG_TYPE(inner_slice);
+  EXPECT_EQ(inner_slice,
+            (gt::gtensor<double, 2>{{21., 31.}, {22., 32.}, {23., 33.}}));
+  auto inner_first = &(inner_slice.data_access(0));
+  auto inner_last =
+    &(inner_slice(inner_slice.shape(0) - 1, inner_slice.shape(1) - 1));
+  EXPECT_NE(inner_last - inner_first + 1, inner_slice.size());
+  EXPECT_NE(inner_slice.strides(), calc_strides(inner_slice.shape()));
+  EXPECT_FALSE(inner_slice.is_f_contiguous());
+
+  auto outer_slice = gt::view_strided(a, _all, _s(1, 3));
+  GT_DEBUG_TYPE(outer_slice);
+  EXPECT_EQ(outer_slice,
+            (gt::gtensor<double, 2>{{12., 22., 32.}, {13., 23., 33.}}));
+  auto outer_first = &(outer_slice.data_access(0));
+  auto outer_last =
+    &(outer_slice(outer_slice.shape(0) - 1, outer_slice.shape(1) - 1));
+  EXPECT_EQ(outer_last - outer_first + 1, outer_slice.size());
+  EXPECT_EQ(outer_slice.strides(), calc_strides(outer_slice.shape()));
+  EXPECT_TRUE(outer_slice.is_f_contiguous());
+  EXPECT_EQ(outer_slice.data().get(), gt::raw_pointer_cast(&(a(0, 1))));
+
+  auto a_trans = gt::transpose(a, gt::shape(1, 0));
+  GT_DEBUG_TYPE(a_trans);
+  EXPECT_EQ(a_trans, (gt::gtensor<double, 2>{
+                       {11., 12., 13.}, {21., 22., 23.}, {31., 32., 33.}}));
+  auto trans_first = &(a_trans.data_access(0));
+  auto trans_last = &(a_trans(a_trans.shape(0) - 1, a_trans.shape(1) - 1));
+  EXPECT_EQ(trans_last - trans_first + 1, a_trans.size());
+  EXPECT_NE(a_trans.strides(), calc_strides(a_trans.shape()));
+  EXPECT_FALSE(a_trans.is_f_contiguous());
+}
+
+TEST(gview, device_fn_view_nodata)
+{
+  gt::gtensor_device<double, 2> a{
+    {11., 21., 31.}, {12., 22., 32.}, {13., 23., 33.}, {14., 24., 34.}};
+
+  auto twoa = 2 * a;
+
+  GT_DEBUG_VAR(a.shape());
+  GT_DEBUG_VAR(twoa.shape());
+
+  GT_DEBUG_VAR(a.strides());
+
+  GT_DEBUG_TYPE(twoa);
+
+  auto inner_slice = twoa.view(_s(1, 3), _all);
+  GT_DEBUG_TYPE(inner_slice);
+  GT_DEBUG_VAR(inner_slice.shape());
+  GT_DEBUG_VAR(inner_slice.strides());
+
+  EXPECT_EQ(inner_slice,
+            (2 * gt::gtensor<double, 2>{
+                   {21., 31.}, {22., 32.}, {23., 33.}, {24., 34.}}));
+
+  EXPECT_FALSE(gt::has_data_method_v<decltype(inner_slice)>);
 }
 
 #endif
