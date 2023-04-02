@@ -187,53 +187,16 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
-  if (GTENSOR_USE_UMPIRE)
-    # needed by blt which is used by umpire
-    find_package(hip REQUIRED)
-  endif()
+  set(GPU_TARGETS "${HIP_GPU_ARCHITECTURES}"
+      CACHE STRING "GPU targets to compile for")
+  find_package(hip REQUIRED)
+  find_package(rocthrust REQUIRED)
 
   if (GTENSOR_USE_THRUST)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
-  # Note: always link thrust, used for reductions even when the gtensor
-  # internal data backend is used instead of thrust::device_vector
-  add_library(rocthrust INTERFACE IMPORTED)
-  target_include_directories(rocthrust INTERFACE
-                             "${ROCM_PATH}/rocprim/include")
-  target_include_directories(rocthrust INTERFACE
-                             "${ROCM_PATH}/rocthrust/include")
-
-  add_library(rocblas INTERFACE IMPORTED)
-  target_link_libraries(rocblas INTERFACE "${ROCM_PATH}/lib/librocblas.so")
-  target_include_directories(rocblas INTERFACE "${ROCM_PATH}/include")
-
-  add_library(rocsolver INTERFACE IMPORTED)
-  target_link_libraries(rocsolver INTERFACE
-                        "${ROCM_PATH}/lib/librocsolver.so")
-  target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
-
-  add_library(rocsparse INTERFACE IMPORTED)
-  target_link_libraries(rocsparse INTERFACE
-                        "${ROCM_PATH}/lib/librocsparse.so")
-  target_include_directories(rocsparse INTERFACE "${ROCM_PATH}/include")
-
-  # NB: in ROCm, rocfft library / package was deprecated in favor of
-  # rocfft library / package.
-  add_library(rocfft INTERFACE IMPORTED)
-  target_link_libraries(rocfft INTERFACE "${ROCM_PATH}/lib/librocfft.so")
-  target_include_directories(rocfft INTERFACE "${ROCM_PATH}/rocfft/include")
-
-  #find_package(rocprim REQUIRED CONFIG
-  #             PATHS "${ROCM_PATH}/rocprim")
-  #find_package(rocthrust REQUIRED CONFIG
-  #             PATHS "${ROCM_PATH}/rocthrust")
-
-  target_link_libraries(gtensor_hip INTERFACE rocthrust)
-  target_compile_options(gtensor_hip INTERFACE
-    $<$<COMPILE_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
-  target_link_options(gtensor_hip INTERFACE
-    $<$<LINK_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
+  target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 
   if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE
@@ -457,7 +420,9 @@ if (GTENSOR_ENABLE_BLAS)
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     target_link_libraries(gtblas INTERFACE CUDA::cublas)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gtblas INTERFACE rocblas rocsolver)
+    find_package(rocblas REQUIRED)
+    find_package(rocsolver REQUIRED)
+    target_link_libraries(gtblas INTERFACE roc::rocblas roc::rocsolver)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     target_link_libraries(gtblas INTERFACE $<LINK_ONLY:MKL::MKL>)
   elseif (${GTENSOR_DEVICE} STREQUAL "host")
@@ -508,7 +473,8 @@ if (GTENSOR_ENABLE_FFT)
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     target_link_libraries(gtfft INTERFACE CUDA::cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gtfft INTERFACE rocfft)
+    find_package(rocfft REQUIRED)
+    target_link_libraries(gtfft INTERFACE roc::rocfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     if (GTENSOR_DEVICE_SYCL_BBFFT)
       #find_package(bbfft-sycl REQUIRED)
