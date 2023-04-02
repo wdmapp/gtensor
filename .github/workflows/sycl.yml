@@ -38,6 +38,10 @@ jobs:
     - name: env check
       run: |
         env | grep oneapi
+    - name: install cmake
+      run: |
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-Linux-x86_64.sh'
+        bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: install googletest
       run: |
         mkdir -p ${{ env.GTEST_ROOT }}
