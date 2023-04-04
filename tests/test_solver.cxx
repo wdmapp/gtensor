@@ -136,24 +136,24 @@ TEST(solver, zfull_sparse_solve)
 
 #endif
 
-TEST(solver, sfull_band_solve)
+TEST(solver, sfull_banded_solve)
 {
-  test_full_solve<gt::solver::solver_band<float>>();
+  test_full_solve<gt::solver::solver_banded<float>>();
 }
 
-TEST(solver, dfull_band_solve)
+TEST(solver, dfull_banded_solve)
 {
-  test_full_solve<gt::solver::solver_band<double>>();
+  test_full_solve<gt::solver::solver_banded<double>>();
 }
 
-TEST(solver, cfull_band_solve)
+TEST(solver, cfull_banded_solve)
 {
-  test_full_solve<gt::solver::solver_band<gt::complex<float>>>();
+  test_full_solve<gt::solver::solver_banded<gt::complex<float>>>();
 }
 
-TEST(solver, zfull_band_solve)
+TEST(solver, zfull_banded_solve)
 {
-  test_full_solve<gt::solver::solver_band<gt::complex<double>>>();
+  test_full_solve<gt::solver::solver_banded<gt::complex<double>>>();
 }
 
 TEST(solver, sfull_staging_dense_solve)

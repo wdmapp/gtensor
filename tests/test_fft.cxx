@@ -62,7 +62,7 @@ void fft_r2c_1d()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  GT_EXPECT_EQ(h_A, h_A2 / N);
+  GT_EXPECT_NEAR(h_A, h_A2 / N);
 
   GT_EXPECT_NEAR(h_B(0, 0), T(8, 0));
   GT_EXPECT_NEAR(h_B(1, 0), T(3, 1));
@@ -86,7 +86,7 @@ void fft_r2c_1d()
   plan2.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  GT_EXPECT_EQ(h_A, h_A2 / N);
+  GT_EXPECT_NEAR(h_A, h_A2 / N);
 
   GT_EXPECT_NEAR(h_B(0, 0), T(8, 0));
   GT_EXPECT_NEAR(h_B(1, 0), T(3, 1));
@@ -163,8 +163,8 @@ void fft_r2c_1d_strided()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  GT_EXPECT_EQ(h_B_expected, h_B);
-  GT_EXPECT_EQ(h_A, h_A2 / N);
+  GT_EXPECT_NEAR(h_B_expected, h_B);
+  GT_EXPECT_NEAR(h_A, h_A2 / N);
 }
 
 TEST(fft, d2z_1d_strided) { fft_r2c_1d_strided<double>(); }
@@ -231,8 +231,8 @@ void fft_r2c_1d_strided_dist()
   plan.inverse(d_B, d_A2);
   gt::copy(d_A2, h_A2);
 
-  GT_EXPECT_EQ(h_B_expected, h_B);
-  GT_EXPECT_EQ(h_A, h_A2 / N);
+  GT_EXPECT_NEAR(h_B_expected, h_B);
+  GT_EXPECT_NEAR(h_A, h_A2 / N);
 }
 
 TEST(fft, d2z_1d_strided_dist) { fft_r2c_1d_strided_dist<double>(); }
@@ -273,15 +273,15 @@ void fft_c2r_1d()
 
   gt::copy(d_A, h_A);
 
-  EXPECT_EQ(h_A(0, 0) / N, 2);
-  EXPECT_EQ(h_A(1, 0) / N, 3);
-  EXPECT_EQ(h_A(2, 0) / N, -1);
-  EXPECT_EQ(h_A(3, 0) / N, 4);
+  GT_EXPECT_NEAR(h_A(0, 0) / N, 2);
+  GT_EXPECT_NEAR(h_A(1, 0) / N, 3);
+  GT_EXPECT_NEAR(h_A(2, 0) / N, -1);
+  GT_EXPECT_NEAR(h_A(3, 0) / N, 4);
 
-  EXPECT_EQ(h_A(0, 1) / N, 7);
-  EXPECT_EQ(h_A(1, 1) / N, -21);
-  EXPECT_EQ(h_A(2, 1) / N, 11);
-  EXPECT_EQ(h_A(3, 1) / N, 1);
+  GT_EXPECT_NEAR(h_A(0, 1) / N, 7);
+  GT_EXPECT_NEAR(h_A(1, 1) / N, -21);
+  GT_EXPECT_NEAR(h_A(2, 1) / N, 11);
+  GT_EXPECT_NEAR(h_A(3, 1) / N, 1);
 }
 
 TEST(fft, z2d_1d) { fft_c2r_1d<double>(); }

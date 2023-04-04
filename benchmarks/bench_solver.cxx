@@ -112,7 +112,7 @@ BENCHMARK(BM_solver<gt::solver::solver_sparse<double>>)
   ->Args({210, 5, 1, 256})
   ->Unit(benchmark::kMillisecond);
 
-BENCHMARK(BM_solver<gt::solver::solver_band<double>>)
+BENCHMARK(BM_solver<gt::solver::solver_banded<double>>)
   ->Args({512, 32, 1, 64})
   ->Args({512, 5, 1, 64})
   ->Args({210, 32, 1, 256})
@@ -139,7 +139,7 @@ BENCHMARK(BM_solver<gt::solver::solver_sparse<gt::complex<double>>>)
   ->Unit(benchmark::kMillisecond);
 #endif
 
-BENCHMARK(BM_solver<gt::solver::solver_band<gt::complex<double>>>)
+BENCHMARK(BM_solver<gt::solver::solver_banded<gt::complex<double>>>)
   ->Args({512, 32, 1, 64})
   ->Args({512, 5, 1, 64})
   ->Args({210, 32, 1, 256})

@@ -304,8 +304,8 @@ template class solver_sparse<gt::complex<double>>;
 #endif
 
 template <typename T>
-solver_band<T>::solver_band(gt::blas::handle_t& h, int n, int nbatches,
-                            int nrhs, T* const* matrix_batches)
+solver_banded<T>::solver_banded(gt::blas::handle_t& h, int n, int nbatches,
+                                int nrhs, T* const* matrix_batches)
   : h_(h),
     n_(n),
     nbatches_(nbatches),
@@ -336,7 +336,7 @@ solver_band<T>::solver_band(gt::blas::handle_t& h, int n, int nbatches,
 }
 
 template <typename T>
-void solver_band<T>::solve(T* rhs, T* result)
+void solver_banded<T>::solve(T* rhs, T* result)
 {
   detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, rhs, n_,
                                        nrhs_);
@@ -351,7 +351,7 @@ void solver_band<T>::solve(T* rhs, T* result)
 }
 
 template <typename T>
-std::size_t solver_band<T>::get_device_memory_usage()
+std::size_t solver_banded<T>::get_device_memory_usage()
 {
   size_t nelements = matrix_data_.size();
   size_t nindex = pivot_data_.size();
@@ -360,10 +360,10 @@ std::size_t solver_band<T>::get_device_memory_usage()
          nptr * sizeof(T*) + info_.size() * sizeof(int);
 }
 
-template class solver_band<float>;
-template class solver_band<double>;
-template class solver_band<gt::complex<float>>;
-template class solver_band<gt::complex<double>>;
+template class solver_banded<float>;
+template class solver_banded<double>;
+template class solver_banded<gt::complex<float>>;
+template class solver_banded<gt::complex<double>>;
 
 template <typename Solver>
 staging_solver<Solver>::staging_solver(gt::blas::handle_t& h, int n,
@@ -422,10 +422,10 @@ template class staging_solver<solver_sparse<gt::complex<float>>>;
 template class staging_solver<solver_sparse<gt::complex<double>>>;
 #endif
 
-template class staging_solver<solver_band<float>>;
-template class staging_solver<solver_band<double>>;
-template class staging_solver<solver_band<gt::complex<float>>>;
-template class staging_solver<solver_band<gt::complex<double>>>;
+template class staging_solver<solver_banded<float>>;
+template class staging_solver<solver_banded<double>>;
+template class staging_solver<solver_banded<gt::complex<float>>>;
+template class staging_solver<solver_banded<gt::complex<double>>>;
 
 } // namespace solver
 

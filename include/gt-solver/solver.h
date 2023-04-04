@@ -190,15 +190,15 @@ private:
 };
 
 template <typename T>
-class solver_band : public solver<T>
+class solver_banded : public solver<T>
 {
 public:
   using base_type = solver<T>;
   using typename base_type::value_type;
   static constexpr bool inplace = true;
 
-  solver_band(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
-              T* const* matrix_batches);
+  solver_banded(gt::blas::handle_t& h, int n, int nbatches, int nrhs,
+                T* const* matrix_batches);
 
   virtual void solve(T* rhs, T* result);
   virtual std::size_t get_device_memory_usage();

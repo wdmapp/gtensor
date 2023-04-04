@@ -25,10 +25,10 @@ jobs:
         clangFormatVersion: 14
 
   tests-cpu:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        cxx: [ 'g++-7', 'g++-9', 'clang++-9' ]
+        cxx: [ 'g++-9', 'g++-10', 'clang++-10' ]
     name: tests-cpu-${{ matrix.cxx }}
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -65,10 +65,10 @@ jobs:
       run: cmake --build build-tests-${{ matrix.cxx }} -t test
 
   examples-cpu:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        cxx: [ 'g++-7', 'g++-9', 'clang++-9' ]
+        cxx: [ 'g++-9', 'g++-10', 'clang++-10' ]
     name: examples-cpu-${{ matrix.cxx }}
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
