@@ -53,6 +53,11 @@ if (NOT "${GTENSOR_DEVICE}" STREQUAL "host"
   target_link_libraries(snippets gtensor::gtensor)
   target_link_libraries(snippets gtensor::gtfft)
   target_link_libraries(snippets gtensor::blas)
+
+  add_executable(gtblas_axpy)
+  target_gtensor_sources(gtblas_axpy PRIVATE src/gtblas_axpy.cxx)
+  target_link_libraries(gtblas_axpy gtensor::gtensor)
+  target_link_libraries(gtblas_axpy gtensor::blas)
 endif()
 
 add_executable(mult_table)
