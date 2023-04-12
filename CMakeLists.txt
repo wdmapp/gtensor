@@ -69,8 +69,6 @@ set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
     STRING "comma separated list of AMD gpu architectures to build for")
 
 # SYCL specific configuration
-set(GTENSOR_DEVICE_SYCL_SELECTOR "default" CACHE STRING
-    "Use specified sycl device selector ('default', 'gpu', 'cpu',  or 'host')")
 set(GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES "" CACHE STRING
     "AOT with specified sycl architecture")
 set(GTENSOR_DEVICE_SYCL_INTEL ON CACHE BOOL
@@ -189,53 +187,16 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
-  if (GTENSOR_USE_UMPIRE)
-    # needed by blt which is used by umpire
-    find_package(hip REQUIRED)
-  endif()
+  set(GPU_TARGETS "${HIP_GPU_ARCHITECTURES}"
+      CACHE STRING "GPU targets to compile for")
+  find_package(hip REQUIRED)
+  find_package(rocthrust REQUIRED)
 
   if (GTENSOR_USE_THRUST)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
-  # Note: always link thrust, used for reductions even when the gtensor
-  # internal data backend is used instead of thrust::device_vector
-  add_library(rocthrust INTERFACE IMPORTED)
-  target_include_directories(rocthrust INTERFACE
-                             "${ROCM_PATH}/rocprim/include")
-  target_include_directories(rocthrust INTERFACE
-                             "${ROCM_PATH}/rocthrust/include")
-
-  add_library(rocblas INTERFACE IMPORTED)
-  target_link_libraries(rocblas INTERFACE "${ROCM_PATH}/lib/librocblas.so")
-  target_include_directories(rocblas INTERFACE "${ROCM_PATH}/include")
-
-  add_library(rocsolver INTERFACE IMPORTED)
-  target_link_libraries(rocsolver INTERFACE
-                        "${ROCM_PATH}/lib/librocsolver.so")
-  target_include_directories(rocsolver INTERFACE "${ROCM_PATH}/include")
-
-  add_library(rocsparse INTERFACE IMPORTED)
-  target_link_libraries(rocsparse INTERFACE
-                        "${ROCM_PATH}/lib/librocsparse.so")
-  target_include_directories(rocsparse INTERFACE "${ROCM_PATH}/include")
-
-  # NB: in ROCm, rocfft library / package was deprecated in favor of
-  # rocfft library / package.
-  add_library(rocfft INTERFACE IMPORTED)
-  target_link_libraries(rocfft INTERFACE "${ROCM_PATH}/lib/librocfft.so")
-  target_include_directories(rocfft INTERFACE "${ROCM_PATH}/rocfft/include")
-
-  #find_package(rocprim REQUIRED CONFIG
-  #             PATHS "${ROCM_PATH}/rocprim")
-  #find_package(rocthrust REQUIRED CONFIG
-  #             PATHS "${ROCM_PATH}/rocthrust")
-
-  target_link_libraries(gtensor_hip INTERFACE rocthrust)
-  target_compile_options(gtensor_hip INTERFACE
-    $<$<COMPILE_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
-  target_link_options(gtensor_hip INTERFACE
-    $<$<LINK_LANGUAGE:CXX>:--offload-arch=${HIP_GPU_ARCHITECTURES}>)
+  target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 
   if (HIP_GCC_TOOLCHAIN)
     target_compile_options(gtensor_hip INTERFACE
@@ -252,25 +213,19 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
   message(STATUS "${PROJECT_NAME}: adding gtensor_sycl target")
   add_gtensor_library(sycl)
 
-  target_compile_options(gtensor_sycl INTERFACE
-                         $<$<COMPILE_LANGUAGE:CXX>:-fsycl -x c++>)
-  target_link_options(gtensor_sycl INTERFACE
-                      $<$<COMPILE_LANGUAGE:CXX>:-fsycl>)
+  cmake_minimum_required(VERSION 3.23.0)
+  find_package(IntelSYCL)
+  if (IntelSYCL_FOUND)
+      target_compile_options(gtensor_sycl INTERFACE
+                             $<$<COMPILE_LANGUAGE:CXX>:-fsycl -x c++>)
+      target_link_options(gtensor_sycl INTERFACE
+                          $<$<COMPILE_LANGUAGE:CXX>:-fsycl>)
+  else()
+    find_package(IntelDPCPP REQUIRED)
+  endif()
+
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL)
-
-  if (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "default")
-    target_compile_definitions(gtensor_sycl INTERFACE
-                               GTENSOR_DEVICE_SYCL_DEFAULT)
-  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "gpu")
-    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_GPU)
-  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "cpu")
-    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_CPU)
-  elseif (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host")
-    target_compile_definitions(gtensor_sycl INTERFACE GTENSOR_DEVICE_SYCL_HOST)
-  else()
-    message(FATAL_ERROR "${PROJECT_NAME}: sycl selector '${GTENSOR_DEVICE_SYCL_SELECTOR}' is not supported")
-  endif()
 
   target_include_directories(gtensor_sycl INTERFACE ${DPCPP_INCDIR})
 
@@ -282,10 +237,6 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
                                GTENSOR_DEVICE_SYCL_OPENCL)
     target_link_libraries(gtensor_sycl INTERFACE ze_loader)
     target_link_libraries(gtensor_sycl INTERFACE OpenCL)
-    if (NOT (${GTENSOR_DEVICE_SYCL_SELECTOR} STREQUAL "host"))
-        target_link_options(gtensor_sycl INTERFACE
-                            -fsycl-device-lib=libm-fp32,libm-fp64)
-    endif()
 
     if (GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES)
       target_compile_options(gtensor_sycl INTERFACE
@@ -298,24 +249,24 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
             "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}" >)
     endif()
 
-    add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
-    target_include_directories(oneapi_mkl_sycl INTERFACE "${MKL_PATH}/include")
-    target_link_libraries(oneapi_mkl_sycl INTERFACE
-                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sycl.so")
+    find_package(MKL CONFIG REQUIRED)
+
+    target_compile_options(gtensor_sycl INTERFACE
+      $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
+    target_include_directories(gtensor_sycl INTERFACE
+      $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_link_libraries(gtensor_sycl INTERFACE $<LINK_ONLY:MKL::MKL>)
+
     # NOTE: we could support gnu here to, but when using DPCPP it must be intel,
     # and that is the expected case here.
-    if (GTENSOR_DEVICE_SYCL_ILP64)
-      target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
-      target_link_libraries(oneapi_mkl_sycl INTERFACE
-                            "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
-    else()
-      target_link_libraries(oneapi_mkl_sycl INTERFACE
-                            "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_lp64.so")
-    endif()
-    target_link_libraries(oneapi_mkl_sycl INTERFACE
-                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sequential.so")
-    target_link_libraries(oneapi_mkl_sycl INTERFACE
-                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_core.so")
+    #if (GTENSOR_DEVICE_SYCL_ILP64)
+    #  target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
+    #  target_link_libraries(oneapi_mkl_sycl INTERFACE
+    #                        "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
+    #else()
+    #  target_link_libraries(oneapi_mkl_sycl INTERFACE
+    #                        "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_lp64.so")
+    #endif()
   endif()
 endif()
 
@@ -469,9 +420,11 @@ if (GTENSOR_ENABLE_BLAS)
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     target_link_libraries(gtblas INTERFACE CUDA::cublas)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gtblas INTERFACE rocblas rocsolver)
+    find_package(rocblas REQUIRED)
+    find_package(rocsolver REQUIRED)
+    target_link_libraries(gtblas INTERFACE roc::rocblas roc::rocsolver)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
-    target_link_libraries(gtblas INTERFACE oneapi_mkl_sycl)
+    target_link_libraries(gtblas INTERFACE $<LINK_ONLY:MKL::MKL>)
   elseif (${GTENSOR_DEVICE} STREQUAL "host")
     # only openblas is supported at this time -- needs
     # adaptations for the various cblas interfaces
@@ -520,7 +473,8 @@ if (GTENSOR_ENABLE_FFT)
   if (${GTENSOR_DEVICE} STREQUAL "cuda")
     target_link_libraries(gtfft INTERFACE CUDA::cufft)
   elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-    target_link_libraries(gtfft INTERFACE rocfft)
+    find_package(rocfft REQUIRED)
+    target_link_libraries(gtfft INTERFACE roc::rocfft)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
     if (GTENSOR_DEVICE_SYCL_BBFFT)
       #find_package(bbfft-sycl REQUIRED)
@@ -538,7 +492,7 @@ if (GTENSOR_ENABLE_FFT)
       target_compile_definitions(gtfft INTERFACE GTENSOR_DEVICE_SYCL_BBFFT)
       target_link_libraries(gtfft INTERFACE bbfft::bbfft-sycl)
     else()
-      target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
+      target_link_libraries(gtfft INTERFACE $<LINK_ONLY:MKL::MKL>)
     endif()
   endif()
 
