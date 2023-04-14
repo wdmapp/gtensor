@@ -145,16 +145,19 @@ solver_dense<T>::solver_dense(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void solver_dense<T>::solve(T* rhs, T* result)
 {
-  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, rhs, n_,
-                                       nrhs_);
+  // in place solve in result vector
+  if (result == nullptr) {
+    result = rhs;
+  } else if (rhs != result) {
+    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+               gt::device_pointer_cast(result));
+  }
+  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, result,
+                                       n_, nrhs_);
   gt::blas::getrs_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()),
     gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_);
-  if (rhs != result && result != nullptr) {
-    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-               gt::device_pointer_cast(result));
-  }
 }
 
 template <typename T>
@@ -338,16 +341,19 @@ solver_banded<T>::solver_banded(gt::blas::handle_t& h, int n, int nbatches,
 template <typename T>
 void solver_banded<T>::solve(T* rhs, T* result)
 {
-  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, rhs, n_,
-                                       nrhs_);
+  // in place solve in result vector
+  if (result == nullptr) {
+    result = rhs;
+  } else if (rhs != result) {
+    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
+               gt::device_pointer_cast(result));
+  }
+  detail::set_device_pointer_array_rhs(h_rhs_pointers_, rhs_pointers_, result,
+                                       n_, nrhs_);
   gt::blas::getrs_banded_batched<T>(
     h_, n_, nrhs_, gt::raw_pointer_cast(matrix_pointers_.data()), n_,
     gt::raw_pointer_cast(pivot_data_.data()),
     gt::raw_pointer_cast(rhs_pointers_.data()), n_, nbatches_, lbw_, ubw_);
-  if (rhs != result && result != nullptr) {
-    gt::copy_n(gt::device_pointer_cast(rhs), n_ * nrhs_ * nbatches_,
-               gt::device_pointer_cast(result));
-  }
 }
 
 template <typename T>
@@ -373,25 +379,31 @@ staging_solver<Solver>::staging_solver(gt::blas::handle_t& h, int n,
     nbatches_(nbatches),
     nrhs_(nrhs),
     solver_(h, n, nbatches, nrhs, matrix_batches),
-    rhs_stage_(gt::shape(n, nrhs, nbatches)),
-    rhs_stage_p_(gt::raw_pointer_cast(rhs_stage_.data())),
-    result_stage_(Solver::inplace ? gt::shape(0, 0, 0)
-                                  : gt::shape(n, nrhs, nbatches)),
-    result_stage_p_(
-      Solver::inplace ? nullptr : gt::raw_pointer_cast(result_stage_.data()))
+    rhs_stage_(Solver::inplace ? gt::shape(0, 0, 0)
+                               : gt::shape(n, nrhs, nbatches)),
+    rhs_stage_p_(Solver::inplace ? nullptr
+                                 : gt::raw_pointer_cast(rhs_stage_.data())),
+    result_stage_(gt::shape(n, nrhs, nbatches)),
+    result_stage_p_(gt::raw_pointer_cast(result_stage_.data()))
 {}
 
 template <typename Solver>
 void staging_solver<Solver>::solve(value_type* rhs, value_type* result)
 {
-  gt::copy_n(gt::device_pointer_cast(rhs), rhs_stage_.size(),
-             rhs_stage_.data());
   if (inplace) {
-    solver_.solve(rhs_stage_p_, result);
+    if (result == nullptr) {
+      result = rhs;
+    }
+    solver_.solve(rhs, result_stage_p_);
+    gt::copy_n(result_stage_.data(), result_stage_.size(),
+               gt::device_pointer_cast(result));
   } else {
+    if (result == nullptr) {
+      result = rhs;
+    }
+    gt::copy_n(gt::device_pointer_cast(rhs), rhs_stage_.size(),
+               rhs_stage_.data());
     solver_.solve(rhs_stage_p_, result_stage_p_);
-  }
-  if (!inplace) {
     gt::copy_n(result_stage_.data(), result_stage_.size(),
                gt::device_pointer_cast(result));
   }

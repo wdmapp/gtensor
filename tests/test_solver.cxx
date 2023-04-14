@@ -204,6 +204,30 @@ TEST(solver, zfull_staging_invert_solve)
     gt::solver::solver_invert<gt::complex<double>>>>();
 }
 
+TEST(solver, sfull_staging_banded_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_banded<float>>>();
+}
+
+TEST(solver, dfull_staging_banded_solve)
+{
+  test_full_solve<
+    gt::solver::staging_solver<gt::solver::solver_banded<double>>>();
+}
+
+TEST(solver, cfull_staging_banded_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_banded<gt::complex<float>>>>();
+}
+
+TEST(solver, zfull_staging_banded_solve)
+{
+  test_full_solve<gt::solver::staging_solver<
+    gt::solver::solver_banded<gt::complex<double>>>>();
+}
+
 TEST(solver, sfull_staging_sparse_solve)
 {
   test_full_solve<
