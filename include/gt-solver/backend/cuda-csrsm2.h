@@ -221,25 +221,27 @@ public:
 
   void solve(T* rhs, T* result)
   {
+    // in place solve in result vector
+    if (result == nullptr) {
+      result = rhs;
+    } else if (rhs != result) {
+      gt::copy_n(gt::device_pointer_cast(rhs), csr_mat_.shape(0) * nrhs_,
+                 gt::device_pointer_cast(result));
+    }
     gtSparseCheck(FN::solve(
       h_.get_backend_handle(), algo_, CUSPARSE_OPERATION_NON_TRANSPOSE,
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), l_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs), csr_mat_.shape(0),
+      csr_mat_.col_ind_data(), FN::cast_pointer(result), csr_mat_.shape(0),
       l_info_, policy_, FN::cast_pointer(l_buf_.data())));
     gtSparseCheck(FN::solve(
       h_.get_backend_handle(), algo_, CUSPARSE_OPERATION_NON_TRANSPOSE,
       CUSPARSE_OPERATION_NON_TRANSPOSE, csr_mat_.shape(0), nrhs_,
       csr_mat_.nnz(), FN::cast_pointer(&alpha_), u_desc_,
       FN::cast_pointer(csr_mat_.values_data()), csr_mat_.row_ptr_data(),
-      csr_mat_.col_ind_data(), FN::cast_pointer(rhs), csr_mat_.shape(0),
+      csr_mat_.col_ind_data(), FN::cast_pointer(result), csr_mat_.shape(0),
       u_info_, policy_, FN::cast_pointer(u_buf_.data())));
-
-    if (rhs != result && result != nullptr) {
-      gt::copy_n(gt::device_pointer_cast(rhs), csr_mat_.shape(0) * nrhs_,
-                 gt::device_pointer_cast(result));
-    }
   }
 
   std::size_t get_device_memory_usage()
