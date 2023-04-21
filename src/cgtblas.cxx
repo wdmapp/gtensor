@@ -134,6 +134,12 @@ void gtblas_destroy()
   }
 }
 
+void* gtblas_get_handle()
+{
+  gtblas_create();
+  return g_handle;
+}
+
 void gtblas_set_stream(gt::stream_view stream) { g_handle->set_stream(stream); }
 
 void gtblas_get_stream(gt::stream_view* stream_id)
