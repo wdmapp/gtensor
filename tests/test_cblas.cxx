@@ -267,3 +267,25 @@ void test_gemv_complex(F&& f)
 TEST(cblas, cgemv) { test_gemv_complex<float>(&gtblas_cgemv); }
 
 TEST(cblas, zgemv) { test_gemv_complex<double>(&gtblas_zgemv); }
+
+TEST(cblas, get_handle)
+{
+  void *h1, *h2, *h3;
+
+  gtblas_create();
+
+  h1 = gtblas_get_handle();
+
+  gtblas_create();
+
+  h2 = gtblas_get_handle();
+
+  EXPECT_EQ(h1, h2);
+
+  gtblas_destroy();
+
+  // calls create internally
+  h3 = gtblas_get_handle();
+
+  EXPECT_NE(h2, h3);
+}
