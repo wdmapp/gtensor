@@ -249,24 +249,23 @@ if ("sycl" IN_LIST GTENSOR_BUILD_DEVICES)
             "-device ${GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES}" >)
     endif()
 
-    find_package(MKL CONFIG REQUIRED)
+    add_library(oneapi_mkl_sycl INTERFACE IMPORTED)
+    target_include_directories(oneapi_mkl_sycl INTERFACE "${MKL_PATH}/include")
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sycl.so")
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_sequential.so")
+    target_link_libraries(oneapi_mkl_sycl INTERFACE
+                          "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_core.so")
 
-    target_compile_options(gtensor_sycl INTERFACE
-      $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
-    target_include_directories(gtensor_sycl INTERFACE
-      $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
-    target_link_libraries(gtensor_sycl INTERFACE $<LINK_ONLY:MKL::MKL>)
-
-    # NOTE: we could support gnu here to, but when using DPCPP it must be intel,
-    # and that is the expected case here.
-    #if (GTENSOR_DEVICE_SYCL_ILP64)
-    #  target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
-    #  target_link_libraries(oneapi_mkl_sycl INTERFACE
-    #                        "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
-    #else()
-    #  target_link_libraries(oneapi_mkl_sycl INTERFACE
-    #                        "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_lp64.so")
-    #endif()
+    if (GTENSOR_DEVICE_SYCL_ILP64)
+      target_compile_definitions(oneapi_mkl_sycl INTERFACE MKL_ILP64)
+      target_link_libraries(oneapi_mkl_sycl INTERFACE
+                            "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_ilp64.so")
+    else()
+      target_link_libraries(oneapi_mkl_sycl INTERFACE
+                            "${MKL_PATH}/lib/${MKL_ARCH}/libmkl_intel_lp64.so")
+    endif()
   endif()
 endif()
 
@@ -424,7 +423,7 @@ if (GTENSOR_ENABLE_BLAS)
     find_package(rocsolver REQUIRED)
     target_link_libraries(gtblas INTERFACE roc::rocblas roc::rocsolver)
   elseif (${GTENSOR_DEVICE} STREQUAL "sycl")
-    target_link_libraries(gtblas INTERFACE $<LINK_ONLY:MKL::MKL>)
+    target_link_libraries(gtblas INTERFACE oneapi_mkl_sycl)
   elseif (${GTENSOR_DEVICE} STREQUAL "host")
     # only openblas is supported at this time -- needs
     # adaptations for the various cblas interfaces
@@ -492,7 +491,7 @@ if (GTENSOR_ENABLE_FFT)
       target_compile_definitions(gtfft INTERFACE GTENSOR_DEVICE_SYCL_BBFFT)
       target_link_libraries(gtfft INTERFACE bbfft::bbfft-sycl)
     else()
-      target_link_libraries(gtfft INTERFACE $<LINK_ONLY:MKL::MKL>)
+      target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
     endif()
   endif()
 
