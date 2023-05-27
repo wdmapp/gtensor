@@ -8,6 +8,31 @@ public:
   fftw() = default;
   fftw(plan_type plan) : plan_{plan}, is_valid_{true} {}
 
+  // move only
+  fftw(const fftw& other) = delete;
+  fftw(fftw&& other) : plan_{other.plan_}, is_valid_{other.is_valid_}
+  {
+    other.is_valid_ = false;
+  }
+
+  fftw& operator=(const fftw& other) = delete;
+  fftw& operator=(fftw&& other)
+  {
+    if (&other != this) {
+      using std::swap;
+      swap(plan_, other.plan_);
+      swap(is_valid_, other.is_valid_);
+    }
+    return *this;
+  }
+
+  ~fftw()
+  {
+    if (is_valid_) {
+      FFTW_(destroy_plan)(plan_);
+    }
+  }
+
   static fftw plan_many_dft(int rank, const int* n, int howmany,
                             complex_type* in, const int* inembed, int istride,
                             int idist, complex_type* out, const int* onembed,

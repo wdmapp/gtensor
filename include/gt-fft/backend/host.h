@@ -3,6 +3,7 @@
 
 #include <numeric>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <fftw3.h>
@@ -86,7 +87,6 @@ class FFTPlanManyHost
 public:
   FFTPlanManyHost(std::vector<int> lengths, int batch_size = 1,
                   gt::stream_view stream = gt::stream_view{})
-    : is_valid_(true)
   {
     int rank = lengths.size();
     int idist, odist;
@@ -103,46 +103,13 @@ public:
   FFTPlanManyHost(std::vector<int> lengths, int istride, int idist, int ostride,
                   int odist, int batch_size = 1,
                   gt::stream_view stream = gt::stream_view{})
-    : is_valid_(true)
   {
     init(lengths, istride, idist, ostride, odist, batch_size);
-  }
-
-  // move only
-  // delete copy ctor/assign
-  FFTPlanManyHost(const FFTPlanManyHost& other) = delete;
-  FFTPlanManyHost& operator=(const FFTPlanManyHost& other) = delete;
-
-  // custom move to avoid double destroy in moved-from object
-  FFTPlanManyHost(FFTPlanManyHost&& other) : is_valid_(true)
-  {
-    fftw_forward_ = other.fftw_forward_;
-    fftw_inverse_ = other.fftw_inverse_;
-    other.is_valid_ = false;
-  }
-
-  FFTPlanManyHost& operator=(FFTPlanManyHost&& other)
-  {
-    fftw_forward_ = other.fftw_forward_;
-    fftw_inverse_ = other.fftw_inverse_;
-    other.is_valid_ = false;
-    return *this;
-  }
-
-  virtual ~FFTPlanManyHost()
-  {
-    if (is_valid_) {
-      // fftw_destroy_plan(fftw_forward_);
-      // fftw_destroy_plan(fftw_inverse_);
-    }
   }
 
   void operator()(typename detail::fft_config<D, R>::Tin* indata,
                   typename detail::fft_config<D, R>::Tout* outdata) const
   {
-    if (!is_valid_) {
-      throw std::runtime_error("can't use a moved-from plan");
-    }
     auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     if constexpr (D == gt::fft::Domain::COMPLEX) {
@@ -153,9 +120,6 @@ public:
   void inverse(typename detail::fft_config<D, R>::Tout* indata,
                typename detail::fft_config<D, R>::Tin* outdata) const
   {
-    if (!is_valid_) {
-      throw std::runtime_error("can't use a moved-from plan");
-    }
     auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     if constexpr (D == gt::fft::Domain::COMPLEX) {
@@ -188,7 +152,6 @@ private:
 
   fftw fftw_inverse_;
   fftw fftw_forward_;
-  bool is_valid_;
 };
 
 template <gt::fft::Domain D, typename R>
