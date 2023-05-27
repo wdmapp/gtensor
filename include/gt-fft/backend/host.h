@@ -139,23 +139,23 @@ private:
   {
     int rank = lengths.size();
     int* n = lengths.data();
-    Bin* in = nullptr;
-    Bout* out = nullptr;
+    Bin dummy_in;
+    Bout dummy_out;
 
     if constexpr (D == gt::fft::Domain::COMPLEX) {
-      fftw_forward_ =
-        fftw::plan_many_dft(rank, n, batch_size, in, NULL, istride, idist, out,
-                            NULL, ostride, odist, -1, FFTW_ESTIMATE);
-      fftw_inverse_ =
-        fftw::plan_many_dft(rank, n, batch_size, out, NULL, ostride, odist, in,
-                            NULL, istride, idist, 1, FFTW_ESTIMATE);
+      fftw_forward_ = fftw::plan_many_dft(rank, n, batch_size, &dummy_in, NULL,
+                                          istride, idist, &dummy_out, NULL,
+                                          ostride, odist, -1, FFTW_ESTIMATE);
+      fftw_inverse_ = fftw::plan_many_dft(rank, n, batch_size, &dummy_out, NULL,
+                                          ostride, odist, &dummy_in, NULL,
+                                          istride, idist, 1, FFTW_ESTIMATE);
     } else {
-      fftw_forward_ =
-        fftw::plan_many_dft_r2c(rank, n, batch_size, in, NULL, istride, idist,
-                                out, NULL, ostride, odist, FFTW_ESTIMATE);
-      fftw_inverse_ =
-        fftw::plan_many_dft_c2r(rank, n, batch_size, out, NULL, ostride, odist,
-                                in, NULL, istride, idist, FFTW_ESTIMATE);
+      fftw_forward_ = fftw::plan_many_dft_r2c(
+        rank, n, batch_size, &dummy_in, NULL, istride, idist, &dummy_out, NULL,
+        ostride, odist, FFTW_ESTIMATE);
+      fftw_inverse_ = fftw::plan_many_dft_c2r(
+        rank, n, batch_size, &dummy_out, NULL, ostride, odist, &dummy_in, NULL,
+        istride, idist, FFTW_ESTIMATE);
     }
   }
 
