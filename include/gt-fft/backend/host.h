@@ -15,69 +15,17 @@ namespace fftw
 template <typename R>
 class fftw;
 
-template <>
-class fftw<double>
-{
-  using fftw_plan = ::fftw_plan;
+#define R double
+#define FFTW_(SFX) fftw_##SFX
+#include "fftw_inc.h"
+#undef R
+#undef FFTW_
 
-public:
-  using complex = fftw_complex;
-
-  fftw() = default;
-  fftw(fftw_plan plan) : plan_{plan}, is_valid_{true} {}
-
-  static fftw plan_many_dft(int rank, const int* n, int howmany, complex* in,
-                            const int* inembed, int istride, int idist,
-                            complex* out, const int* onembed, int ostride,
-                            int odist, int sign, unsigned flags)
-  {
-    return fftw{::fftw_plan_many_dft(rank, n, howmany, in, inembed, istride,
-                                     idist, out, onembed, ostride, odist, sign,
-                                     flags)};
-  }
-
-  void execute_dft(complex* in, complex* out) const
-  {
-    assert(is_valid_);
-    return ::fftw_execute_dft(plan_, in, out);
-  }
-
-public:
-  fftw_plan plan_;
-  bool is_valid_ = false;
-};
-
-template <>
-class fftw<float>
-{
-  using fftw_plan = ::fftwf_plan;
-
-public:
-  using complex = fftwf_complex;
-
-  fftw() = default;
-  fftw(fftw_plan plan) : plan_{plan}, is_valid_{true} {}
-
-  static fftw plan_many_dft(int rank, const int* n, int howmany, complex* in,
-                            const int* inembed, int istride, int idist,
-                            complex* out, const int* onembed, int ostride,
-                            int odist, int sign, unsigned flags)
-  {
-    return fftw{::fftwf_plan_many_dft(rank, n, howmany, in, inembed, istride,
-                                      idist, out, onembed, ostride, odist, sign,
-                                      flags)};
-  }
-
-  void execute_dft(complex* in, complex* out) const
-  {
-    assert(is_valid_);
-    return ::fftwf_execute_dft(plan_, in, out);
-  }
-
-private:
-  fftwf_plan plan_;
-  bool is_valid_ = false;
-};
+#define R float
+#define FFTW_(SFX) fftwf_##SFX
+#include "fftw_inc.h"
+#undef R
+#undef FFTW_
 
 } // namespace fftw
 
