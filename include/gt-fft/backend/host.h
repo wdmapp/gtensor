@@ -10,6 +10,77 @@
 namespace gt
 {
 
+namespace fftw
+{
+template <typename R>
+class fftw;
+
+template <>
+class fftw<double>
+{
+  using fftw_plan = ::fftw_plan;
+
+public:
+  using complex = fftw_complex;
+
+  fftw() = default;
+  fftw(fftw_plan plan) : plan_{plan}, is_valid_{true} {}
+
+  static fftw plan_many_dft(int rank, const int* n, int howmany, complex* in,
+                            const int* inembed, int istride, int idist,
+                            complex* out, const int* onembed, int ostride,
+                            int odist, int sign, unsigned flags)
+  {
+    return fftw{::fftw_plan_many_dft(rank, n, howmany, in, inembed, istride,
+                                     idist, out, onembed, ostride, odist, sign,
+                                     flags)};
+  }
+
+  void execute_dft(complex* in, complex* out) const
+  {
+    assert(is_valid_);
+    return ::fftw_execute_dft(plan_, in, out);
+  }
+
+public:
+  fftw_plan plan_;
+  bool is_valid_ = false;
+};
+
+template <>
+class fftw<float>
+{
+  using fftw_plan = ::fftwf_plan;
+
+public:
+  using complex = fftwf_complex;
+
+  fftw() = default;
+  fftw(fftw_plan plan) : plan_{plan}, is_valid_{true} {}
+
+  static fftw plan_many_dft(int rank, const int* n, int howmany, complex* in,
+                            const int* inembed, int istride, int idist,
+                            complex* out, const int* onembed, int ostride,
+                            int odist, int sign, unsigned flags)
+  {
+    return fftw{::fftwf_plan_many_dft(rank, n, howmany, in, inembed, istride,
+                                      idist, out, onembed, ostride, odist, sign,
+                                      flags)};
+  }
+
+  void execute_dft(complex* in, complex* out) const
+  {
+    assert(is_valid_);
+    return ::fftwf_execute_dft(plan_, in, out);
+  }
+
+private:
+  fftwf_plan plan_;
+  bool is_valid_ = false;
+};
+
+} // namespace fftw
+
 namespace fft
 {
 
@@ -26,22 +97,6 @@ struct fft_config<gt::fft::Domain::COMPLEX, double>
   using Tout = gt::complex<double>;
   using Bin = fftw_complex;
   using Bout = fftw_complex;
-  using plan_type = fftw_plan;
-
-  static plan_type fftw_plan_many_dft(int rank, const int* n, int howmany,
-                                      Bin* in, const int* inembed, int istride,
-                                      int idist, Bout* out, const int* onembed,
-                                      int ostride, int odist, int sign,
-                                      unsigned flags)
-  {
-    return ::fftw_plan_many_dft(rank, n, howmany, in, inembed, istride, idist,
-                                out, onembed, ostride, odist, sign, flags);
-  }
-
-  static void fftw_execute_dft(plan_type plan, Bin* in, Bout* out)
-  {
-    return ::fftw_execute_dft(plan, in, out);
-  }
 };
 
 template <>
@@ -51,22 +106,6 @@ struct fft_config<gt::fft::Domain::COMPLEX, float>
   using Tout = gt::complex<float>;
   using Bin = fftwf_complex;
   using Bout = fftwf_complex;
-  using plan_type = fftwf_plan;
-
-  static plan_type fftw_plan_many_dft(int rank, const int* n, int howmany,
-                                      Bin* in, const int* inembed, int istride,
-                                      int idist, Bout* out, const int* onembed,
-                                      int ostride, int odist, int sign,
-                                      unsigned flags)
-  {
-    return ::fftwf_plan_many_dft(rank, n, howmany, in, inembed, istride, idist,
-                                 out, onembed, ostride, odist, sign, flags);
-  }
-
-  static void fftw_execute_dft(plan_type plan, Bin* in, Bout* out)
-  {
-    return ::fftwf_execute_dft(plan, in, out);
-  }
 };
 
 template <>
@@ -76,7 +115,6 @@ struct fft_config<gt::fft::Domain::REAL, double>
   using Tout = gt::complex<double>;
   using Bin = double;
   using Bout = fftw_complex;
-  using plan_type = fftw_plan;
 };
 
 template <>
@@ -86,7 +124,6 @@ struct fft_config<gt::fft::Domain::REAL, float>
   using Tout = gt::complex<float>;
   using Bin = float;
   using Bout = fftwf_complex;
-  using plan_type = fftwf_plan;
 };
 
 } // namespace detail
@@ -94,9 +131,9 @@ struct fft_config<gt::fft::Domain::REAL, float>
 template <gt::fft::Domain D, typename R>
 class FFTPlanManyHost
 {
+  using fftw = fftw::fftw<R>;
   using Bin = typename detail::fft_config<D, R>::Bin;
   using Bout = typename detail::fft_config<D, R>::Bout;
-  using plan_type = typename detail::fft_config<D, R>::plan_type;
 
 public:
   FFTPlanManyHost(std::vector<int> lengths, int batch_size = 1,
@@ -131,15 +168,15 @@ public:
   // custom move to avoid double destroy in moved-from object
   FFTPlanManyHost(FFTPlanManyHost&& other) : is_valid_(true)
   {
-    plan_forward_ = other.plan_forward_;
-    plan_inverse_ = other.plan_inverse_;
+    fftw_forward_ = other.fftw_forward_;
+    fftw_inverse_ = other.fftw_inverse_;
     other.is_valid_ = false;
   }
 
   FFTPlanManyHost& operator=(FFTPlanManyHost&& other)
   {
-    plan_forward_ = other.plan_forward_;
-    plan_inverse_ = other.plan_inverse_;
+    fftw_forward_ = other.fftw_forward_;
+    fftw_inverse_ = other.fftw_inverse_;
     other.is_valid_ = false;
     return *this;
   }
@@ -147,8 +184,8 @@ public:
   virtual ~FFTPlanManyHost()
   {
     if (is_valid_) {
-      // fftw_destroy_plan(plan_forward_);
-      // fftw_destroy_plan(plan_inverse_);
+      // fftw_destroy_plan(fftw_forward_);
+      // fftw_destroy_plan(fftw_inverse_);
     }
   }
 
@@ -161,7 +198,7 @@ public:
     auto bin = reinterpret_cast<Bin*>(indata);
     auto bout = reinterpret_cast<Bout*>(outdata);
     if constexpr (D == gt::fft::Domain::COMPLEX) {
-      detail::fft_config<D, R>::fftw_execute_dft(plan_forward_, bin, bout);
+      fftw_forward_.execute_dft(bin, bout);
     }
   }
 
@@ -174,7 +211,7 @@ public:
     auto bin = reinterpret_cast<Bout*>(indata);
     auto bout = reinterpret_cast<Bin*>(outdata);
     if constexpr (D == gt::fft::Domain::COMPLEX) {
-      detail::fft_config<D, R>::fftw_execute_dft(plan_inverse_, bin, bout);
+      fftw_inverse_.execute_dft(bin, bout);
     }
   }
 
@@ -192,17 +229,17 @@ private:
       using Bout = typename detail::fft_config<D, R>::Bout;
       Bin* in = nullptr;
       Bout* out = nullptr;
-      plan_forward_ = detail::fft_config<D, R>::fftw_plan_many_dft(
-        rank, n, batch_size, in, NULL, istride, idist, out, NULL, ostride,
-        odist, -1, FFTW_ESTIMATE);
-      plan_inverse_ = detail::fft_config<D, R>::fftw_plan_many_dft(
-        rank, n, batch_size, out, NULL, ostride, odist, in, NULL, istride,
-        idist, 1, FFTW_ESTIMATE);
+      fftw_forward_ =
+        fftw::plan_many_dft(rank, n, batch_size, in, NULL, istride, idist, out,
+                            NULL, ostride, odist, -1, FFTW_ESTIMATE);
+      fftw_inverse_ =
+        fftw::plan_many_dft(rank, n, batch_size, out, NULL, ostride, odist, in,
+                            NULL, istride, idist, 1, FFTW_ESTIMATE);
     }
   }
 
-  plan_type plan_inverse_;
-  plan_type plan_forward_;
+  fftw fftw_inverse_;
+  fftw fftw_forward_;
   bool is_valid_;
 };
 
