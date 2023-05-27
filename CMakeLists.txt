@@ -11,6 +11,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 include(cmake/CPM.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
@@ -493,6 +494,10 @@ if (GTENSOR_ENABLE_FFT)
     else()
       target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
     endif()
+  elseif (${GTENSOR_DEVICE} STREQUAL "host")
+    find_package(FFTW REQUIRED)
+
+    target_link_libraries(gtfft INTERFACE FFTW::Double FFTW::Float)
   endif()
 
   list(APPEND GTENSOR_TARGETS gtfft)
