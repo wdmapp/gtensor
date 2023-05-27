@@ -6,14 +6,11 @@ public:
   using complex_type = ::FFTW_(complex);
 
   fftw() = default;
-  fftw(plan_type plan) : plan_{plan}, is_valid_{true} {}
+  fftw(plan_type plan) : plan_{plan} {}
 
   // move only
   fftw(const fftw& other) = delete;
-  fftw(fftw&& other) : plan_{other.plan_}, is_valid_{other.is_valid_}
-  {
-    other.is_valid_ = false;
-  }
+  fftw(fftw&& other) : plan_{other.plan_} { other.plan_ = {}; }
 
   fftw& operator=(const fftw& other) = delete;
   fftw& operator=(fftw&& other)
@@ -21,14 +18,13 @@ public:
     if (&other != this) {
       using std::swap;
       swap(plan_, other.plan_);
-      swap(is_valid_, other.is_valid_);
     }
     return *this;
   }
 
   ~fftw()
   {
-    if (is_valid_) {
+    if (plan_) {
       FFTW_(destroy_plan)(plan_);
     }
   }
@@ -45,11 +41,10 @@ public:
 
   void execute_dft(complex_type* in, complex_type* out) const
   {
-    assert(is_valid_);
+    assert(plan_);
     return ::FFTW_(execute_dft)(plan_, in, out);
   }
 
 private:
-  plan_type plan_;
-  bool is_valid_ = false;
+  plan_type plan_ = {};
 };
