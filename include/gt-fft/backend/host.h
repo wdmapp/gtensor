@@ -114,6 +114,8 @@ public:
     auto bout = reinterpret_cast<Bout*>(outdata);
     if constexpr (D == gt::fft::Domain::COMPLEX) {
       fftw_forward_.execute_dft(bin, bout);
+    } else {
+      fftw_forward_.execute_dft_r2c(bin, bout);
     }
   }
 
@@ -124,6 +126,8 @@ public:
     auto bout = reinterpret_cast<Bin*>(outdata);
     if constexpr (D == gt::fft::Domain::COMPLEX) {
       fftw_inverse_.execute_dft(bin, bout);
+    } else {
+      fftw_inverse_.execute_dft_c2r(bin, bout);
     }
   }
 
@@ -135,18 +139,23 @@ private:
   {
     int rank = lengths.size();
     int* n = lengths.data();
+    Bin* in = nullptr;
+    Bout* out = nullptr;
 
     if constexpr (D == gt::fft::Domain::COMPLEX) {
-      using Bin = typename detail::fft_config<D, R>::Bin;
-      using Bout = typename detail::fft_config<D, R>::Bout;
-      Bin* in = nullptr;
-      Bout* out = nullptr;
       fftw_forward_ =
         fftw::plan_many_dft(rank, n, batch_size, in, NULL, istride, idist, out,
                             NULL, ostride, odist, -1, FFTW_ESTIMATE);
       fftw_inverse_ =
         fftw::plan_many_dft(rank, n, batch_size, out, NULL, ostride, odist, in,
                             NULL, istride, idist, 1, FFTW_ESTIMATE);
+    } else {
+      fftw_forward_ =
+        fftw::plan_many_dft_r2c(rank, n, batch_size, in, NULL, istride, idist,
+                                out, NULL, ostride, odist, FFTW_ESTIMATE);
+      fftw_inverse_ =
+        fftw::plan_many_dft_c2r(rank, n, batch_size, out, NULL, ostride, odist,
+                                in, NULL, istride, idist, FFTW_ESTIMATE);
     }
   }
 

@@ -4,6 +4,7 @@ class fftw<R>
 public:
   using plan_type = ::FFTW_(plan);
   using complex_type = ::FFTW_(complex);
+  using real_type = R;
 
   fftw() = default;
   fftw(plan_type plan) : plan_{plan} {}
@@ -39,10 +40,44 @@ public:
                                        sign, flags)};
   }
 
+  static fftw plan_many_dft_r2c(int rank, const int* n, int howmany,
+                                real_type* in, const int* inembed, int istride,
+                                int idist, complex_type* out,
+                                const int* onembed, int ostride, int odist,
+                                unsigned flags)
+  {
+    return fftw{::FFTW_(plan_many_dft_r2c)(rank, n, howmany, in, inembed,
+                                           istride, idist, out, onembed,
+                                           ostride, odist, flags)};
+  }
+
+  static fftw plan_many_dft_c2r(int rank, const int* n, int howmany,
+                                complex_type* in, const int* inembed,
+                                int istride, int idist, real_type* out,
+                                const int* onembed, int ostride, int odist,
+                                unsigned flags)
+  {
+    return fftw{::FFTW_(plan_many_dft_c2r)(rank, n, howmany, in, inembed,
+                                           istride, idist, out, onembed,
+                                           ostride, odist, flags)};
+  }
+
   void execute_dft(complex_type* in, complex_type* out) const
   {
     assert(plan_);
     return ::FFTW_(execute_dft)(plan_, in, out);
+  }
+
+  void execute_dft_r2c(real_type* in, complex_type* out) const
+  {
+    assert(plan_);
+    return ::FFTW_(execute_dft_r2c)(plan_, in, out);
+  }
+
+  void execute_dft_c2r(complex_type* in, real_type* out) const
+  {
+    assert(plan_);
+    return ::FFTW_(execute_dft_c2r)(plan_, in, out);
   }
 
 private:
