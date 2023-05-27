@@ -64,19 +64,25 @@ public:
 
   void execute_dft(complex_type* in, complex_type* out) const
   {
-    assert(plan_);
+    if (!plan_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     return ::FFTW_(execute_dft)(plan_, in, out);
   }
 
   void execute_dft_r2c(real_type* in, complex_type* out) const
   {
-    assert(plan_);
+    if (!plan_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     return ::FFTW_(execute_dft_r2c)(plan_, in, out);
   }
 
   void execute_dft_c2r(complex_type* in, real_type* out) const
   {
-    assert(plan_);
+    if (!plan_) {
+      throw std::runtime_error("can't use a moved-from plan");
+    }
     return ::FFTW_(execute_dft_c2r)(plan_, in, out);
   }
 
