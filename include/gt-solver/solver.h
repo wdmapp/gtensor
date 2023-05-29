@@ -30,6 +30,9 @@
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include "gt-solver/backend/sycl.h"
+
+#elif defined(GTENSOR_DEVICE_HOST)
+#include "gt-solver/backend/host.h"
 #endif
 
 namespace gt
