@@ -5,6 +5,7 @@
 #include "backend_common.h"
 
 #include <algorithm>
+#include <cstdint>
 
 // ======================================================================
 // gt::backend::host
