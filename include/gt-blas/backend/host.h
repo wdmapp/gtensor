@@ -10,6 +10,15 @@ extern "C" {
 #include <lapack.h>
 }
 
+// Workaround bug in how openblas_config.h defines these macros,
+// at least as of Ubuntu 22.04 LTS package (0.3.20)
+#ifdef OPENBLAS_COMPLEX_C99
+#undef openblas_complex_float_real
+#define openblas_complex_float_real(z) (crealf(z))
+#undef openblas_complex_float_imag
+#define openblas_complex_float_imag(z) (cimagf(z))
+#endif
+
 namespace gt
 {
 

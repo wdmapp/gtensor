@@ -30,6 +30,9 @@
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include "gt-solver/backend/sycl.h"
+
+#elif defined(GTENSOR_DEVICE_HOST)
+#include "gt-solver/backend/host.h"
 #endif
 
 namespace gt
@@ -162,6 +165,9 @@ protected:
   gt::gtensor<T*, 1> h_result_pointers_;
 };
 
+#ifdef GTENSOR_SOLVER_HAVE_CSR_MATRIX_LU
+#define GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
+
 template <typename T>
 class solver_sparse : public solver<T>
 {
@@ -188,6 +194,8 @@ private:
   static gt::sparse::csr_matrix<T, gt::space::device> lu_factor_batches_to_csr(
     gt::blas::handle_t& h, int n, int nbatches, T* const* matrix_batches);
 };
+
+#endif
 
 template <typename T>
 class solver_banded : public solver<T>

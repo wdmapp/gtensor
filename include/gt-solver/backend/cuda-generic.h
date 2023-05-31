@@ -264,6 +264,8 @@ private:
   using FN = detail::csrsm_functions<T>;
 };
 
+#define GTENSOR_SOLVER_HAVE_CSR_MATRIX_LU
+
 template <typename T>
 using csr_matrix_lu = csr_matrix_lu_cuda_generic<T>;
 

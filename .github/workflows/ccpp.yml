@@ -35,8 +35,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: install packages
+      run: sudo apt-get update && sudo apt-get install -y libopenblas-dev libfftw3-dev liblapacke-dev
     - name: cmake
-      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      run: cmake -S . -B build-tests-${{ matrix.cxx }} -DGTENSOR_DEVICE=host -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=OFF -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=OFF
       env:
         CXX: ${{ matrix.cxx }}
     - name: build

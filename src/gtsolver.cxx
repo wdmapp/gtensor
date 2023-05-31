@@ -248,6 +248,7 @@ template class solver_invert<double>;
 template class solver_invert<gt::complex<float>>;
 template class solver_invert<gt::complex<double>>;
 
+#ifdef GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
 template <typename T>
 solver_sparse<T>::solver_sparse(gt::blas::handle_t& blas_h, int n, int nbatches,
                                 int nrhs, T* const* matrix_batches)
@@ -305,6 +306,8 @@ template class solver_sparse<double>;
 template class solver_sparse<gt::complex<float>>;
 template class solver_sparse<gt::complex<double>>;
 #endif
+
+#endif // GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
 
 template <typename T>
 solver_banded<T>::solver_banded(gt::blas::handle_t& h, int n, int nbatches,
@@ -426,12 +429,14 @@ template class staging_solver<solver_invert<double>>;
 template class staging_solver<solver_invert<gt::complex<float>>>;
 template class staging_solver<solver_invert<gt::complex<double>>>;
 
+#ifdef GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
 template class staging_solver<solver_sparse<float>>;
 template class staging_solver<solver_sparse<double>>;
 // Note: oneMKL sparse API does not support complex yet
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 template class staging_solver<solver_sparse<gt::complex<float>>>;
 template class staging_solver<solver_sparse<gt::complex<double>>>;
+#endif
 #endif
 
 template class staging_solver<solver_banded<float>>;

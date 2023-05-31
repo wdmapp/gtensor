@@ -111,6 +111,7 @@ TEST(solver, zfull_invert_solve)
   test_full_solve<gt::solver::solver_invert<gt::complex<double>>>();
 }
 
+#ifdef GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
 TEST(solver, sfull_sparse_solve)
 {
   test_full_solve<gt::solver::solver_sparse<float>>();
@@ -133,6 +134,8 @@ TEST(solver, zfull_sparse_solve)
 {
   test_full_solve<gt::solver::solver_sparse<gt::complex<double>>>();
 }
+
+#endif
 
 #endif
 
@@ -228,6 +231,7 @@ TEST(solver, zfull_staging_banded_solve)
     gt::solver::solver_banded<gt::complex<double>>>>();
 }
 
+#ifdef GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
 TEST(solver, sfull_staging_sparse_solve)
 {
   test_full_solve<
@@ -253,4 +257,5 @@ TEST(solver, zfull_staging_sparse_solve)
   test_full_solve<gt::solver::staging_solver<
     gt::solver::solver_sparse<gt::complex<double>>>>();
 }
+#endif
 #endif
