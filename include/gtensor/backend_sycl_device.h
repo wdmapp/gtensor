@@ -369,14 +369,22 @@ inline bool is_host_backend()
 
 #ifdef GTENSOR_DEVICE_SYCL_L0
 
+// L0 backend only implementation, returns 0's otherwise
 inline void mem_info(size_t* free, size_t* total)
 {
-  zes_mem_state_t memory_props{
-    ZES_STRUCTURE_TYPE_MEM_PROPERTIES,
-  };
+  *total = 0;
+  *free = 0;
 
   auto q = get_queue();
   auto d = q.get_device();
+
+  if (d.get_backend() != ::sycl::backend::ext_oneapi_level_zero) {
+    return;
+  }
+
+  zes_mem_state_t memory_props{
+    ZES_STRUCTURE_TYPE_MEM_PROPERTIES,
+  };
 
   // Get level-zero device handle
   auto ze_dev = ::sycl::get_native<::sycl::backend::ext_oneapi_level_zero>(d);
@@ -385,9 +393,11 @@ inline void mem_info(size_t* free, size_t* total)
   std::vector<zes_mem_handle_t> module_list(n_mem_modules);
   zesDeviceEnumMemoryModules(ze_dev, &n_mem_modules, module_list.data());
 
-  zesMemoryGetState(module_list[0], &memory_props);
-  *total = memory_props.size;
-  *free = memory_props.free;
+  for (int i = 0; i < n_mem_modules; i++) {
+    zesMemoryGetState(module_list[i], &memory_props);
+    *total += memory_props.size;
+    *free += memory_props.free;
+  }
 }
 
 #else // no GTENSOR_DEVICE_SYCL_L0

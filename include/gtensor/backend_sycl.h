@@ -320,6 +320,11 @@ public:
 
     void synchronize() { stream_.wait(); }
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+    gt::backend::sycl::mem_info(free, total);
+  }
 };
 
 namespace stream_interface

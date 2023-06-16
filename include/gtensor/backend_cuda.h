@@ -290,6 +290,11 @@ public:
 
     auto get_execution_policy() { return thrust::cuda::par.on(this->stream_); }
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+    gtGpuCheck(cudaMemGetInfo(free, total));
+  }
 };
 
 namespace stream_interface

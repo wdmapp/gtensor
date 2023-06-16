@@ -324,6 +324,11 @@ public:
 
     auto get_execution_policy() { return thrust::hip::par.on(this->stream_); }
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+    gtGpuCheck(hipMemGetInfo(free, total));
+  }
 };
 
 namespace stream_interface
