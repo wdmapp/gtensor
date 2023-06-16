@@ -176,9 +176,10 @@ inline std::vector<::sycl::device> get_devices_with_numa_sub(
         for (auto sub_dev : sub_devices) {
           result.push_back(sub_dev);
         }
+      } else {
+        result.push_back(root_dev);
       }
-    }
-    if (result.size() == 0) {
+    } else {
       result.push_back(root_dev);
     }
   }
