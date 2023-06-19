@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cstdint>
 
+#include <sys/sysinfo.h>
+
 // ======================================================================
 // gt::backend::host
 
@@ -64,6 +66,14 @@ public:
 
     void synchronize() {}
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+    struct sysinfo info;
+    sysinfo(&info);
+    *total = info.totalram;
+    *free = info.freeram;
+  }
 };
 
 namespace allocator_impl

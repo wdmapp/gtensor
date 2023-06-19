@@ -22,11 +22,15 @@ TEST(device_backend, list_devices)
             << std::endl;
 #endif
 
+  size_t mem_total, mem_free;
+
   for (int i = 0; i < n_devices; i++) {
+    gt::backend::clib::mem_info(&mem_free, &mem_total);
     vendor_id[i] = gt::backend::clib::device_get_vendor_id(i);
     GT_DEBUG_PRINTLN("device[" << i << "]: 0x" << std::setfill('0')
                                << std::setw(8) << std::hex << vendor_id[i]
-                               << std::dec << std::endl);
+                               << std::dec << " Mem Total: " << mem_total
+                               << ", Free: " << mem_free);
     for (int j = i - 1; j >= 0; j--) {
       EXPECT_NE(vendor_id[i], vendor_id[j]);
     }
