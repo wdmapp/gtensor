@@ -101,6 +101,9 @@ struct selector<T, gt::space::host_only>
 };
 } // namespace allocator_impl
 
+// Note: SYCL has a custom host copy
+#ifndef GTENSOR_DEVICE_SYCL
+
 namespace copy_impl
 {
 template <typename InputPtr, typename OutputPtr>
@@ -115,6 +118,8 @@ inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
   }
 }
 } // namespace copy_impl
+
+#endif // GTENSOR_DEVICE_SYCL
 
 namespace fill_impl
 {

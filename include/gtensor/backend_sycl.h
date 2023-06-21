@@ -2,6 +2,7 @@
 #ifndef GTENSOR_BACKEND_SYCL_H
 #define GTENSOR_BACKEND_SYCL_H
 
+#include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -140,6 +141,9 @@ namespace copy_impl
 template <typename InputPtr, typename OutputPtr>
 inline void sycl_copy_n(InputPtr in, size_type count, OutputPtr out)
 {
+  if (gt::raw_pointer_cast(in) == gt::raw_pointer_cast(out)) {
+    return;
+  }
   ::sycl::queue& q = gt::backend::sycl::get_queue();
   auto in_raw = gt::raw_pointer_cast(in);
   auto out_raw = gt::raw_pointer_cast(out);
@@ -179,14 +183,20 @@ inline void copy_n(gt::space::host tag_in, gt::space::sycl tag_out, InputPtr in,
   sycl_copy_n(in, count, out);
 }
 
-#if 0
 template <typename InputPtr, typename OutputPtr>
 inline void copy_n(gt::space::host tag_in, gt::space::host tag_out, InputPtr in,
                    size_type count, OutputPtr out)
 {
-  sycl_copy_n(in, count, out);
+  if (in == out) {
+    return;
+  }
+  if (gt::backend::sycl::is_device_accessible(in) ||
+      gt::backend::sycl::is_device_accessible(out)) {
+    sycl_copy_n(in, count, out);
+  } else {
+    std::copy_n(in, count, out);
+  }
 }
-#endif
 
 } // namespace copy_impl
 
@@ -251,10 +261,7 @@ public:
   template <typename Ptr>
   static bool is_device_accessible(const Ptr ptr)
   {
-    auto& q = gt::backend::sycl::get_queue();
-    auto alloc_type = ::sycl::get_pointer_type(ptr, q.get_context());
-    return (alloc_type == ::sycl::usm::alloc::device ||
-            alloc_type == ::sycl::usm::alloc::shared);
+    return gt::backend::sycl::is_device_accessible(ptr);
   }
 
   template <typename Ptr>
