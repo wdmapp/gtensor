@@ -138,6 +138,26 @@ extern "C" int gpuStreamSynchronize(hipStream_t stream)
   return static_cast<int>(hipStreamSynchronize(stream));
 }
 
+extern "C" int gpuEventCreate(hipEvent_t* event)
+{
+  return static_cast<int>(hipEventCreate(event));
+}
+
+extern "C" int gpuEventDestroy(hipEvent_t event)
+{
+  return static_cast<int>(hipEventDestroy(event));
+}
+
+extern "C" int gpuEventRecord(hipEvent_t event, hipStream_t stream)
+{
+  return static_cast<int>(hipEventRecord(event, stream));
+}
+
+extern "C" int gpuEventSynchronize(hipEvent_t event)
+{
+  return static_cast<int>(hipEventSynchronize(event));
+}
+
 extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
                               hipMemcpyKind kind, hipStream_t stream)
 {
