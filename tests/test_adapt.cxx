@@ -28,6 +28,27 @@ TEST(adapt, adapt_complex)
   EXPECT_EQ(a[N * M - 1], (T{1., -1.}));
 }
 
+TEST(adapt, adapt_copy)
+{
+  constexpr int N = 3;
+
+  // managed allocation adapted
+  auto p_coeff =
+    gt::backend::gallocator<gt::space::clib_managed>::allocate<double>(N);
+  auto coeff_adapt = gt::adapt<1>(p_coeff, gt::shape(N));
+
+  // host allocation
+  gt::gtensor<double, 1> coeff_gt(gt::shape(N));
+
+  // copy between managed and host
+  gt::copy(coeff_adapt, coeff_gt);
+
+  EXPECT_EQ(coeff_gt, coeff_adapt);
+
+  // clean up
+  gt::backend::gallocator<gt::space::clib_managed>::deallocate<double>(p_coeff);
+}
+
 TEST(adapt, adapt_device)
 {
   constexpr int N = 10;

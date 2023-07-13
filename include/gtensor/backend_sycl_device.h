@@ -410,6 +410,15 @@ inline void mem_info(size_t* free, size_t* total)
 
 #endif // GTENSOR_DEVICE_SYCL_L0
 
+template <typename Ptr>
+bool is_device_accessible(const Ptr ptr)
+{
+  auto& q = get_queue();
+  auto alloc_type = ::sycl::get_pointer_type(ptr, q.get_context());
+  return (alloc_type == ::sycl::usm::alloc::device ||
+          alloc_type == ::sycl::usm::alloc::shared);
+}
+
 } // namespace sycl
 
 } // namespace backend
