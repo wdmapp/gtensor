@@ -5,7 +5,7 @@
 #include "gtensor/sparse.h"
 
 #include "gt-blas/blas.h"
-
+// CUDART_VERSION >= 11310
 #ifdef GTENSOR_DEVICE_CUDA
 #if CUDART_VERSION >= 12000
 #if CUDART_VERSION >= 12010
