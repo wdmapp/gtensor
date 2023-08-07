@@ -52,10 +52,10 @@ template <typename T>
 static void BM_device_memcpy(benchmark::State& state)
 {
   int n = state.range(0);
-  int N = n * n * n * n;
+  auto s = gt::shape(n * n * n * n);
 
-  auto a = gt::empty_device<T>({N});
-  auto b = gt::empty_device<T>({N});
+  auto a = gt::empty_device<T>(s);
+  auto b = gt::empty_device<T>(s);
 
   for (auto _ : state) {
     gt::copy_n(a.data(), a.size(), b.data());
@@ -79,10 +79,10 @@ template <typename T>
 static void BM_device_copy(benchmark::State& state)
 {
   int n = state.range(0);
-  int N = n * n * n * n;
+  auto s = gt::shape(n * n * n * n);
 
-  auto a = gt::empty_device<T>({N});
-  auto b = gt::empty_device<T>({N});
+  auto a = gt::empty_device<T>(s);
+  auto b = gt::empty_device<T>(s);
 
   for (auto _ : state) {
     gt::copy(a, b);
