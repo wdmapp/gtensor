@@ -44,26 +44,27 @@ void test_csr_matrix_batched()
   auto d_Acsr = gt::sparse::csr_matrix<T, S>::join_matrix_batches(d_A);
 
   gt::gtensor<double, 1, S> d_err{gt::shape(1)};
-  gt::gtensor<double, 1> h_err{gt::shape(1)};
+  auto h_err = gt::host_mirror(d_err);
   auto k_err = d_err.to_kernel();
   auto k_Acsr = d_Acsr.to_kernel();
 
   gt::launch<1, S>(
     gt::shape(NBATCHES), GT_LAMBDA(int b) {
-      k_err(0) = 0.0;
+      double err = 0.0;
       for (int b = 0; b < NBATCHES; b++) {
         for (int j = b * N; j < (b + 1) * N; j++) {
           for (int i = b * N; i < (b + 1) * N; i++) {
             if (i == j) {
-              k_err(0) += gt::norm(k_Acsr(i, j) - T(b, -b));
+              err += gt::norm(k_Acsr(i, j) - T(b, -b));
             } else if (std::abs(i - j) == 1) {
-              k_err(0) += gt::norm(k_Acsr(i, j) - T(-1, 0));
+              err += gt::norm(k_Acsr(i, j) - T(-1, 0));
             } else {
-              k_err(0) += gt::norm(k_Acsr(i, j));
+              err += gt::norm(k_Acsr(i, j));
             }
           }
         }
       }
+      k_err(0) = err;
     });
 
   gt::copy(d_err, h_err);
@@ -133,18 +134,19 @@ void test_csr_matrix()
 
   gt::launch<1, S>(
     gt::shape(1), GT_LAMBDA(int b) {
-      k_err(0) = 0.0;
+      double err = 0.0;
       for (int j = 0; j < N; j++) {
         for (int i = 0; i < N; i++) {
           if (i == j) {
-            k_err(0) += gt::norm(k_Acsr(i, j) - T(2));
+            err += gt::norm(k_Acsr(i, j) - T(2));
           } else if (std::abs(i - j) == 1) {
-            k_err(0) += gt::norm(k_Acsr(i, j) - T(-1));
+            err += gt::norm(k_Acsr(i, j) - T(-1));
           } else {
-            k_err(0) += gt::norm(k_Acsr(i, j));
+            err += gt::norm(k_Acsr(i, j));
           }
         }
       }
+      k_err(0) = err;
     });
 
   gt::copy(d_err, h_err);
