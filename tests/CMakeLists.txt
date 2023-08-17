@@ -43,6 +43,7 @@ add_gtensor_test(test_space)
 add_gtensor_test(test_stream)
 add_gtensor_test(test_gtest_predicates)
 add_gtensor_test(test_sparse)
+add_gtensor_test(test_half)
 
 if (GTENSOR_ENABLE_CLIB)
   add_executable(test_clib)
