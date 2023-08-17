@@ -35,12 +35,39 @@ TARGET_ARCH const half operator+(const half& lhs, const half& rhs)
 #endif
 }
 
+TARGET_ARCH const half operator-(const half& lhs, const half& rhs)
+{
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+    return half( lhs.Get() - rhs.Get() );
+#else
+    return half( float(lhs.Get()) - float(rhs.Get()) );
+#endif
+}
+
 TARGET_ARCH const half operator*(const half& lhs, const half& rhs)
 {
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
     return half( lhs.Get() * rhs.Get() );
 #else
     return half( float(lhs.Get()) * float(rhs.Get()) );
+#endif
+}
+
+TARGET_ARCH const half operator/(const half& lhs, const half& rhs)
+{
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+    return half( lhs.Get() / rhs.Get() );
+#else
+    return half( float(lhs.Get()) / float(rhs.Get()) );
+#endif
+}
+
+TARGET_ARCH bool operator==(const half& lhs, const half& rhs)
+{
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+    return lhs.Get() == rhs.Get();
+#else
+    return float(lhs.Get()) == float(rhs.Get());
 #endif
 }
 
