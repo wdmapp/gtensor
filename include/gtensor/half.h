@@ -71,6 +71,11 @@ TARGET_ARCH bool operator==(const half& lhs, const half& rhs)
 #endif
 }
 
+TARGET_ARCH bool operator!=(const half& lhs, const half& rhs)
+{
+    return !(lhs == rhs);
+}
+
 std::ostream& operator<<(std::ostream& s, const half& h)
 { s << (float) h.Get(); return s; }
 
