@@ -18,6 +18,7 @@ namespace gt
 class half
 {
 public:
+    half() = default;
     TARGET_ARCH half(float x) : x(x) {};
     TARGET_ARCH half(__half x) : x(x) {};
     TARGET_ARCH const half& operator=(const float f) { x = f; return *this; }

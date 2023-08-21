@@ -55,11 +55,11 @@ TEST(halfFailing, AutoInitDeviceHalf)
 {
     gt::half fill_value{1.25};
     // DOES NOT COMPILE !!! ----------------------------------------------------
-    // gt::gtensor<gt::half, 1, gt::space::device> d_a(gt::shape(5), fill_value);
-    EXPECT_EQ(true, false);
-    // temporary workaround:
-    gt::gtensor<gt::half, 1, gt::space::device> d_a(gt::shape(5));
-    generic_fill_1d<gt::space::device>(d_a, fill_value);
+     gt::gtensor<gt::half, 1, gt::space::device> d_a(gt::shape(5), fill_value);
+//    EXPECT_EQ(true, false);
+//    // temporary workaround:
+//    gt::gtensor<gt::half, 1, gt::space::device> d_a(gt::shape(5));
+//    generic_fill_1d<gt::space::device>(d_a, fill_value);
     // -------------------------------------------------------------------------
 
     gt::gtensor<gt::half, 1, gt::space::device> d_b(d_a.shape());
