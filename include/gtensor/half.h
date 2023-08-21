@@ -11,8 +11,10 @@ namespace gt
 // half
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
 #define TARGET_ARCH __host__ __device__
+using compute_type = __half;
 #else
 #define TARGET_ARCH
+using compute_type = float;
 #endif
 
 class half
@@ -22,54 +24,34 @@ public:
     TARGET_ARCH half(float x) : x(x) {};
     TARGET_ARCH half(__half x) : x(x) {};
     TARGET_ARCH const half& operator=(const float f) { x = f; return *this; }
-    TARGET_ARCH const __half& Get() const { return x; }
+    TARGET_ARCH compute_type Get() const { return static_cast<compute_type>(x); }
 private:
     __half x;
 };
 
 TARGET_ARCH const half operator+(const half& lhs, const half& rhs)
 {
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
     return half( lhs.Get() + rhs.Get() );
-#else
-    return half( float(lhs.Get()) + float(rhs.Get()) );
-#endif
 }
 
 TARGET_ARCH const half operator-(const half& lhs, const half& rhs)
 {
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
     return half( lhs.Get() - rhs.Get() );
-#else
-    return half( float(lhs.Get()) - float(rhs.Get()) );
-#endif
 }
 
 TARGET_ARCH const half operator*(const half& lhs, const half& rhs)
 {
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
     return half( lhs.Get() * rhs.Get() );
-#else
-    return half( float(lhs.Get()) * float(rhs.Get()) );
-#endif
 }
 
 TARGET_ARCH const half operator/(const half& lhs, const half& rhs)
 {
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
     return half( lhs.Get() / rhs.Get() );
-#else
-    return half( float(lhs.Get()) / float(rhs.Get()) );
-#endif
 }
 
 TARGET_ARCH bool operator==(const half& lhs, const half& rhs)
 {
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
     return lhs.Get() == rhs.Get();
-#else
-    return float(lhs.Get()) == float(rhs.Get());
-#endif
 }
 
 TARGET_ARCH bool operator!=(const half& lhs, const half& rhs)
