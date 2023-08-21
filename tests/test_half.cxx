@@ -101,15 +101,11 @@ void generic_explicit_haxpy_1d( const gt::half& a,
 
 TEST(half, HaxpyExplicit1dDevice)
 {
-    gt::gtensor<gt::half, 1, gt::space::host> h_x(gt::shape(3), gt::half{1.5});
-    gt::gtensor<gt::half, 1, gt::space::host> h_y(h_x.shape(), gt::half{2.5});
+    gt::gtensor<gt::half, 1, gt::space::device> d_x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::device> d_y(d_x.shape(), 2.5);
     gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(h_x.shape(), 3.25);
-
-    gt::gtensor<gt::half, 1, gt::space::device> d_x(h_x.shape());
-    gt::gtensor<gt::half, 1, gt::space::device> d_y(h_y.shape());
-    gt::copy(h_x, d_x);
-    gt::copy(h_y, d_y);
+    gt::gtensor<gt::half, 1, gt::space::host> ref(d_y.shape(), 3.25);
+    gt::gtensor<gt::half, 1, gt::space::host> h_y(d_y.shape());
 
     generic_explicit_haxpy_1d<gt::space::device>(a, d_x, d_y);
 
@@ -132,15 +128,11 @@ TEST(half, HaxpyImplicit1dHost)
 
 TEST(half, HaxpyImplicit1dDevice)
 {
-    gt::gtensor<gt::half, 1, gt::space::host> h_x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::host> h_y(h_x.shape(), 2.5);
+    gt::gtensor<gt::half, 1, gt::space::device> d_x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::device> d_y(d_x.shape(), 2.5);
     gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(h_x.shape(), 3.25);
-
-    gt::gtensor<gt::half, 1, gt::space::device> d_x(h_x.shape());
-    gt::gtensor<gt::half, 1, gt::space::device> d_y(h_y.shape());
-    gt::copy(h_x, d_x);
-    gt::copy(h_y, d_y);
+    gt::gtensor<gt::half, 1, gt::space::host> ref(d_y.shape(), 3.25);
+    gt::gtensor<gt::half, 1, gt::space::host> h_y(d_y.shape());
 
     d_y = a * d_x + d_y;
 
