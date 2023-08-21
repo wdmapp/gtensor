@@ -101,3 +101,34 @@ TEST(half, HaxpyExplicit1dDevice)
 
     EXPECT_EQ(h_y, ref);
 }
+
+TEST(half, HaxpyImplicit1dHost)
+{
+    gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
+    gt::half a{0.5};
+    gt::gtensor<gt::half, 1, gt::space::host> ref(x.shape(), 3.25);
+
+    y = a * x + y;
+
+    EXPECT_EQ(y, ref);
+}
+
+TEST(half, HaxpyImplicit1dDevice)
+{
+    gt::gtensor<gt::half, 1, gt::space::host> h_x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::host> h_y(h_x.shape(), 2.5);
+    gt::half a{0.5};
+    gt::gtensor<gt::half, 1, gt::space::host> ref(h_x.shape(), 3.25);
+
+    gt::gtensor<gt::half, 1, gt::space::device> d_x(h_x.shape());
+    gt::gtensor<gt::half, 1, gt::space::device> d_y(h_y.shape());
+    gt::copy(h_x, d_x);
+    gt::copy(h_y, d_y);
+
+    d_y = a * d_x + d_y;
+
+    gt::copy(d_y, h_y);
+
+    EXPECT_EQ(h_y, ref);
+}
