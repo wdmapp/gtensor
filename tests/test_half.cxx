@@ -32,9 +32,9 @@ TEST(half, ScalarArithmetic)
 template <typename S>
 void generic_fill_1d(gt::gtensor<gt::half, 1, S>& x, const gt::half& fill_value)
 {
-  auto k_x = x.to_kernel();
+    auto k_x = x.to_kernel();
 
-  gt::launch<1, S>(x.shape(), GT_LAMBDA(int i) { k_x(i) = fill_value; });
+    gt::launch<1, S>(x.shape(), GT_LAMBDA(int i) { k_x(i) = fill_value; });
 }
 
 TEST(half, AutoInitHost)
@@ -68,11 +68,11 @@ void host_explicit_haxpy_1d(const gt::half& a,
                             const gt::gtensor<gt::half, 1>& x,
                             gt::gtensor<gt::half, 1>& y)
 {
-  auto k_x = x.to_kernel();
-  auto k_y = y.to_kernel();
+    auto k_x = x.to_kernel();
+    auto k_y = y.to_kernel();
 
-  gt::launch_host<1>(
-    y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
+    gt::launch_host<1>(
+            y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
 TEST(half, HaxpyExplicit1dHost)
@@ -92,11 +92,11 @@ void generic_explicit_haxpy_1d( const gt::half& a,
                                 const gt::gtensor<gt::half, 1, S>& x,
                                       gt::gtensor<gt::half, 1, S>& y)
 {
-  auto k_x = x.to_kernel();
-  auto k_y = y.to_kernel();
+    auto k_x = x.to_kernel();
+    auto k_y = y.to_kernel();
 
-  gt::launch<1, S>(
-    y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
+    gt::launch<1, S>(
+            y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
 TEST(half, HaxpyExplicit1dDevice)
