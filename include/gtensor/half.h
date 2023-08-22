@@ -49,6 +49,26 @@ TARGET_ARCH bool operator!=(const half& lhs, const half& rhs)
     return !(lhs == rhs);
 }
 
+TARGET_ARCH bool operator<(const half& lhs, const half& rhs)
+{
+    return lhs.Get() < rhs.Get();
+}
+
+TARGET_ARCH bool operator<=(const half& lhs, const half& rhs)
+{
+    return lhs.Get() <= rhs.Get();
+}
+
+TARGET_ARCH bool operator>(const half& lhs, const half& rhs)
+{
+    return lhs.Get() > rhs.Get();
+}
+
+TARGET_ARCH bool operator>=(const half& lhs, const half& rhs)
+{
+    return lhs.Get() >= rhs.Get();
+}
+
 std::ostream& operator<<(std::ostream& s, const half& h)
 { s << (float) h.Get(); return s; }
 
