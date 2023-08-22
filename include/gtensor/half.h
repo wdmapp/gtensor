@@ -23,31 +23,21 @@ public:
     half() = default;
     TARGET_ARCH half(float x) : x(x) {};
     TARGET_ARCH half(__half x) : x(x) {};
+
     TARGET_ARCH const half& operator=(const float f) { x = f; return *this; }
     TARGET_ARCH compute_type Get() const { return static_cast<compute_type>(x); }
 private:
     __half x;
 };
 
-TARGET_ARCH const half operator+(const half& lhs, const half& rhs)
-{
-    return half( lhs.Get() + rhs.Get() );
-}
+#define PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(op) \
+    TARGET_ARCH const half operator op(const half& lhs, const half& rhs) \
+    { return half( lhs.Get() op rhs.Get() ); }
 
-TARGET_ARCH const half operator-(const half& lhs, const half& rhs)
-{
-    return half( lhs.Get() - rhs.Get() );
-}
-
-TARGET_ARCH const half operator*(const half& lhs, const half& rhs)
-{
-    return half( lhs.Get() * rhs.Get() );
-}
-
-TARGET_ARCH const half operator/(const half& lhs, const half& rhs)
-{
-    return half( lhs.Get() / rhs.Get() );
-}
+PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(+);
+PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(-);
+PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(*);
+PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(/);
 
 TARGET_ARCH bool operator==(const half& lhs, const half& rhs)
 {
