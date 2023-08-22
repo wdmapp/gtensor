@@ -29,6 +29,46 @@ TEST(half, ScalarArithmetic)
     EXPECT_EQ(c, ref);
 }
 
+TEST(half, BinaryComparisonOperators)
+{
+    gt::half a{1.0};
+    gt::half b{2.0};
+    gt::half c{2.0};
+
+    EXPECT_EQ(a, a);
+    EXPECT_EQ(b, b);
+    EXPECT_EQ(b, c);
+    EXPECT_EQ(c, b);
+    EXPECT_EQ(c, c);
+
+    EXPECT_NE(a, b);
+    EXPECT_NE(a, c);
+    EXPECT_NE(b, a);
+    EXPECT_NE(c, a);
+
+    EXPECT_LT(a, b);
+    EXPECT_LT(a, c);
+
+    EXPECT_LE(a, a);
+    EXPECT_LE(a, b);
+    EXPECT_LE(a, c);
+    EXPECT_LE(b, b);
+    EXPECT_LE(b, c);
+    EXPECT_LE(c, b);
+    EXPECT_LE(c, c);
+
+    EXPECT_GT(b, a);
+    EXPECT_GT(c, a);
+
+    EXPECT_GE(a, a);
+    EXPECT_GE(b, a);
+    EXPECT_GE(b, b);
+    EXPECT_GE(b, c);
+    EXPECT_GE(c, a);
+    EXPECT_GE(c, b);
+    EXPECT_GE(c, c);
+}
+
 template <typename S>
 void generic_fill_1d(gt::gtensor<gt::half, 1, S>& x, const gt::half& fill_value)
 {
