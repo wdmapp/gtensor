@@ -39,35 +39,16 @@ PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(-);
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(*);
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(/);
 
-TARGET_ARCH bool operator==(const half& lhs, const half& rhs)
-{
-    return lhs.Get() == rhs.Get();
-}
+#define PROVIDE_HALF_COMPARISON_OPERATOR(op) \
+    TARGET_ARCH bool operator op(const half& lhs, const half& rhs) \
+    { return lhs.Get() op rhs.Get(); }
 
-TARGET_ARCH bool operator!=(const half& lhs, const half& rhs)
-{
-    return !(lhs == rhs);
-}
-
-TARGET_ARCH bool operator<(const half& lhs, const half& rhs)
-{
-    return lhs.Get() < rhs.Get();
-}
-
-TARGET_ARCH bool operator<=(const half& lhs, const half& rhs)
-{
-    return lhs.Get() <= rhs.Get();
-}
-
-TARGET_ARCH bool operator>(const half& lhs, const half& rhs)
-{
-    return lhs.Get() > rhs.Get();
-}
-
-TARGET_ARCH bool operator>=(const half& lhs, const half& rhs)
-{
-    return lhs.Get() >= rhs.Get();
-}
+PROVIDE_HALF_COMPARISON_OPERATOR(==);
+PROVIDE_HALF_COMPARISON_OPERATOR(!=);
+PROVIDE_HALF_COMPARISON_OPERATOR(<);
+PROVIDE_HALF_COMPARISON_OPERATOR(<=);
+PROVIDE_HALF_COMPARISON_OPERATOR(>);
+PROVIDE_HALF_COMPARISON_OPERATOR(>=);
 
 std::ostream& operator<<(std::ostream& s, const half& h)
 { s << (float) h.Get(); return s; }
