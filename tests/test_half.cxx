@@ -91,17 +91,12 @@ TEST(half, AutoInitHost)
 TEST(half, AutoInitDevice)
 {
     gt::half fill_value{1.25};
-    gt::gtensor<gt::half, 1, gt::space::device> d_a(gt::shape(5), fill_value);
-    gt::gtensor<gt::half, 1, gt::space::device> d_b(d_a.shape());
+    gt::gtensor<gt::half, 1, gt::space::device> a(gt::shape(5), fill_value);
+    gt::gtensor<gt::half, 1, gt::space::device> b(a.shape());
 
-    generic_fill_1d<gt::space::device>(d_b, fill_value);
+    generic_fill_1d<gt::space::device>(b, fill_value);
 
-    gt::gtensor<gt::half, 1, gt::space::host> h_a(d_a.shape());
-    gt::gtensor<gt::half, 1, gt::space::host> h_b(d_b.shape());
-    gt::copy(d_a, h_a);
-    gt::copy(d_b, h_b);
-
-    EXPECT_EQ(h_a, h_b);
+    EXPECT_EQ(a, b);
 }
 
 void host_explicit_haxpy_1d(const gt::half& a,
@@ -141,17 +136,14 @@ void generic_explicit_haxpy_1d( const gt::half& a,
 
 TEST(half, HaxpyExplicit1dDevice)
 {
-    gt::gtensor<gt::half, 1, gt::space::device> d_x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::device> d_y(d_x.shape(), 2.5);
+    gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
     gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(d_y.shape(), 3.25);
-    gt::gtensor<gt::half, 1, gt::space::host> h_y(d_y.shape());
+    gt::gtensor<gt::half, 1, gt::space::device> ref(y.shape(), 3.25);
 
-    generic_explicit_haxpy_1d<gt::space::device>(a, d_x, d_y);
+    generic_explicit_haxpy_1d<gt::space::device>(a, x, y);
 
-    gt::copy(d_y, h_y);
-
-    EXPECT_EQ(h_y, ref);
+    EXPECT_EQ(y, ref);
 }
 
 TEST(half, HaxpyImplicit1dHost)
@@ -168,17 +160,14 @@ TEST(half, HaxpyImplicit1dHost)
 
 TEST(half, HaxpyImplicit1dDevice)
 {
-    gt::gtensor<gt::half, 1, gt::space::device> d_x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::device> d_y(d_x.shape(), 2.5);
+    gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
     gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(d_y.shape(), 3.25);
-    gt::gtensor<gt::half, 1, gt::space::host> h_y(d_y.shape());
+    gt::gtensor<gt::half, 1, gt::space::device> ref(y.shape(), 3.25);
 
-    d_y = a * d_x + d_y;
+    y = a * x + y;
 
-    gt::copy(d_y, h_y);
-
-    EXPECT_EQ(h_y, ref);
+    EXPECT_EQ(y, ref);
 }
 
 template <typename S>
