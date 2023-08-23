@@ -180,3 +180,64 @@ TEST(half, HaxpyImplicit1dDevice)
 
     EXPECT_EQ(h_y, ref);
 }
+
+template <typename S>
+void generic_explicit_custom_kernel_1d( const gt::half& s1,
+                                        const gt::half& s2,
+                                        const gt::gtensor<gt::half, 1, S>& a,
+                                        const gt::gtensor<gt::half, 1, S>& b,
+                                        const gt::gtensor<gt::half, 1, S>& c,
+                                        const gt::gtensor<gt::half, 1, S>& d,
+                                        const gt::gtensor<gt::half, 1, S>& e,
+                                        gt::gtensor<gt::half, 1, S>& result)
+{
+    auto k_a = a.to_kernel();
+    auto k_b = b.to_kernel();
+    auto k_c = c.to_kernel();
+    auto k_d = d.to_kernel();
+    auto k_e = e.to_kernel();
+    auto k_r = result.to_kernel();
+
+    gt::launch<1, S>(result.shape(), GT_LAMBDA(int i)
+        { k_r(i) = s2 - k_e(i) * ((k_a(i) - s1 * k_b(i)) / k_c(i) + k_d(i)); });
+}
+
+TEST(half, CustomKernelExplicitImplicitHostDevice)
+{
+    gt::half a_val{12.34}, b_val{2.345}, c_val{0.987}, d_val{0.67}, e_val{3.14};
+    gt::half s1{0.1}, s2{4.56};
+
+    gt::half r = s2 - e_val * ((a_val - s1 * b_val) / c_val + d_val);
+
+    auto shape = gt::shape(3);
+
+    gt::gtensor<gt::half, 1, gt::space::host> h_a(shape, a_val);
+    gt::gtensor<gt::half, 1, gt::space::host> h_b(shape, b_val);
+    gt::gtensor<gt::half, 1, gt::space::host> h_c(shape, c_val);
+    gt::gtensor<gt::half, 1, gt::space::host> h_d(shape, d_val);
+    gt::gtensor<gt::half, 1, gt::space::host> h_e(shape, e_val);
+    gt::gtensor<gt::half, 1, gt::space::host> h_r_expl(shape);
+    gt::gtensor<gt::half, 1, gt::space::host> h_r_impl(shape);
+
+    gt::gtensor<gt::half, 1, gt::space::device> d_a(shape, a_val);
+    gt::gtensor<gt::half, 1, gt::space::device> d_b(shape, b_val);
+    gt::gtensor<gt::half, 1, gt::space::device> d_c(shape, c_val);
+    gt::gtensor<gt::half, 1, gt::space::device> d_d(shape, d_val);
+    gt::gtensor<gt::half, 1, gt::space::device> d_e(shape, e_val);
+    gt::gtensor<gt::half, 1, gt::space::device> d_r_expl(shape);
+    gt::gtensor<gt::half, 1, gt::space::device> d_r_impl(shape);
+
+    h_r_impl = s2 - h_e * ((h_a - s1 * h_b) / h_c + h_d);
+    d_r_impl = s2 - d_e * ((d_a - s1 * d_b) / d_c + d_d);
+
+    generic_explicit_custom_kernel_1d<gt::space::host>(s1, s2,
+            h_a, h_b, h_c, h_d, h_e, h_r_expl);
+
+    generic_explicit_custom_kernel_1d<gt::space::device>(s1, s2,
+            d_a, d_b, d_c, d_d, d_e, d_r_expl);
+
+    EXPECT_EQ(h_r_impl(2), r);
+    EXPECT_EQ(h_r_impl, h_r_expl);
+    EXPECT_EQ(h_r_impl, d_r_expl);
+    EXPECT_EQ(h_r_impl, d_r_impl);
+}
