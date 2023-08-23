@@ -31,7 +31,7 @@ private:
 };
 
 #define PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(op) \
-    TARGET_ARCH const half operator op(const half& lhs, const half& rhs) \
+    TARGET_ARCH half operator op(const half& lhs, const half& rhs) \
     { return half( lhs.Get() op rhs.Get() ); }
 
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(+);
