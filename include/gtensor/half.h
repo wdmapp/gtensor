@@ -51,7 +51,7 @@ PROVIDE_HALF_COMPARISON_OPERATOR(>);
 PROVIDE_HALF_COMPARISON_OPERATOR(>=);
 
 std::ostream& operator<<(std::ostream& s, const half& h)
-{ s << (float) h.Get(); return s; }
+{ s << static_cast<float>(h.Get()); return s; }
 
 } // namespace gt
 
