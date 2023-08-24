@@ -34,14 +34,40 @@ private:
     TARGET_ARCH half operator op(const half& lhs, const half& rhs) \
     { return half( lhs.Get() op rhs.Get() ); }
 
+#define PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(op, fp_type) \
+    \
+    TARGET_ARCH fp_type operator op(const half& lhs, const fp_type& rhs) \
+    { return static_cast<fp_type>(lhs.Get()) op rhs; } \
+    \
+    TARGET_ARCH fp_type operator op(const fp_type& lhs, const half& rhs) \
+    { return lhs op static_cast<fp_type>(rhs.Get()); }
+
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(+);
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(-);
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(*);
 PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(/);
 
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(+, float);
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(-, float);
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(*, float);
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(/, float);
+
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(+, double);
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(-, double);
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(*, double);
+PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR(/, double);
+
 #define PROVIDE_HALF_COMPARISON_OPERATOR(op) \
     TARGET_ARCH bool operator op(const half& lhs, const half& rhs) \
     { return lhs.Get() op rhs.Get(); }
+
+#define PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(op, fp_type) \
+    \
+    TARGET_ARCH bool operator op(const half& lhs, const fp_type& rhs) \
+    { return static_cast<fp_type>(lhs.Get()) op rhs; } \
+    \
+    TARGET_ARCH bool operator op(const fp_type& lhs, const half& rhs) \
+    { return lhs op static_cast<fp_type>(rhs.Get()); }
 
 PROVIDE_HALF_COMPARISON_OPERATOR(==);
 PROVIDE_HALF_COMPARISON_OPERATOR(!=);
@@ -49,6 +75,20 @@ PROVIDE_HALF_COMPARISON_OPERATOR(<);
 PROVIDE_HALF_COMPARISON_OPERATOR(<=);
 PROVIDE_HALF_COMPARISON_OPERATOR(>);
 PROVIDE_HALF_COMPARISON_OPERATOR(>=);
+
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(==, float);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(!=, float);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(<, float);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(<=, float);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(>, float);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(>=, float);
+
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(==, double);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(!=, double);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(<, double);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(<=, double);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(>, double);
+PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(>=, double);
 
 std::ostream& operator<<(std::ostream& s, const half& h)
 { s << static_cast<float>(h.Get()); return s; }
