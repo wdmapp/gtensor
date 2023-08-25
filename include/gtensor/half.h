@@ -9,11 +9,15 @@ namespace gt
 
 // ======================================================================
 // half
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+#ifdef __CUDA_ARCH__
 #define TARGET_ARCH __host__ __device__
-using compute_type = __half;
 #else
 #define TARGET_ARCH
+#endif
+
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+using compute_type = __half;
+#else
 using compute_type = float;
 #endif
 
