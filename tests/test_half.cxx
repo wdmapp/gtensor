@@ -4,7 +4,7 @@
 
 #include <gtensor/half.h>
 
-TEST(half, ScalarArithmetic)
+TEST(half, scalar_arithmetic)
 {
     gt::half a{1.0};
     gt::half b{2.0};
@@ -29,7 +29,7 @@ TEST(half, ScalarArithmetic)
     EXPECT_EQ(c, ref);
 }
 
-TEST(half, BinaryComparisonOperators)
+TEST(half, binary_comparison_operators)
 {
     gt::half a{1.0};
     gt::half b{2.0};
@@ -77,7 +77,7 @@ void generic_fill_1d(gt::gtensor<gt::half, 1, S>& x, const gt::half& fill_value)
     gt::launch<1, S>(x.shape(), GT_LAMBDA(int i) { k_x(i) = fill_value; });
 }
 
-TEST(half, AutoInitHost)
+TEST(half, auto_init_host)
 {
     gt::half fill_value{1.25};
     gt::gtensor<gt::half, 1, gt::space::host> a(gt::shape(5), fill_value);
@@ -88,7 +88,7 @@ TEST(half, AutoInitHost)
     EXPECT_EQ(a, b);
 }
 
-TEST(half, AutoInitDevice)
+TEST(half, auto_init_device)
 {
     gt::half fill_value{1.25};
     gt::gtensor<gt::half, 1, gt::space::device> a(gt::shape(5), fill_value);
@@ -110,7 +110,7 @@ void host_explicit_haxpy_1d(const gt::half& a,
             y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
-TEST(half, HaxpyExplicit1dHost)
+TEST(half, haxpy_explicit_1d_host)
 {
     gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
@@ -134,7 +134,7 @@ void generic_explicit_haxpy_1d( const gt::half& a,
             y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
-TEST(half, HaxpyExplicit1dDevice)
+TEST(half, haxpy_explicit_1d_device)
 {
     gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
@@ -146,7 +146,7 @@ TEST(half, HaxpyExplicit1dDevice)
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, HaxpyImplicit1dHost)
+TEST(half, haxpy_implicit_1d_host)
 {
     gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
@@ -158,7 +158,7 @@ TEST(half, HaxpyImplicit1dHost)
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, HaxpyImplicit1dDevice)
+TEST(half, haxpy_implicit_1d_device)
 {
     gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
@@ -191,7 +191,7 @@ void generic_explicit_custom_kernel_1d( const gt::half& s1,
         { k_r(i) = s2 - k_e(i) * ((k_a(i) - s1 * k_b(i)) / k_c(i) + k_d(i)); });
 }
 
-TEST(half, CustomKernelExplicitImplicitHostDevice)
+TEST(half, custom_kernel_explicit_implicit_host_device)
 {
     gt::half a_val{12.34}, b_val{2.345}, c_val{0.987}, d_val{0.67}, e_val{3.14};
     gt::half s1{0.1}, s2{4.56};
@@ -231,7 +231,7 @@ TEST(half, CustomKernelExplicitImplicitHostDevice)
     EXPECT_EQ(h_r_impl, d_r_impl);
 }
 
-TEST(half, MixedPrecisionScalar)
+TEST(half, mixed_precision_scalar)
 {
     gt::half a_half{1.0};
 
@@ -251,7 +251,7 @@ TEST(half, MixedPrecisionScalar)
     EXPECT_EQ(c_half, c_double);
 }
 
-TEST(half, MixedPrecisionHost)
+TEST(half, mixed_precision_host)
 {
     auto shape = gt::shape(3);
     gt::gtensor<gt::half, 1, gt::space::host> vh(shape, 4.0);
@@ -273,7 +273,7 @@ TEST(half, MixedPrecisionHost)
     EXPECT_EQ(ref, rd);
 }
 
-TEST(half, MixedPrecisionDevice)
+TEST(half, mixed_precision_device)
 {
     auto shape = gt::shape(3);
     gt::gtensor<gt::half, 1, gt::space::device> vh(shape, 4.0);
