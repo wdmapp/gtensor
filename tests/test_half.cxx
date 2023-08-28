@@ -251,18 +251,19 @@ TEST(half, mixed_precision_scalar)
     EXPECT_EQ(c_half, c_double);
 }
 
-TEST(half, mixed_precision_host)
+template<typename S>
+void test_mixed_precision_helper()
 {
     auto shape = gt::shape(3);
-    gt::gtensor<gt::half, 1, gt::space::host> vh(shape, 4.0);
-    gt::gtensor<float, 1, gt::space::host> vf(shape, 3.0);
-    gt::gtensor<double, 1, gt::space::host> vd(shape, 2.0);
+    gt::gtensor<gt::half, 1, S> vh(shape, 4.0);
+    gt::gtensor<float, 1, S> vf(shape, 3.0);
+    gt::gtensor<double, 1, S> vd(shape, 2.0);
 
-    gt::gtensor<gt::half, 1, gt::space::host> rh(shape);
-    gt::gtensor<float, 1, gt::space::host> rf(shape);
-    gt::gtensor<double, 1, gt::space::host> rd(shape);
+    gt::gtensor<gt::half, 1, S> rh(shape);
+    gt::gtensor<float, 1, S> rf(shape);
+    gt::gtensor<double, 1, S> rd(shape);
 
-    gt::gtensor<double, 1, gt::space::host> ref(shape, 10.0);
+    gt::gtensor<double, 1, S> ref(shape, 10.0);
 
     rh = (vh * vf) - (vh / vd);
     rf = (vh * vf) - (vh / vd);
@@ -273,24 +274,12 @@ TEST(half, mixed_precision_host)
     EXPECT_EQ(ref, rd);
 }
 
+TEST(half, mixed_precision_host)
+{
+    test_mixed_precision_helper<gt::space::host>();
+}
+
 TEST(half, mixed_precision_device)
 {
-    auto shape = gt::shape(3);
-    gt::gtensor<gt::half, 1, gt::space::device> vh(shape, 4.0);
-    gt::gtensor<float, 1, gt::space::device> vf(shape, 3.0);
-    gt::gtensor<double, 1, gt::space::device> vd(shape, 2.0);
-
-    gt::gtensor<gt::half, 1, gt::space::device> rh(shape);
-    gt::gtensor<float, 1, gt::space::device> rf(shape);
-    gt::gtensor<double, 1, gt::space::device> rd(shape);
-
-    gt::gtensor<double, 1, gt::space::device> ref(shape, 10.0);
-
-    rh = (vh * vf) - (vh / vd);
-    rf = (vh * vf) - (vh / vd);
-    rd = (vh * vf) - (vh / vd);
-
-    EXPECT_EQ(ref, rh);
-    EXPECT_EQ(ref, rf);
-    EXPECT_EQ(ref, rd);
+    test_mixed_precision_helper<gt::space::device>();
 }
