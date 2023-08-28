@@ -99,29 +99,6 @@ TEST(half, auto_init_device)
     EXPECT_EQ(a, b);
 }
 
-void host_explicit_haxpy_1D(const gt::half& a,
-                            const gt::gtensor<gt::half, 1>& x,
-                            gt::gtensor<gt::half, 1>& y)
-{
-    auto k_x = x.to_kernel();
-    auto k_y = y.to_kernel();
-
-    gt::launch_host<1>(
-            y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
-}
-
-TEST(half, haxpy_explicit_1D_host)
-{
-    gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
-    gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(x.shape(), 3.25);
-
-    host_explicit_haxpy_1D(a, x, y);
-
-    EXPECT_EQ(y, ref);
-}
-
 template <typename S>
 void generic_explicit_haxpy_1D( const gt::half& a,
                                 const gt::gtensor<gt::half, 1, S>& x,
@@ -132,6 +109,18 @@ void generic_explicit_haxpy_1D( const gt::half& a,
 
     gt::launch<1, S>(
             y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
+}
+
+TEST(half, haxpy_explicit_1D_host)
+{
+    gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
+    gt::half a{0.5};
+    gt::gtensor<gt::half, 1, gt::space::host> ref(x.shape(), 3.25);
+
+    generic_explicit_haxpy_1D<gt::space::host>(a, x, y);
+
+    EXPECT_EQ(y, ref);
 }
 
 TEST(half, haxpy_explicit_1D_device)
