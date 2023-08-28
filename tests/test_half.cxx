@@ -70,7 +70,7 @@ TEST(half, binary_comparison_operators)
 }
 
 template <typename S>
-void generic_fill_1d(gt::gtensor<gt::half, 1, S>& x, const gt::half& fill_value)
+void generic_fill_1D(gt::gtensor<gt::half, 1, S>& x, const gt::half& fill_value)
 {
     auto k_x = x.to_kernel();
 
@@ -83,7 +83,7 @@ TEST(half, auto_init_host)
     gt::gtensor<gt::half, 1, gt::space::host> a(gt::shape(5), fill_value);
     gt::gtensor<gt::half, 1, gt::space::host> b(a.shape());
 
-    generic_fill_1d<gt::space::host>(b, fill_value);
+    generic_fill_1D<gt::space::host>(b, fill_value);
 
     EXPECT_EQ(a, b);
 }
@@ -94,12 +94,12 @@ TEST(half, auto_init_device)
     gt::gtensor<gt::half, 1, gt::space::device> a(gt::shape(5), fill_value);
     gt::gtensor<gt::half, 1, gt::space::device> b(a.shape());
 
-    generic_fill_1d<gt::space::device>(b, fill_value);
+    generic_fill_1D<gt::space::device>(b, fill_value);
 
     EXPECT_EQ(a, b);
 }
 
-void host_explicit_haxpy_1d(const gt::half& a,
+void host_explicit_haxpy_1D(const gt::half& a,
                             const gt::gtensor<gt::half, 1>& x,
                             gt::gtensor<gt::half, 1>& y)
 {
@@ -110,20 +110,20 @@ void host_explicit_haxpy_1d(const gt::half& a,
             y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
-TEST(half, haxpy_explicit_1d_host)
+TEST(half, haxpy_explicit_1D_host)
 {
     gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
     gt::half a{0.5};
     gt::gtensor<gt::half, 1, gt::space::host> ref(x.shape(), 3.25);
 
-    host_explicit_haxpy_1d(a, x, y);
+    host_explicit_haxpy_1D(a, x, y);
 
     EXPECT_EQ(y, ref);
 }
 
 template <typename S>
-void generic_explicit_haxpy_1d( const gt::half& a,
+void generic_explicit_haxpy_1D( const gt::half& a,
                                 const gt::gtensor<gt::half, 1, S>& x,
                                       gt::gtensor<gt::half, 1, S>& y)
 {
@@ -134,19 +134,19 @@ void generic_explicit_haxpy_1d( const gt::half& a,
             y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
-TEST(half, haxpy_explicit_1d_device)
+TEST(half, haxpy_explicit_1D_device)
 {
     gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
     gt::half a{0.5};
     gt::gtensor<gt::half, 1, gt::space::device> ref(y.shape(), 3.25);
 
-    generic_explicit_haxpy_1d<gt::space::device>(a, x, y);
+    generic_explicit_haxpy_1D<gt::space::device>(a, x, y);
 
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, haxpy_implicit_1d_host)
+TEST(half, haxpy_implicit_1D_host)
 {
     gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
@@ -158,7 +158,7 @@ TEST(half, haxpy_implicit_1d_host)
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, haxpy_implicit_1d_device)
+TEST(half, haxpy_implicit_1D_device)
 {
     gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
     gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
@@ -171,7 +171,7 @@ TEST(half, haxpy_implicit_1d_device)
 }
 
 template <typename S>
-void generic_explicit_custom_kernel_1d( const gt::half& s1,
+void generic_explicit_custom_kernel_1D( const gt::half& s1,
                                         const gt::half& s2,
                                         const gt::gtensor<gt::half, 1, S>& a,
                                         const gt::gtensor<gt::half, 1, S>& b,
@@ -219,10 +219,10 @@ TEST(half, custom_kernel_explicit_implicit_host_device)
     h_r_impl = s2 - h_e * ((h_a - s1 * h_b) / h_c + h_d);
     d_r_impl = s2 - d_e * ((d_a - s1 * d_b) / d_c + d_d);
 
-    generic_explicit_custom_kernel_1d<gt::space::host>(s1, s2,
+    generic_explicit_custom_kernel_1D<gt::space::host>(s1, s2,
             h_a, h_b, h_c, h_d, h_e, h_r_expl);
 
-    generic_explicit_custom_kernel_1d<gt::space::device>(s1, s2,
+    generic_explicit_custom_kernel_1D<gt::space::device>(s1, s2,
             d_a, d_b, d_c, d_d, d_e, d_r_expl);
 
     EXPECT_EQ(h_r_impl(2), r);
