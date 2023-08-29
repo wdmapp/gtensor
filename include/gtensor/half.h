@@ -93,11 +93,11 @@ PROVIDE_MIXED_HALF_COMPARISON_OPERATOR(>=, double);
 std::ostream& operator<<(std::ostream& s, const half& h)
 { s << static_cast<float>(h.Get()); return s; }
 
+} // namespace gt
+
 #undef PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_MIXED_HALF_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_HALF_COMPARISON_OPERATOR
 #undef PROVIDE_MIXED_HALF_COMPARISON_OPERATOR
-
-} // namespace gt
 
 #endif
