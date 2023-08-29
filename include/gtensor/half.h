@@ -2,7 +2,15 @@
 #define GTENSOR_HALF_H
 
 #include <iostream>
+
+#if __has_include(<cuda_fp16.h>)
 #include <cuda_fp16.h>
+#define GTENSOR_FP16_CUDA_HEADER
+#elif 0 // TODO check if other fp16 type available, e.g., _Float16
+#else
+#error "No half precision floating point type available."
+#endif
+
 #include <gtensor/macros.h>
 
 namespace gt
@@ -11,7 +19,15 @@ namespace gt
 // ======================================================================
 // half
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+#if defined(GTENSOR_FP16_CUDA_HEADER)
+using storage_type = __half;
+#else
+#error "No half precision floating point type available."
+#endif
+
+#if defined(GTENSOR_FP16_CUDA_HEADER) \
+    && defined(__CUDA_ARCH__) \
+    && (__CUDA_ARCH__ >= 530)
 using compute_type = __half;
 #else
 using compute_type = float;
@@ -22,12 +38,12 @@ class half
 public:
     half() = default;
     GT_INLINE half(float x) : x(x) {};
-    GT_INLINE half(__half x) : x(x) {};
+    GT_INLINE half(storage_type x) : x(x) {};
 
     GT_INLINE const half& operator=(const float f) { x = f; return *this; }
     GT_INLINE compute_type Get() const { return static_cast<compute_type>(x); }
 private:
-    __half x;
+    storage_type x;
 };
 
 #define PROVIDE_HALF_BINARY_ARITHMETIC_OPERATOR(op) \
