@@ -8,18 +8,19 @@
 
 #ifdef GTENSOR_DEVICE_CUDA
 #if CUDART_VERSION >= 12000
-#ifdef GTENSOR_DEVICE_CUDA_CUSPARSE_GENERIC
-// New generic API; available since 11.3.1, but performance
-// is worse than old csrsm2 API in many cases pre-12.
+#if CUDART_VERSION >= 12010
+// New generic API; available since 11.3.1, added support
+// for in-place solve in 12.1
 #include "gt-solver/backend/cuda-generic.h"
 #else
 // bsrsm2 API, which can work with csr format by setting
-// block size 1. In CUDA 12, appears to use less memory and
-// often be faster than generic API. Exists even in 8.0,
-// but not clear it has advantage over csrsm2 API for older
-// cuda versions where csrsm2 is still available.
+// block size 1. Deprecated in 12.2
+// May be faster than generic API in some cuda versions.
+// Exists even in 8.0, but not clear it has advantage over
+// csrsm2 API for older cuda versions where csrsm2 is still
+// available.
 #include "gt-solver/backend/cuda-bsrsm2.h"
-#endif // GTENSOR_DEVICE_CUDA_CUSPARSE_GENERIC
+#endif // version 12010
 #else
 // legacy API, deprecated since 11.3.1 but still supported until 12
 #include "gt-solver/backend/cuda-csrsm2.h"

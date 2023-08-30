@@ -86,7 +86,6 @@ static void BM_stencil1d(benchmark::State& state)
   double dx = n / lx;
   double scale = lx / n;
   auto fn = [](double x) { return x * x * x; };
-  auto fn_dydx = [](double x) { return 3.0 * x * x; };
 
   for (int i = 0; i < x.shape(0); i++) {
     double xtmp = i * dx;

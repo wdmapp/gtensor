@@ -194,7 +194,7 @@ jobs:
 
   build-cuda:
     runs-on: ubuntu-latest
-    container: nvidia/cuda:10.2-devel-ubuntu18.04
+    container: nvidia/cuda:11.1.1-devel-ubuntu20.04
     env:
       GTEST_VERSION: 1.10.0
       GTEST_ROOT: ${{ github.workspace }}/googletest
@@ -217,17 +217,17 @@ jobs:
         cmake -S googletest-release-${{ env.GTEST_VERSION }} -B build -DCMAKE_INSTALL_PREFIX=${{ env.GTEST_ROOT }}
         cmake --build build -t install
       env:
-        CXX: g++-7
+        CXX: g++
     - name: cmake thrust
-      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON
+      run: cmake -S . -B build-cuda -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON -DCMAKE_CUDA_FLAGS_RELWITHDEBINFO="-O2 -g -DNDEBUG -Werror=all-warnings"
     - name: cmake thrust build
       run: cmake --build build-cuda -v
     - name: cmake thrust debug
-      run: cmake -S . -B build-cuda-debug -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON
+      run: cmake -S . -B build-cuda-debug -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=Debug -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON -DCMAKE_CUDA_FLAGS_DEBUG="-g -Werror=all-warnings"
     - name: cmake thrust debug build
       run: cmake --build build-cuda-debug -v
     - name: cmake nothrust
-      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON
+      run: cmake -S . -B build-cuda-nothrust -DGTENSOR_DEVICE=cuda -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTENSOR_USE_THRUST=OFF -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON -DCMAKE_CUDA_FLAGS_RELWITHDEBINFO="-O2 -g -DNDEBUG -Werror=all-warnings"
     - name: cmake nothrust build
       run: cmake --build build-cuda-nothrust -v
     - name: GNU make setup gtensor subdir
