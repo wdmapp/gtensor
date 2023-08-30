@@ -8,7 +8,7 @@
 #define GTENSOR_FP16_CUDA_HEADER
 #elif 0 // TODO check if other fp16 type available, e.g., _Float16
 #else
-#error "No half precision floating point type available."
+#error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
 #endif
 
 #include <gtensor/macros.h>
@@ -22,7 +22,7 @@ namespace gt
 #if defined(GTENSOR_FP16_CUDA_HEADER)
 using storage_type = __half;
 #else
-#error "No half precision floating point type available."
+#error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
 #endif
 
 #if defined(GTENSOR_FP16_CUDA_HEADER) \
