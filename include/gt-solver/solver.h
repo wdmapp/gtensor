@@ -27,10 +27,10 @@
 #endif // CUDA_VERSION
 
 #elif defined(GTENSOR_DEVICE_HIP)
-#ifdef GTENSOR_SOLVER_HIP_CSRSM2
-#include "gt-solver/backend/hip-csrsm2.h"
-#else
+#ifdef GTENSOR_SOLVER_HIP_SPARSE_GENERIC
 #include "gt-solver/backend/hip-generic.h"
+#else
+#include "gt-solver/backend/hip-csrsm2.h"
 #endif
 
 #elif defined(GTENSOR_DEVICE_SYCL)
