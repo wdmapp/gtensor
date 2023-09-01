@@ -38,6 +38,7 @@ option(GTENSOR_ENABLE_BLAS "Enable gtblas" OFF)
 option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 option(GTENSOR_ENABLE_FORTRAN "Enable Fortran interoperability" OFF)
 option(GTENSOR_ENABLE_SOLVER "Enable high level solver library" OFF)
+option(GTENSOR_SOLVER_HIP_SPARSE_GENERIC "Use rocSPARSE generic API for sparse solver" OFF)
 
 option(GTENSOR_PER_DIM_KERNELS
        "Enable per dim kernels (may break for large arrays)" OFF)
@@ -459,6 +460,10 @@ if (GTENSOR_ENABLE_BLAS)
       target_link_libraries(gtsolver CUDA::cusparse)
     elseif (${GTENSOR_DEVICE} STREQUAL "hip")
       target_link_libraries(gtsolver rocsparse)
+      if (GTENSOR_SOLVER_HIP_SPARSE_GENERIC)
+        target_compile_definitions(gtsolver INTERFACE
+                                   GTENSOR_SOLVER_HIP_SPARSE_GENERIC)
+      endif()
     endif()
     list(APPEND GTENSOR_TARGETS gtsolver)
     add_library(gtensor::gtsolver ALIAS gtsolver)

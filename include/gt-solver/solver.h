@@ -5,7 +5,7 @@
 #include "gtensor/sparse.h"
 
 #include "gt-blas/blas.h"
-
+// CUDART_VERSION >= 11310
 #ifdef GTENSOR_DEVICE_CUDA
 #if CUDART_VERSION >= 12000
 #if CUDART_VERSION >= 12010
@@ -27,7 +27,11 @@
 #endif // CUDA_VERSION
 
 #elif defined(GTENSOR_DEVICE_HIP)
-#include "gt-solver/backend/hip.h"
+#ifdef GTENSOR_SOLVER_HIP_SPARSE_GENERIC
+#include "gt-solver/backend/hip-generic.h"
+#else
+#include "gt-solver/backend/hip-csrsm2.h"
+#endif
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include "gt-solver/backend/sycl.h"
