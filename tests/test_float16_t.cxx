@@ -2,7 +2,7 @@
 
 #include <gtensor/gtensor.h>
 
-#include <gtensor/half.h>
+#include <gtensor/float16_t.h>
 
 TEST(float16_t, scalar_arithmetic)
 {

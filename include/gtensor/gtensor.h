@@ -20,7 +20,7 @@
 #include "space.h"
 
 #if defined(GTENSOR_ENABLE_FP16)
-#include "half.h"
+#include "float16_t.h"
 #endif
 
 namespace gt

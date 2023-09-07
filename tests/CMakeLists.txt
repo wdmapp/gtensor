@@ -82,5 +82,5 @@ if (GTENSOR_ENABLE_FFT)
 endif()
 
 if (GTENSOR_ENABLE_FP16)
-  add_gtensor_test(test_half)
+  add_gtensor_test(test_float16_t)
 endif()
