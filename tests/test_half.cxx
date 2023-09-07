@@ -4,13 +4,13 @@
 
 #include <gtensor/half.h>
 
-TEST(half, scalar_arithmetic)
+TEST(float16_t, scalar_arithmetic)
 {
-    gt::half a{1.0};
-    gt::half b{2.0};
+    gt::float16_t a{1.0};
+    gt::float16_t b{2.0};
 
-    gt::half c{0.0};
-    gt::half ref{0.0};
+    gt::float16_t c{0.0};
+    gt::float16_t ref{0.0};
 
     c = a + b;
     ref = 3.0;
@@ -29,11 +29,11 @@ TEST(half, scalar_arithmetic)
     EXPECT_EQ(c, ref);
 }
 
-TEST(half, binary_comparison_operators)
+TEST(float16_t, binary_comparison_operators)
 {
-    gt::half a{1.0};
-    gt::half b{2.0};
-    gt::half c{2.0};
+    gt::float16_t a{1.0};
+    gt::float16_t b{2.0};
+    gt::float16_t c{2.0};
 
     EXPECT_EQ(a, a);
     EXPECT_EQ(b, b);
@@ -70,29 +70,29 @@ TEST(half, binary_comparison_operators)
 }
 
 template <typename S>
-void generic_fill_1D(gt::gtensor<gt::half, 1, S>& x, const gt::half& fill_value)
+void generic_fill_1D(gt::gtensor<gt::float16_t, 1, S>& x, const gt::float16_t& fill_value)
 {
     auto k_x = x.to_kernel();
 
     gt::launch<1, S>(x.shape(), GT_LAMBDA(int i) { k_x(i) = fill_value; });
 }
 
-TEST(half, auto_init_host)
+TEST(float16_t, auto_init_host)
 {
-    gt::half fill_value{1.25};
-    gt::gtensor<gt::half, 1, gt::space::host> a(gt::shape(5), fill_value);
-    gt::gtensor<gt::half, 1, gt::space::host> b(a.shape());
+    gt::float16_t fill_value{1.25};
+    gt::gtensor<gt::float16_t, 1, gt::space::host> a(gt::shape(5), fill_value);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> b(a.shape());
 
     generic_fill_1D<gt::space::host>(b, fill_value);
 
     EXPECT_EQ(a, b);
 }
 
-TEST(half, auto_init_device)
+TEST(float16_t, auto_init_device)
 {
-    gt::half fill_value{1.25};
-    gt::gtensor<gt::half, 1, gt::space::device> a(gt::shape(5), fill_value);
-    gt::gtensor<gt::half, 1, gt::space::device> b(a.shape());
+    gt::float16_t fill_value{1.25};
+    gt::gtensor<gt::float16_t, 1, gt::space::device> a(gt::shape(5), fill_value);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> b(a.shape());
 
     generic_fill_1D<gt::space::device>(b, fill_value);
 
@@ -100,9 +100,9 @@ TEST(half, auto_init_device)
 }
 
 template <typename S>
-void generic_explicit_haxpy_1D( const gt::half& a,
-                                const gt::gtensor<gt::half, 1, S>& x,
-                                      gt::gtensor<gt::half, 1, S>& y)
+void generic_explicit_haxpy_1D( const gt::float16_t& a,
+                                const gt::gtensor<gt::float16_t, 1, S>& x,
+                                      gt::gtensor<gt::float16_t, 1, S>& y)
 {
     auto k_x = x.to_kernel();
     auto k_y = y.to_kernel();
@@ -111,48 +111,48 @@ void generic_explicit_haxpy_1D( const gt::half& a,
             y.shape(), GT_LAMBDA(int i) { k_y(i) = k_y(i) + a * k_x(i); });
 }
 
-TEST(half, haxpy_explicit_1D_host)
+TEST(float16_t, haxpy_explicit_1D_host)
 {
-    gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
-    gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(x.shape(), 3.25);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> y(x.shape(), 2.5);
+    gt::float16_t a{0.5};
+    gt::gtensor<gt::float16_t, 1, gt::space::host> ref(x.shape(), 3.25);
 
     generic_explicit_haxpy_1D<gt::space::host>(a, x, y);
 
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, haxpy_explicit_1D_device)
+TEST(float16_t, haxpy_explicit_1D_device)
 {
-    gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
-    gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::device> ref(y.shape(), 3.25);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> y(x.shape(), 2.5);
+    gt::float16_t a{0.5};
+    gt::gtensor<gt::float16_t, 1, gt::space::device> ref(y.shape(), 3.25);
 
     generic_explicit_haxpy_1D<gt::space::device>(a, x, y);
 
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, haxpy_implicit_1D_host)
+TEST(float16_t, haxpy_implicit_1D_host)
 {
-    gt::gtensor<gt::half, 1, gt::space::host> x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::host> y(x.shape(), 2.5);
-    gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::host> ref(x.shape(), 3.25);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> y(x.shape(), 2.5);
+    gt::float16_t a{0.5};
+    gt::gtensor<gt::float16_t, 1, gt::space::host> ref(x.shape(), 3.25);
 
     y = a * x + y;
 
     EXPECT_EQ(y, ref);
 }
 
-TEST(half, haxpy_implicit_1D_device)
+TEST(float16_t, haxpy_implicit_1D_device)
 {
-    gt::gtensor<gt::half, 1, gt::space::device> x(gt::shape(3), 1.5);
-    gt::gtensor<gt::half, 1, gt::space::device> y(x.shape(), 2.5);
-    gt::half a{0.5};
-    gt::gtensor<gt::half, 1, gt::space::device> ref(y.shape(), 3.25);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> x(gt::shape(3), 1.5);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> y(x.shape(), 2.5);
+    gt::float16_t a{0.5};
+    gt::gtensor<gt::float16_t, 1, gt::space::device> ref(y.shape(), 3.25);
 
     y = a * x + y;
 
@@ -160,14 +160,14 @@ TEST(half, haxpy_implicit_1D_device)
 }
 
 template <typename S>
-void generic_explicit_custom_kernel_1D( const gt::half& s1,
-                                        const gt::half& s2,
-                                        const gt::gtensor<gt::half, 1, S>& a,
-                                        const gt::gtensor<gt::half, 1, S>& b,
-                                        const gt::gtensor<gt::half, 1, S>& c,
-                                        const gt::gtensor<gt::half, 1, S>& d,
-                                        const gt::gtensor<gt::half, 1, S>& e,
-                                        gt::gtensor<gt::half, 1, S>& result)
+void generic_explicit_custom_kernel_1D( const gt::float16_t& s1,
+                                        const gt::float16_t& s2,
+                                        const gt::gtensor<gt::float16_t, 1, S>& a,
+                                        const gt::gtensor<gt::float16_t, 1, S>& b,
+                                        const gt::gtensor<gt::float16_t, 1, S>& c,
+                                        const gt::gtensor<gt::float16_t, 1, S>& d,
+                                        const gt::gtensor<gt::float16_t, 1, S>& e,
+                                        gt::gtensor<gt::float16_t, 1, S>& result)
 {
     auto k_a = a.to_kernel();
     auto k_b = b.to_kernel();
@@ -180,30 +180,30 @@ void generic_explicit_custom_kernel_1D( const gt::half& s1,
         { k_r(i) = s2 - k_e(i) * ((k_a(i) - s1 * k_b(i)) / k_c(i) + k_d(i)); });
 }
 
-TEST(half, custom_kernel_explicit_implicit_host_device)
+TEST(float16_t, custom_kernel_explicit_implicit_host_device)
 {
-    gt::half a_val{12.34}, b_val{2.345}, c_val{0.987}, d_val{0.67}, e_val{3.14};
-    gt::half s1{0.1}, s2{4.56};
+    gt::float16_t a_val{12.34}, b_val{2.345}, c_val{0.987}, d_val{0.67}, e_val{3.14};
+    gt::float16_t s1{0.1}, s2{4.56};
 
-    gt::half r = s2 - e_val * ((a_val - s1 * b_val) / c_val + d_val);
+    gt::float16_t r = s2 - e_val * ((a_val - s1 * b_val) / c_val + d_val);
 
     auto shape = gt::shape(3);
 
-    gt::gtensor<gt::half, 1, gt::space::host> h_a(shape, a_val);
-    gt::gtensor<gt::half, 1, gt::space::host> h_b(shape, b_val);
-    gt::gtensor<gt::half, 1, gt::space::host> h_c(shape, c_val);
-    gt::gtensor<gt::half, 1, gt::space::host> h_d(shape, d_val);
-    gt::gtensor<gt::half, 1, gt::space::host> h_e(shape, e_val);
-    gt::gtensor<gt::half, 1, gt::space::host> h_r_expl(shape);
-    gt::gtensor<gt::half, 1, gt::space::host> h_r_impl(shape);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_a(shape, a_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_b(shape, b_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_c(shape, c_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_d(shape, d_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_e(shape, e_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_r_expl(shape);
+    gt::gtensor<gt::float16_t, 1, gt::space::host> h_r_impl(shape);
 
-    gt::gtensor<gt::half, 1, gt::space::device> d_a(shape, a_val);
-    gt::gtensor<gt::half, 1, gt::space::device> d_b(shape, b_val);
-    gt::gtensor<gt::half, 1, gt::space::device> d_c(shape, c_val);
-    gt::gtensor<gt::half, 1, gt::space::device> d_d(shape, d_val);
-    gt::gtensor<gt::half, 1, gt::space::device> d_e(shape, e_val);
-    gt::gtensor<gt::half, 1, gt::space::device> d_r_expl(shape);
-    gt::gtensor<gt::half, 1, gt::space::device> d_r_impl(shape);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_a(shape, a_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_b(shape, b_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_c(shape, c_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_d(shape, d_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_e(shape, e_val);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_r_expl(shape);
+    gt::gtensor<gt::float16_t, 1, gt::space::device> d_r_impl(shape);
 
     h_r_impl = s2 - h_e * ((h_a - s1 * h_b) / h_c + h_d);
     d_r_impl = s2 - d_e * ((d_a - s1 * d_b) / d_c + d_d);
@@ -220,35 +220,35 @@ TEST(half, custom_kernel_explicit_implicit_host_device)
     EXPECT_EQ(h_r_impl, d_r_impl);
 }
 
-TEST(half, mixed_precision_scalar)
+TEST(float16_t, mixed_precision_scalar)
 {
-    gt::half a_half{1.0};
+    gt::float16_t a_16{1.0};
 
-    gt::half b_half{2.0};
-    float b_float{2.0};
-    double b_double{2.0};
+    gt::float16_t b_16{2.0};
+    float b_32{2.0};
+    double b_64{2.0};
 
-    auto c_half = a_half + b_half;
-    auto c_float = a_half + b_float;
-    auto c_double = a_half + b_double;
+    auto c_16 = a_16 + b_16;
+    auto c_32 = a_16 + b_32;
+    auto c_64 = a_16 + b_64;
 
-    EXPECT_TRUE((std::is_same<gt::half, decltype(c_half)>::value));
-    EXPECT_TRUE((std::is_same<float, decltype(c_float)>::value));
-    EXPECT_TRUE((std::is_same<double, decltype(c_double)>::value));
+    EXPECT_TRUE((std::is_same<gt::float16_t, decltype(c_16)>::value));
+    EXPECT_TRUE((std::is_same<float, decltype(c_32)>::value));
+    EXPECT_TRUE((std::is_same<double, decltype(c_64)>::value));
 
-    EXPECT_EQ(c_half, c_float);
-    EXPECT_EQ(c_half, c_double);
+    EXPECT_EQ(c_16, c_32);
+    EXPECT_EQ(c_16, c_64);
 }
 
 template<typename S>
 void test_mixed_precision_helper()
 {
     auto shape = gt::shape(3);
-    gt::gtensor<gt::half, 1, S> vh(shape, 4.0);
+    gt::gtensor<gt::float16_t, 1, S> vh(shape, 4.0);
     gt::gtensor<float, 1, S> vf(shape, 3.0);
     gt::gtensor<double, 1, S> vd(shape, 2.0);
 
-    gt::gtensor<gt::half, 1, S> rh(shape);
+    gt::gtensor<gt::float16_t, 1, S> rh(shape);
     gt::gtensor<float, 1, S> rf(shape);
     gt::gtensor<double, 1, S> rd(shape);
 
@@ -263,12 +263,12 @@ void test_mixed_precision_helper()
     EXPECT_EQ(ref, rd);
 }
 
-TEST(half, mixed_precision_host)
+TEST(float16_t, mixed_precision_host)
 {
     test_mixed_precision_helper<gt::space::host>();
 }
 
-TEST(half, mixed_precision_device)
+TEST(float16_t, mixed_precision_device)
 {
     test_mixed_precision_helper<gt::space::device>();
 }
