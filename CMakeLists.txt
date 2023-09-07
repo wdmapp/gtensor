@@ -51,7 +51,7 @@ option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
 option(GTENSOR_ADDRESS_CHECK "Enable address checking for device spans" OFF)
 option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
-option(GTENSOR_ENABLE_FP16 "Enable 16-bit floating point type gt::half" OFF)
+option(GTENSOR_ENABLE_FP16 "Enable 16-bit floating point type gt::float16_t" OFF)
 
 if (GTENSOR_ENABLE_FORTRAN)
   # do this early (here) since later the `enable_language(Fortran)` gives me trouble
@@ -337,7 +337,7 @@ else()
 endif()
 
 if (GTENSOR_ENABLE_FP16)
-  message(STATUS "${PROJECT_NAME}: gt::half is ENABLED")
+  message(STATUS "${PROJECT_NAME}: gt::float16_t is ENABLED")
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
                              INTERFACE GTENSOR_ENABLE_FP16)
 endif()
