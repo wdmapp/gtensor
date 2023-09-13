@@ -80,3 +80,7 @@ if (GTENSOR_ENABLE_FFT)
   add_gtensor_test(test_fft)
   target_link_libraries(test_fft gtfft)
 endif()
+
+if (GTENSOR_ENABLE_FP16)
+  add_gtensor_test(test_float16_t)
+endif()
