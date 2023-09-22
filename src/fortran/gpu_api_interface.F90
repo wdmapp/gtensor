@@ -113,6 +113,12 @@ module gpu_api_m
          integer(C_INT) :: gpuStreamCreate
       end function gpuStreamCreate
 
+      function gpuStreamCreateAsync(streamId) bind(c,name="gpuStreamCreateAsync")
+         import
+         type(C_PTR),intent(INOUT) :: streamId
+         integer(C_INT) :: gpuStreamCreateAsync
+      end function gpuStreamCreateAsync
+
       function gpuStreamDestroy(streamId) bind(c,name="gpuStreamDestroy")
          import
          type(C_PTR),value :: streamId
@@ -124,6 +130,30 @@ module gpu_api_m
          type(C_PTR),value,intent(IN) :: streamid
          integer(C_INT) :: gpuStreamSynchronize
       end function gpuStreamSynchronize
+
+      function gpuEventCreate(event) bind(c,name="gpuEventCreate")
+         import
+         type(C_PTR) :: event
+         integer(C_INT) :: gpuEventCreate
+      end function gpuEventCreate
+
+      function gpuEventDestroy(event) bind(c,name="gpuEventDestroy")
+         import
+         type(C_PTR),value :: event
+         integer(C_INT) :: gpuEventDestroy
+      end function gpuEventDestroy
+
+      function gpuEventRecord(event, streamid) bind(c,name="gpuEventRecord")
+         import
+         type(C_PTR),value :: event,streamid
+         integer(C_INT) :: gpuEventRecord
+      end function gpuEventRecord
+
+      function gpuEventSynchronize(event) bind(c,name="gpuEventSynchronize")
+         import
+         type(C_PTR),value :: event
+         integer(C_INT) :: gpuEventSynchronize
+      end function gpuEventSynchronize
 
       integer(C_INT) function gpuMemcpyAsync( dst, src, count, kind, streamId ) &
            & bind(c,name="gpuMemcpyAsync")
