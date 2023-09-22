@@ -236,4 +236,21 @@ extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
   return 0;
 }
 
+#elif defined(GTENSOR_DEVICE_HOST)
+
+// dummy implementation, one GPU only
+extern "C" int gpuStreamCreate(gt::stream_view::stream_t* pStream) { return 0; }
+
+extern "C" int gpuStreamCreateAsync(gt::stream_view::stream_t* pStream)
+{
+  return 0;
+}
+
+extern "C" int gpuStreamDestroy(gt::stream_view::stream_t stream) { return 0; }
+
+extern "C" int gpuStreamSynchronize(gt::stream_view::stream_t stream)
+{
+  return 0;
+}
+
 #endif
