@@ -19,148 +19,145 @@ namespace gt
 
 // ======================================================================
 // complex_float16_t
+// ... adapted from the C++ <complex>, see e.g.,
+// header https://en.cppreference.com/w/cpp/header/complex [2023/10/17]
 
-#if defined(GTENSOR_FP16_CUDA_HEADER)
-using storage_type = __half;
-#else
-#error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
-#endif
-
-#if defined(GTENSOR_FP16_CUDA_HEADER) && defined(__CUDA_ARCH__) &&             \
-  (__CUDA_ARCH__ >= 530)
-using compute_type = __half;
-#define FLOAT16T_ON_CUDA_DEVICE
-#else
-using compute_type = float;
-#endif
-
-template<class T> class complex;
-
-template<> class complex<float>;
-template<> class complex<double>;
-template<> class complex<long double>;
+class complex_float16_t;
 
 // operators:
-template<class T> constexpr complex<T> operator+(
-    const complex<T>&, const complex<T>&);
-template<class T> constexpr complex<T> operator+(const complex<T>&, const T&);
-template<class T> constexpr complex<T> operator+(const T&, const complex<T>&);
+constexpr complex_float16_t operator+(const complex_float16_t&,
+                                      const complex_float16_t&);
+constexpr complex_float16_t operator+(const complex_float16_t&,
+                                      const float16_t&);
+constexpr complex_float16_t operator+(const float16_t&,
+                                      const complex_float16_t&);
 
-template<class T> constexpr complex<T> operator-(
-    const complex<T>&, const complex<T>&);
-template<class T> constexpr complex<T> operator-(const complex<T>&, const T&);
-template<class T> constexpr complex<T> operator-(const T&, const complex<T>&);
+constexpr complex_float16_t operator-(const complex_float16_t&,
+                                      const complex_float16_t&);
+constexpr complex_float16_t operator-(const complex_float16_t&,
+                                      const float16_t&);
+constexpr complex_float16_t operator-(const float16_t&,
+                                      const complex_float16_t&);
 
-template<class T> constexpr complex<T> operator*(
-    const complex<T>&, const complex<T>&);
-template<class T> constexpr complex<T> operator*(const complex<T>&, const T&);
-template<class T> constexpr complex<T> operator*(const T&, const complex<T>&);
+constexpr complex_float16_t operator*(const complex_float16_t&,
+                                      const complex_float16_t&);
+constexpr complex_float16_t operator*(const complex_float16_t&,
+                                      const float16_t&);
+constexpr complex_float16_t operator*(const float16_t&,
+                                      const complex_float16_t&);
 
-template<class T> constexpr complex<T> operator/(
-    const complex<T>&, const complex<T>&);
-template<class T> constexpr complex<T> operator/(const complex<T>&, const T&);
-template<class T> constexpr complex<T> operator/(const T&, const complex<T>&);
+constexpr complex_float16_t operator/(const complex_float16_t&,
+                                      const complex_float16_t&);
+constexpr complex_float16_t operator/(const complex_float16_t&,
+                                      const float16_t&);
+constexpr complex_float16_t operator/(const float16_t&,
+                                      const complex_float16_t&);
 
-template<class T> constexpr complex<T> operator+(const complex<T>&);
-template<class T> constexpr complex<T> operator-(const complex<T>&);
+constexpr complex_float16_t operator+(const complex_float16_t&);
+constexpr complex_float16_t operator-(const complex_float16_t&);
 
-template<class T> constexpr bool operator==(const complex<T>&, const complex<T>&);
-template<class T> constexpr bool operator==(const complex<T>&, const T&);
-template<class T> constexpr bool operator==(const T&, const complex<T>&);
+constexpr bool operator==(const complex_float16_t&, const complex_float16_t&);
+constexpr bool operator==(const complex_float16_t&, const float16_t&);
+constexpr bool operator==(const float16_t&, const complex_float16_t&);
 
-template<class T> constexpr bool operator!=(const complex<T>&, const complex<T>&);
-template<class T> constexpr bool operator!=(const complex<T>&, const T&);
-template<class T> constexpr bool operator!=(const T&, const complex<T>&);
+constexpr bool operator!=(const complex_float16_t&, const complex_float16_t&);
+constexpr bool operator!=(const complex_float16_t&, const float16_t&);
+constexpr bool operator!=(const float16_t&, const complex_float16_t&);
 
-template<class T, class CharT, class Traits>
-basic_istream<CharT, Traits>&
-operator>>(basic_istream<CharT, Traits>&, complex<T>&);
+template <class CharT, class Traits>
+basic_istream<CharT, Traits>& operator>>(basic_istream<CharT, Traits>&,
+                                         complex_float16_t&);
 
-template<class T, class CharT, class Traits>
-basic_ostream<CharT, Traits>&
-operator<<(basic_ostream<CharT, Traits>&, const complex<T>&);
+template <class CharT, class Traits>
+basic_ostream<CharT, Traits>& operator<<(basic_ostream<CharT, Traits>&,
+                                         const complex_float16_t&);
 
 // values:
-template<class T> constexpr T real(const complex<T>&);
-template<class T> constexpr T imag(const complex<T>&);
+constexpr float16_t real(const complex_float16_t&);
+constexpr float16_t imag(const complex_float16_t&);
 
-template<class T> T abs(const complex<T>&);
-template<class T> T arg(const complex<T>&);
-template<class T> constexpr T norm(const complex<T>&);
+float16_t abs(const complex_float16_t&);
+float16_t arg(const complex_float16_t&);
+constexpr float16_t norm(const complex_float16_t&);
 
-template<class T> constexpr complex<T> conj(const complex<T>&);
-template<class T> complex<T> proj(const complex<T>&);
-template<class T> complex<T> polar(const T&, const T& = 0);
+constexpr complex_float16_t conj(const complex_float16_t&);
+complex_float16_t proj(const complex_float16_t&);
+complex_float16_t polar(const float16_t&, const float16_t& = 0);
 
 // transcendentals:
-template<class T> complex<T> acos(const complex<T>&);
-template<class T> complex<T> asin(const complex<T>&);
-template<class T> complex<T> atan(const complex<T>&);
+complex_float16_t acos(const complex_float16_t&);
+complex_float16_t asin(const complex_float16_t&);
+complex_float16_t atan(const complex_float16_t&);
 
-template<class T> complex<T> acosh(const complex<T>&);
-template<class T> complex<T> asinh(const complex<T>&);
-template<class T> complex<T> atanh(const complex<T>&);
+complex_float16_t acosh(const complex_float16_t&);
+complex_float16_t asinh(const complex_float16_t&);
+complex_float16_t atanh(const complex_float16_t&);
 
-template<class T> complex<T> cos  (const complex<T>&);
-template<class T> complex<T> cosh (const complex<T>&);
-template<class T> complex<T> exp  (const complex<T>&);
-template<class T> complex<T> log  (const complex<T>&);
-template<class T> complex<T> log10(const complex<T>&);
+complex_float16_t cos(const complex_float16_t&);
+complex_float16_t cosh(const complex_float16_t&);
+complex_float16_t exp(const complex_float16_t&);
+complex_float16_t log(const complex_float16_t&);
+complex_float16_t log10(const complex_float16_t&);
 
-template<class T> complex<T> pow(const complex<T>&, const T&);
-template<class T> complex<T> pow(const complex<T>&, const complex<T>&);
-template<class T> complex<T> pow(const T&, const complex<T>&);
+complex_float16_t pow(const complex_float16_t&, const float16_t&);
+complex_float16_t pow(const complex_float16_t&, const complex_float16_t&);
+complex_float16_t pow(const float16_t&, const complex_float16_t&);
 
-template<class T> complex<T> sin (const complex<T>&);
-template<class T> complex<T> sinh(const complex<T>&);
-template<class T> complex<T> sqrt(const complex<T>&);
-template<class T> complex<T> tan (const complex<T>&);
-template<class T> complex<T> tanh(const complex<T>&);
+complex_float16_t sin(const complex_float16_t&);
+complex_float16_t sinh(const complex_float16_t&);
+complex_float16_t sqrt(const complex_float16_t&);
+complex_float16_t tan(const complex_float16_t&);
+complex_float16_t tanh(const complex_float16_t&);
 
 // complex literals:
-inline namespace literals {
-    inline namespace complex_literals {
-        constexpr complex<long double> operator""il(long double);
-        constexpr complex<long double> operator""il(unsigned long long);
-        constexpr complex<double> operator""i(long double);
-        constexpr complex<double> operator""i(unsigned long long);
-        constexpr complex<float> operator""if(long double);
-        constexpr complex<float> operator""if(unsigned long long);
-    }
-}
+inline namespace literals
+{
+inline namespace complex_literals
+{
+constexpr complex_float16_t operator""_ih(long double);
+constexpr complex_float16_t operator""_ih(unsigned long long);
+} // namespace complex_literals
+} // namespace literals
 
-template<class T>
-class complex {
+class complex_float16_t
+{
 public:
-    typedef T value_type;
-    constexpr complex(const T& re = T(), const T& im = T());
-    constexpr complex(const complex&) = default;
-    template<class X> constexpr explicit(/* see constructor page */)
-        complex(const complex<X>&);
- 
-    constexpr T real() const;
-    constexpr void real(T);
-    constexpr T imag() const;
-    constexpr void imag(T);
- 
-    constexpr complex<T>& operator= (const T&);
-    constexpr complex<T>& operator+=(const T&);
-    constexpr complex<T>& operator-=(const T&);
-    constexpr complex<T>& operator*=(const T&);
-    constexpr complex<T>& operator/=(const T&);
- 
-    constexpr complex& operator=(const complex&);
-    template<class X> constexpr complex<T>& operator= (const complex<X>&);
-    template<class X> constexpr complex<T>& operator+=(const complex<X>&);
-    template<class X> constexpr complex<T>& operator-=(const complex<X>&);
-    template<class X> constexpr complex<T>& operator*=(const complex<X>&);
-    template<class X> constexpr complex<T>& operator/=(const complex<X>&);
+  typedef float16_t value_type;
+  constexpr complex_float16_t(const float16_t& re = float16_t(),
+                              const float16_t& im = float16_t());
+  constexpr complex_float16_t(const complex_float16_t&) = default;
+  template <class X>
+  constexpr explicit(/* see constructor page */)
+    complex_float16_t(const complex<X>&);
+
+  constexpr float16_t real() const;
+  constexpr void real(float16_t);
+  constexpr float16_t imag() const;
+  constexpr void imag(float16_t);
+
+  constexpr complex_float16_t& operator=(const float16_t&);
+  constexpr complex_float16_t& operator+=(const float16_t&);
+  constexpr complex_float16_t& operator-=(const float16_t&);
+  constexpr complex_float16_t& operator*=(const float16_t&);
+  constexpr complex_float16_t& operator/=(const float16_t&);
+
+  constexpr complex_float16_t& operator=(const complex_float16_t&);
+  template <class X>
+  constexpr complex_float16_t& operator=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator+=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator-=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator*=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator/=(const complex<X>&);
+
+private:
+  float16_t _real;
+  float16_t _imag;
 };
 
 } // namespace gt
-
-#undef PROVIDE_COMPLEX_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
-
-#undef FLOAT16T_ON_CUDA_DEVICE
 
 #endif // GTENSOR_COMPLEX_FLOAT16T_H
