@@ -137,7 +137,7 @@ std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&
 template <class CharT, class Traits>
 std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& s,
                                          const complex_float16_t& z)
-{ return s << "TODO LATER"; }
+{ return s << "(" << z.real() << ", " << z.imag() << ")"; }
 
 // values:
 constexpr float16_t real(const complex_float16_t&);
