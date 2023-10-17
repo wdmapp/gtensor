@@ -39,15 +39,25 @@ public:
   GT_INLINE float16_t imag() const { return _imag; }
   constexpr void imag(float16_t);
 
-  constexpr complex_float16_t& operator=(const float16_t&);
+  GT_INLINE complex_float16_t& operator=(const float16_t& x)
+  {
+    _real = x;
+    _imag = 0;
+    return *this;
+  }
   constexpr complex_float16_t& operator+=(const float16_t&);
   constexpr complex_float16_t& operator-=(const float16_t&);
   constexpr complex_float16_t& operator*=(const float16_t&);
   constexpr complex_float16_t& operator/=(const float16_t&);
 
-  constexpr complex_float16_t& operator=(const complex_float16_t&);
+  complex_float16_t& operator=(const complex_float16_t&) = default;
   template <class X>
-  constexpr complex_float16_t& operator=(const complex<X>&);
+  GT_INLINE complex_float16_t& operator=(const complex<X>& z)
+  {
+    _real = z.real();
+    _imag = z.imag();
+    return *this;
+  }
   template <class X>
   constexpr complex_float16_t& operator+=(const complex<X>&);
   template <class X>
