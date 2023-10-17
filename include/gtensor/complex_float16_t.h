@@ -22,7 +22,44 @@ namespace gt
 // ... adapted from the C++ <complex>, see e.g.,
 // header https://en.cppreference.com/w/cpp/header/complex [2023/10/17]
 
-class complex_float16_t;
+class complex_float16_t
+{
+public:
+  typedef float16_t value_type;
+  GT_INLINE complex_float16_t(const float16_t& re = float16_t(),
+                              const float16_t& im = float16_t())
+  : _real(re), _imag(im) {}
+  constexpr complex_float16_t(const complex_float16_t&) = default;
+  template <class X>
+  constexpr complex_float16_t(const complex<X>&);
+
+  GT_INLINE float16_t real() const { return _real; }
+  constexpr void real(float16_t);
+  GT_INLINE float16_t imag() const { return _imag; }
+  constexpr void imag(float16_t);
+
+  constexpr complex_float16_t& operator=(const float16_t&);
+  constexpr complex_float16_t& operator+=(const float16_t&);
+  constexpr complex_float16_t& operator-=(const float16_t&);
+  constexpr complex_float16_t& operator*=(const float16_t&);
+  constexpr complex_float16_t& operator/=(const float16_t&);
+
+  constexpr complex_float16_t& operator=(const complex_float16_t&);
+  template <class X>
+  constexpr complex_float16_t& operator=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator+=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator-=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator*=(const complex<X>&);
+  template <class X>
+  constexpr complex_float16_t& operator/=(const complex<X>&);
+
+private:
+  float16_t _real;
+  float16_t _imag;
+};
 
 // operators:
 constexpr complex_float16_t operator+(const complex_float16_t&,
@@ -56,7 +93,10 @@ constexpr complex_float16_t operator/(const float16_t&,
 constexpr complex_float16_t operator+(const complex_float16_t&);
 constexpr complex_float16_t operator-(const complex_float16_t&);
 
-constexpr bool operator==(const complex_float16_t&, const complex_float16_t&);
+GT_INLINE bool operator==(const complex_float16_t& lhs, const complex_float16_t& rhs)
+{
+    return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+}
 constexpr bool operator==(const complex_float16_t&, const float16_t&);
 constexpr bool operator==(const float16_t&, const complex_float16_t&);
 
@@ -65,12 +105,13 @@ constexpr bool operator!=(const complex_float16_t&, const float16_t&);
 constexpr bool operator!=(const float16_t&, const complex_float16_t&);
 
 template <class CharT, class Traits>
-basic_istream<CharT, Traits>& operator>>(basic_istream<CharT, Traits>&,
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&,
                                          complex_float16_t&);
 
 template <class CharT, class Traits>
-basic_ostream<CharT, Traits>& operator<<(basic_ostream<CharT, Traits>&,
-                                         const complex_float16_t&);
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& s,
+                                         const complex_float16_t& z)
+{ return s << "TODO LATER"; }
 
 // values:
 constexpr float16_t real(const complex_float16_t&);
@@ -118,45 +159,6 @@ constexpr complex_float16_t operator""_ih(long double);
 constexpr complex_float16_t operator""_ih(unsigned long long);
 } // namespace complex_literals
 } // namespace literals
-
-class complex_float16_t
-{
-public:
-  typedef float16_t value_type;
-  constexpr complex_float16_t(const float16_t& re = float16_t(),
-                              const float16_t& im = float16_t());
-  constexpr complex_float16_t(const complex_float16_t&) = default;
-  template <class X>
-  constexpr explicit(/* see constructor page */)
-    complex_float16_t(const complex<X>&);
-
-  constexpr float16_t real() const;
-  constexpr void real(float16_t);
-  constexpr float16_t imag() const;
-  constexpr void imag(float16_t);
-
-  constexpr complex_float16_t& operator=(const float16_t&);
-  constexpr complex_float16_t& operator+=(const float16_t&);
-  constexpr complex_float16_t& operator-=(const float16_t&);
-  constexpr complex_float16_t& operator*=(const float16_t&);
-  constexpr complex_float16_t& operator/=(const float16_t&);
-
-  constexpr complex_float16_t& operator=(const complex_float16_t&);
-  template <class X>
-  constexpr complex_float16_t& operator=(const complex<X>&);
-  template <class X>
-  constexpr complex_float16_t& operator+=(const complex<X>&);
-  template <class X>
-  constexpr complex_float16_t& operator-=(const complex<X>&);
-  template <class X>
-  constexpr complex_float16_t& operator*=(const complex<X>&);
-  template <class X>
-  constexpr complex_float16_t& operator/=(const complex<X>&);
-
-private:
-  float16_t _real;
-  float16_t _imag;
-};
 
 } // namespace gt
 
