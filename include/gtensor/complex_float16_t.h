@@ -45,12 +45,55 @@ public:
     _imag = 0;
     return *this;
   }
-  constexpr complex_float16_t& operator+=(const float16_t&);
-  constexpr complex_float16_t& operator-=(const float16_t&);
-  constexpr complex_float16_t& operator*=(const float16_t&);
-  constexpr complex_float16_t& operator/=(const float16_t&);
+  GT_INLINE complex_float16_t& operator+=(const float16_t& x)
+  {
+    _real += x;
+    return *this;
+  }
+  GT_INLINE complex_float16_t& operator-=(const float16_t& x)
+  {
+    _real -= x;
+    return *this;
+  }
+  GT_INLINE complex_float16_t& operator*=(const float16_t& x)
+  {
+    _real *= x;
+    _imag *= x;
+    return *this;
+  }
+  GT_INLINE complex_float16_t& operator/=(const float16_t& x)
+  {
+    _real /= x;
+    _imag /= x;
+    return *this;
+  }
 
   complex_float16_t& operator=(const complex_float16_t&) = default;
+  GT_INLINE complex_float16_t& operator+=(const complex_float16_t& z)
+  {
+    _real += z.real();
+    _imag += z.imag();
+    return *this;
+  }
+  GT_INLINE complex_float16_t& operator-=(const complex_float16_t& z)
+  {
+    _real -= z.real();
+    _imag -= z.imag();
+    return *this;
+  }
+  GT_INLINE complex_float16_t& operator*=(const complex_float16_t& z)
+  {
+    const auto retmp{_real};
+    _real = _real * z.real() - _imag * z.imag();
+    _imag = _imag * z.real() + retmp * z.imag();
+    return *this;
+  }
+//  GT_INLINE complex_float16_t& operator/=(const complex_float16_t& z)
+//  {
+//    *this *= z.conj() / z.norm();
+//    return *this;
+//  }
+
   template <class X>
   GT_INLINE complex_float16_t& operator=(const complex<X>& z)
   {

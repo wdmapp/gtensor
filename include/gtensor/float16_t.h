@@ -44,6 +44,44 @@ public:
   }
   GT_INLINE compute_type Get() const { return static_cast<compute_type>(x); }
 
+  // update operators
+  GT_INLINE float16_t operator+=(const float16_t& y)
+  {
+#if defined(FLOAT16T_ON_CUDA_DEVICE)
+    x += y.Get();
+#else
+    x = this->Get() + y.Get();
+#endif
+    return *this;
+  }
+  GT_INLINE float16_t operator-=(const float16_t& y)
+  {
+#if defined(FLOAT16T_ON_CUDA_DEVICE)
+    x -= y.Get();
+#else
+    x = this->Get() - y.Get();
+#endif
+    return *this;
+  }
+  GT_INLINE float16_t operator*=(const float16_t& y)
+  {
+#if defined(FLOAT16T_ON_CUDA_DEVICE)
+    x *= y.Get();
+#else
+    x = this->Get() * y.Get();
+#endif
+    return *this;
+  }
+  GT_INLINE float16_t operator/=(const float16_t& y)
+  {
+#if defined(FLOAT16T_ON_CUDA_DEVICE)
+    x /= y.Get();
+#else
+    x = this->Get() / y.Get();
+#endif
+    return *this;
+  }
+
 private:
   storage_type x;
 };

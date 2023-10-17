@@ -72,3 +72,44 @@ TEST(complex_float16_t, getter_setter)
 
   EXPECT_EQ(a, b);
 }
+
+TEST(complex_float16_t, update_operators)
+{
+  gt::complex_float16_t a{5.0, -2.0};
+  gt::complex_float16_t b{2.0, 1.0};
+  gt::complex_float16_t ref;
+  gt::float16_t x{2.0};
+
+  a += b;
+  ref = gt::complex_float16_t{7.0, -1.0};
+  EXPECT_EQ(a, ref);
+
+  a += x;
+  ref = gt::complex_float16_t{9.0, -1.0};
+  EXPECT_EQ(a, ref);
+
+  a -= b;
+  ref = gt::complex_float16_t{7.0, -2.0};
+  EXPECT_EQ(a, ref);
+
+  a -= x;
+  ref = gt::complex_float16_t{5.0, -2.0};
+  EXPECT_EQ(a, ref);
+
+  a *= b;
+  ref = gt::complex_float16_t{12.0, 1.0};
+  EXPECT_EQ(a, ref);
+
+  a *= x;
+  ref = gt::complex_float16_t{24.0, 2.0};
+  EXPECT_EQ(a, ref);
+
+  a /= x;
+  ref = gt::complex_float16_t{12.0, 1.0};
+  EXPECT_EQ(a, ref);
+
+//  a /= b;
+//  ref = gt::complex_float16_t{5.0, -2.0};
+//  EXPECT_EQ(a, ref);
+}
+
