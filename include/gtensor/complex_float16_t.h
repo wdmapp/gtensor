@@ -73,16 +73,18 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
                                          const complex_float16_t&);
 
 // values:
-constexpr float16_t real(const complex_float16_t&);
-constexpr float16_t imag(const complex_float16_t&);
+GT_INLINE float16_t real(const complex_float16_t&);
+GT_INLINE float16_t imag(const complex_float16_t&);
 
-float16_t abs(const complex_float16_t&);
-float16_t arg(const complex_float16_t&);
+GT_INLINE float16_t abs(const complex_float16_t&);
 GT_INLINE float16_t norm(const complex_float16_t&);
 
 GT_INLINE complex_float16_t conj(const complex_float16_t&);
-complex_float16_t proj(const complex_float16_t&);
-complex_float16_t polar(const float16_t&, const float16_t& = 0);
+
+// values = delete [NOT IMPLEMENTED
+float16_t arg(const complex_float16_t&) = delete;
+complex_float16_t proj(const complex_float16_t&) = delete;
+complex_float16_t polar(const float16_t&, const float16_t& = 0) = delete;
 
 // transcendentals:
 complex_float16_t acos(const complex_float16_t&);
@@ -247,6 +249,16 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
 { return s << "(" << z.real() << ", " << z.imag() << ")"; }
 
 // values:
+GT_INLINE float16_t real(const complex_float16_t& z)
+{ return z.real(); }
+GT_INLINE float16_t imag(const complex_float16_t& z)
+{ return z.imag(); }
+
+GT_INLINE float16_t abs(const complex_float16_t& z)
+{
+  auto abs2 = norm(z);
+  return sqrt(abs2);
+}
 GT_INLINE float16_t norm(const complex_float16_t& z)
 { return z.real() * z.real() + z.imag() * z.imag(); }
 

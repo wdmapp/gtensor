@@ -115,14 +115,19 @@ TEST(complex_float16_t, update_operators)
 
 TEST(complex_float16_t, values)
 {
-  gt::complex_float16_t a{5.0, -3.0};
-  gt::complex_float16_t b{5.0, +3.0};
-  gt::complex_float16_t c{conj(a)};
+  gt::complex_float16_t a{4.0, -3.0};
 
-  gt::float16_t x{34.0};
-  gt::float16_t y{norm(a)};
+  gt::float16_t a_real{4.0};
+  gt::float16_t a_imag{-3.0};
+  gt::float16_t a_abs{5.0};
+  gt::float16_t a_norm{25.0};
+  gt::complex_float16_t a_conj{4.0, +3.0};
 
-  EXPECT_EQ(b, c);
-  EXPECT_EQ(x, y);
+  EXPECT_EQ(a_real, real(a));
+  EXPECT_EQ(a_imag, imag(a));
+  EXPECT_EQ(a_abs, abs(a));
+  EXPECT_EQ(a_norm, norm(a));
+  EXPECT_EQ(a_conj, conj(a));
+
 }
 
