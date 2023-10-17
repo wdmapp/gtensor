@@ -120,6 +120,23 @@ PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR(<=, double);
 PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR(>, double);
 PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR(>=, double);
 
+// op is ==, !=
+// int_type is int
+#define PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(op, int_type)      \
+                                                                               \
+  GT_INLINE bool operator op(const float16_t& lhs, const int_type& rhs)        \
+  {                                                                            \
+    return lhs op static_cast<float>(rhs);                                    \
+  }                                                                            \
+                                                                               \
+  GT_INLINE bool operator op(const int_type& lhs, const float16_t& rhs)        \
+  {                                                                            \
+    return static_cast<float>(lhs) op rhs;                                    \
+  }
+
+PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(==, int);
+PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(!=, int);
+
 std::ostream& operator<<(std::ostream& s, const float16_t& h)
 {
   s << static_cast<float>(h.Get());
@@ -132,5 +149,6 @@ std::ostream& operator<<(std::ostream& s, const float16_t& h)
 #undef PROVIDE_MIXED_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_FLOAT16T_COMPARISON_OPERATOR
 #undef PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR
+#undef PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR
 
 #endif

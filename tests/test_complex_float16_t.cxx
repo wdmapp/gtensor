@@ -17,4 +17,18 @@ TEST(complex_float16_t, comparison_operators)
   EXPECT_NE(a, c);
   EXPECT_NE(a, d);
 
+  gt::complex_float16_t e{3.0, 0.0};
+  gt::complex_float16_t f{3.0, 1.0};
+  gt::float16_t s{3.0};
+  gt::float16_t t{4.0};
+
+  EXPECT_EQ(e, s);
+  EXPECT_EQ(s, e);
+  EXPECT_NE(f, s);
+  EXPECT_NE(s, f);
+  EXPECT_NE(e, t);
+  EXPECT_NE(t, e);
+  EXPECT_NE(f, t);
+  EXPECT_NE(t, f);
+
 }
