@@ -61,3 +61,14 @@ TEST(complex_float16_t, assignment)
   b = f;
   EXPECT_EQ(e, b);
 }
+
+TEST(complex_float16_t, getter_setter)
+{
+  const gt::complex_float16_t a{7.0, -2.0};
+  gt::complex_float16_t b;
+
+  b.real(a.real());
+  b.imag(a.imag());
+
+  EXPECT_EQ(a, b);
+}

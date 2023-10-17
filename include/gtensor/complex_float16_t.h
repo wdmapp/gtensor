@@ -35,9 +35,9 @@ public:
   : _real(z.real()), _imag(z.imag()) {}
 
   GT_INLINE float16_t real() const { return _real; }
-  constexpr void real(float16_t);
+  GT_INLINE void real(float16_t re) { _real = re; }
   GT_INLINE float16_t imag() const { return _imag; }
-  constexpr void imag(float16_t);
+  GT_INLINE void imag(float16_t im) { _imag = im; }
 
   GT_INLINE complex_float16_t& operator=(const float16_t& x)
   {
