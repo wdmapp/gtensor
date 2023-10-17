@@ -32,3 +32,15 @@ TEST(complex_float16_t, comparison_operators)
   EXPECT_NE(t, f);
 
 }
+
+TEST(complex_float16_t, constructors)
+{
+  gt::complex_float16_t a{7.0, -2.0};
+  gt::complex_float16_t b{a};
+  gt::complex<float> c{7.0, -2.0};
+  gt::complex_float16_t d{c};
+
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a, d);
+
+}

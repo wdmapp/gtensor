@@ -29,9 +29,10 @@ public:
   GT_INLINE complex_float16_t(const float16_t& re = float16_t(),
                               const float16_t& im = float16_t())
   : _real(re), _imag(im) {}
-  constexpr complex_float16_t(const complex_float16_t&) = default;
+  complex_float16_t(const complex_float16_t&) = default;
   template <class X>
-  constexpr complex_float16_t(const complex<X>&);
+  GT_INLINE complex_float16_t(const complex<X>& z)
+  : _real(z.real()), _imag(z.imag()) {}
 
   GT_INLINE float16_t real() const { return _real; }
   constexpr void real(float16_t);
