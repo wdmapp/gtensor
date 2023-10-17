@@ -100,7 +100,10 @@ GT_INLINE bool operator==(const complex_float16_t& lhs, const complex_float16_t&
 constexpr bool operator==(const complex_float16_t&, const float16_t&);
 constexpr bool operator==(const float16_t&, const complex_float16_t&);
 
-constexpr bool operator!=(const complex_float16_t&, const complex_float16_t&);
+GT_INLINE bool operator!=(const complex_float16_t& lhs, const complex_float16_t& rhs)
+{
+    return lhs.real() != rhs.real() || lhs.imag() != rhs.imag();
+}
 constexpr bool operator!=(const complex_float16_t&, const float16_t&);
 constexpr bool operator!=(const float16_t&, const complex_float16_t&);
 
