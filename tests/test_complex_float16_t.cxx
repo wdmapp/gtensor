@@ -75,41 +75,54 @@ TEST(complex_float16_t, getter_setter)
 
 TEST(complex_float16_t, update_operators)
 {
-  gt::complex_float16_t a{5.0, -2.0};
-  gt::complex_float16_t b{2.0, 1.0};
+  gt::complex_float16_t a{5.0, -3.0};
+  gt::complex_float16_t b{-2.0, 2.0};
   gt::complex_float16_t ref;
-  gt::float16_t x{2.0};
+  gt::float16_t x{3.0};
 
   a += b;
-  ref = gt::complex_float16_t{7.0, -1.0};
+  ref = gt::complex_float16_t{3.0, -1.0};
   EXPECT_EQ(a, ref);
 
   a += x;
-  ref = gt::complex_float16_t{9.0, -1.0};
+  ref = gt::complex_float16_t{6.0, -1.0};
   EXPECT_EQ(a, ref);
 
   a -= b;
-  ref = gt::complex_float16_t{7.0, -2.0};
+  ref = gt::complex_float16_t{8.0, -3.0};
   EXPECT_EQ(a, ref);
 
   a -= x;
-  ref = gt::complex_float16_t{5.0, -2.0};
+  ref = gt::complex_float16_t{5.0, -3.0};
   EXPECT_EQ(a, ref);
 
   a *= b;
-  ref = gt::complex_float16_t{12.0, 1.0};
+  ref = gt::complex_float16_t{-4.0, 16.0};
   EXPECT_EQ(a, ref);
 
   a *= x;
-  ref = gt::complex_float16_t{24.0, 2.0};
+  ref = gt::complex_float16_t{-12.0, 48.0};
   EXPECT_EQ(a, ref);
 
   a /= x;
-  ref = gt::complex_float16_t{12.0, 1.0};
+  ref = gt::complex_float16_t{-4.0, 16.0};
   EXPECT_EQ(a, ref);
 
-//  a /= b;
-//  ref = gt::complex_float16_t{5.0, -2.0};
-//  EXPECT_EQ(a, ref);
+  a /= b;
+  ref = gt::complex_float16_t{5.0, -3.0};
+  EXPECT_EQ(a, ref); // exact because b chosen s.t. norm(b) = 8
+}
+
+TEST(complex_float16_t, values)
+{
+  gt::complex_float16_t a{5.0, -3.0};
+  gt::complex_float16_t b{5.0, +3.0};
+  gt::complex_float16_t c{conj(a)};
+
+  gt::float16_t x{34.0};
+  gt::float16_t y{norm(a)};
+
+  EXPECT_EQ(b, c);
+  EXPECT_EQ(x, y);
 }
 
