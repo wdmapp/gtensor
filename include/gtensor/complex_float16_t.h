@@ -65,12 +65,12 @@ GT_INLINE bool operator!=(const complex_float16_t&, const float16_t&);
 GT_INLINE bool operator!=(const float16_t&, const complex_float16_t&);
 
 template <class CharT, class Traits>
-std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&,
-                                         complex_float16_t&);
+std::basic_istream<CharT, Traits>& operator>>(
+  std::basic_istream<CharT, Traits>&, complex_float16_t&);
 
 template <class CharT, class Traits>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&,
-                                         const complex_float16_t&);
+std::basic_ostream<CharT, Traits>& operator<<(
+  std::basic_ostream<CharT, Traits>&, const complex_float16_t&);
 
 // values:
 GT_INLINE float16_t real(const complex_float16_t&);
@@ -102,7 +102,8 @@ complex_float16_t log(const complex_float16_t&) = delete;
 complex_float16_t log10(const complex_float16_t&) = delete;
 
 complex_float16_t pow(const complex_float16_t&, const float16_t&) = delete;
-complex_float16_t pow(const complex_float16_t&, const complex_float16_t&) = delete;
+complex_float16_t pow(const complex_float16_t&,
+                      const complex_float16_t&) = delete;
 complex_float16_t pow(const float16_t&, const complex_float16_t&) = delete;
 
 complex_float16_t sin(const complex_float16_t&) = delete;
@@ -117,11 +118,13 @@ public:
   typedef float16_t value_type;
   GT_INLINE complex_float16_t(const float16_t& re = float16_t(),
                               const float16_t& im = float16_t())
-  : _real(re), _imag(im) {}
+    : _real(re), _imag(im)
+  {}
   complex_float16_t(const complex_float16_t&) = default;
   template <class X>
   GT_INLINE explicit complex_float16_t(const complex<X>& z)
-  : _real(z.real()), _imag(z.imag()) {}
+    : _real(z.real()), _imag(z.imag())
+  {}
 
   GT_INLINE float16_t real() const { return _real; }
   GT_INLINE void real(float16_t re) { _real = re; }
@@ -226,130 +229,129 @@ private:
 GT_INLINE complex_float16_t operator+(const complex_float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result += rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result += rhs;
+  return result;
 }
 
 GT_INLINE complex_float16_t operator+(const complex_float16_t& lhs,
                                       const float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result += rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result += rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator+(const float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result += rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result += rhs;
+  return result;
 }
 
 GT_INLINE complex_float16_t operator-(const complex_float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result -= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result -= rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator-(const complex_float16_t& lhs,
                                       const float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result -= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result -= rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator-(const float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result -= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result -= rhs;
+  return result;
 }
 
 GT_INLINE complex_float16_t operator*(const complex_float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result *= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result *= rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator*(const complex_float16_t& lhs,
                                       const float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result *= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result *= rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator*(const float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result *= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result *= rhs;
+  return result;
 }
 
 GT_INLINE complex_float16_t operator/(const complex_float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result /= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result /= rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator/(const complex_float16_t& lhs,
                                       const float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result /= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result /= rhs;
+  return result;
 }
 GT_INLINE complex_float16_t operator/(const float16_t& lhs,
                                       const complex_float16_t& rhs)
 {
-    complex_float16_t result{lhs};
-    result /= rhs;
-    return result;
+  complex_float16_t result{lhs};
+  result /= rhs;
+  return result;
 }
 
-GT_INLINE complex_float16_t operator+(const complex_float16_t& z)
-{
-    return z;
-}
+GT_INLINE complex_float16_t operator+(const complex_float16_t& z) { return z; }
 GT_INLINE complex_float16_t operator-(const complex_float16_t& z)
 {
-    return complex_float16_t{-z.real(), -z.imag()};
+  return complex_float16_t{-z.real(), -z.imag()};
 }
 
-GT_INLINE bool operator==(const complex_float16_t& lhs, const complex_float16_t& rhs)
+GT_INLINE bool operator==(const complex_float16_t& lhs,
+                          const complex_float16_t& rhs)
 {
-    return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+  return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
 }
 GT_INLINE bool operator==(const complex_float16_t& lhs, const float16_t& rhs)
 {
-    return lhs.real() == rhs && lhs.imag() == 0;
+  return lhs.real() == rhs && lhs.imag() == 0;
 }
 GT_INLINE bool operator==(const float16_t& lhs, const complex_float16_t& rhs)
 {
-    return lhs == rhs.real() && 0 == rhs.imag();
+  return lhs == rhs.real() && 0 == rhs.imag();
 }
 
-GT_INLINE bool operator!=(const complex_float16_t& lhs, const complex_float16_t& rhs)
+GT_INLINE bool operator!=(const complex_float16_t& lhs,
+                          const complex_float16_t& rhs)
 {
-    return lhs.real() != rhs.real() || lhs.imag() != rhs.imag();
+  return lhs.real() != rhs.real() || lhs.imag() != rhs.imag();
 }
 GT_INLINE bool operator!=(const complex_float16_t& lhs, const float16_t& rhs)
 {
-    return lhs.real() != rhs || lhs.imag() != 0;
+  return lhs.real() != rhs || lhs.imag() != 0;
 }
 GT_INLINE bool operator!=(const float16_t& lhs, const complex_float16_t& rhs)
 {
-    return lhs != rhs.real() || 0 != rhs.imag();
+  return lhs != rhs.real() || 0 != rhs.imag();
 }
 
 template <class CharT, class Traits>
-std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& s,
-                                         complex_float16_t& z)
+std::basic_istream<CharT, Traits>& operator>>(
+  std::basic_istream<CharT, Traits>& s, complex_float16_t& z)
 {
   complex<float> w;
   s >> w;
@@ -358,15 +360,15 @@ std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&
 }
 
 template <class CharT, class Traits>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& s,
-                                         const complex_float16_t& z)
-{ return s << "(" << z.real() << ", " << z.imag() << ")"; }
+std::basic_ostream<CharT, Traits>& operator<<(
+  std::basic_ostream<CharT, Traits>& s, const complex_float16_t& z)
+{
+  return s << "(" << z.real() << ", " << z.imag() << ")";
+}
 
 // values:
-GT_INLINE float16_t real(const complex_float16_t& z)
-{ return z.real(); }
-GT_INLINE float16_t imag(const complex_float16_t& z)
-{ return z.imag(); }
+GT_INLINE float16_t real(const complex_float16_t& z) { return z.real(); }
+GT_INLINE float16_t imag(const complex_float16_t& z) { return z.imag(); }
 
 GT_INLINE float16_t abs(const complex_float16_t& z)
 {
@@ -374,11 +376,14 @@ GT_INLINE float16_t abs(const complex_float16_t& z)
   return sqrt(abs2);
 }
 GT_INLINE float16_t norm(const complex_float16_t& z)
-{ return z.real() * z.real() + z.imag() * z.imag(); }
+{
+  return z.real() * z.real() + z.imag() * z.imag();
+}
 
 GT_INLINE complex_float16_t conj(const complex_float16_t& z)
-{ return complex_float16_t{z.real(), -z.imag()}; }
-
+{
+  return complex_float16_t{z.real(), -z.imag()};
+}
 
 } // namespace gt
 

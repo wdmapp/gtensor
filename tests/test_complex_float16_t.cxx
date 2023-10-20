@@ -149,7 +149,6 @@ TEST(complex_float16_t, values)
   EXPECT_EQ(a_abs, abs(a));
   EXPECT_EQ(a_norm, norm(a));
   EXPECT_EQ(a_conj, conj(a));
-
 }
 
 TEST(complex_float16_t, binary_arithmetic_operators)
