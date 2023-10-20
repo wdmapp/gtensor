@@ -131,3 +131,50 @@ TEST(complex_float16_t, values)
 
 }
 
+TEST(complex_float16_t, binary_arithmetic_operators)
+{
+  gt::complex_float16_t a{4.0, -4.0};
+  gt::complex_float16_t b{-2.0, 2.0};
+  gt::float16_t x{8.0};
+  gt::complex_float16_t c;
+  gt::complex_float16_t ref;
+
+  c = a + b;
+  ref = gt::complex_float16_t{2.0, -2.0};
+  EXPECT_EQ(c, ref);
+  c = a + x;
+  ref = gt::complex_float16_t{12.0, -4.0};
+  EXPECT_EQ(c, ref);
+  c = x + a;
+  EXPECT_EQ(c, ref);
+
+  c = a - b;
+  ref = gt::complex_float16_t{6.0, -6.0};
+  EXPECT_EQ(c, ref);
+  c = a - x;
+  ref = gt::complex_float16_t{-4.0, -4.0};
+  EXPECT_EQ(c, ref);
+  c = x - a;
+  ref = gt::complex_float16_t{4.0, 4.0};
+  EXPECT_EQ(c, ref);
+
+  c = a * b;
+  ref = gt::complex_float16_t{0.0, 16.0};
+  EXPECT_EQ(c, ref);
+  c = a * x;
+  ref = gt::complex_float16_t{32.0, -32.0};
+  EXPECT_EQ(c, ref);
+  c = x * a;
+  EXPECT_EQ(c, ref);
+
+  c = a / b;
+  ref = gt::complex_float16_t{-2.0, 0.0};
+  EXPECT_EQ(c, ref); // exact because b chosen s.t. norm(b) = 8
+  c = a / x;
+  ref = gt::complex_float16_t{0.5, -0.5};
+  EXPECT_EQ(c, ref);
+  ref = gt::complex_float16_t{1.0, 1.0};
+  c = x / a;
+  EXPECT_EQ(c, ref); // exact because a chosen s.t. norm(a) = 32
+}
+

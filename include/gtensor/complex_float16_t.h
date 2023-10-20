@@ -25,32 +25,32 @@ namespace gt
 class complex_float16_t;
 
 // operators:
-constexpr complex_float16_t operator+(const complex_float16_t&,
+GT_INLINE complex_float16_t operator+(const complex_float16_t&,
                                       const complex_float16_t&);
-constexpr complex_float16_t operator+(const complex_float16_t&,
+GT_INLINE complex_float16_t operator+(const complex_float16_t&,
                                       const float16_t&);
-constexpr complex_float16_t operator+(const float16_t&,
+GT_INLINE complex_float16_t operator+(const float16_t&,
                                       const complex_float16_t&);
 
-constexpr complex_float16_t operator-(const complex_float16_t&,
+GT_INLINE complex_float16_t operator-(const complex_float16_t&,
                                       const complex_float16_t&);
-constexpr complex_float16_t operator-(const complex_float16_t&,
+GT_INLINE complex_float16_t operator-(const complex_float16_t&,
                                       const float16_t&);
-constexpr complex_float16_t operator-(const float16_t&,
+GT_INLINE complex_float16_t operator-(const float16_t&,
                                       const complex_float16_t&);
 
-constexpr complex_float16_t operator*(const complex_float16_t&,
+GT_INLINE complex_float16_t operator*(const complex_float16_t&,
                                       const complex_float16_t&);
-constexpr complex_float16_t operator*(const complex_float16_t&,
+GT_INLINE complex_float16_t operator*(const complex_float16_t&,
                                       const float16_t&);
-constexpr complex_float16_t operator*(const float16_t&,
+GT_INLINE complex_float16_t operator*(const float16_t&,
                                       const complex_float16_t&);
 
-constexpr complex_float16_t operator/(const complex_float16_t&,
+GT_INLINE complex_float16_t operator/(const complex_float16_t&,
                                       const complex_float16_t&);
-constexpr complex_float16_t operator/(const complex_float16_t&,
+GT_INLINE complex_float16_t operator/(const complex_float16_t&,
                                       const float16_t&);
-constexpr complex_float16_t operator/(const float16_t&,
+GT_INLINE complex_float16_t operator/(const float16_t&,
                                       const complex_float16_t&);
 
 constexpr complex_float16_t operator+(const complex_float16_t&);
@@ -217,6 +217,95 @@ private:
 };
 
 // operators:
+GT_INLINE complex_float16_t operator+(const complex_float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result += rhs;
+    return result;
+}
+
+GT_INLINE complex_float16_t operator+(const complex_float16_t& lhs,
+                                      const float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result += rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator+(const float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result += rhs;
+    return result;
+}
+
+GT_INLINE complex_float16_t operator-(const complex_float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result -= rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator-(const complex_float16_t& lhs,
+                                      const float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result -= rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator-(const float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result -= rhs;
+    return result;
+}
+
+GT_INLINE complex_float16_t operator*(const complex_float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result *= rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator*(const complex_float16_t& lhs,
+                                      const float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result *= rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator*(const float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result *= rhs;
+    return result;
+}
+
+GT_INLINE complex_float16_t operator/(const complex_float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result /= rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator/(const complex_float16_t& lhs,
+                                      const float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result /= rhs;
+    return result;
+}
+GT_INLINE complex_float16_t operator/(const float16_t& lhs,
+                                      const complex_float16_t& rhs)
+{
+    complex_float16_t result{lhs};
+    result /= rhs;
+    return result;
+}
+
 GT_INLINE bool operator==(const complex_float16_t& lhs, const complex_float16_t& rhs)
 {
     return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
