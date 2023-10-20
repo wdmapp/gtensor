@@ -86,30 +86,30 @@ float16_t arg(const complex_float16_t&) = delete;
 complex_float16_t proj(const complex_float16_t&) = delete;
 complex_float16_t polar(const float16_t&, const float16_t& = 0) = delete;
 
-// transcendentals:
-complex_float16_t acos(const complex_float16_t&);
-complex_float16_t asin(const complex_float16_t&);
-complex_float16_t atan(const complex_float16_t&);
+// transcendentals = delete [NOT IMPLEMENTED]
+complex_float16_t acos(const complex_float16_t&) = delete;
+complex_float16_t asin(const complex_float16_t&) = delete;
+complex_float16_t atan(const complex_float16_t&) = delete;
 
-complex_float16_t acosh(const complex_float16_t&);
-complex_float16_t asinh(const complex_float16_t&);
-complex_float16_t atanh(const complex_float16_t&);
+complex_float16_t acosh(const complex_float16_t&) = delete;
+complex_float16_t asinh(const complex_float16_t&) = delete;
+complex_float16_t atanh(const complex_float16_t&) = delete;
 
-complex_float16_t cos(const complex_float16_t&);
-complex_float16_t cosh(const complex_float16_t&);
-complex_float16_t exp(const complex_float16_t&);
-complex_float16_t log(const complex_float16_t&);
-complex_float16_t log10(const complex_float16_t&);
+complex_float16_t cos(const complex_float16_t&) = delete;
+complex_float16_t cosh(const complex_float16_t&) = delete;
+complex_float16_t exp(const complex_float16_t&) = delete;
+complex_float16_t log(const complex_float16_t&) = delete;
+complex_float16_t log10(const complex_float16_t&) = delete;
 
-complex_float16_t pow(const complex_float16_t&, const float16_t&);
-complex_float16_t pow(const complex_float16_t&, const complex_float16_t&);
-complex_float16_t pow(const float16_t&, const complex_float16_t&);
+complex_float16_t pow(const complex_float16_t&, const float16_t&) = delete;
+complex_float16_t pow(const complex_float16_t&, const complex_float16_t&) = delete;
+complex_float16_t pow(const float16_t&, const complex_float16_t&) = delete;
 
-complex_float16_t sin(const complex_float16_t&);
-complex_float16_t sinh(const complex_float16_t&);
-complex_float16_t sqrt(const complex_float16_t&);
-complex_float16_t tan(const complex_float16_t&);
-complex_float16_t tanh(const complex_float16_t&);
+complex_float16_t sin(const complex_float16_t&) = delete;
+complex_float16_t sinh(const complex_float16_t&) = delete;
+complex_float16_t sqrt(const complex_float16_t&) = delete;
+complex_float16_t tan(const complex_float16_t&) = delete;
+complex_float16_t tanh(const complex_float16_t&) = delete;
 
 class complex_float16_t
 {
