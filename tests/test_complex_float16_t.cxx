@@ -79,6 +79,7 @@ TEST(complex_float16_t, update_operators)
 {
   gt::complex_float16_t a{5.0, -3.0};
   gt::complex_float16_t b{-2.0, 2.0};
+  gt::complex<float> f{-2.0, 2.0};
   gt::complex_float16_t ref;
   gt::float16_t x{3.0};
 
@@ -113,6 +114,24 @@ TEST(complex_float16_t, update_operators)
   a /= b;
   ref = gt::complex_float16_t{5.0, -3.0};
   EXPECT_EQ(a, ref); // exact because b chosen s.t. norm(b) = 8
+
+  a += f;
+  ref = gt::complex_float16_t{3.0, -1.0};
+  EXPECT_EQ(a, ref);
+
+  a += x;
+  a -= f;
+  ref = gt::complex_float16_t{8.0, -3.0};
+  EXPECT_EQ(a, ref);
+
+  a -= x;
+  a *= f;
+  ref = gt::complex_float16_t{-4.0, 16.0};
+  EXPECT_EQ(a, ref);
+
+  a /= f;
+  ref = gt::complex_float16_t{5.0, -3.0};
+  EXPECT_EQ(a, ref); // exact because f chosen s.t. norm(b) = 8
 }
 
 TEST(complex_float16_t, values)

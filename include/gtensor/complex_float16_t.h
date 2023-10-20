@@ -203,13 +203,29 @@ public:
     return *this;
   }
   template <class X>
-  constexpr complex_float16_t& operator+=(const complex<X>&);
+  GT_INLINE complex_float16_t& operator+=(const complex<X>& z)
+  {
+    *this += complex_float16_t{z};
+    return *this;
+  }
   template <class X>
-  constexpr complex_float16_t& operator-=(const complex<X>&);
+  GT_INLINE complex_float16_t& operator-=(const complex<X>& z)
+  {
+    *this -= complex_float16_t{z};
+    return *this;
+  }
   template <class X>
-  constexpr complex_float16_t& operator*=(const complex<X>&);
+  GT_INLINE complex_float16_t& operator*=(const complex<X>& z)
+  {
+    *this *= complex_float16_t{z};
+    return *this;
+  }
   template <class X>
-  constexpr complex_float16_t& operator/=(const complex<X>&);
+  GT_INLINE complex_float16_t& operator/=(const complex<X>& z)
+  {
+    *this /= complex_float16_t{z};
+    return *this;
+  }
 
 private:
   float16_t _real;
