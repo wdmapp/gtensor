@@ -53,8 +53,8 @@ GT_INLINE complex_float16_t operator/(const complex_float16_t&,
 GT_INLINE complex_float16_t operator/(const float16_t&,
                                       const complex_float16_t&);
 
-constexpr complex_float16_t operator+(const complex_float16_t&);
-constexpr complex_float16_t operator-(const complex_float16_t&);
+GT_INLINE complex_float16_t operator+(const complex_float16_t&);
+GT_INLINE complex_float16_t operator-(const complex_float16_t&);
 
 GT_INLINE bool operator==(const complex_float16_t&, const complex_float16_t&);
 GT_INLINE bool operator==(const complex_float16_t&, const float16_t&);
@@ -304,6 +304,15 @@ GT_INLINE complex_float16_t operator/(const float16_t& lhs,
     complex_float16_t result{lhs};
     result /= rhs;
     return result;
+}
+
+GT_INLINE complex_float16_t operator+(const complex_float16_t& z)
+{
+    return z;
+}
+GT_INLINE complex_float16_t operator-(const complex_float16_t& z)
+{
+    return complex_float16_t{-z.real(), -z.imag()};
 }
 
 GT_INLINE bool operator==(const complex_float16_t& lhs, const complex_float16_t& rhs)

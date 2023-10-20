@@ -178,3 +178,16 @@ TEST(complex_float16_t, binary_arithmetic_operators)
   EXPECT_EQ(c, ref); // exact because a chosen s.t. norm(a) = 32
 }
 
+TEST(complex_float16_t, unary_arithmetic_operators)
+{
+  gt::complex_float16_t a{4.0, -5.0};
+  gt::complex_float16_t b{-4.0, 5.0};
+  gt::complex_float16_t c;
+
+  c = +a;
+  EXPECT_EQ(c, a);
+
+  c = -a;
+  EXPECT_EQ(c, b);
+}
+
