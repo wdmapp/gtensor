@@ -342,6 +342,16 @@ GT_INLINE bool operator!=(const float16_t& lhs, const complex_float16_t& rhs)
 }
 
 template <class CharT, class Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& s,
+                                         complex_float16_t& z)
+{
+  complex<float> w;
+  s >> w;
+  z = w;
+  return s;
+}
+
+template <class CharT, class Traits>
 std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& s,
                                          const complex_float16_t& z)
 { return s << "(" << z.real() << ", " << z.imag() << ")"; }

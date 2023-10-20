@@ -5,6 +5,8 @@
 #include <gtensor/complex_float16_t.h>
 #include <gtensor/float16_t.h>
 
+#include <sstream>
+
 TEST(complex_float16_t, comparison_operators)
 {
   gt::complex_float16_t a{7.0, -2.0};
@@ -189,5 +191,19 @@ TEST(complex_float16_t, unary_arithmetic_operators)
 
   c = -a;
   EXPECT_EQ(c, b);
+}
+
+TEST(complex_float16_t, iostream)
+{
+  std::istringstream is("(1.125, -2.5)");
+  std::ostringstream os;
+  gt::complex_float16_t a{1.125, -2.5};
+  gt::complex_float16_t b;
+
+  is >> b;
+  EXPECT_EQ(a, b);
+
+  os << a;
+  EXPECT_EQ(is.str(), os.str());
 }
 
