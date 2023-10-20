@@ -179,9 +179,9 @@ public:
   }
   GT_INLINE complex_float16_t& operator/=(const complex_float16_t& z)
   {
-    auto tmp = conj(z);
-    tmp /= norm(z);
-    *this *= tmp;
+    auto z_alt = conj(z);
+    z_alt /= norm(z);
+    *this *= z_alt;
     return *this;
   }
 
