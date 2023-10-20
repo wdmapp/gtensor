@@ -81,7 +81,7 @@ GT_INLINE float16_t norm(const complex_float16_t&);
 
 GT_INLINE complex_float16_t conj(const complex_float16_t&);
 
-// values = delete [NOT IMPLEMENTED
+// values = delete [NOT IMPLEMENTED]
 float16_t arg(const complex_float16_t&) = delete;
 complex_float16_t proj(const complex_float16_t&) = delete;
 complex_float16_t polar(const float16_t&, const float16_t& = 0) = delete;
@@ -110,16 +110,6 @@ complex_float16_t sinh(const complex_float16_t&);
 complex_float16_t sqrt(const complex_float16_t&);
 complex_float16_t tan(const complex_float16_t&);
 complex_float16_t tanh(const complex_float16_t&);
-
-// complex literals:
-inline namespace literals
-{
-inline namespace complex_literals
-{
-constexpr complex_float16_t operator""_ih(long double);
-constexpr complex_float16_t operator""_ih(unsigned long long);
-} // namespace complex_literals
-} // namespace literals
 
 class complex_float16_t
 {
