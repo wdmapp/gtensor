@@ -29,22 +29,68 @@ TEST(float16_t, scalar_arithmetic)
   EXPECT_EQ(c, ref);
 }
 
+TEST(float16_t, update_operators)
+{
+  gt::float16_t a{1.0};
+  gt::float16_t b{2.0};
+
+  gt::float16_t c{a};
+  gt::float16_t ref{0.0};
+
+  c += b;
+  ref = 3.0;
+  EXPECT_EQ(c, ref);
+
+  c -= b;
+  ref = a;
+  EXPECT_EQ(c, ref);
+
+  c *= b;
+  ref = 2.0;
+  EXPECT_EQ(c, ref);
+
+  c /= b;
+  ref = 1.0;
+  EXPECT_EQ(c, ref);
+}
+
+TEST(float16_t, unary_operators)
+{
+  gt::float16_t a{2.0};
+  gt::float16_t b{-2.0};
+
+  gt::float16_t c{a};
+
+  c = +a;
+  EXPECT_EQ(c, a);
+
+  c = -a;
+  EXPECT_EQ(c, b);
+}
+
 TEST(float16_t, binary_comparison_operators)
 {
   gt::float16_t a{1.0};
   gt::float16_t b{2.0};
   gt::float16_t c{2.0};
+  int d{2};
 
   EXPECT_EQ(a, a);
   EXPECT_EQ(b, b);
   EXPECT_EQ(b, c);
+  EXPECT_EQ(b, d);
   EXPECT_EQ(c, b);
   EXPECT_EQ(c, c);
+  EXPECT_EQ(c, d);
+  EXPECT_EQ(d, b);
+  EXPECT_EQ(d, c);
 
   EXPECT_NE(a, b);
   EXPECT_NE(a, c);
+  EXPECT_NE(a, d);
   EXPECT_NE(b, a);
   EXPECT_NE(c, a);
+  EXPECT_NE(d, a);
 
   EXPECT_LT(a, b);
   EXPECT_LT(a, c);
@@ -67,6 +113,16 @@ TEST(float16_t, binary_comparison_operators)
   EXPECT_GE(c, a);
   EXPECT_GE(c, b);
   EXPECT_GE(c, c);
+}
+
+TEST(float16_t, sqrt)
+{
+  gt::float16_t a{4.0};
+  gt::float16_t b;
+  gt::float16_t ref{2.0};
+
+  b = gt::sqrt(a);
+  EXPECT_EQ(b, ref);
 }
 
 template <typename S>
