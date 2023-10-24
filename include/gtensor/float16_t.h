@@ -1,6 +1,7 @@
 #ifndef GTENSOR_FLOAT16T_H
 #define GTENSOR_FLOAT16T_H
 
+#include <cmath>
 #include <iostream>
 
 #if __has_include(<cuda_fp16.h>)
@@ -26,6 +27,7 @@ using storage_type = __half;
 #if defined(GTENSOR_FP16_CUDA_HEADER) && defined(__CUDA_ARCH__) &&             \
   (__CUDA_ARCH__ >= 530)
 using compute_type = __half;
+#define FLOAT16T_ON_CUDA_DEVICE
 #else
 using compute_type = float;
 #endif
@@ -184,6 +186,16 @@ PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR(>=, double);
 
 PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(==, int);
 PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(!=, int);
+
+// function is sqrt
+GT_INLINE float16_t sqrt(const float16_t& x)
+{
+#if defined(FLOAT16T_ON_CUDA_DEVICE)
+  return hsqrt(x.Get());
+#else
+  return std::sqrt(x.Get());
+#endif
+}
 
 std::ostream& operator<<(std::ostream& s, const float16_t& h)
 {
