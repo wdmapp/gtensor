@@ -227,9 +227,9 @@ TEST(complex_float16_t, iostream)
 
 #ifdef GTENSOR_HAVE_DEVICE
 
-TEST(complex, device_complex_ops)
+TEST(complex_float16_t, device_complex_ops)
 {
-  using T = gt::complex<double>;
+  using T = gt::complex_float16_t;
   gt::gtensor<T, 1> h_a(2);
   gt::gtensor<T, 1> h_b(h_a.shape());
   gt::gtensor<T, 1> h_c(h_a.shape());
@@ -266,9 +266,9 @@ TEST(complex, device_complex_ops)
 }
 
 // compare against device_comlex_multiply test case with nvprof
-TEST(complex, device_double_multiply)
+TEST(complex_float16_t, device_float16_t_multiply)
 {
-  using T = double;
+  using T = gt::float16_t;
   gt::gtensor<T, 2> h_a(gt::shape(3, 2));
   gt::gtensor<T, 2> h_c(h_a.shape());
   gt::gtensor<T, 2> h_r(h_a.shape());
@@ -310,9 +310,9 @@ TEST(complex, device_double_multiply)
 // Note: can be run with nvprof / nsys profile to see if thrust kernels
 // are called unnecessarily (other than __unititialized_fill which is
 // difficult to avoid without ugly hacks).
-TEST(complex, device_complex_multiply)
+TEST(complex_float16_t, device_complex_multiply)
 {
-  using T = gt::complex<double>;
+  using T = gt::complex_float16_t;
   auto I = T{0., 1.0};
   gt::gtensor<T, 2> h_a(gt::shape(3, 2));
   gt::gtensor<T, 2> h_r(h_a.shape());
@@ -353,9 +353,9 @@ TEST(complex, device_complex_multiply)
 // Note: can be run with nvprof / nsys profile to see if thrust kernels
 // are called unnecessarily (other than __unititialized_fill which is
 // difficult to avoid without ugly hacks).
-TEST(complex, device_eval)
+TEST(complex_float16_t, device_eval)
 {
-  using T = gt::complex<double>;
+  using T = gt::complex_float16_t;
   auto I = T{0., 1.0};
   gt::gtensor<T, 2> h_a(gt::shape(3, 2));
   gt::gtensor<T, 2> h_b(h_a.shape());
@@ -386,7 +386,7 @@ TEST(complex, device_eval)
   std::cout << "e1  type: " << typeid(e1).name() << "\n";
   auto e2 = a + I * a;
   std::cout << "e2  type: " << typeid(e2).name() << "\n";
-  auto e = (1. / 2.) * (e1 + e2);
+  auto e = T{1. / 2.} * (e1 + e2);
   std::cout << "e   type: " << typeid(e).name() << "\n";
   auto c = eval(e);
   std::cout << "c   type: " << typeid(c).name() << std::endl;
@@ -399,8 +399,8 @@ TEST(complex, device_eval)
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 __global__ void kernel_norm(
-  gt::gtensor_span_device<gt::complex<double>, 1> d_in,
-  gt::gtensor_span_device<double, 1> d_out)
+  gt::gtensor_span_device<gt::complex_float16_t, 1> d_in,
+  gt::gtensor_span_device<gt::float16_t, 1> d_out)
 {
   int i = threadIdx.x;
   if (i < d_in.shape(0)) {
@@ -409,8 +409,8 @@ __global__ void kernel_norm(
 }
 
 __global__ void kernel_conj(
-  gt::gtensor_span_device<gt::complex<double>, 1> d_in,
-  gt::gtensor_span_device<gt::complex<double>, 1> d_out)
+  gt::gtensor_span_device<gt::complex_float16_t, 1> d_in,
+  gt::gtensor_span_device<gt::complex_float16_t, 1> d_out)
 {
   int i = threadIdx.x;
   if (i < d_in.shape(0)) {
@@ -418,19 +418,19 @@ __global__ void kernel_conj(
   }
 }
 
-TEST(complex, device_norm)
+TEST(complex_float16_t, device_norm)
 {
   const int N = 6;
-  using T = gt::complex<double>;
+  using T = gt::complex_float16_t;
   auto I = T{0., 1.0};
   gt::gtensor<T, 1> h_a(gt::shape(N));
-  gt::gtensor<double, 1> h_norm(h_a.shape());
+  gt::gtensor<gt::float16_t, 1> h_norm(h_a.shape());
 
   gt::gtensor_device<T, 1> d_a(h_a.shape());
-  gt::gtensor_device<double, 1> d_norm(d_a.shape());
+  gt::gtensor_device<gt::float16_t, 1> d_norm(d_a.shape());
 
   for (int i = 0; i < N; i++) {
-    h_a(i) = T{1., static_cast<double>(i)};
+    h_a(i) = T{1., static_cast<gt::float16_t>(i)};
   }
 
   gt::copy(h_a, d_a);
@@ -444,10 +444,10 @@ TEST(complex, device_norm)
   }
 }
 
-TEST(complex, device_conj)
+TEST(complex_float16_t, device_conj)
 {
   const int N = 6;
-  using T = gt::complex<double>;
+  using T = gt::complex_float16_t;
   auto I = T{0., 1.0};
   gt::gtensor<T, 1> h_a(gt::shape(N));
   gt::gtensor<T, 1> h_conj(h_a.shape());
@@ -456,7 +456,7 @@ TEST(complex, device_conj)
   gt::gtensor_device<T, 1> d_conj(d_a.shape());
 
   for (int i = 0; i < N; i++) {
-    h_a(i) = T{1., static_cast<double>(i)};
+    h_a(i) = T{1., static_cast<gt::float16_t>(i)};
   }
 
   gt::copy(h_a, d_a);
@@ -468,49 +468,6 @@ TEST(complex, device_conj)
   for (int i = 0; i < N; i++) {
     EXPECT_EQ(h_conj(i), gt::conj(h_a(i)));
   }
-}
-
-template <typename T>
-static void run_device_exp(gt::gtensor_device<T, 1>& res,
-                           const gt::gtensor_device<T, 1>& x)
-{
-  auto k_res = res.to_kernel();
-  auto k_x = x.to_kernel();
-
-  gt::launch<1>(
-    x.shape(), GT_LAMBDA(int i) { k_res(i) = gt::exp(k_x(i)); });
-  gt::synchronize();
-}
-
-TEST(complex, device_exp_real)
-{
-  using T = double;
-
-  gt::gtensor_device<T, 1> x = {1.};
-  auto res = gt::empty_like(x);
-  run_device_exp(res, x);
-
-  gt::gtensor<T, 1> h_res(res.shape());
-  copy(res, h_res);
-  EXPECT_EQ(h_res(0), std::exp(T(1.)));
-}
-
-TEST(complex, device_exp)
-{
-  using namespace std::complex_literals;
-  using T = gt::complex<double>;
-
-  gt::gtensor_device<T, 1> x(gt::shape(1));
-  gt::gtensor<T, 1> h_x(x.shape());
-  h_x(0) = 1.i * M_PI / 2.;
-  copy(h_x, x);
-
-  auto res = gt::empty_like(x);
-  run_device_exp(res, x);
-
-  gt::gtensor<T, 1> h_res(res.shape());
-  copy(res, h_res);
-  EXPECT_LT(gt::abs(h_res(0) - T(0., 1.)), 1e-14);
 }
 
 template <typename Tres, typename Tx>
@@ -525,9 +482,9 @@ static void run_device_abs(gt::gtensor_device<Tres, 1>& res,
   gt::synchronize();
 }
 
-TEST(complex, device_abs_real)
+TEST(complex_float16_t, device_abs_real)
 {
-  using T = double;
+  using T = gt::float16_t;
 
   gt::gtensor<T, 1> h_x = {-1.75, -0.001};
   gt::gtensor_device<T, 1> x{h_x.shape()};
@@ -541,14 +498,14 @@ TEST(complex, device_abs_real)
   gt::copy(res, h_res);
   gt::synchronize();
 
-  EXPECT_EQ(h_res(0), std::abs(h_x(0)));
-  EXPECT_EQ(h_res(1), std::abs(h_x(1)));
+  EXPECT_EQ(h_res(0), gt::abs(h_x(0)));
+  EXPECT_EQ(h_res(1), gt::abs(h_x(1)));
 }
 
-TEST(complex, device_abs)
+TEST(complex_float16_t, device_abs)
 {
-  using R = double;
-  using T = gt::complex<R>;
+  using R = gt::float16_t;
+  using T = gt::complex_float16_t;
 
   gt::gtensor_device<T, 1> x(gt::shape(1));
   gt::gtensor<T, 1> h_x(x.shape());
@@ -560,7 +517,8 @@ TEST(complex, device_abs)
 
   gt::gtensor<R, 1> h_res(res.shape());
   gt::copy(res, h_res);
-  // EXPECT_EQ(h_res(0), R(1));
+  // here, truncation and rounding errors cancel for IEEE binary16
+  EXPECT_EQ(h_res(0), R(1));
 }
 
 #endif // CUDA or HIP
