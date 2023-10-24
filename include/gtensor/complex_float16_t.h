@@ -19,8 +19,8 @@ namespace gt
 
 // ======================================================================
 // complex_float16_t
-// ... adapted from the C++ <complex>, see e.g.,
-// header https://en.cppreference.com/w/cpp/header/complex [2023/10/17]
+// ... adapted from the C++ <complex> header,
+// see e.g., https://en.cppreference.com/w/cpp/header/complex [2023/10/17]
 
 class complex_float16_t;
 
