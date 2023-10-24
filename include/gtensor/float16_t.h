@@ -86,6 +86,16 @@ private:
   storage_type x;
 };
 
+// op is unary +, -
+#define PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR(op)                         \
+  GT_INLINE float16_t operator op(const float16_t& rhs)                        \
+  {                                                                            \
+    return float16_t(op rhs.Get());                                            \
+  }
+
+PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR(+);
+PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR(-);
+
 #define PROVIDE_FLOAT16T_BINARY_ARITHMETIC_OPERATOR(op)                        \
   GT_INLINE float16_t operator op(const float16_t& lhs, const float16_t& rhs)  \
   {                                                                            \
@@ -183,6 +193,7 @@ std::ostream& operator<<(std::ostream& s, const float16_t& h)
 
 } // namespace gt
 
+#undef PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_MIXED_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_FLOAT16T_COMPARISON_OPERATOR
