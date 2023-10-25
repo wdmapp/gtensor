@@ -182,12 +182,12 @@ PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR(>=, double);
                                                                                \
   GT_INLINE bool operator op(const float16_t& lhs, const int_type& rhs)        \
   {                                                                            \
-    return lhs op static_cast<float>(rhs);                                    \
+    return lhs op static_cast<float>(rhs);                                     \
   }                                                                            \
                                                                                \
   GT_INLINE bool operator op(const int_type& lhs, const float16_t& rhs)        \
   {                                                                            \
-    return static_cast<float>(lhs) op rhs;                                    \
+    return static_cast<float>(lhs) op rhs;                                     \
   }
 
 PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(==, int);
