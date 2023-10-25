@@ -3,16 +3,7 @@
 
 #include "complex.h"
 #include "float16_t.h"
-#include <cmath>
 #include <iostream>
-
-#if __has_include(<cuda_fp16.h>)
-#include <cuda_fp16.h>
-#define GTENSOR_FP16_CUDA_HEADER
-#elif 0 // TODO check if other fp16 type available, e.g., _Float16
-#else
-#error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
-#endif
 
 namespace gt
 {
