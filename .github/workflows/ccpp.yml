@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        cxx: [ 'g++-12', 'clang++-14' ]
+        cxx: [ 'g++-12', 'clang++-15' ]
     name: tests-cpu-cxx20-${{ matrix.cxx }}
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
