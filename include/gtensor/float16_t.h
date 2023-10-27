@@ -211,6 +211,8 @@ std::ostream& operator<<(std::ostream& s, const float16_t& h)
 
 } // namespace gt
 
+#undef GTENSOR_FP16_CUDA_HEADER
+#undef FLOAT16T_ON_CUDA_DEVICE
 #undef PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_MIXED_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
@@ -218,4 +220,4 @@ std::ostream& operator<<(std::ostream& s, const float16_t& h)
 #undef PROVIDE_MIXED_FLOAT16T_COMPARISON_OPERATOR
 #undef PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR
 
-#endif
+#endif // GTENSOR_FLOAT16T_H
