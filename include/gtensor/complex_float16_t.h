@@ -1,9 +1,11 @@
 #ifndef GTENSOR_COMPLEX_FLOAT16T_H
 #define GTENSOR_COMPLEX_FLOAT16T_H
 
+#include <iostream>
+
 #include "complex.h"
 #include "float16_t.h"
-#include <iostream>
+#include "macros.h"
 
 namespace gt
 {

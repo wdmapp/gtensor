@@ -12,6 +12,8 @@
 #error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
 #endif
 
+#include "macros.h"
+
 namespace gt
 {
 
