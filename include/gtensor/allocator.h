@@ -99,6 +99,8 @@ struct caching_allocator : A
 
   GT_INLINE void construct(pointer) {}
 
+  // Note: thrust allocators have a non-static deallocate and this does not work
+  // if thrust is enabled
   static void clear_cache()
   {
     for (auto it = free_.begin(); it != free_.end(); it++) {

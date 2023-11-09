@@ -314,4 +314,7 @@ contains
       out_device_id = gt_backend_device_get()
    end subroutine gpuDeviceGet
 
+   subroutine gpuAllocatorClearCache()
+   end subroutine gpuAllocatorClearCache
+
 end module gpu_api_m
