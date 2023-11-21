@@ -20,6 +20,9 @@ namespace gt
 // ======================================================================
 // float16_t
 
+class float16_t
+{
+
 #if defined(GTENSOR_FP16_CUDA_HEADER)
 using storage_type = __half;
 #else
@@ -34,8 +37,6 @@ using compute_type = __half;
 using compute_type = float;
 #endif
 
-class float16_t
-{
 public:
   float16_t() = default;
   GT_INLINE float16_t(float x) : x(x){};
