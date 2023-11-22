@@ -2,8 +2,8 @@
 
 #include <gtensor/gtensor.h>
 
-#include <gtensor/complex_bfloat16_t.h>
 #include <gtensor/bfloat16_t.h>
+#include <gtensor/complex_bfloat16_t.h>
 
 #include <sstream>
 

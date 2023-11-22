@@ -92,20 +92,21 @@ private:
 };
 
 // op is unary [+, -]
-#define PROVIDE_BFLOAT16T_UNARY_ARITHMETIC_OPERATOR(op)                         \
-  GT_INLINE bfloat16_t operator op(const bfloat16_t& rhs)                        \
+#define PROVIDE_BFLOAT16T_UNARY_ARITHMETIC_OPERATOR(op)                        \
+  GT_INLINE bfloat16_t operator op(const bfloat16_t& rhs)                      \
   {                                                                            \
-    return bfloat16_t(op rhs.Get());                                            \
+    return bfloat16_t(op rhs.Get());                                           \
   }
 
 PROVIDE_BFLOAT16T_UNARY_ARITHMETIC_OPERATOR(+);
 PROVIDE_BFLOAT16T_UNARY_ARITHMETIC_OPERATOR(-);
 
 // op is binary [+, -, *, /]
-#define PROVIDE_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(op)                        \
-  GT_INLINE bfloat16_t operator op(const bfloat16_t& lhs, const bfloat16_t& rhs)  \
+#define PROVIDE_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(op)                       \
+  GT_INLINE bfloat16_t operator op(const bfloat16_t& lhs,                      \
+                                   const bfloat16_t& rhs)                      \
   {                                                                            \
-    return bfloat16_t(lhs.Get() op rhs.Get());                                  \
+    return bfloat16_t(lhs.Get() op rhs.Get());                                 \
   }
 
 PROVIDE_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(+);
@@ -115,14 +116,14 @@ PROVIDE_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(/);
 
 // op is binary [+, -, *, /]
 // fp_type is [float, double]
-#define PROVIDE_MIXED_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(op, fp_type)         \
+#define PROVIDE_MIXED_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(op, fp_type)        \
                                                                                \
-  GT_INLINE fp_type operator op(const bfloat16_t& lhs, const fp_type& rhs)      \
+  GT_INLINE fp_type operator op(const bfloat16_t& lhs, const fp_type& rhs)     \
   {                                                                            \
     return static_cast<fp_type>(lhs.Get()) op rhs;                             \
   }                                                                            \
                                                                                \
-  GT_INLINE fp_type operator op(const fp_type& lhs, const bfloat16_t& rhs)      \
+  GT_INLINE fp_type operator op(const fp_type& lhs, const bfloat16_t& rhs)     \
   {                                                                            \
     return lhs op static_cast<fp_type>(rhs.Get());                             \
   }
@@ -138,22 +139,22 @@ PROVIDE_MIXED_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(*, double);
 PROVIDE_MIXED_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR(/, double);
 
 // op is binary [==, !=, <, <=, >, >=]
-#define PROVIDE_BFLOAT16T_COMPARISON_OPERATOR(op)                               \
-  GT_INLINE bool operator op(const bfloat16_t& lhs, const bfloat16_t& rhs)       \
+#define PROVIDE_BFLOAT16T_COMPARISON_OPERATOR(op)                              \
+  GT_INLINE bool operator op(const bfloat16_t& lhs, const bfloat16_t& rhs)     \
   {                                                                            \
     return lhs.Get() op rhs.Get();                                             \
   }
 
 // op is binary [==, !=, <, <=, >, >=]
 // fp_type is [float, double]
-#define PROVIDE_MIXED_BFLOAT16T_COMPARISON_OPERATOR(op, fp_type)                \
+#define PROVIDE_MIXED_BFLOAT16T_COMPARISON_OPERATOR(op, fp_type)               \
                                                                                \
-  GT_INLINE bool operator op(const bfloat16_t& lhs, const fp_type& rhs)         \
+  GT_INLINE bool operator op(const bfloat16_t& lhs, const fp_type& rhs)        \
   {                                                                            \
     return static_cast<fp_type>(lhs.Get()) op rhs;                             \
   }                                                                            \
                                                                                \
-  GT_INLINE bool operator op(const fp_type& lhs, const bfloat16_t& rhs)         \
+  GT_INLINE bool operator op(const fp_type& lhs, const bfloat16_t& rhs)        \
   {                                                                            \
     return lhs op static_cast<fp_type>(rhs.Get());                             \
   }
@@ -181,14 +182,14 @@ PROVIDE_MIXED_BFLOAT16T_COMPARISON_OPERATOR(>=, double);
 
 // op is [==, !=]
 // int_type is [int]
-#define PROVIDE_MIXED_INTEGRAL_BFLOAT16T_COMPARISON_OPERATOR(op, int_type)      \
+#define PROVIDE_MIXED_INTEGRAL_BFLOAT16T_COMPARISON_OPERATOR(op, int_type)     \
                                                                                \
-  GT_INLINE bool operator op(const bfloat16_t& lhs, const int_type& rhs)        \
+  GT_INLINE bool operator op(const bfloat16_t& lhs, const int_type& rhs)       \
   {                                                                            \
     return lhs op static_cast<float>(rhs);                                     \
   }                                                                            \
                                                                                \
-  GT_INLINE bool operator op(const int_type& lhs, const bfloat16_t& rhs)        \
+  GT_INLINE bool operator op(const int_type& lhs, const bfloat16_t& rhs)       \
   {                                                                            \
     return static_cast<float>(lhs) op rhs;                                     \
   }
