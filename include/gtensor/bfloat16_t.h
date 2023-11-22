@@ -24,17 +24,17 @@ class bfloat16_t
 {
 
 #if defined(GTENSOR_BF16_CUDA_HEADER)
-using storage_type = __nv_bfloat16;
+  using storage_type = __nv_bfloat16;
 #else
 #error "GTENSOR_ENABLE_BF16=ON, but no bfloat16 type available!"
 #endif
 
 #if defined(GTENSOR_BF16_CUDA_HEADER) && defined(__CUDA_ARCH__) &&             \
   (__CUDA_ARCH__ >= 800)
-using compute_type = __nv_bfloat16;
+  using compute_type = __nv_bfloat16;
 #define BFLOAT16T_ON_CUDA_DEVICE
 #else
-using compute_type = float;
+  using compute_type = float;
 #endif
 
 public:
