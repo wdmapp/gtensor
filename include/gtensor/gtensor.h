@@ -25,8 +25,8 @@
 #endif
 
 #if defined(GTENSOR_ENABLE_BF16)
-#include "complex_bfloat16_t.h"
 #include "bfloat16_t.h"
+#include "complex_bfloat16_t.h"
 #endif
 
 namespace gt
