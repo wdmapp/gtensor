@@ -85,3 +85,8 @@ if (GTENSOR_ENABLE_FP16)
   add_gtensor_test(test_float16_t)
   add_gtensor_test(test_complex_float16_t)
 endif()
+
+if (GTENSOR_ENABLE_BF16)
+  add_gtensor_test(test_bfloat16_t)
+  add_gtensor_test(test_complex_bfloat16_t)
+endif()
