@@ -180,7 +180,21 @@ public:
   static int device_get_count()
   {
     int device_count;
-    gtGpuCheck(cudaGetDeviceCount(&device_count));
+    cudaError_t code = cudaGetDeviceCount(&device_count);
+    switch (code) {
+      case cudaErrorNoDevice:
+        fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
+                cudaGetErrorString(code));
+        device_count = 0;
+        break;
+      case cudaErrorInsufficientDriver:
+        fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
+                cudaGetErrorString(code));
+        fprintf(stderr, "Did you start the job on a CPU partition?\n");
+        device_count = 0;
+        break;
+      case cudaSuccess: break;
+    }
     return device_count;
   }
 
