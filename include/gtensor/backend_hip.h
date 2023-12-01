@@ -216,7 +216,15 @@ public:
   static int device_get_count()
   {
     int device_count;
-    gtGpuCheck(hipGetDeviceCount(&device_count));
+    hipError_t code = hipGetDeviceCount(&device_count);
+    switch (code) {
+    case hipErrorNoDevice:
+      /* Set silently the return value to 0 */
+      device_count=0;
+      break;
+    case hipSuccess:
+      break;
+    }
     return device_count;
   }
 
