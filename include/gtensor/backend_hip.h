@@ -217,13 +217,12 @@ public:
   {
     int device_count;
     hipError_t code = hipGetDeviceCount(&device_count);
-    switch (code) {
-      case hipErrorNoDevice:
-        /* Set silently the return value to 0 */
-        device_count = 0;
-        break;
-      case hipSuccess: break;
-      case default: gtGpuCheck(code); break;
+    if (code == hipErrorNoDevice) {
+      fprintf(stderr, "Error in hipGetDeviceCount: %d (%s)\n", code,
+              hipGetErrorString(code));
+      device_count = 0;
+    } else if (code != hipSuccess) {
+      gtGpuCheck(code);
     }
     return device_count;
   }

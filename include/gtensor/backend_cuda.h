@@ -181,20 +181,17 @@ public:
   {
     int device_count;
     cudaError_t code = cudaGetDeviceCount(&device_count);
-    switch (code) {
-      case cudaErrorNoDevice:
-        fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
-                cudaGetErrorString(code));
-        device_count = 0;
-        break;
-      case cudaErrorInsufficientDriver:
-        fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
-                cudaGetErrorString(code));
-        fprintf(stderr, "Did you start the job on a CPU partition?\n");
-        device_count = 0;
-        break;
-      case cudaSuccess: break;
-      case default: gtGpuCheck(code); break;
+    if (code == cudaErrorNoDevice) {
+      fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
+              cudaGetErrorString(code));
+      device_count = 0;
+    } else if (code == cudaErrorInsufficientDriver) {
+      fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
+              cudaGetErrorString(code));
+      fprintf(stderr, "Did you start the job on a CPU partition?\n");
+      device_count = 0;
+    } else if (code != cudaSuccess) {
+      gtGpuCheck(code);
     }
     return device_count;
   }
