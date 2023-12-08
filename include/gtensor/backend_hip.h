@@ -223,6 +223,7 @@ public:
         device_count = 0;
         break;
       case hipSuccess: break;
+      case default: gtGpuCheck(code); break;
     }
     return device_count;
   }
