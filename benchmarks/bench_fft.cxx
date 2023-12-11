@@ -177,11 +177,7 @@ static void BM_fft_r2c_2d(benchmark::State& state)
   auto h_A = gt::zeros<E>({Nx, Ny, batch_size});
   gt::bm::gtensor2<E, 3, S> d_A(h_A.shape());
 
-  auto h_A2 = gt::zeros<E>(h_A.shape());
-  gt::bm::gtensor2<E, 3, S> d_A2(h_A.shape());
-
   auto h_B = gt::empty<T>({Nx / 2 + 1, Ny, batch_size});
-  auto h_B_expected = gt::empty<T>(h_B.shape());
   gt::bm::gtensor2<T, 3, S> d_B(h_B.shape());
 
   // Set up periodic domain with frequencies 4 and 2
@@ -238,6 +234,9 @@ BENCHMARK(BM_fft_r2c_2d<double, 16, 16, 500, gt::space::managed>)
 BENCHMARK(BM_fft_r2c_2d<float, 32, 16, 500, gt::space::managed>)
   ->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_fft_r2c_2d<double, 32, 16, 500, gt::space::managed>)
+  ->Unit(benchmark::kMillisecond);
+
+BENCHMARK(BM_fft_r2c_2d<double, 256, 45, 2, gt::space::managed>)
   ->Unit(benchmark::kMillisecond);
 
 template <typename E, int Nx, int Ny, int batch_k, typename S = gt::space::device>
