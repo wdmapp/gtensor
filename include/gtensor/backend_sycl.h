@@ -304,12 +304,24 @@ public:
     using base_class::base_class;
 
     stream_view() : base_class(gt::backend::sycl::get_queue()) {}
+    // HACK: allow nullptr to work as default stream like other backends
+    stream_view(::sycl::queue* p) : base_class(gt::backend::sycl::get_queue())
+    {
+      // Interop with e.g. Fortran code that initializes a queue not using
+      // gtensor interfaces
+      if (p != nullptr) {
+        // Note: SYCL uses reference semantics for queues, so a "copy" of the
+        // queue is really the same queue
+        this->stream_ = *p;
+      }
+    }
     stream_view(const stream_view& other) : base_class(other.stream_) {}
 
     stream_view& operator=(const stream_view& other)
     {
-      this->~stream_view();
-      new (this) stream_view(other);
+      // Note: SYCL uses reference semantics for queues, so a "copy" of the
+      // queue is really the same queue
+      this->stream_ = other.stream_;
       return *this;
     }
 
