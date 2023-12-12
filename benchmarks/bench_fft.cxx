@@ -168,7 +168,8 @@ BENCHMARK(BM_fft_c2r_1d<double, 64, 500, gt::space::managed>)
 // BM_fft_r2c_2d
 //
 
-template <typename E, int Nx, int Ny, int batch_k, typename S = gt::space::device>
+template <typename E, int Nx, int Ny, int batch_k,
+          typename S = gt::space::device>
 static void BM_fft_r2c_2d(benchmark::State& state)
 {
   int batch_size = 1024 * batch_k;
@@ -239,7 +240,8 @@ BENCHMARK(BM_fft_r2c_2d<double, 32, 16, 500, gt::space::managed>)
 BENCHMARK(BM_fft_r2c_2d<double, 256, 45, 2, gt::space::managed>)
   ->Unit(benchmark::kMillisecond);
 
-template <typename E, int Nx, int Ny, int batch_k, typename S = gt::space::device>
+template <typename E, int Nx, int Ny, int batch_k,
+          typename S = gt::space::device>
 static void BM_fft_c2r_2d(benchmark::State& state)
 {
   int batch_size = 1024 * batch_k;
