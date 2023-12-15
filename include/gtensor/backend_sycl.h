@@ -268,7 +268,8 @@ public:
       case ::sycl::usm::alloc::shared: return memory_type::managed;
       case ::sycl::usm::alloc::unknown: return memory_type::unregistered;
       default:
-        fprintf(stderr, "ERROR: unknown memoryType %d.\n", alloc_type);
+        std::cerr << "ERROR: unknown memory type for pointer " << ptr
+                  << std::endl;
         std::abort();
     }
   }
