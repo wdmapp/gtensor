@@ -227,8 +227,8 @@ public:
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args);
 
-  GT_INLINE decltype(auto) operator[](const shape_type& idx) const;
-  GT_INLINE decltype(auto) operator[](const shape_type& idx);
+  GT_INLINE decltype(auto) operator[](const shape_type & idx) const;
+  GT_INLINE decltype(auto) operator[](const shape_type & idx);
 
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
@@ -651,7 +651,7 @@ template <typename E,
           typename = std::enable_if_t<detail::is_data_stride_expr<E>()>>
 inline auto swapaxes(E& e, int axis1, int axis2)
 {
-  //constexpr int N = expr_dimension<E>();
+  // constexpr int N = expr_dimension<E>();
   expr_shape_type<E> shape;
   expr_shape_type<E> strides;
 
