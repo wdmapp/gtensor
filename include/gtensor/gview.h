@@ -227,8 +227,8 @@ public:
   template <typename... Args>
   GT_INLINE decltype(auto) operator()(Args&&... args);
 
-  GT_INLINE decltype(auto) operator[](const shape_type & idx) const;
-  GT_INLINE decltype(auto) operator[](const shape_type & idx);
+  GT_INLINE decltype(auto) operator[](const shape_type& idx) const;
+  GT_INLINE decltype(auto) operator[](const shape_type& idx);
 
   GT_INLINE decltype(auto) data_access(size_type i) const;
   GT_INLINE decltype(auto) data_access(size_type i);
