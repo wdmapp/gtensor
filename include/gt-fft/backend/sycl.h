@@ -270,7 +270,11 @@ private:
         work_buffer_bytes_ += plan_work_buffer_bytes;
       }
     } catch (std::exception const& e) {
-      std::cerr << "Error creating dft descriptor:" << e.what() << std::endl;
+      std::cerr << "Error creating dft descriptor size {" << lengths[0];
+      for (int i = 1; i < lengths.size(); i++) {
+        std::cerr << ", " << lengths[i];
+      }
+      std::cerr << "} batch " << batch_size << ": " << e.what() << std::endl;
       abort();
     }
   }

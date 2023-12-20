@@ -195,6 +195,14 @@ extern "C" int gpuStreamCreate(sycl::queue** pStream)
   return 0;
 }
 
+extern "C" int gpuStreamCreateAsync(sycl::queue** pStream)
+{
+  // TODO: do we need to change queue properties for this
+  // to be as close as possible to HIP/CUDA?
+  *pStream = &gt::backend::sycl::new_stream_queue();
+  return 0;
+}
+
 extern "C" int gpuStreamDestroy(sycl::queue* stream)
 {
   if (stream != nullptr) {
