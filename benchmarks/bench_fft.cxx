@@ -237,8 +237,9 @@ BENCHMARK(BM_fft_r2c_2d<float, 32, 16, 500, gt::space::managed>)
 BENCHMARK(BM_fft_r2c_2d<double, 32, 16, 500, gt::space::managed>)
   ->Unit(benchmark::kMillisecond);
 
-BENCHMARK(BM_fft_r2c_2d<double, 256, 45, 2, gt::space::managed>)
-  ->Unit(benchmark::kMillisecond);
+// Uncomment to benchmark bigger case on large HPC class GPUs
+// BENCHMARK(BM_fft_r2c_2d<double, 256, 45, 2, gt::space::managed>)
+// ->Unit(benchmark::kMillisecond);
 
 template <typename E, int Nx, int Ny, int batch_k,
           typename S = gt::space::device>
