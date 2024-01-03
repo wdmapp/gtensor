@@ -28,6 +28,7 @@
 #include "cuda_runtime_api.h"
 #elif defined(GTENSOR_DEVICE_HIP)
 #include "hip/hip_runtime.h"
+#include "roctracer_ext.h"
 #endif
 
 #ifdef GTENSOR_DEVICE_SYCL
@@ -57,6 +58,8 @@ extern "C" void gpuProfilerStart()
 {
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck(cudaProfilerStart());
+#elif defined(GTENSOR_DEVICE_HIP)
+  roctracer_start();
 #endif
 }
 
@@ -64,6 +67,8 @@ extern "C" void gpuProfilerStop()
 {
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck(cudaProfilerStop());
+#elif defined(GTENSOR_DEVICE_HIP)
+  roctracer_stop();
 #endif
 }
 
