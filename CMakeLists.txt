@@ -200,6 +200,8 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
+  target_include_directories(gtensor_hip INTERFACE ${ROCM_PATH}/include/roctracer)
+  target_link_libraries(gtensor_hip INTERFACE ${ROCM_PATH}/lib/libroctracer64.so)
   target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 
   if (HIP_GCC_TOOLCHAIN)
