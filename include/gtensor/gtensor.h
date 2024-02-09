@@ -293,6 +293,28 @@ __global__ void kernel_launch(gt::shape_type<6> shape, F f)
   }
 }
 
+
+template <typename F>
+__global__ void kernel_launch(gt::shape_type<7> shape, F f)
+{
+  int i = threadIdx.x + blockIdx.x * BS_X;
+  int j = threadIdx.y + blockIdx.y * BS_Y;
+  int b = blockIdx.z;
+  int o = b / (shape[2] * shape[3] * shape[4] * shape[5]);
+  b -= o * (shape[2] * shape[3] * shape[4] * hspae[5]);
+  int n = b / (shape[2] * shape[3] * shape[4]);
+  b -= n * (shape[2] * shape[3] * shape[4]);
+  int m = b / (shape[2] * shape[3]);
+  b -= m * (shape[2] * shape[3]);
+  int l = b / shape[2];
+  b -= l * shape[2];
+  int k = b;
+
+  if (i < shape[0] && j < shape[1]) {
+    f(i, j, k, l, m, n, o);
+  }
+}
+
 #else // not GTENSOR_PER_DIM_KERNELS
 
 template <typename F, size_type N>
@@ -418,6 +440,31 @@ struct launch<6, space::host>
   }
 };
 
+
+template <>
+struct launch<7, space::host>
+{
+  template <typename F>
+  static void run(const gt::shape_type<7>& shape, F&& f, gt::stream_view stream)
+  {
+    for (int o = 0; o < shape[6]; o++) {
+      for (int n = 0; n < shape[5]; n++) {
+	for (int m = 0; m < shape[4]; m++) {
+	  for (int l = 0; l < shape[3]; l++) {
+	    for (int k = 0; k < shape[2]; k++) {
+	      for (int j = 0; j < shape[1]; j++) {
+		for (int i = 0; i < shape[0]; i++) {
+		  std::forward<F>(f)(i, j, k, l, m, n, o);
+		}
+	      }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 #ifdef GTENSOR_PER_DIM_KERNELS
@@ -513,6 +560,21 @@ struct launch<6, space::device>
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
                    shape[2] * shape[3] * shape[4] * shape[5]);
+
+    gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), shape, std::forward<F>(f));
+  }
+};
+
+template <>
+struct launch<7, space::device>
+{
+  template <typename F>
+  static void run(const gt::shape_type<7>& shape, F&& f, gt::stream_view stream)
+  {
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((shape[0] + BS_X - 1) / BS_X, (shape[1] + BS_Y - 1) / BS_Y,
+                   shape[2] * shape[3] * shape[4] * shape[5] * shape[6]);
 
     gtLaunchKernel(kernel_launch, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), shape, std::forward<F>(f));

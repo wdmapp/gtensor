@@ -124,6 +124,12 @@ GT_INLINE decltype(auto) index_expression(E&& expr, shape_type<6> idx)
   return expr(idx[0], idx[1], idx[2], idx[3], idx[4], idx[5]);
 }
 
+  template <typename E>
+GT_INLINE decltype(auto) index_expression(E&& expr, shape_type<7> idx)
+{
+  return expr(idx[0], idx[1], idx[2], idx[3], idx[4], idx[5], idx[6]);
+}
+
 } // namespace gt
 
 #endif
