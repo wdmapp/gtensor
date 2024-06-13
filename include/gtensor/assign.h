@@ -401,7 +401,7 @@ struct assigner<1, space::device>
     auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
-      using kname = gt::backend::sycl::Assign1<E1, E2, ltype, rtype>;
+      using kname = gt::backend::sycl::Assign1<ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<1> item) {
         auto i = item.get_id();
         k_lhs(i) = k_rhs(i);
@@ -427,7 +427,7 @@ struct assigner<2, space::device>
     auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
-      using kname = gt::backend::sycl::Assign2<E1, E2, ltype, rtype>;
+      using kname = gt::backend::sycl::Assign2<ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<2> item) {
         auto i = item.get_id(1);
         auto j = item.get_id(0);
@@ -454,7 +454,7 @@ struct assigner<3, space::device>
     auto e = q.submit([&](sycl::handler& cgh) {
       using ltype = decltype(k_lhs);
       using rtype = decltype(k_rhs);
-      using kname = gt::backend::sycl::Assign3<E1, E2, ltype, rtype>;
+      using kname = gt::backend::sycl::Assign3<ltype, rtype>;
       cgh.parallel_for<kname>(range, [=](sycl::item<3> item) {
         auto i = item.get_id(2);
         auto j = item.get_id(1);
@@ -493,16 +493,16 @@ struct assigner<N, space::device>
       q.copy(&k_rhs, d_rhs_p, 1).wait();
 
       auto e = q.submit([&](sycl::handler& cgh) {
-        using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
-        cgh.parallel_for<kname>(sycl::range<1>(size), [=](sycl::id<1> i) {
+        using kname = gt::backend::sycl::AssignN<ltype, rtype>;
+        cgh.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i) {
           auto idx = unravel(i, strides);
           index_expression(k_lhs, idx) = index_expression(*d_rhs_p, idx);
         });
       });
     } else {
       auto e = q.submit([&](sycl::handler& cgh) {
-        using kname = gt::backend::sycl::AssignN<E1, E2, ltype, rtype>;
-        cgh.parallel_for<kname>(sycl::range<1>(size), [=](sycl::id<1> i) {
+        using kname = gt::backend::sycl::AssignN<ltype, rtype>;
+        cgh.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i) {
           auto idx = unravel(i, strides);
           index_expression(k_lhs, idx) = index_expression(k_rhs, idx);
         });
