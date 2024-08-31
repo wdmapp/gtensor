@@ -19,6 +19,16 @@
 #include "operator.h"
 #include "space.h"
 
+#if defined(GTENSOR_ENABLE_FP16)
+#include "complex_float16_t.h"
+#include "float16_t.h"
+#endif
+
+#if defined(GTENSOR_ENABLE_BF16)
+#include "bfloat16_t.h"
+#include "complex_bfloat16_t.h"
+#endif
+
 namespace gt
 {
 

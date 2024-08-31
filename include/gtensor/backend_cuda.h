@@ -180,7 +180,19 @@ public:
   static int device_get_count()
   {
     int device_count;
-    gtGpuCheck(cudaGetDeviceCount(&device_count));
+    cudaError_t code = cudaGetDeviceCount(&device_count);
+    if (code == cudaErrorNoDevice) {
+      fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
+              cudaGetErrorString(code));
+      device_count = 0;
+    } else if (code == cudaErrorInsufficientDriver) {
+      fprintf(stderr, "Error in cudaGetDeviceCount: %d (%s)\n", code,
+              cudaGetErrorString(code));
+      fprintf(stderr, "Did you start the job on a CPU partition?\n");
+      device_count = 0;
+    } else if (code != cudaSuccess) {
+      gtGpuCheck(code);
+    }
     return device_count;
   }
 
@@ -290,6 +302,11 @@ public:
 
     auto get_execution_policy() { return thrust::cuda::par.on(this->stream_); }
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+    gtGpuCheck(cudaMemGetInfo(free, total));
+  }
 };
 
 namespace stream_interface

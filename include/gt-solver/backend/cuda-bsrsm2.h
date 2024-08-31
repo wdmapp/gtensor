@@ -135,7 +135,7 @@ class csr_matrix_lu_cuda_bsrsm2
 public:
   using value_type = T;
   using space_type = gt::space::device;
-  static constexpr bool inplace = false;
+  static constexpr bool inplace = true;
 
   csr_matrix_lu_cuda_bsrsm2(gt::sparse::csr_matrix<T, space_type>& csr_mat,
                             const T alpha, int nrhs,
@@ -204,23 +204,28 @@ public:
 
   void solve(T* rhs, T* result)
   {
-    // first solve in place into rhs
+    // in place solve in result vector
+    if (result == nullptr) {
+      result = rhs;
+    } else if (rhs != result) {
+      gt::copy_n(gt::device_pointer_cast(rhs), csr_mat_.shape(0) * nrhs_,
+                 gt::device_pointer_cast(result));
+    }
     gtSparseCheck(FN::solve(
       h_.get_backend_handle(), CUSPARSE_DIRECTION_COLUMN,
       CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE,
       csr_mat_.shape(0), nrhs_, csr_mat_.nnz(), FN::cast_pointer(&alpha_),
       l_desc_, FN::cast_pointer(csr_mat_.values_data()),
       csr_mat_.row_ptr_data(), csr_mat_.col_ind_data(), 1, l_info_,
-      FN::cast_pointer(rhs), csr_mat_.shape(0), FN::cast_pointer(rhs),
+      FN::cast_pointer(result), csr_mat_.shape(0), FN::cast_pointer(result),
       csr_mat_.shape(0), policy_, FN::cast_pointer(l_buf_.data())));
-    // second solve uses solution of first as input in rhs, result as output
     gtSparseCheck(FN::solve(
       h_.get_backend_handle(), CUSPARSE_DIRECTION_COLUMN,
       CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE,
       csr_mat_.shape(0), nrhs_, csr_mat_.nnz(), FN::cast_pointer(&alpha_),
       u_desc_, FN::cast_pointer(csr_mat_.values_data()),
       csr_mat_.row_ptr_data(), csr_mat_.col_ind_data(), 1, u_info_,
-      FN::cast_pointer(rhs), csr_mat_.shape(0), FN::cast_pointer(result),
+      FN::cast_pointer(result), csr_mat_.shape(0), FN::cast_pointer(result),
       csr_mat_.shape(0), policy_, FN::cast_pointer(u_buf_.data())));
   }
 
@@ -250,6 +255,8 @@ private:
 
   using FN = detail::csrsm_functions<T>;
 };
+
+#define GTENSOR_SOLVER_HAVE_CSR_MATRIX_LU
 
 template <typename T>
 using csr_matrix_lu = csr_matrix_lu_cuda_bsrsm2<T>;

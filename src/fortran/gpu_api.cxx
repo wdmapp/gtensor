@@ -28,6 +28,7 @@
 #include "cuda_runtime_api.h"
 #elif defined(GTENSOR_DEVICE_HIP)
 #include "hip/hip_runtime.h"
+#include "roctracer_ext.h"
 #endif
 
 #ifdef GTENSOR_DEVICE_SYCL
@@ -38,18 +39,7 @@
 
 extern "C" void gpuMemGetInfo(size_t* free, size_t* total)
 {
-#ifdef GTENSOR_DEVICE_CUDA
-  gtGpuCheck(cudaMemGetInfo(free, total));
-#elif defined(GTENSOR_DEVICE_HIP)
-  gtGpuCheck(hipMemGetInfo(free, total));
-#elif defined(GTENSOR_DEVICE_SYCL) && defined(GTENSOR_DEVICE_SYCL_L0)
-  // Note: must set ZES_ENABLE_SYSMAN=1 in env for this to work
-  gt::backend::sycl::mem_info(free, total);
-#else
-  // fallback so compiles and not divide by zero
-  *total = 1;
-  *free = 1;
-#endif
+  gt::backend::clib::mem_info(free, total);
 }
 
 #ifdef GTENSOR_DEVICE_CUDA
@@ -68,6 +58,8 @@ extern "C" void gpuProfilerStart()
 {
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck(cudaProfilerStart());
+#elif defined(GTENSOR_DEVICE_HIP)
+  roctracer_start();
 #endif
 }
 
@@ -75,6 +67,8 @@ extern "C" void gpuProfilerStop()
 {
 #ifdef GTENSOR_DEVICE_CUDA
   gtGpuCheck(cudaProfilerStop());
+#elif defined(GTENSOR_DEVICE_HIP)
+  roctracer_stop();
 #endif
 }
 
@@ -106,6 +100,12 @@ extern "C" int gpuStreamCreate(cudaStream_t* pStream)
   return static_cast<int>(cudaStreamCreate(pStream));
 }
 
+extern "C" int gpuStreamCreateAsync(cudaStream_t* pStream)
+{
+  return static_cast<int>(
+    cudaStreamCreateWithFlags(pStream, cudaStreamNonBlocking));
+}
+
 extern "C" int gpuStreamDestroy(cudaStream_t stream)
 {
   return static_cast<int>(cudaStreamDestroy(stream));
@@ -114,6 +114,26 @@ extern "C" int gpuStreamDestroy(cudaStream_t stream)
 extern "C" int gpuStreamSynchronize(cudaStream_t stream)
 {
   return static_cast<int>(cudaStreamSynchronize(stream));
+}
+
+extern "C" int gpuEventCreate(cudaEvent_t* event)
+{
+  return static_cast<int>(cudaEventCreate(event));
+}
+
+extern "C" int gpuEventDestroy(cudaEvent_t event)
+{
+  return static_cast<int>(cudaEventDestroy(event));
+}
+
+extern "C" int gpuEventRecord(cudaEvent_t event, cudaStream_t stream)
+{
+  return static_cast<int>(cudaEventRecord(event, stream));
+}
+
+extern "C" int gpuEventSynchronize(cudaEvent_t event)
+{
+  return static_cast<int>(cudaEventSynchronize(event));
 }
 
 extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
@@ -127,6 +147,12 @@ extern "C" int gpuStreamCreate(hipStream_t* pStream)
   return static_cast<int>(hipStreamCreate(pStream));
 }
 
+extern "C" int gpuStreamCreateAsync(hipStream_t* pStream)
+{
+  return static_cast<int>(
+    hipStreamCreateWithFlags(pStream, hipStreamNonBlocking));
+}
+
 extern "C" int gpuStreamDestroy(hipStream_t stream)
 {
   return static_cast<int>(hipStreamDestroy(stream));
@@ -135,6 +161,26 @@ extern "C" int gpuStreamDestroy(hipStream_t stream)
 extern "C" int gpuStreamSynchronize(hipStream_t stream)
 {
   return static_cast<int>(hipStreamSynchronize(stream));
+}
+
+extern "C" int gpuEventCreate(hipEvent_t* event)
+{
+  return static_cast<int>(hipEventCreate(event));
+}
+
+extern "C" int gpuEventDestroy(hipEvent_t event)
+{
+  return static_cast<int>(hipEventDestroy(event));
+}
+
+extern "C" int gpuEventRecord(hipEvent_t event, hipStream_t stream)
+{
+  return static_cast<int>(hipEventRecord(event, stream));
+}
+
+extern "C" int gpuEventSynchronize(hipEvent_t event)
+{
+  return static_cast<int>(hipEventSynchronize(event));
 }
 
 extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
@@ -192,6 +238,23 @@ extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
 {
   sycl::queue& q = sycl_get_queue(stream);
   q.memcpy(dst, src, bytes);
+  return 0;
+}
+
+#elif defined(GTENSOR_DEVICE_HOST)
+
+// dummy implementation, one GPU only
+extern "C" int gpuStreamCreate(gt::stream_view::stream_t* pStream) { return 0; }
+
+extern "C" int gpuStreamCreateAsync(gt::stream_view::stream_t* pStream)
+{
+  return 0;
+}
+
+extern "C" int gpuStreamDestroy(gt::stream_view::stream_t stream) { return 0; }
+
+extern "C" int gpuStreamSynchronize(gt::stream_view::stream_t stream)
+{
   return 0;
 }
 

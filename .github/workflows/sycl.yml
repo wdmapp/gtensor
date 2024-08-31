@@ -10,23 +10,19 @@ on:
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/wdmapp/oneapi-dpcpp-ubuntu-22.04:20230104
+    container: intel/oneapi-basekit:2023.1.0-devel-ubuntu22.04
     env:
       GTEST_VERSION: 1.12.1
       GTEST_ROOT: ${{ github.workspace }}/googletest
       DEBIAN_FRONTEND: noninteractive
       GTENSOR_TEST_EXCLUDE: test_fft test_reductions test_solver test_bandsolver
-      LD_LIBRARY_PATH: /opt/intel/oneapi/tbb/2021.8.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.8.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.8.0//lib/release:/opt/intel/oneapi/mpi/2021.8.0//lib:/opt/intel/oneapi/mkl/2023.0.0/lib/intel64:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2023.0.0/dep/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/x64:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2023.0.0/linux/compiler/lib/intel64_lin
-      PATH: /opt/intel/oneapi/mpi/2021.8.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.8.0//bin:/opt/intel/oneapi/mkl/2023.0.0/bin/intel64:/opt/intel/oneapi/dev-utilities/2021.8.0/bin:/opt/intel/oneapi/debugger/2023.0.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2023.0.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       CMAKE_BUILD_PARALLEL_LEVEL: 8
+      ONEAPI_DEVICE_SELECTOR: opencl:cpu
       UMPIRE_ROOT: ${{ github.workspace }}/umpire
     steps:
     - uses: actions/checkout@v3
-    - name: clinfo
-      run: |
-        mkdir -p /etc/OpenCL/vendors
-        echo "libintelocl.so" > /etc/OpenCL/vendors/intel-cpu.icd
-        clinfo
+    - name: install dependencies
+      run: apt-get -y update && apt-get install -y --no-install-recommends level-zero-dev
     - name: sycl-ls
       run: |
         which sycl-ls
@@ -38,10 +34,6 @@ jobs:
     - name: env check
       run: |
         env | grep oneapi
-    - name: install cmake
-      run: |
-        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-Linux-x86_64.sh'
-        bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: install googletest
       run: |
         mkdir -p ${{ env.GTEST_ROOT }}
@@ -51,7 +43,7 @@ jobs:
         cmake -S googletest-release-${{ env.GTEST_VERSION }} -B build -DCMAKE_INSTALL_PREFIX=${{ env.GTEST_ROOT }}
         cmake --build build -t install
       env:
-        CXX: clang++-11
+        CXX: g++
     - name: cmake
       run: cmake -S . -B build-sycl -DGTENSOR_DEVICE=sycl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGTENSOR_BUILD_EXAMPLES=ON -DGTEST_ROOT=${{ env.GTEST_ROOT }} -DGTENSOR_ENABLE_CLIB=ON -DGTENSOR_ENABLE_BLAS=ON -DGTENSOR_ENABLE_FFT=ON -DGTENSOR_ENABLE_SOLVER=ON -DGTENSOR_TEST_DEBUG=ON
     - name: cmake build
@@ -62,46 +54,30 @@ jobs:
       run: cmake --build build-sycl-debug -v
     - name: cmake cpu run tests
       run: ./run-gtests.sh build-sycl
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: cmake cpu run daxpy
       run: ./daxpy
       working-directory: ${{ github.workspace }}/build-sycl/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: cmake cpu run stencil1d
       run: ./stencil1d
       working-directory: ${{ github.workspace }}/build-sycl/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: cmake cpu run mult_table
       run: ./mult_table
       working-directory: ${{ github.workspace }}/build-sycl/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: GNU make setup gtensor subdir
       run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
       working-directory: ${{ github.workspace }}/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: GNU make build
       run: make GTENSOR_DEVICE=sycl
       working-directory: ${{ github.workspace }}/examples
     - name: GNU make run daxpy
       run: ./daxpy
       working-directory: ${{ github.workspace }}/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: GNU make run stencil1d
       run: ./stencil1d
       working-directory: ${{ github.workspace }}/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: GNU make run mult_table
       run: ./mult_table
       working-directory: ${{ github.workspace }}/examples
-      env:
-        SYCL_DEVICE_FILTER: cpu
     - name: install umpire
       run: |
         mkdir -p ${{ env.UMPIRE_ROOT }}

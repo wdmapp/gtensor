@@ -287,5 +287,8 @@ TEST(cblas, get_handle)
   // calls create internally
   h3 = gtblas_get_handle();
 
+  // host backend uses a singleton dummy handle
+#ifndef GTENSOR_DEVICE_HOST
   EXPECT_NE(h2, h3);
+#endif
 }

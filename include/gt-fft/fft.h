@@ -33,6 +33,8 @@ enum class Domain
 #else
 #include "backend/sycl.h"
 #endif // GTENSOR_DEVICE_SYCL_BBFFT
+#elif defined(GTENSOR_DEVICE_HOST)
+#include "backend/host.h"
 #endif
 
 namespace gt

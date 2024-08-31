@@ -5,6 +5,11 @@
 #include "backend_common.h"
 
 #include <algorithm>
+#include <cstdint>
+
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#endif
 
 // ======================================================================
 // gt::backend::host
@@ -63,6 +68,19 @@ public:
 
     void synchronize() {}
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+#ifdef __linux__
+    struct sysinfo info;
+    sysinfo(&info);
+    *total = info.totalram;
+    *free = info.freeram;
+#else
+    *total = 0;
+    *free = 0;
+#endif
+  }
 };
 
 namespace allocator_impl

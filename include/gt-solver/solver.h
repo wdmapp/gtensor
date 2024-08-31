@@ -5,31 +5,39 @@
 #include "gtensor/sparse.h"
 
 #include "gt-blas/blas.h"
-
+// CUDART_VERSION >= 11310
 #ifdef GTENSOR_DEVICE_CUDA
 #if CUDART_VERSION >= 12000
-#ifdef GTENSOR_DEVICE_CUDA_CUSPARSE_GENERIC
-// New generic API; available since 11.3.1, but performance
-// is worse than old csrsm2 API in many cases pre-12.
+#if CUDART_VERSION >= 12010
+// New generic API; available since 11.3.1, added support
+// for in-place solve in 12.1
 #include "gt-solver/backend/cuda-generic.h"
 #else
 // bsrsm2 API, which can work with csr format by setting
-// block size 1. In CUDA 12, appears to use less memory and
-// often be faster than generic API. Exists even in 8.0,
-// but not clear it has advantage over csrsm2 API for older
-// cuda versions where csrsm2 is still available.
+// block size 1. Deprecated in 12.2
+// May be faster than generic API in some cuda versions.
+// Exists even in 8.0, but not clear it has advantage over
+// csrsm2 API for older cuda versions where csrsm2 is still
+// available.
 #include "gt-solver/backend/cuda-bsrsm2.h"
-#endif // GTENSOR_DEVICE_CUDA_CUSPARSE_GENERIC
+#endif // version 12010
 #else
 // legacy API, deprecated since 11.3.1 but still supported until 12
 #include "gt-solver/backend/cuda-csrsm2.h"
 #endif // CUDA_VERSION
 
 #elif defined(GTENSOR_DEVICE_HIP)
-#include "gt-solver/backend/hip.h"
+#ifdef GTENSOR_SOLVER_HIP_SPARSE_GENERIC
+#include "gt-solver/backend/hip-generic.h"
+#else
+#include "gt-solver/backend/hip-csrsm2.h"
+#endif
 
 #elif defined(GTENSOR_DEVICE_SYCL)
 #include "gt-solver/backend/sycl.h"
+
+#elif defined(GTENSOR_DEVICE_HOST)
+#include "gt-solver/backend/host.h"
 #endif
 
 namespace gt
@@ -162,6 +170,9 @@ protected:
   gt::gtensor<T*, 1> h_result_pointers_;
 };
 
+#ifdef GTENSOR_SOLVER_HAVE_CSR_MATRIX_LU
+#define GTENSOR_SOLVER_HAVE_SOLVER_SPARSE
+
 template <typename T>
 class solver_sparse : public solver<T>
 {
@@ -188,6 +199,8 @@ private:
   static gt::sparse::csr_matrix<T, gt::space::device> lu_factor_batches_to_csr(
     gt::blas::handle_t& h, int n, int nbatches, T* const* matrix_batches);
 };
+
+#endif
 
 template <typename T>
 class solver_banded : public solver<T>

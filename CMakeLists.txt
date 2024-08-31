@@ -11,6 +11,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 include(cmake/CPM.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
 set(GTENSOR_DEVICE "cuda" CACHE STRING "Device type 'host', 'cuda', or 'hip'")
@@ -37,6 +38,7 @@ option(GTENSOR_ENABLE_BLAS "Enable gtblas" OFF)
 option(GTENSOR_ENABLE_FFT  "Enable gtfft" OFF)
 option(GTENSOR_ENABLE_FORTRAN "Enable Fortran interoperability" OFF)
 option(GTENSOR_ENABLE_SOLVER "Enable high level solver library" OFF)
+option(GTENSOR_SOLVER_HIP_SPARSE_GENERIC "Use rocSPARSE generic API for sparse solver" OFF)
 
 option(GTENSOR_PER_DIM_KERNELS
        "Enable per dim kernels (may break for large arrays)" OFF)
@@ -49,6 +51,8 @@ option(GTENSOR_ALLOCATOR_CACHING "Enable naive caching allocators" ON)
 option(GTENSOR_BOUNDS_CHECK "Enable per access bounds checking" OFF)
 option(GTENSOR_ADDRESS_CHECK "Enable address checking for device spans" OFF)
 option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
+option(GTENSOR_ENABLE_FP16 "Enable 16-bit floating point type gt::float16_t" OFF)
+option(GTENSOR_ENABLE_BF16 "Enable 16-bit floating point type gt::bfloat16_t" OFF)
 
 if (GTENSOR_ENABLE_FORTRAN)
   # do this early (here) since later the `enable_language(Fortran)` gives me trouble
@@ -196,6 +200,8 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
+  target_include_directories(gtensor_hip INTERFACE ${ROCM_PATH}/include/roctracer)
+  target_link_libraries(gtensor_hip INTERFACE ${ROCM_PATH}/lib/libroctracer64.so)
   target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 
   if (HIP_GCC_TOOLCHAIN)
@@ -333,6 +339,21 @@ else()
   message(STATUS "${PROJECT_NAME}: sync kernels is OFF")
 endif()
 
+if (GTENSOR_ENABLE_FP16)
+  message(STATUS "${PROJECT_NAME}: gt::float16_t is ENABLED")
+  message(STATUS "${PROJECT_NAME}: gt::complex_float16_t is ENABLED")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_ENABLE_FP16)
+endif()
+
+if (GTENSOR_ENABLE_BF16)
+  message(STATUS "${PROJECT_NAME}: gt::bfloat16_t is ENABLED")
+  message(STATUS "${PROJECT_NAME}: gt::complex_bfloat16_t is ENABLED")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_ENABLE_BF16)
+endif()
+
+
 target_compile_definitions(gtensor_${GTENSOR_DEVICE} INTERFACE
   GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT=${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT})
 message(STATUS "${PROJECT_NAME}: default managed memory type '${GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT}'")
@@ -458,6 +479,10 @@ if (GTENSOR_ENABLE_BLAS)
       target_link_libraries(gtsolver CUDA::cusparse)
     elseif (${GTENSOR_DEVICE} STREQUAL "hip")
       target_link_libraries(gtsolver rocsparse)
+      if (GTENSOR_SOLVER_HIP_SPARSE_GENERIC)
+        target_compile_definitions(gtsolver INTERFACE
+                                   GTENSOR_SOLVER_HIP_SPARSE_GENERIC)
+      endif()
     endif()
     list(APPEND GTENSOR_TARGETS gtsolver)
     add_library(gtensor::gtsolver ALIAS gtsolver)
@@ -493,6 +518,10 @@ if (GTENSOR_ENABLE_FFT)
     else()
       target_link_libraries(gtfft INTERFACE oneapi_mkl_sycl)
     endif()
+  elseif (${GTENSOR_DEVICE} STREQUAL "host")
+    find_package(FFTW REQUIRED)
+
+    target_link_libraries(gtfft INTERFACE FFTW::Double FFTW::Float)
   endif()
 
   list(APPEND GTENSOR_TARGETS gtfft)

@@ -734,14 +734,7 @@ void test_full_solve_real(gt::stream_view stream = gt::stream_view{})
   gt::blas::getrf_batched(h, N, gt::raw_pointer_cast(d_Aptr.data()), N,
                           gt::raw_pointer_cast(d_p.data()),
                           gt::raw_pointer_cast(d_info.data()), batch_size);
-
-  if (!stream.is_default()) {
-    // NOTE: this should work for default stream as well, but more important
-    // to test the no-stream style interface with global sync below
-    stream.synchronize();
-  } else {
-    gt::synchronize();
-  }
+  stream.synchronize();
 
   auto bw = gt::blas::get_max_bandwidth(
     h, N, gt::raw_pointer_cast(d_Aptr.data()), N, 1);
@@ -753,7 +746,7 @@ void test_full_solve_real(gt::stream_view stream = gt::stream_view{})
                                   gt::raw_pointer_cast(d_p.data()),
                                   gt::raw_pointer_cast(d_Ainvptr.data()), N,
                                   batch_size, bw.lower, bw.upper);
-  gt::synchronize();
+  stream.synchronize();
 
   gt::copy(d_Ainv, h_Ainv);
   GT_EXPECT_NEAR_ARRAY(h_Ainv, h_Ainv_expected);
@@ -762,7 +755,7 @@ void test_full_solve_real(gt::stream_view stream = gt::stream_view{})
                             gt::raw_pointer_cast(d_Ainvptr.data()), N,
                             gt::raw_pointer_cast(d_Bptr.data()), N, 0.0,
                             gt::raw_pointer_cast(d_Cptr.data()), N, batch_size);
-  gt::synchronize();
+  stream.synchronize();
 
   gt::copy(d_C, h_C);
 

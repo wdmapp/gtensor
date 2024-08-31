@@ -216,7 +216,14 @@ public:
   static int device_get_count()
   {
     int device_count;
-    gtGpuCheck(hipGetDeviceCount(&device_count));
+    hipError_t code = hipGetDeviceCount(&device_count);
+    if (code == hipErrorNoDevice) {
+      fprintf(stderr, "Error in hipGetDeviceCount: %d (%s)\n", code,
+              hipGetErrorString(code));
+      device_count = 0;
+    } else if (code != hipSuccess) {
+      gtGpuCheck(code);
+    }
     return device_count;
   }
 
@@ -324,6 +331,11 @@ public:
 
     auto get_execution_policy() { return thrust::hip::par.on(this->stream_); }
   };
+
+  static void mem_info(size_t* free, size_t* total)
+  {
+    gtGpuCheck(hipMemGetInfo(free, total));
+  }
 };
 
 namespace stream_interface
