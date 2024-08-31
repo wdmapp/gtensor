@@ -355,7 +355,6 @@ struct equals<6, 6, space::host, space::host>
   }
 };
 
-
 template <>
 struct equals<7, 7, space::host, space::host>
 {
@@ -368,14 +367,14 @@ struct equals<7, 7, space::host, space::host>
 
     for (int v = 0; v < e1.shape(6); v++) {
       for (int z = 0; z < e1.shape(5); z++) {
-	for (int y = 0; y < e1.shape(4); y++) {
-	  for (int x = 0; x < e1.shape(3); x++) {
-	    for (int k = 0; k < e1.shape(2); k++) {
-	      for (int j = 0; j < e1.shape(1); j++) {
-		for (int i = 0; i < e1.shape(0); i++) {
-		  if (e1(i, j, k, x, y, z, v) != e2(i, j, k, x, y, z, v)) {
-		    return false;
-		  }
+        for (int y = 0; y < e1.shape(4); y++) {
+          for (int x = 0; x < e1.shape(3); x++) {
+            for (int k = 0; k < e1.shape(2); k++) {
+              for (int j = 0; j < e1.shape(1); j++) {
+                for (int i = 0; i < e1.shape(0); i++) {
+                  if (e1(i, j, k, x, y, z, v) != e2(i, j, k, x, y, z, v)) {
+                    return false;
+                  }
                 }
               }
             }

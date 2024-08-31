@@ -303,7 +303,6 @@ __global__ void kernel_launch(gt::shape_type<6> shape, F f)
   }
 }
 
-
 template <typename F>
 __global__ void kernel_launch(gt::shape_type<7> shape, F f)
 {
@@ -450,7 +449,6 @@ struct launch<6, space::host>
   }
 };
 
-
 template <>
 struct launch<7, space::host>
 {
@@ -459,14 +457,14 @@ struct launch<7, space::host>
   {
     for (int o = 0; o < shape[6]; o++) {
       for (int n = 0; n < shape[5]; n++) {
-	for (int m = 0; m < shape[4]; m++) {
-	  for (int l = 0; l < shape[3]; l++) {
-	    for (int k = 0; k < shape[2]; k++) {
-	      for (int j = 0; j < shape[1]; j++) {
-		for (int i = 0; i < shape[0]; i++) {
-		  std::forward<F>(f)(i, j, k, l, m, n, o);
-		}
-	      }
+        for (int m = 0; m < shape[4]; m++) {
+          for (int l = 0; l < shape[3]; l++) {
+            for (int k = 0; k < shape[2]; k++) {
+              for (int j = 0; j < shape[1]; j++) {
+                for (int i = 0; i < shape[0]; i++) {
+                  std::forward<F>(f)(i, j, k, l, m, n, o);
+                }
+              }
             }
           }
         }

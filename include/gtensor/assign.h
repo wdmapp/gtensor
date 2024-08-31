@@ -134,7 +134,6 @@ struct assigner<6, space::host>
   }
 };
 
-
 template <>
 struct assigner<7, space::host>
 {
@@ -144,14 +143,14 @@ struct assigner<7, space::host>
     // printf("assigner<7, host>\n");
     for (int o = 0; o < lhs.shape(6); o++) {
       for (int n = 0; n < lhs.shape(5); n++) {
-	for (int m = 0; m < lhs.shape(4); m++) {
-	  for (int l = 0; l < lhs.shape(3); l++) {
-	    for (int k = 0; k < lhs.shape(2); k++) {
-	      for (int j = 0; j < lhs.shape(1); j++) {
-		for (int i = 0; i < lhs.shape(0); i++) {
-		  lhs(i, j, k, l, m, n, o) = rhs(i, j, k, l, m, n, o);
-		}
-	      }
+        for (int m = 0; m < lhs.shape(4); m++) {
+          for (int l = 0; l < lhs.shape(3); l++) {
+            for (int k = 0; k < lhs.shape(2); k++) {
+              for (int j = 0; j < lhs.shape(1); j++) {
+                for (int i = 0; i < lhs.shape(0); i++) {
+                  lhs(i, j, k, l, m, n, o) = rhs(i, j, k, l, m, n, o);
+                }
+              }
             }
           }
         }
@@ -257,8 +256,7 @@ __global__ void kernel_assign_7(Elhs lhs, Erhs _rhs)
     int j = tidx / lhs.shape(0), i = tidx % lhs.shape(0);
     int l = tidy / lhs.shape(2), k = tidy % lhs.shape(2);
     int m = tidz % lhs.shape(5) % lhs.shape(4);
-    int n = tidz % lhs.shape(5) / lhs.shape(4),
-    int o = tidz / lhs.shape(5);
+    int n = tidz % lhs.shape(5) / lhs.shape(4), int o = tidz / lhs.shape(5);
 
     lhs(i, j, k, l, m, n, o) = rhs(i, j, k, l, m, o);
   }
