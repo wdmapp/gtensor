@@ -253,10 +253,13 @@ __global__ void kernel_assign_7(Elhs lhs, Erhs _rhs)
   int tidz = blockIdx.z;
   if (tidx < lhs.shape(0) * lhs.shape(1) &&
       tidy < lhs.shape(2) * lhs.shape(3)) {
-    int j = tidx / lhs.shape(0), i = tidx % lhs.shape(0);
-    int l = tidy / lhs.shape(2), k = tidy % lhs.shape(2);
+    int j = tidx / lhs.shape(0);
+    int i = tidx % lhs.shape(0);
+    int l = tidy / lhs.shape(2);
+    int k = tidy % lhs.shape(2);
+    int n = tidz % lhs.shape(5) / lhs.shape(4);
     int m = tidz % lhs.shape(5) % lhs.shape(4);
-    int n = tidz % lhs.shape(5) / lhs.shape(4), int o = tidz / lhs.shape(5);
+    int o = tidz / lhs.shape(5);
 
     lhs(i, j, k, l, m, n, o) = rhs(i, j, k, l, m, o);
   }
