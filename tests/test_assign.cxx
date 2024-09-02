@@ -113,7 +113,7 @@ TEST(assign, broadcast_7d)
       }
     }
   }
-
+}
 #ifdef GTENSOR_HAVE_DEVICE
 
   TEST(assign, device_gtensor_6d)
@@ -478,5 +478,6 @@ TEST(assign, broadcast_7d)
         }
       }
     }
+  }
 
 #endif // GTENSOR_HAVE_DEVICE
