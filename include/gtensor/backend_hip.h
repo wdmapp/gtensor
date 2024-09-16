@@ -259,7 +259,11 @@ public:
       return false;
     }
     gtGpuCheck(rval);
-    return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
+#if HIP_VERSION_MAJOR >= 6
+      return (attr.type == hipMemoryTypeDevice || attr.isManaged);
+#else
+      return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
+#endif
   }
 
   template <typename Ptr>
@@ -268,19 +272,27 @@ public:
     hipPointerAttribute_t attr;
     auto rc = hipPointerGetAttributes(&attr, ptr);
     if (rc == hipErrorInvalidValue) {
-      hipGetLastError(); // clear the error
+      static_cast<void>(hipGetLastError()); // clear the error
       return memory_type::unregistered;
     }
     gtGpuCheck(rc);
     if (attr.isManaged) {
       return memory_type::managed;
     }
+#if HIP_VERSION_MAJOR >= 6
+    switch (attr.type) {
+#else
     switch (attr.memoryType) {
+#endif
       case hipMemoryTypeHost: return memory_type::host;
       case hipMemoryTypeDevice: return memory_type::device;
       case hipMemoryTypeUnified: return memory_type::managed;
       default:
-        fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.memoryType);
+#if HIP_VERSION_MAJOR >= 6
+        fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.type);
+#else
+	fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.memoryType);
+#endif
         std::abort();
     }
   }

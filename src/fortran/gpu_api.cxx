@@ -88,7 +88,7 @@ extern "C" void gpuDeviceReset()
 #ifdef GTENSOR_DEVICE_CUDA
   cudaDeviceReset();
 #elif defined(GTENSOR_DEVICE_HIP)
-  hipDeviceReset();
+  static_cast<void>(hipDeviceReset());
 #elif defined(GTENSOR_DEVICE_SYCL)
 #warning "device reset not yet implemented for SYCL"
 #endif
