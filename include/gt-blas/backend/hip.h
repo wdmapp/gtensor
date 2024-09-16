@@ -1,8 +1,8 @@
 #ifndef GTENSOR_BLAS_HIP_H
 #define GTENSOR_BLAS_HIP_H
 
-#include "rocblas.h"
-#include "rocsolver.h"
+#include "rocblas/rocblas.h"
+#include "rocsolver/rocsolver.h"
 
 // ======================================================================
 // error handling helper

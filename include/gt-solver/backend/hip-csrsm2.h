@@ -9,7 +9,7 @@
 
 #include "gt-blas/blas.h"
 
-#include <rocsparse.h>
+#include <rocsparse/rocsparse.h>
 
 // ======================================================================
 // error handling helper

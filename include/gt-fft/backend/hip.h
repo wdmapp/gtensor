@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <rocfft.h>
+#include <rocfft/rocfft.h>
 
 // ======================================================================
 // error handling helper
@@ -163,7 +163,7 @@ public:
       rocfft_execution_info_destroy(info_forward_);
       rocfft_execution_info_destroy(info_inverse_);
       if (work_buffer_ != nullptr) {
-        hipFree(work_buffer_);
+        static_cast<void>(hipFree(work_buffer_));
       }
     }
   }
