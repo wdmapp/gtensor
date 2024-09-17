@@ -271,7 +271,7 @@ TEST(gtensor, device_launch_7d)
         for (int l = 0; l < h_a.shape(3); l++) {
           for (int m = 0; m < h_a.shape(4); m++) {
             for (int n = 0; n < h_a.shape(5); n++) {
-              for (int o = 0; n < h_a.shape(6); o++) {
+              for (int o = 0; o < h_a.shape(6); o++) {
                 h_a(i, j, k, l, m, n, o) = i + j + k + l + m + n + o;
               }
             }
