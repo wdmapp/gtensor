@@ -260,9 +260,9 @@ public:
     }
     gtGpuCheck(rval);
 #if HIP_VERSION_MAJOR >= 6
-      return (attr.type == hipMemoryTypeDevice || attr.isManaged);
+    return (attr.type == hipMemoryTypeDevice || attr.isManaged);
 #else
-      return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
+    return (attr.memoryType == hipMemoryTypeDevice || attr.isManaged);
 #endif
   }
 
@@ -291,7 +291,7 @@ public:
 #if HIP_VERSION_MAJOR >= 6
         fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.type);
 #else
-	fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.memoryType);
+        fprintf(stderr, "ERROR: unknown memoryType %d.\n", attr.memoryType);
 #endif
         std::abort();
     }
