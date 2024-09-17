@@ -335,6 +335,7 @@ jobs:
     runs-on: ubuntu-latest
     container: rocm/dev-ubuntu-22.04:5.4.2-complete
     env:
+      CMAKE_VERSION: 3.25.3
       CMAKE_PREFIX_PATH: /opt/rocm/lib/cmake
       ROCM_PATH: /opt/rocm
       CXX: /opt/rocm/bin/hipcc
@@ -347,7 +348,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: install core packages
-      run: apt-get update -y && apt-get install -y wget git cmake clang
+      run: apt-get update -y && apt-get install -y wget git clang
+    - name: install cmake
+      run: |
+        wget -O cmake.sh 'https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION}}/cmake-${{env.CMAKE_VERSION }}-Linux-x86_64.sh'
+        bash cmake.sh --prefix=/usr --skip-license --exclude-subdir
     - name: install extra ROCm packages
       run: apt-get install -y rocthrust rocprim rocfft rocblas hipfft rocsolver rocsparse
     - name: install googletest
@@ -364,7 +369,7 @@ jobs:
       run: |
         mkdir -p ${{ env.UMPIRE_ROOT }}
         cd ${{ env.UMPIRE_ROOT }}
-        git clone --recursive https://github.com/LLNL/Umpire.git src
+        git clone --recursive https://github.com/LLNL/Umpire.git src -b v2024.02.1
         cmake -S src -B build -DCMAKE_INSTALL_PREFIX=${{ env.UMPIRE_ROOT }}/install -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
         cmake --build build -t install
     - name: cmake nothrust umpire
