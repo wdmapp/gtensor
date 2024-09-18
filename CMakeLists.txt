@@ -22,7 +22,7 @@ set(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed" CACHE STRING
    "One of 'managed', 'device', or for HIP 'managed_coarse' or 'managed_fine'")
 set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
              PROPERTY STRINGS "managed" "device" "managed_coarse" "managed_fine")
-
+set(GTENSOR_GPU_ARCHITECTURES "native" CACHE STRING "The compute architecture for the GPU, i.e. 80 for A100, gfx90a for MI250X")
 set(GTENSOR_UMPIRE_STRATEGY "DynamicPoolList" CACHE STRING "class in umpire::strategy")
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
@@ -61,6 +61,9 @@ if (GTENSOR_ENABLE_FORTRAN)
   set(GTENSOR_ENABLE_CLIB ON)
 endif()
 
+# CUDA specific configuration
+set(CMAKE_CUDA_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
+
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 if (DEFINED ENV{ROCM_PATH})
@@ -69,8 +72,9 @@ else()
    set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 endif()
 set(HIP_PATH "${ROCM_PATH}/hip" CACHE STRING "path to HIP installation")
-set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
-    STRING "comma separated list of AMD gpu architectures to build for")
+set(HIP_GPU_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
+#set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
+#    STRING "comma separated list of AMD gpu architectures to build for")
 
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES "" CACHE STRING
