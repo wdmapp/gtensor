@@ -9,7 +9,11 @@
 
 #include "gt-blas/blas.h"
 
-#include <rocsparse.h>
+#if HIP_VERSION_MAJOR >= 6
+# include "rocsparse/rocsparse.h"
+#else
+# include <rocsparse.h>
+#endif
 
 // ======================================================================
 // error handling helper

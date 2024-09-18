@@ -28,7 +28,11 @@
 #include "cuda_runtime_api.h"
 #elif defined(GTENSOR_DEVICE_HIP)
 #include "hip/hip_runtime.h"
-#include "roctracer_ext.h"
+#if HIP_VERSION_MAJOR >= 6
+# include "roctracer/roctracer_ext.h"
+#else
+# include "roctracer_ext.h"
+#endif
 #endif
 
 #ifdef GTENSOR_DEVICE_SYCL

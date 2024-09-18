@@ -1,8 +1,13 @@
 #ifndef GTENSOR_BLAS_HIP_H
 #define GTENSOR_BLAS_HIP_H
 
-#include "rocblas.h"
-#include "rocsolver.h"
+#if HIP_VERSION_MAJOR >= 6
+# include "rocblas/rocblas.h"
+# include "rocsolver/rocsolver.h"
+#else
+# include "rocblas.h"
+# include "rocsolver.h"
+#endif
 
 // ======================================================================
 // error handling helper
