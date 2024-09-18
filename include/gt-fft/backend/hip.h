@@ -5,7 +5,11 @@
 #include <stdexcept>
 #include <vector>
 
-#include <rocfft.h>
+#if HIP_VERSION_MAJOR >= 6
+# include "rocfft/rocfft.h"
+#else
+# include <rocfft.h>
+#endif
 
 // ======================================================================
 // error handling helper
