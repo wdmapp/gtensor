@@ -355,6 +355,37 @@ struct equals<6, 6, space::host, space::host>
   }
 };
 
+template <>
+struct equals<7, 7, space::host, space::host>
+{
+  template <typename E1, typename E2>
+  static bool run(const E1& e1, const E2& e2)
+  {
+    if (e1.shape() != e2.shape()) {
+      return false;
+    }
+
+    for (int v = 0; v < e1.shape(6); v++) {
+      for (int z = 0; z < e1.shape(5); z++) {
+        for (int y = 0; y < e1.shape(4); y++) {
+          for (int x = 0; x < e1.shape(3); x++) {
+            for (int k = 0; k < e1.shape(2); k++) {
+              for (int j = 0; j < e1.shape(1); j++) {
+                for (int i = 0; i < e1.shape(0); i++) {
+                  if (e1(i, j, k, x, y, z, v) != e2(i, j, k, x, y, z, v)) {
+                    return false;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+};
+
 #ifdef GTENSOR_HAVE_DEVICE
 
 template <size_type N1, size_type N2>

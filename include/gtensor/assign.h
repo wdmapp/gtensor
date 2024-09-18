@@ -134,6 +134,31 @@ struct assigner<6, space::host>
   }
 };
 
+template <>
+struct assigner<7, space::host>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
+  {
+    // printf("assigner<7, host>\n");
+    for (int o = 0; o < lhs.shape(6); o++) {
+      for (int n = 0; n < lhs.shape(5); n++) {
+        for (int m = 0; m < lhs.shape(4); m++) {
+          for (int l = 0; l < lhs.shape(3); l++) {
+            for (int k = 0; k < lhs.shape(2); k++) {
+              for (int j = 0; j < lhs.shape(1); j++) {
+                for (int i = 0; i < lhs.shape(0); i++) {
+                  lhs(i, j, k, l, m, n, o) = rhs(i, j, k, l, m, n, o);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
 #if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
 
 #ifdef GTENSOR_PER_DIM_KERNELS
@@ -216,6 +241,27 @@ __global__ void kernel_assign_6(Elhs lhs, Erhs _rhs)
     int n = tidz / lhs.shape(4), m = tidz % lhs.shape(4);
 
     lhs(i, j, k, l, m, n) = rhs(i, j, k, l, m, n);
+  }
+}
+
+template <typename Elhs, typename Erhs>
+__global__ void kernel_assign_7(Elhs lhs, Erhs _rhs)
+{
+  auto rhs = _rhs;
+  int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+  int tidy = threadIdx.y + blockIdx.y * blockDim.y;
+  int tidz = blockIdx.z;
+  if (tidx < lhs.shape(0) * lhs.shape(1) &&
+      tidy < lhs.shape(2) * lhs.shape(3)) {
+    int j = tidx / lhs.shape(0);
+    int i = tidx % lhs.shape(0);
+    int l = tidy / lhs.shape(2);
+    int k = tidy % lhs.shape(2);
+    int n = tidz % lhs.shape(5) / lhs.shape(4);
+    int m = tidz % lhs.shape(5) % lhs.shape(4);
+    int o = tidz / lhs.shape(5);
+
+    lhs(i, j, k, l, m, n, o) = rhs(i, j, k, l, m, o);
   }
 }
 
@@ -305,7 +351,7 @@ struct assigner<5, space::device>
   template <typename E1, typename E2>
   static void run(E1& lhs, const E2& rhs, stream_view stream)
   {
-    // printf("assigner<6, device>\n");
+    // printf("assigner<5, device>\n");
     dim3 numThreads(BS_X, BS_Y);
     dim3 numBlocks((lhs.shape(0) * lhs.shape(1) + BS_X - 1) / BS_X,
                    (lhs.shape(2) * lhs.shape(3) + BS_Y - 1) / BS_Y,
@@ -335,6 +381,27 @@ struct assigner<6, space::device>
     gpuSyncIfEnabledStream(stream);
     // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
     gtLaunchKernel(kernel_assign_6, numBlocks, numThreads, 0,
+                   stream.get_backend_stream(), lhs.to_kernel(),
+                   rhs.to_kernel());
+    gpuSyncIfEnabledStream(stream);
+  }
+};
+
+template <>
+struct assigner<7, space::device>
+{
+  template <typename E1, typename E2>
+  static void run(E1& lhs, const E2& rhs, stream_view stream)
+  {
+    // printf("assigner<7, device>\n");
+    dim3 numThreads(BS_X, BS_Y);
+    dim3 numBlocks((lhs.shape(0) * lhs.shape(1) + BS_X - 1) / BS_X,
+                   (lhs.shape(2) * lhs.shape(3) + BS_Y - 1) / BS_Y,
+                   lhs.shape(4) * lhs.shape(5) * lhs.shape(6));
+
+    gpuSyncIfEnabledStream(stream);
+    // std::cout << "rhs " << typeid(rhs.to_kernel()).name() << "\n";
+    gtLaunchKernel(kernel_assign_7, numBlocks, numThreads, 0,
                    stream.get_backend_stream(), lhs.to_kernel(),
                    rhs.to_kernel());
     gpuSyncIfEnabledStream(stream);

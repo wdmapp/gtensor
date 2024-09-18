@@ -23,6 +23,22 @@ TEST(assign, gtensor_6d)
   EXPECT_EQ(a, b);
 }
 
+TEST(assign, gtensor_7d)
+{
+  gt::gtensor<int, 7> a(gt::shape(2, 3, 4, 5, 6, 7, 8));
+  gt::gtensor<int, 7> b(a.shape());
+
+  int* adata = a.data();
+
+  for (int i = 0; i < a.size(); i++) {
+    adata[i] = i;
+  }
+
+  EXPECT_NE(a, b);
+  b = a;
+  EXPECT_EQ(a, b);
+}
+
 TEST(assign, gview_1d_scalar)
 {
   auto a = gt::empty<int>(gt::shape(5));
@@ -81,6 +97,23 @@ TEST(assign, broadcast_6d)
   }
 }
 
+TEST(assign, broadcast_7d)
+{
+  gt::gtensor<int, 7> a(gt::shape(8, 1, 2, 4, 1, 1, 6), 0);
+  gt::gtensor<int, 7> b(gt::shape(8, 1, 2, 1, 1, 1, 6), -7);
+
+  gt::assign(a, b);
+
+  for (int i = 0; i < a.shape(0); i++) {
+    for (int j = 0; j < a.shape(2); j++) {
+      for (int k = 0; k < a.shape(3); k++) {
+        for (int l = 0; l < a.shape(6); l++) {
+          EXPECT_EQ(a(i, 0, j, k, 0, 0, l), -7);
+        }
+      }
+    }
+  }
+}
 #ifdef GTENSOR_HAVE_DEVICE
 
 TEST(assign, device_gtensor_6d)
@@ -89,6 +122,26 @@ TEST(assign, device_gtensor_6d)
   gt::gtensor_device<int, 6> b(a.shape());
   gt::gtensor<int, 6> h_a(a.shape());
   gt::gtensor<int, 6> h_b(a.shape());
+
+  int* adata = h_a.data();
+
+  for (int i = 0; i < a.size(); i++) {
+    adata[i] = i;
+  }
+
+  gt::copy(h_a, a);
+  b = a;
+  gt::copy(b, h_b);
+
+  EXPECT_EQ(h_a, h_b);
+}
+
+TEST(assign, device_gtensor_7d)
+{
+  gt::gtensor_device<int, 7> a(gt::shape(2, 3, 4, 5, 6, 7, 8));
+  gt::gtensor_device<int, 7> b(a.shape());
+  gt::gtensor<int, 7> h_a(a.shape());
+  gt::gtensor<int, 7> h_b(a.shape());
 
   int* adata = h_a.data();
 
@@ -398,6 +451,28 @@ TEST(assign, device_broadcast_6d)
     for (int j = 0; j < h_a.shape(2); j++) {
       for (int k = 0; k < h_a.shape(3); k++) {
         EXPECT_EQ(h_a(i, 0, j, k, 0, 0), -7);
+      }
+    }
+  }
+}
+
+TEST(assign, device_broadcast_7d)
+{
+  gt::gtensor_device<int, 7> a(gt::shape(8, 1, 2, 4, 1, 1, 4), 0);
+  gt::gtensor_device<int, 7> b(gt::shape(8, 1, 2, 1, 1, 1, 4), -7);
+
+  gt::gtensor<int, 7> h_a(a.shape());
+
+  gt::assign(a, b);
+
+  gt::copy(a, h_a);
+
+  for (int i = 0; i < h_a.shape(0); i++) {
+    for (int j = 0; j < h_a.shape(2); j++) {
+      for (int k = 0; k < h_a.shape(3); k++) {
+        for (int l = 0; l < h_a.shape(6); l++) {
+          EXPECT_EQ(h_a(i, 0, j, k, 0, 0, l), -7);
+        }
       }
     }
   }
