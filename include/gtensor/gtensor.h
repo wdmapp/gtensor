@@ -310,7 +310,7 @@ __global__ void kernel_launch(gt::shape_type<7> shape, F f)
   int j = threadIdx.y + blockIdx.y * BS_Y;
   int b = blockIdx.z;
   int o = b / (shape[2] * shape[3] * shape[4] * shape[5]);
-  b -= o * (shape[2] * shape[3] * shape[4] * hspae[5]);
+  b -= o * (shape[2] * shape[3] * shape[4] * shape[5]);
   int n = b / (shape[2] * shape[3] * shape[4]);
   b -= n * (shape[2] * shape[3] * shape[4]);
   int m = b / (shape[2] * shape[3]);
