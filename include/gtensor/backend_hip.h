@@ -290,7 +290,7 @@ public:
       case hipMemoryTypeDevice: return memory_type::device;
       case hipMemoryTypeUnified: return memory_type::managed;
       default:
-        fprintf(stderr, "ERROR: unknown type %d.\n", attr.type);
+        fprintf(stderr, "ERROR: unknown type %d.\n", memoryType);
         std::abort();
     }
   }
