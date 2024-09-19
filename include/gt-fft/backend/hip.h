@@ -6,9 +6,9 @@
 #include <vector>
 
 #if HIP_VERSION_MAJOR >= 6
-# include "rocfft/rocfft.h"
+#include "rocfft/rocfft.h"
 #else
-# include <rocfft.h>
+#include <rocfft.h>
 #endif
 
 // ======================================================================

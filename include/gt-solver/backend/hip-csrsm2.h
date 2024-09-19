@@ -10,9 +10,9 @@
 #include "gt-blas/blas.h"
 
 #if HIP_VERSION_MAJOR >= 6
-# include "rocsparse/rocsparse.h"
+#include "rocsparse/rocsparse.h"
 #else
-# include <rocsparse.h>
+#include <rocsparse.h>
 #endif
 
 // ======================================================================

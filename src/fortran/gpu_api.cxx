@@ -29,9 +29,9 @@
 #elif defined(GTENSOR_DEVICE_HIP)
 #include "hip/hip_runtime.h"
 #if HIP_VERSION_MAJOR >= 6
-# include "roctracer/roctracer_ext.h"
+#include "roctracer/roctracer_ext.h"
 #else
-# include "roctracer_ext.h"
+#include "roctracer_ext.h"
 #endif
 #endif
 
