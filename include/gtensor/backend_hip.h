@@ -260,9 +260,9 @@ public:
     }
     gtGpuCheck(rval);
 #if HIP_VERSION_MAJOR >= 6
-    auto memoryType=attr.type;
+    auto memoryType = attr.type;
 #else
-    auto memoryType=attr.memoryType;
+    auto memoryType = attr.memoryType;
 #endif
     return (memoryType == hipMemoryTypeDevice || attr.isManaged);
   }
@@ -281,9 +281,9 @@ public:
       return memory_type::managed;
     }
 #if HIP_VERSION_MAJOR >= 6
-    auto memoryType=attr.type;
+    auto memoryType = attr.type;
 #else
-    auto memoryType=attr.memoryType;
+    auto memoryType = attr.memoryType;
 #endif
     switch (memoryType) {
       case hipMemoryTypeHost: return memory_type::host;
