@@ -22,7 +22,7 @@ set(GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT "managed" CACHE STRING
    "One of 'managed', 'device', or for HIP 'managed_coarse' or 'managed_fine'")
 set_property(CACHE GTENSOR_MANAGED_MEMORY_TYPE_DEFAULT
              PROPERTY STRINGS "managed" "device" "managed_coarse" "managed_fine")
-
+set(GTENSOR_GPU_ARCHITECTURES "default" CACHE STRING "The compute architecture for the GPU, i.e. 80 for A100, gfx90a for MI250X")
 set(GTENSOR_UMPIRE_STRATEGY "DynamicPoolList" CACHE STRING "class in umpire::strategy")
 
 option(USE_GTEST_DISCOVER_TESTS "use gtest_discover_tests()" ON)
@@ -61,6 +61,13 @@ if (GTENSOR_ENABLE_FORTRAN)
   set(GTENSOR_ENABLE_CLIB ON)
 endif()
 
+# CUDA specific configuration
+if(GTENSOR_GPU_ARCHITECTURES STREQUAL "default")
+  set(CMAKE_CUDA_ARCHITECTURES "70")
+else()
+  set(CMAKE_CUDA_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
+endif()
+
 # HIP specific configuration
 set(HIP_GCC_TOOLCHAIN "" CACHE STRING "pass gcc-toolchain option to hipcc")
 if (DEFINED ENV{ROCM_PATH})
@@ -69,8 +76,11 @@ else()
    set(ROCM_PATH "/opt/rocm" CACHE STRING "path to ROCm installation")
 endif()
 set(HIP_PATH "${ROCM_PATH}/hip" CACHE STRING "path to HIP installation")
-set(HIP_GPU_ARCHITECTURES "gfx803,gfx906,gfx908,gfx90a" CACHE
-    STRING "comma separated list of AMD gpu architectures to build for")
+if(GTENSOR_GPU_ARCHITECTURES STREQUAL "default")
+  set(HIP_GPU_ARCHITECTURE "gfx90a")
+else()
+  set(CMAKE_CUDA_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
+endif()
 
 # SYCL specific configuration
 set(GTENSOR_DEVICE_SYCL_AOT_ARCHITECTURES "" CACHE STRING
@@ -200,7 +210,7 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
     target_compile_definitions(gtensor_hip INTERFACE GTENSOR_USE_THRUST)
   endif()
 
-  target_include_directories(gtensor_hip INTERFACE ${ROCM_PATH}/include/roctracer)
+  target_link_libraries(gtensor_hip INTERFACE hip::device hip::amdhip64)
   target_link_libraries(gtensor_hip INTERFACE ${ROCM_PATH}/lib/libroctracer64.so)
   target_link_libraries(gtensor_hip INTERFACE roc::rocthrust)
 
@@ -426,7 +436,6 @@ if (GTENSOR_ENABLE_CLIB)
   add_library(cgtensor)
   target_gtensor_sources(cgtensor PRIVATE src/cgtensor.cxx)
   target_link_libraries(cgtensor PUBLIC gtensor::gtensor)
-
   list(APPEND GTENSOR_TARGETS cgtensor)
   add_library(gtensor::cgtensor ALIAS cgtensor)
 endif()
@@ -465,7 +474,7 @@ if (GTENSOR_ENABLE_BLAS)
     message(STATUS "${PROJECT_NAME}: CBLAS is ENABLED")
     add_library(cgtblas)
     target_gtensor_sources(cgtblas PRIVATE src/cgtblas.cxx)
-    target_link_libraries(cgtblas gtblas)
+    target_link_libraries(cgtblas PUBLIC gtblas)
     list(APPEND GTENSOR_TARGETS cgtblas)
     add_library(gtensor::cgtblas ALIAS cgtblas)
   endif()
@@ -474,11 +483,12 @@ if (GTENSOR_ENABLE_BLAS)
     message(STATUS "${PROJECT_NAME}: SOLVER is ENABLED")
     add_library(gtsolver)
     target_gtensor_sources(gtsolver PRIVATE src/gtsolver.cxx)
-    target_link_libraries(gtsolver gtblas)
+    target_link_libraries(gtsolver PUBLIC gtblas)
     if (${GTENSOR_DEVICE} STREQUAL "cuda")
-      target_link_libraries(gtsolver CUDA::cusparse)
+      target_link_libraries(gtsolver PUBLIC CUDA::cusparse)
     elseif (${GTENSOR_DEVICE} STREQUAL "hip")
-      target_link_libraries(gtsolver rocsparse)
+      find_package(rocsparse REQUIRED)
+      target_link_libraries(gtsolver PUBLIC roc::rocsparse)
       if (GTENSOR_SOLVER_HIP_SPARSE_GENERIC)
         target_compile_definitions(gtsolver INTERFACE
                                    GTENSOR_SOLVER_HIP_SPARSE_GENERIC)

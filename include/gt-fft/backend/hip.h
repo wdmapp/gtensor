@@ -5,7 +5,11 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef GTENSOR_HIP_NEW_INCLUDES
+#include <rocfft/rocfft.h>
+#else
 #include <rocfft.h>
+#endif
 
 // ======================================================================
 // error handling helper
@@ -163,7 +167,7 @@ public:
       rocfft_execution_info_destroy(info_forward_);
       rocfft_execution_info_destroy(info_inverse_);
       if (work_buffer_ != nullptr) {
-        hipFree(work_buffer_);
+        gtGpuCheck(hipFree(work_buffer_));
       }
     }
   }

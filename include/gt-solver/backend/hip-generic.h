@@ -10,7 +10,11 @@
 
 #include "gt-blas/blas.h"
 
+#ifdef GTENSOR_HIP_NEW_INCLUDES
+#include <rocsparse/rocsparse.h>
+#else
 #include <rocsparse.h>
+#endif
 
 // ======================================================================
 // error handling helper
