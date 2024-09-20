@@ -10,7 +10,7 @@
 
 #include "gt-blas/blas.h"
 
-#if HIP_VERSION_MAJOR >= 6
+#ifdef GTENSOR_HIP_NEW_INCLUDES
 #include <rocsparse/rocsparse.h>
 #else
 #include <rocsparse.h>

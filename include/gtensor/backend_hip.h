@@ -273,7 +273,7 @@ public:
     hipPointerAttribute_t attr;
     auto rc = hipPointerGetAttributes(&attr, ptr);
     if (rc == hipErrorInvalidValue) {
-      hipGetLastError(); // clear the error
+      (void)hipGetLastError(); // clear the error
       return memory_type::unregistered;
     }
     gtGpuCheck(rc);

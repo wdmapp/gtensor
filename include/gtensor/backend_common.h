@@ -62,6 +62,10 @@ enum class managed_memory_type
   managed_fine
 };
 #endif // HIP_VERSION_MAJOR
+
+#if HIP_VERSION_MAJOR >= 6 || (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR >= 5)
+#define GTENSOR_HIP_NEW_INCLUDES
+#endif
 #else
 enum class managed_memory_type
 {
