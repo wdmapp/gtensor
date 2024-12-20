@@ -77,9 +77,9 @@ else()
 endif()
 set(HIP_PATH "${ROCM_PATH}/hip" CACHE STRING "path to HIP installation")
 if(GTENSOR_GPU_ARCHITECTURES STREQUAL "default")
-  set(HIP_GPU_ARCHITECTURE "gfx90a")
+  set(CMAKE_HIP_ARCHITECTURES "gfx90a")
 else()
-  set(CMAKE_CUDA_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
+  set(CMAKE_HIP_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
 endif()
 
 # SYCL specific configuration
@@ -201,8 +201,8 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
-  set(GPU_TARGETS "${HIP_GPU_ARCHITECTURES}"
-      CACHE STRING "GPU targets to compile for")
+  #set(GPU_TARGETS "${HIP_GPU_ARCHITECTURES}"
+  #    CACHE STRING "GPU targets to compile for")
   find_package(hip REQUIRED)
   find_package(rocthrust REQUIRED)
 
