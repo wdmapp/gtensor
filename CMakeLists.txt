@@ -53,6 +53,7 @@ option(GTENSOR_ADDRESS_CHECK "Enable address checking for device spans" OFF)
 option(GTENSOR_SYNC_KERNELS "Enable host sync after assign and launch kernels" OFF)
 option(GTENSOR_ENABLE_FP16 "Enable 16-bit floating point type gt::float16_t" OFF)
 option(GTENSOR_ENABLE_BF16 "Enable 16-bit floating point type gt::bfloat16_t" OFF)
+option(GTENSOR_ENABLE_MXP "Enable mixed precision extension" OFF)
 
 if (GTENSOR_ENABLE_FORTRAN)
   # do this early (here) since later the `enable_language(Fortran)` gives me trouble
@@ -361,6 +362,12 @@ if (GTENSOR_ENABLE_BF16)
   message(STATUS "${PROJECT_NAME}: gt::complex_bfloat16_t is ENABLED")
   target_compile_definitions(gtensor_${GTENSOR_DEVICE}
                              INTERFACE GTENSOR_ENABLE_BF16)
+endif()
+
+if (GTENSOR_ENABLE_MXP)
+  message(STATUS "${PROJECT_NAME}: mxp::adapt is ENABLED")
+  target_compile_definitions(gtensor_${GTENSOR_DEVICE}
+                             INTERFACE GTENSOR_ENABLE_MXP)
 endif()
 
 

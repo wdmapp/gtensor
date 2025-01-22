@@ -90,3 +90,7 @@ if (GTENSOR_ENABLE_BF16)
   add_gtensor_test(test_bfloat16_t)
   add_gtensor_test(test_complex_bfloat16_t)
 endif()
+
+if (GTENSOR_ENABLE_MXP)
+  add_gtensor_test(test_mxp)
+endif()
