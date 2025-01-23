@@ -5,13 +5,15 @@
 
 // __________________________________________________________________________ //
 
-namespace mxp {
+namespace mxp
+{
 
 // -------------------------------------------------------------------------- //
 
 template <typename T, gt::size_type N, typename S, typename X>
-class mxp_span : public gt::gtensor_span<T, N, S>,
-                 public gt::expression<mxp_span<T, N, S, X>>
+class mxp_span
+  : public gt::gtensor_span<T, N, S>
+  , public gt::expression<mxp_span<T, N, S, X>>
 {
 public:
   using self_type = mxp_span<T, N, S, X>;
@@ -26,7 +28,8 @@ public:
 
   GT_INLINE mxp_span(pointer data, const shape_type& shape,
                      const strides_type& strides)
-  : base_type(data, shape, strides) {}
+    : base_type(data, shape, strides)
+  {}
 
   // ------------------------------------------------------------------------ //
 
@@ -36,10 +39,11 @@ public:
 
   template <typename... Args>
   GT_INLINE auto operator()(Args&&... args) const -> value_type
-  { return value_type( base_type::operator()(args...) ); }
+  {
+    return value_type(base_type::operator()(args...));
+  }
 
   // ------------------------------------------------------------------------ //
-
 };
 
 // -------------------------------------------------------------------------- //
