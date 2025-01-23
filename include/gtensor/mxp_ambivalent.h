@@ -22,10 +22,13 @@ namespace detail
 
 // -------------------------------------------------------------------------- //
 
-template <typename compute_type, typename storage_type>
+template <typename CT, typename ST>
 class ambivalent_t
 {
 public:
+  using storage_type = ST;
+  using compute_type = CT;
+
   // ------------------------------------------------------------------------ //
 
   // construct from reference
@@ -69,12 +72,51 @@ private:
 
 // -------------------------------------------------------------------------- //
 
-template <typename compute_type, typename storage_type>
-std::ostream& operator<<(std::ostream& s,
-                         const ambivalent_t<compute_type, storage_type>& a)
+template <typename CT, typename ST>
+std::ostream& operator<<(std::ostream& s, const ambivalent_t<CT, ST>& a)
 {
+  using compute_type = typename ambivalent_t<CT, ST>::compute_type;
   return s << static_cast<compute_type>(a);
 }
+
+// -------------------------------------------------------------------------- //
+
+/* Binary operators: ambivalent_t + ambivalent_t
+                     ambivalent_t + scalar_t
+                     scalar_t     + ambivalent_t */
+
+#define MAKE_AMBIVALENT_BINARY_OPERATOR(op)                                    \
+  template <typename CT1, typename ST1, typename CT2, typename ST2>            \
+  GT_INLINE auto operator op(const ambivalent_t<CT1, ST1>& lhs,                \
+                             const ambivalent_t<CT2, ST2>& rhs)                \
+  {                                                                            \
+    using A1_compute_t = typename ambivalent_t<CT1, ST1>::compute_type;        \
+    using A2_compute_t = typename ambivalent_t<CT2, ST2>::compute_type;        \
+    return A1_compute_t(lhs) op A2_compute_t(rhs);                             \
+  }                                                                            \
+                                                                               \
+  template <typename T, typename CT, typename ST>                              \
+  GT_INLINE auto operator op(const T& lhs, const ambivalent_t<CT, ST>& rhs)    \
+  {                                                                            \
+    using A_compute_t = typename ambivalent_t<CT, ST>::compute_type;           \
+    return lhs op A_compute_t(rhs);                                            \
+  }                                                                            \
+                                                                               \
+  template <typename CT, typename ST, typename T>                              \
+  GT_INLINE auto operator op(const ambivalent_t<CT, ST>& lhs, const T& rhs)    \
+  {                                                                            \
+    using A_compute_t = typename ambivalent_t<CT, ST>::compute_type;           \
+    return A_compute_t(lhs) op rhs;                                            \
+  }
+
+MAKE_AMBIVALENT_BINARY_OPERATOR(+)
+MAKE_AMBIVALENT_BINARY_OPERATOR(-)
+MAKE_AMBIVALENT_BINARY_OPERATOR(*)
+MAKE_AMBIVALENT_BINARY_OPERATOR(/)
+
+#undef MAKE_AMBIVALENT_BINARY_OPERATOR
+
+// -------------------------------------------------------------------------- //
 
 } // namespace detail
 
