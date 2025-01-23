@@ -6,7 +6,7 @@
 
 #include <vector>
 
-TEST(mxp, demo_axaxaxpy_implicit)
+TEST(mxp, axaxaxpy_implicit)
 {
   const int n{2};
   const float x_init{1.f / 8.f / 1024.f / 1024.f};
@@ -35,7 +35,7 @@ TEST(mxp, demo_axaxaxpy_implicit)
   EXPECT_EQ(y[1], y_init + x_init);
 }
 
-TEST(mxp, demo_axaxaxpy_explicit)
+TEST(mxp, axaxaxpy_explicit)
 {
   const int n{2};
   const float x_init{1.f / 8.f / 1024.f / 1024.f};
