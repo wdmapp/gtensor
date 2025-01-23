@@ -1,8 +1,8 @@
 #ifndef GTENSOR_MXP_SPAN_H
 #define GTENSOR_MXP_SPAN_H
 
-#include <gtensor/gtensor.h>
 #include "mxp_ambivalent.h"
+#include <gtensor/gtensor.h>
 
 // __________________________________________________________________________ //
 
