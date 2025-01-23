@@ -6,7 +6,7 @@
 
 #include <vector>
 
-TEST(mxp, demo_implicit_axaxaxpy)
+TEST(mxp, demo_axaxaxpy_implicit)
 {
   const int n{2};
   const float x_init{1.f / 8.f / 1024.f / 1024.f};
