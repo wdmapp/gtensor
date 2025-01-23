@@ -233,3 +233,145 @@ TEST(mxp, complex_axaxaxpy_explicit)
   EXPECT_EQ(y[0], y_init + x_init);
   EXPECT_EQ(y[1], y_init + x_init);
 }
+
+TEST(mxp, complex_op_plus_implicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{1.f / 8.f / 1024.f / 1024.f / 3.f,
+                           -1.f / 16.f / 1024.f / 1024.f / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t gt_ref{y_init};
+  const complex32_t mxp_ref{y_init + 3.f * x_init};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y(n, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  gt_y = gt_y + gt_x + gt_x + gt_x;
+
+  EXPECT_EQ(y[0], gt_ref);
+  EXPECT_EQ(y[1], gt_ref);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  mxp_y = mxp_y + mxp_x + mxp_x + mxp_x;
+
+  EXPECT_EQ(y[0], mxp_ref);
+  EXPECT_EQ(y[1], mxp_ref);
+}
+
+TEST(mxp, complex_op_minus_implicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{-1.f / 8.f / 1024.f / 1024.f / 3.f,
+                           1.f / 16.f / 1024.f / 1024.f / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t gt_ref{y_init};
+  const complex32_t mxp_ref{y_init - 3.f * x_init};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y(n, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  gt_y = gt_y - gt_x - gt_x - gt_x;
+
+  EXPECT_EQ(y[0], gt_ref);
+  EXPECT_EQ(y[1], gt_ref);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  mxp_y = mxp_y - mxp_x - mxp_x - mxp_x;
+
+  EXPECT_EQ(y[0], mxp_ref);
+  EXPECT_EQ(y[1], mxp_ref);
+}
+
+TEST(mxp, complex_op_multiply_implicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{1.f + 1.f / 4.f / 1024.f, 0.f};
+
+  const complex32_t gt_ref{
+    1.f + 3.f / 4.f / 1024.f + 1.f / 8.f / 1024.f / 1024.f, 0.f};
+  const complex32_t mxp_ref{
+    1.f + 3.f / 4.f / 1024.f + 1.f / 4.f / 1024.f / 1024.f, 0.f};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y(n);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  gt_y = gt_x * gt_x * gt_x;
+
+  EXPECT_EQ(y[0], gt_ref);
+  EXPECT_EQ(y[1], gt_ref);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  mxp_y = mxp_x * mxp_x * mxp_x;
+
+  EXPECT_EQ(y[0], mxp_ref);
+  EXPECT_EQ(y[1], mxp_ref);
+}
+
+TEST(mxp, complex_op_divide_implicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  double val = 1.5 + 1. / 256. + 1. / 32. / 1024. + 1. / 8. / 1024. / 1024.;
+  double invval = 1. / val;
+  double ref = val / invval / invval;
+
+  const complex32_t x_init{float(invval), 0.f};
+  const complex32_t y_init{float(val), 0.f};
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y_a(n, y_init);
+  /* */ std::vector<complex32_t> y_b(n, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y_a.data(), y_a.size());
+
+  gt_y = gt_y / gt_x / gt_x;
+
+  double gt_err = std::abs(y_a[1].real() - ref);
+  EXPECT_GT(gt_err, 2.7e-07);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y_b.data(), y_b.size());
+
+  mxp_y = mxp_y / mxp_x / mxp_x;
+
+  double mxp_err = std::abs(y_b[1].real() - ref);
+
+  EXPECT_LT(mxp_err, 4.0e-08);
+}
