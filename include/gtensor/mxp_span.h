@@ -2,6 +2,7 @@
 #define GTENSOR_MXP_SPAN_H
 
 #include <gtensor/gtensor.h>
+#include "mxp_ambivalent.h"
 
 // __________________________________________________________________________ //
 
@@ -18,7 +19,7 @@ class mxp_span
 public:
   using self_type = mxp_span<T, N, S, X>;
   using base_type = gt::gtensor_span<T, N, S>;
-  using value_type = X;
+  using value_type = typename mxp::detail::ambivalent_t<X, T>;
 
   using typename base_type::pointer;
   using typename base_type::shape_type;
