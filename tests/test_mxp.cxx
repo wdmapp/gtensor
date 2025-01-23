@@ -4,12 +4,13 @@
 
 #include <gtensor/mxp.h>
 
+#include <cmath>
 #include <vector>
 
 TEST(mxp, axaxaxpy_implicit)
 {
   const int n{2};
-  const float x_init{1.f / 8.f / 1024.f / 1024.f};
+  const float x_init{exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -38,7 +39,7 @@ TEST(mxp, axaxaxpy_implicit)
 TEST(mxp, axaxaxpy_explicit)
 {
   const int n{2};
-  const float x_init{1.f / 8.f / 1024.f / 1024.f};
+  const float x_init{exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -73,7 +74,7 @@ TEST(mxp, axaxaxpy_explicit)
 TEST(mxp, aXaXaXpY_2D_implicit)
 {
   const int mn[2]{2, 3};
-  const float x_init{1.f / 8.f / 1024.f / 1024.f};
+  const float x_init{exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -110,7 +111,7 @@ TEST(mxp, aXaXaXpY_2D_implicit)
 TEST(mxp, aXaXaXpY_2D_explicit)
 {
   const int mn[2]{2, 3};
-  const float x_init{1.f / 8.f / 1024.f / 1024.f};
+  const float x_init{exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -158,8 +159,7 @@ TEST(mxp, complex_axaxaxpy_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f / 8.f / 1024.f / 1024.f,
-                           -1.f / 16.f / 1024.f / 1024.f};
+  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -195,8 +195,7 @@ TEST(mxp, complex_axaxaxpy_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f / 8.f / 1024.f / 1024.f,
-                           -1.f / 16.f / 1024.f / 1024.f};
+  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -240,8 +239,7 @@ TEST(mxp, complex_op_plus_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f / 8.f / 1024.f / 1024.f / 3.f,
-                           -1.f / 16.f / 1024.f / 1024.f / 3.f};
+  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t gt_ref{y_init};
@@ -276,8 +274,7 @@ TEST(mxp, complex_op_minus_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{-1.f / 8.f / 1024.f / 1024.f / 3.f,
-                           1.f / 16.f / 1024.f / 1024.f / 3.f};
+  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t gt_ref{y_init};
@@ -312,12 +309,10 @@ TEST(mxp, complex_op_multiply_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f + 1.f / 4.f / 1024.f, 0.f};
+  const complex32_t x_init{1.f + exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{
-    1.f + 3.f / 4.f / 1024.f + 1.f / 8.f / 1024.f / 1024.f, 0.f};
-  const complex32_t mxp_ref{
-    1.f + 3.f / 4.f / 1024.f + 1.f / 4.f / 1024.f / 1024.f, 0.f};
+  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -347,7 +342,7 @@ TEST(mxp, complex_op_divide_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  double val = 1.5 + 1. / 256. + 1. / 32. / 1024. + 1. / 8. / 1024. / 1024.;
+  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
