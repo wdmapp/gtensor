@@ -69,3 +69,85 @@ TEST(mxp, axaxaxpy_explicit)
   EXPECT_EQ(y[0], y_init + x_init);
   EXPECT_EQ(y[1], y_init + x_init);
 }
+
+TEST(mxp, aXaXaXpY_2D_implicit)
+{
+  const int mn[2]{2, 3};
+  const float x_init{1.f / 8.f / 1024.f / 1024.f};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const std::vector<float> X(mn[0] * mn[1], x_init);
+  /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_X = gt::adapt<2>(X.data(), mn);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  gt_Y = gt_Y + a * gt_X + a * gt_X + a * gt_X;
+
+  EXPECT_EQ(Y[0], y_init);
+  EXPECT_EQ(Y[1], y_init);
+  EXPECT_EQ(Y[2], y_init);
+  EXPECT_EQ(Y[3], y_init);
+  EXPECT_EQ(Y[4], y_init);
+  EXPECT_EQ(Y[5], y_init);
+
+  const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
+  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
+
+  mxp_Y = mxp_Y + a * mxp_X + a * mxp_X + a * mxp_X;
+
+  EXPECT_EQ(Y[0], y_init + x_init);
+  EXPECT_EQ(Y[1], y_init + x_init);
+  EXPECT_EQ(Y[2], y_init + x_init);
+  EXPECT_EQ(Y[3], y_init + x_init);
+  EXPECT_EQ(Y[4], y_init + x_init);
+  EXPECT_EQ(Y[5], y_init + x_init);
+}
+
+TEST(mxp, aXaXaXpY_2D_explicit)
+{
+  const int mn[2]{2, 3};
+  const float x_init{1.f / 8.f / 1024.f / 1024.f};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const std::vector<float> X(mn[0] * mn[1], x_init);
+  /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_X = gt::adapt<2>(X.data(), mn);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  gt::launch<2>(
+    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
+      gt_Y(j, k) =
+        gt_Y(j, k) + a * gt_X(j, k) + a * gt_X(j, k) + a * gt_X(j, k);
+    });
+
+  EXPECT_EQ(Y[0], y_init);
+  EXPECT_EQ(Y[1], y_init);
+  EXPECT_EQ(Y[2], y_init);
+  EXPECT_EQ(Y[3], y_init);
+  EXPECT_EQ(Y[4], y_init);
+  EXPECT_EQ(Y[5], y_init);
+
+  const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
+  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
+
+  gt::launch<2>(
+    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
+      mxp_Y(j, k) =
+        mxp_Y(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k);
+    });
+
+  EXPECT_EQ(Y[0], y_init + x_init);
+  EXPECT_EQ(Y[1], y_init + x_init);
+  EXPECT_EQ(Y[2], y_init + x_init);
+  EXPECT_EQ(Y[3], y_init + x_init);
+  EXPECT_EQ(Y[4], y_init + x_init);
+  EXPECT_EQ(Y[5], y_init + x_init);
+}
