@@ -370,3 +370,151 @@ TEST(mxp, complex_op_divide_implicit)
 
   EXPECT_LT(mxp_err, 4.0e-08);
 }
+
+TEST(mxp, complex_op_plus_explicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t gt_ref{y_init};
+  const complex32_t mxp_ref{y_init + 3.f * x_init};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y(n, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j); });
+
+  EXPECT_EQ(y[0], gt_ref);
+  EXPECT_EQ(y[1], gt_ref);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  gt::launch<1>(
+    {n},
+    GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) + mxp_x(j) + mxp_x(j) + mxp_x(j); });
+
+  EXPECT_EQ(y[0], mxp_ref);
+  EXPECT_EQ(y[1], mxp_ref);
+}
+
+TEST(mxp, complex_op_minus_explicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t gt_ref{y_init};
+  const complex32_t mxp_ref{y_init - 3.f * x_init};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y(n, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j); });
+
+  EXPECT_EQ(y[0], gt_ref);
+  EXPECT_EQ(y[1], gt_ref);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  gt::launch<1>(
+    {n},
+    GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) - mxp_x(j) - mxp_x(j) - mxp_x(j); });
+
+  EXPECT_EQ(y[0], mxp_ref);
+  EXPECT_EQ(y[1], mxp_ref);
+}
+
+TEST(mxp, complex_op_multiply_explicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+
+  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y(n);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_x(j) * gt_x(j) * gt_x(j); });
+
+  EXPECT_EQ(y[0], gt_ref);
+  EXPECT_EQ(y[1], gt_ref);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) { mxp_y(j) = mxp_x(j) * mxp_x(j) * mxp_x(j); });
+
+  EXPECT_EQ(y[0], mxp_ref);
+  EXPECT_EQ(y[1], mxp_ref);
+}
+
+TEST(mxp, complex_op_divide_explicit)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double invval = 1. / val;
+  double ref = val / invval / invval;
+
+  const complex32_t x_init{float(invval), 0.f};
+  const complex32_t y_init{float(val), 0.f};
+
+  const std::vector<complex32_t> x(n, x_init);
+  /* */ std::vector<complex32_t> y_a(n, y_init);
+  /* */ std::vector<complex32_t> y_b(n, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y_a.data(), y_a.size());
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) / gt_x(j) / gt_x(j); });
+
+  double gt_err = std::abs(y_a[1].real() - ref);
+  EXPECT_GT(gt_err, 2.7e-07);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y_b.data(), y_b.size());
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) / mxp_x(j) / mxp_x(j); });
+
+  double mxp_err = std::abs(y_b[1].real() - ref);
+
+  EXPECT_LT(mxp_err, 4.0e-08);
+}
