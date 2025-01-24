@@ -559,3 +559,185 @@ TEST(mxp, view_axaxaxpy)
   EXPECT_EQ(y[3], y_init + x_init);
   EXPECT_EQ(y[4], y_init);
 }
+
+TEST(mxp, view_all_2D)
+{
+  const int mn[2]{3, 2};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const std::vector<float> X(mn[0] * mn[1], x_init);
+  /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_X = gt::adapt<2>(X.data(), mn);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  using gt::placeholders::_all;
+
+  gt_Y.view(_all, _all) = gt_Y.view(_all, _all) + a * gt_X.view(_all, _all) +
+                          a * gt_X.view(_all, _all) + a * gt_X.view(_all, _all);
+
+  EXPECT_EQ(Y[0], y_init);
+  EXPECT_EQ(Y[1], y_init);
+  EXPECT_EQ(Y[2], y_init);
+  EXPECT_EQ(Y[3], y_init);
+  EXPECT_EQ(Y[4], y_init);
+  EXPECT_EQ(Y[5], y_init);
+
+  const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
+  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
+
+  mxp_Y.view(_all, _all) = mxp_Y.view(_all, _all) + a * mxp_X.view(_all, _all) +
+                           a * mxp_X.view(_all, _all) +
+                           a * mxp_X.view(_all, _all);
+
+  EXPECT_EQ(Y[0], y_init + x_init);
+  EXPECT_EQ(Y[1], y_init + x_init);
+  EXPECT_EQ(Y[2], y_init + x_init);
+  EXPECT_EQ(Y[3], y_init + x_init);
+  EXPECT_EQ(Y[4], y_init + x_init);
+  EXPECT_EQ(Y[5], y_init + x_init);
+}
+
+TEST(mxp, view_newaxis_2D)
+{
+  const int mn[2]{3, 2};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const std::vector<float> x(mn[0], x_init);
+  /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), mn[0]);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_newaxis;
+
+  gt_Y.view(_all, _all) =
+    gt_Y.view(_all, _all) + a * gt_x.view(_all, _newaxis) +
+    a * gt_x.view(_all, _newaxis) + a * gt_x.view(_all, _newaxis);
+
+  EXPECT_EQ(Y[0], y_init);
+  EXPECT_EQ(Y[1], y_init);
+  EXPECT_EQ(Y[2], y_init);
+  EXPECT_EQ(Y[3], y_init);
+  EXPECT_EQ(Y[4], y_init);
+  EXPECT_EQ(Y[5], y_init);
+
+  const auto mxp_x = mxp::adapt<1, double>(x.data(), mn[0]);
+  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
+
+  mxp_Y.view(_all, _all) =
+    mxp_Y.view(_all, _all) + a * mxp_x.view(_all, _newaxis) +
+    a * mxp_x.view(_all, _newaxis) + a * mxp_x.view(_all, _newaxis);
+
+  EXPECT_EQ(Y[0], y_init + x_init);
+  EXPECT_EQ(Y[1], y_init + x_init);
+  EXPECT_EQ(Y[2], y_init + x_init);
+  EXPECT_EQ(Y[3], y_init + x_init);
+  EXPECT_EQ(Y[4], y_init + x_init);
+  EXPECT_EQ(Y[5], y_init + x_init);
+}
+
+TEST(mxp, view_s_2D)
+{
+  const int mn[2]{4, 3};
+  const int lj = 2, uj = 4, lk = 1, uk = 3;
+
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const std::vector<float> X(mn[0] * mn[1], x_init);
+  /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_X = gt::adapt<2>(X.data(), mn);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  using gt::placeholders::_s;
+
+  gt_Y.view(_s(lj, uj), _s(lk, uk)) = gt_Y.view(_s(lj, uj), _s(lk, uk)) +
+                                      a * gt_X.view(_s(lj, uj), _s(lk, uk)) +
+                                      a * gt_X.view(_s(lj, uj), _s(lk, uk)) +
+                                      a * gt_X.view(_s(lj, uj), _s(lk, uk));
+
+  for (int j = 0; j < mn[0]; ++j)
+    for (int k = 0; k < mn[1]; ++k) {
+      const int idx = j + k * mn[0];
+      EXPECT_EQ(Y[idx], y_init);
+    }
+
+  const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
+  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
+
+  mxp_Y.view(_s(lj, uj), _s(lk, uk)) = mxp_Y.view(_s(lj, uj), _s(lk, uk)) +
+                                       a * mxp_X.view(_s(lj, uj), _s(lk, uk)) +
+                                       a * mxp_X.view(_s(lj, uj), _s(lk, uk)) +
+                                       a * mxp_X.view(_s(lj, uj), _s(lk, uk));
+
+  for (int j = 0; j < mn[0]; ++j)
+    for (int k = 0; k < mn[1]; ++k) {
+      const int idx = j + k * mn[0];
+
+      if (j >= lj && j < uj && k >= lk && k < uk)
+        EXPECT_EQ(Y[idx], y_init + x_init);
+      else
+        EXPECT_EQ(Y[idx], y_init);
+    }
+}
+
+TEST(mxp, view_slice_2D)
+{
+  const int mn[2]{4, 3};
+  const int slice_idx = 1;
+
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const std::vector<float> X(mn[0] * mn[1], x_init);
+  /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_X = gt::adapt<2>(X.data(), mn);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  using gt::placeholders::_all;
+
+  gt_Y.view(_all, slice_idx) =
+    gt_Y.view(_all, slice_idx) + a * gt_X.view(_all, slice_idx) +
+    a * gt_X.view(_all, slice_idx) + a * gt_X.view(_all, slice_idx);
+
+  for (int j = 0; j < mn[0]; ++j)
+    for (int k = 0; k < mn[1]; ++k) {
+      const int idx = j + k * mn[0];
+      EXPECT_EQ(Y[idx], y_init);
+    }
+
+  const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
+  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
+
+  mxp_Y.view(_all, slice_idx) =
+    mxp_Y.view(_all, slice_idx) + a * mxp_X.view(_all, slice_idx) +
+    a * mxp_X.view(_all, slice_idx) + a * mxp_X.view(_all, slice_idx);
+
+  for (int j = 0; j < mn[0]; ++j)
+    for (int k = 0; k < mn[1]; ++k) {
+      const int idx = j + k * mn[0];
+
+      if (k == slice_idx)
+        EXPECT_EQ(Y[idx], y_init + x_init);
+      else
+        EXPECT_EQ(Y[idx], y_init);
+    }
+}
