@@ -787,3 +787,190 @@ TEST(mxp, view_complex_axaxaxpy)
   EXPECT_EQ(y[3], y_init + x_init);
   EXPECT_EQ(y[4], y_init);
 }
+
+TEST(mxp, view_complex_op_plus)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t mxp_ref{y_init + 3.f * x_init};
+
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
+
+  const std::vector<complex32_t> x(nx, x_init);
+  /* */ std::vector<complex32_t> y(ny, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) + gt_x.view(_all) + gt_x.view(_all) + gt_x.view(_all);
+
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], y_init);
+  EXPECT_EQ(y[2], y_init);
+  EXPECT_EQ(y[3], y_init);
+  EXPECT_EQ(y[4], y_init);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  mxp_y.view(_s(1, -1)) = mxp_y.view(_s(1, -1)) + mxp_x.view(_all) +
+                          mxp_x.view(_all) + mxp_x.view(_all);
+
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], mxp_ref);
+  EXPECT_EQ(y[2], mxp_ref);
+  EXPECT_EQ(y[3], mxp_ref);
+  EXPECT_EQ(y[4], y_init);
+}
+
+TEST(mxp, view_complex_op_minus)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t mxp_ref{y_init - 3.f * x_init};
+
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
+
+  const std::vector<complex32_t> x(nx, x_init);
+  /* */ std::vector<complex32_t> y(ny, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) - gt_x.view(_all) - gt_x.view(_all) - gt_x.view(_all);
+
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], y_init);
+  EXPECT_EQ(y[2], y_init);
+  EXPECT_EQ(y[3], y_init);
+  EXPECT_EQ(y[4], y_init);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  mxp_y.view(_s(1, -1)) = mxp_y.view(_s(1, -1)) - mxp_x.view(_all) -
+                          mxp_x.view(_all) - mxp_x.view(_all);
+
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], mxp_ref);
+  EXPECT_EQ(y[2], mxp_ref);
+  EXPECT_EQ(y[3], mxp_ref);
+  EXPECT_EQ(y[4], y_init);
+}
+
+TEST(mxp, view_complex_op_multiply)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t y_init{-654.321f};
+
+  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+
+  const std::vector<complex32_t> x(nx, x_init);
+  /* */ std::vector<complex32_t> y(ny, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) = gt_x.view(_all) * gt_x.view(_all) * gt_x.view(_all);
+
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], gt_ref);
+  EXPECT_EQ(y[2], gt_ref);
+  EXPECT_EQ(y[3], gt_ref);
+  EXPECT_EQ(y[4], y_init);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
+
+  mxp_y.view(_s(1, -1)) =
+    mxp_x.view(_all) * mxp_x.view(_all) * mxp_x.view(_all);
+
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], mxp_ref);
+  EXPECT_EQ(y[2], mxp_ref);
+  EXPECT_EQ(y[3], mxp_ref);
+  EXPECT_EQ(y[4], y_init);
+}
+
+TEST(mxp, view_complex_op_divide)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double invval = 1. / val;
+  double ref = val / invval / invval;
+
+  const complex32_t x_init{float(invval), 0.f};
+  const complex32_t y_init{float(val), 0.f};
+
+  const std::vector<complex32_t> x(nx, x_init);
+  /* */ std::vector<complex32_t> y_a(ny, y_init);
+  /* */ std::vector<complex32_t> y_b(ny, y_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1>(y_a.data(), y_a.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) / gt_x.view(_all) / gt_x.view(_all);
+
+  double gt_err = std::abs(y_a[1].real() - ref);
+
+  EXPECT_EQ(y_a[0], y_init);
+  EXPECT_GT(gt_err, 2.7e-07);
+  EXPECT_EQ(y_a[2], y_a[1]);
+  EXPECT_EQ(y_a[3], y_a[1]);
+  EXPECT_EQ(y_a[4], y_init);
+
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y_b.data(), y_b.size());
+
+  mxp_y.view(_s(1, -1)) =
+    mxp_y.view(_s(1, -1)) / mxp_x.view(_all) / mxp_x.view(_all);
+
+  double mxp_err = std::abs(y_b[1].real() - ref);
+
+  EXPECT_EQ(y_b[0], y_init);
+  EXPECT_LT(mxp_err, 4.0e-08);
+  EXPECT_EQ(y_b[2], y_b[1]);
+  EXPECT_EQ(y_b[3], y_b[1]);
+  EXPECT_EQ(y_b[4], y_init);
+}
