@@ -242,11 +242,10 @@ TEST(mxp, complex_op_plus_implicit)
   const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
-  const complex32_t gt_ref{y_init};
   const complex32_t mxp_ref{y_init + 3.f * x_init};
 
-  EXPECT_NE(gt_ref.real(), mxp_ref.real());
-  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
 
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
@@ -256,8 +255,8 @@ TEST(mxp, complex_op_plus_implicit)
 
   gt_y = gt_y + gt_x + gt_x + gt_x;
 
-  EXPECT_EQ(y[0], gt_ref);
-  EXPECT_EQ(y[1], gt_ref);
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], y_init);
 
   const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
   /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
@@ -277,11 +276,10 @@ TEST(mxp, complex_op_plus_explicit)
   const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
-  const complex32_t gt_ref{y_init};
   const complex32_t mxp_ref{y_init + 3.f * x_init};
 
-  EXPECT_NE(gt_ref.real(), mxp_ref.real());
-  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
 
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
@@ -292,8 +290,8 @@ TEST(mxp, complex_op_plus_explicit)
   gt::launch<1>(
     {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j); });
 
-  EXPECT_EQ(y[0], gt_ref);
-  EXPECT_EQ(y[1], gt_ref);
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], y_init);
 
   const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
   /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
@@ -315,11 +313,10 @@ TEST(mxp, complex_op_minus_implicit)
   const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
-  const complex32_t gt_ref{y_init};
   const complex32_t mxp_ref{y_init - 3.f * x_init};
 
-  EXPECT_NE(gt_ref.real(), mxp_ref.real());
-  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
 
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
@@ -329,8 +326,8 @@ TEST(mxp, complex_op_minus_implicit)
 
   gt_y = gt_y - gt_x - gt_x - gt_x;
 
-  EXPECT_EQ(y[0], gt_ref);
-  EXPECT_EQ(y[1], gt_ref);
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], y_init);
 
   const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
   /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
@@ -350,11 +347,10 @@ TEST(mxp, complex_op_minus_explicit)
   const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
-  const complex32_t gt_ref{y_init};
   const complex32_t mxp_ref{y_init - 3.f * x_init};
 
-  EXPECT_NE(gt_ref.real(), mxp_ref.real());
-  EXPECT_NE(gt_ref.imag(), mxp_ref.imag());
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
 
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
@@ -365,8 +361,8 @@ TEST(mxp, complex_op_minus_explicit)
   gt::launch<1>(
     {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j); });
 
-  EXPECT_EQ(y[0], gt_ref);
-  EXPECT_EQ(y[1], gt_ref);
+  EXPECT_EQ(y[0], y_init);
+  EXPECT_EQ(y[1], y_init);
 
   const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
   /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
