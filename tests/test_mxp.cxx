@@ -36,6 +36,30 @@ TEST(mxp, axaxaxpy_implicit)
   EXPECT_EQ(y[1], y_init + x_init);
 }
 
+template <typename S, typename T>
+void generic_axaxaxpy_explicit_gt(const int n, const T a, const T* x, T* y)
+{
+  const auto gt_x = gt::adapt<1, S>(x, n);
+  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      gt_y(j) = gt_y(j) + a * gt_x(j) + a * gt_x(j) + a * gt_x(j);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_axaxaxpy_explicit_mxp(const int n, const T a, const T* x, T* y)
+{
+  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      mxp_y(j) = mxp_y(j) + a * mxp_x(j) + a * mxp_x(j) + a * mxp_x(j);
+    });
+}
+
 TEST(mxp, axaxaxpy_explicit)
 {
   const int n{2};
@@ -48,24 +72,12 @@ TEST(mxp, axaxaxpy_explicit)
   const std::vector<float> x(n, x_init);
   /* */ std::vector<float> y(n, y_init);
 
-  const auto gt_x = gt::adapt<1>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) {
-      gt_y(j) = gt_y(j) + a * gt_x(j) + a * gt_x(j) + a * gt_x(j);
-    });
+  generic_axaxaxpy_explicit_gt<gt::space::host>(n, a, x.data(), y.data());
 
   EXPECT_EQ(y[0], y_init);
   EXPECT_EQ(y[1], y_init);
 
-  const auto mxp_x = mxp::adapt<1, double>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, double>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) {
-      mxp_y(j) = mxp_y(j) + a * mxp_x(j) + a * mxp_x(j) + a * mxp_x(j);
-    });
+  generic_axaxaxpy_explicit_mxp<gt::space::host, double>(n, a, x.data(), y.data());
 
   EXPECT_EQ(y[0], y_init + x_init);
   EXPECT_EQ(y[1], y_init + x_init);
@@ -108,6 +120,32 @@ TEST(mxp, aXaXaXpY_2D_implicit)
   EXPECT_EQ(Y[5], y_init + x_init);
 }
 
+template <typename S, typename T>
+void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a, const T* X, T* Y)
+{
+  const auto gt_X = gt::adapt<2, S>(X, mn);
+  /* */ auto gt_Y = gt::adapt<2, S>(Y, mn);
+
+  gt::launch<2>(
+    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
+      gt_Y(j, k) =
+        gt_Y(j, k) + a * gt_X(j, k) + a * gt_X(j, k) + a * gt_X(j, k);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_aXaXaXpy_2D_explicit_mxp(const int* mn, const T a, const T* xx, T* yy)
+{
+  const auto mxp_X = mxp::adapt<2, /*S,*/ X>(xx, mn);
+  /* */ auto mxp_Y = mxp::adapt<2, /*S,*/ X>(yy, mn);
+
+  gt::launch<2>(
+    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
+      mxp_Y(j, k) =
+        mxp_Y(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k);
+    });
+}
+
 TEST(mxp, aXaXaXpY_2D_explicit)
 {
   const int mn[2]{2, 3};
@@ -120,14 +158,7 @@ TEST(mxp, aXaXaXpY_2D_explicit)
   const std::vector<float> X(mn[0] * mn[1], x_init);
   /* */ std::vector<float> Y(mn[0] * mn[1], y_init);
 
-  const auto gt_X = gt::adapt<2>(X.data(), mn);
-  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
-
-  gt::launch<2>(
-    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
-      gt_Y(j, k) =
-        gt_Y(j, k) + a * gt_X(j, k) + a * gt_X(j, k) + a * gt_X(j, k);
-    });
+  generic_aXaXaXpy_2D_explicit_gt<gt::space::host>(mn, a, X.data(), Y.data());
 
   EXPECT_EQ(Y[0], y_init);
   EXPECT_EQ(Y[1], y_init);
@@ -136,14 +167,7 @@ TEST(mxp, aXaXaXpY_2D_explicit)
   EXPECT_EQ(Y[4], y_init);
   EXPECT_EQ(Y[5], y_init);
 
-  const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
-  /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
-
-  gt::launch<2>(
-    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
-      mxp_Y(j, k) =
-        mxp_Y(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k);
-    });
+  generic_aXaXaXpy_2D_explicit_mxp<gt::space::host, double>(mn, a, X.data(), Y.data());
 
   EXPECT_EQ(Y[0], y_init + x_init);
   EXPECT_EQ(Y[1], y_init + x_init);
@@ -189,6 +213,34 @@ TEST(mxp, complex_axaxaxpy_implicit)
   EXPECT_EQ(y[1], y_init + x_init);
 }
 
+template <typename S, typename T>
+void generic_complex_axaxaxpy_explicit_gt(const int n, const T* a, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto gt_a = gt::adapt<1, S>(a, n);
+  const auto gt_x = gt::adapt<1, S>(x, n);
+  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      gt_y(j) =
+        gt_y(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_complex_axaxaxpy_explicit_mxp(const int n, const T* a, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto mxp_a = mxp::adapt<1, /*S,*/ X>(a, n);
+  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      mxp_y(j) =
+        mxp_y(j) + mxp_a(j) * mxp_x(j) + mxp_a(j) * mxp_x(j) + mxp_a(j) * mxp_x(j);
+    });
+}
+
 TEST(mxp, complex_axaxaxpy_explicit)
 {
   using complex32_t = gt::complex<float>;
@@ -206,28 +258,12 @@ TEST(mxp, complex_axaxaxpy_explicit)
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
 
-  const auto gt_a = gt::adapt<1>(a.data(), a.size());
-  const auto gt_x = gt::adapt<1>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) {
-      gt_y(j) =
-        gt_y(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j);
-    });
+  generic_complex_axaxaxpy_explicit_gt<gt::space::host>(n, a.data(), x.data(), y.data());
 
   EXPECT_EQ(y[0].real(), y_init.real());
   EXPECT_EQ(y[1].real(), y_init.real());
 
-  const auto mxp_a = mxp::adapt<1, double>(a.data(), a.size());
-  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) {
-      mxp_y(j) = mxp_y(j) + mxp_a(j) * mxp_x(j) + mxp_a(j) * mxp_x(j) +
-                 mxp_a(j) * mxp_x(j);
-    });
+  generic_complex_axaxaxpy_explicit_mxp<gt::space::host, complex64_t>(n, a.data(), x.data(), y.data());
 
   EXPECT_EQ(y[0], y_init + x_init);
   EXPECT_EQ(y[1], y_init + x_init);
@@ -267,6 +303,30 @@ TEST(mxp, complex_op_plus_implicit)
   EXPECT_EQ(y[1], mxp_ref);
 }
 
+template <typename S, typename T>
+void generic_complex_op_plus_explicit_gt(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto gt_x = gt::adapt<1, S>(x, n);
+  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_complex_op_plus_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      mxp_y(j) = mxp_y(j) + mxp_x(j) + mxp_x(j) + mxp_x(j);
+    });
+}
+
 TEST(mxp, complex_op_plus_explicit)
 {
   using complex32_t = gt::complex<float>;
@@ -284,21 +344,12 @@ TEST(mxp, complex_op_plus_explicit)
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
 
-  const auto gt_x = gt::adapt<1>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j); });
+  generic_complex_op_plus_explicit_gt<gt::space::host>(n, x.data(), y.data());
 
   EXPECT_EQ(y[0], y_init);
   EXPECT_EQ(y[1], y_init);
 
-  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n},
-    GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) + mxp_x(j) + mxp_x(j) + mxp_x(j); });
+  generic_complex_op_plus_explicit_mxp<gt::space::host, complex64_t>(n, x.data(), y.data());
 
   EXPECT_EQ(y[0], mxp_ref);
   EXPECT_EQ(y[1], mxp_ref);
@@ -338,6 +389,30 @@ TEST(mxp, complex_op_minus_implicit)
   EXPECT_EQ(y[1], mxp_ref);
 }
 
+template <typename S, typename T>
+void generic_complex_op_minus_explicit_gt(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto gt_x = gt::adapt<1, S>(x, n);
+  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_complex_op_minus_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      mxp_y(j) = mxp_y(j) - mxp_x(j) - mxp_x(j) - mxp_x(j);
+    });
+}
+
 TEST(mxp, complex_op_minus_explicit)
 {
   using complex32_t = gt::complex<float>;
@@ -355,21 +430,12 @@ TEST(mxp, complex_op_minus_explicit)
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n, y_init);
 
-  const auto gt_x = gt::adapt<1>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j); });
+  generic_complex_op_minus_explicit_gt<gt::space::host>(n, x.data(), y.data());
 
   EXPECT_EQ(y[0], y_init);
   EXPECT_EQ(y[1], y_init);
 
-  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n},
-    GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) - mxp_x(j) - mxp_x(j) - mxp_x(j); });
+  generic_complex_op_minus_explicit_mxp<gt::space::host, complex64_t>(n, x.data(), y.data());
 
   EXPECT_EQ(y[0], mxp_ref);
   EXPECT_EQ(y[1], mxp_ref);
@@ -408,6 +474,30 @@ TEST(mxp, complex_op_multiply_implicit)
   EXPECT_EQ(y[1], mxp_ref);
 }
 
+template <typename S, typename T>
+void generic_complex_op_multiply_explicit_gt(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto gt_x = gt::adapt<1, S>(x, n);
+  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      gt_y(j) = gt_x(j) * gt_x(j) * gt_x(j);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_complex_op_multiply_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      mxp_y(j) = mxp_x(j) * mxp_x(j) * mxp_x(j);
+    });
+}
+
 TEST(mxp, complex_op_multiply_explicit)
 {
   using complex32_t = gt::complex<float>;
@@ -424,20 +514,12 @@ TEST(mxp, complex_op_multiply_explicit)
   const std::vector<complex32_t> x(n, x_init);
   /* */ std::vector<complex32_t> y(n);
 
-  const auto gt_x = gt::adapt<1>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_x(j) * gt_x(j) * gt_x(j); });
+  generic_complex_op_multiply_explicit_gt<gt::space::host>(n, x.data(), y.data());
 
   EXPECT_EQ(y[0], gt_ref);
   EXPECT_EQ(y[1], gt_ref);
 
-  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y.data(), y.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) { mxp_y(j) = mxp_x(j) * mxp_x(j) * mxp_x(j); });
+  generic_complex_op_multiply_explicit_mxp<gt::space::host, complex64_t>(n, x.data(), y.data());
 
   EXPECT_EQ(y[0], mxp_ref);
   EXPECT_EQ(y[1], mxp_ref);
@@ -478,6 +560,30 @@ TEST(mxp, complex_op_divide_implicit)
   EXPECT_LT(mxp_err, 4.0e-08);
 }
 
+template <typename S, typename T>
+void generic_complex_op_divide_explicit_gt(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto gt_x = gt::adapt<1, S>(x, n);
+  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      gt_y(j) = gt_y(j) / gt_x(j) / gt_x(j);
+    });
+}
+
+template <typename S, typename X, typename T>
+void generic_complex_op_divide_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
+{
+  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+
+  gt::launch<1>(
+    {n}, GT_LAMBDA(int j) {
+      mxp_y(j) = mxp_y(j) / mxp_x(j) / mxp_x(j);
+    });
+}
+
 TEST(mxp, complex_op_divide_explicit)
 {
   using complex32_t = gt::complex<float>;
@@ -495,20 +601,12 @@ TEST(mxp, complex_op_divide_explicit)
   /* */ std::vector<complex32_t> y_a(n, y_init);
   /* */ std::vector<complex32_t> y_b(n, y_init);
 
-  const auto gt_x = gt::adapt<1>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1>(y_a.data(), y_a.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) / gt_x(j) / gt_x(j); });
+  generic_complex_op_divide_explicit_gt<gt::space::host>(n, x.data(), y_a.data());
 
   double gt_err = std::abs(y_a[1].real() - ref);
   EXPECT_GT(gt_err, 2.7e-07);
 
-  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y_b.data(), y_b.size());
-
-  gt::launch<1>(
-    {n}, GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) / mxp_x(j) / mxp_x(j); });
+  generic_complex_op_divide_explicit_mxp<gt::space::host, complex64_t>(n, x.data(), y_b.data());
 
   double mxp_err = std::abs(y_b[1].real() - ref);
 
