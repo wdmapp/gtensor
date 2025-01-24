@@ -978,3 +978,65 @@ TEST(mxp, view_complex_op_divide)
   EXPECT_EQ(y_b[3], y_b[1]);
   EXPECT_EQ(y_b[4], y_init);
 }
+
+TEST(mxp, view_placeholders_complex_aXaXaXpY_2D)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int mn[2]{4, 3};
+  const int lk = 1, uk = 2;
+
+  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t y_init{1.f, 1.f};
+  const float a_init{1.f / 3.f};
+
+  EXPECT_NE(y_init.real(), y_init.real() + x_init.real());
+  EXPECT_NE(y_init.imag(), y_init.imag() + x_init.imag());
+
+  const std::vector<float> a(mn[0], a_init);
+  const std::vector<complex32_t> x(mn[0], x_init);
+  /* */ std::vector<complex32_t> Y(mn[0] * mn[1], y_init);
+
+  const auto gt_a = gt::adapt<1>(a.data(), mn[0]);
+  const auto gt_x = gt::adapt<1>(x.data(), mn[0]);
+  /* */ auto gt_Y = gt::adapt<2>(Y.data(), mn);
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_newaxis;
+  using gt::placeholders::_s;
+
+  gt_Y.view(_all, _s(lk, uk)) =
+    gt_Y.view(_all, _s(lk, uk)) +
+    gt_a.view(_all, _newaxis) * gt_x.view(_all, _newaxis) +
+    gt_a.view(_all, _newaxis) * gt_x.view(_all, _newaxis) +
+    gt_a.view(_all, _newaxis) * gt_x.view(_all, _newaxis);
+
+  for (int j = 0; j < mn[0]; ++j) {
+    for (int k = 0; k < mn[1]; ++k) {
+      const int idx = j + k * mn[0];
+      EXPECT_EQ(Y[idx], y_init);
+    }
+  }
+
+  const auto mxp_a = mxp::adapt<1, double>(a.data(), mn[0]);
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), mn[0]);
+  /* */ auto mxp_Y = mxp::adapt<2, complex64_t>(Y.data(), mn);
+
+  mxp_Y.view(_all, _s(lk, uk)) =
+    mxp_Y.view(_all, _s(lk, uk)) +
+    mxp_a.view(_all, _newaxis) * mxp_x.view(_all, _newaxis) +
+    mxp_a.view(_all, _newaxis) * mxp_x.view(_all, _newaxis) +
+    mxp_a.view(_all, _newaxis) * mxp_x.view(_all, _newaxis);
+
+  for (int j = 0; j < mn[0]; ++j) {
+    for (int k = 0; k < mn[1]; ++k) {
+      const int idx = j + k * mn[0];
+
+      if (k >= lk && k < uk)
+        EXPECT_EQ(Y[idx], y_init + x_init);
+      else
+        EXPECT_EQ(Y[idx], y_init);
+    }
+  }
+}
