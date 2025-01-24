@@ -19,6 +19,7 @@ class mxp_span
 public:
   using self_type = mxp_span<T, N, S, X>;
   using base_type = gt::gtensor_span<T, N, S>;
+  using expression_base_type = gt::expression<mxp_span<T, N, S, X>>;
   using value_type = typename mxp::detail::ambivalent_t<X, T>;
 
   using typename base_type::pointer;
@@ -35,6 +36,28 @@ public:
   // ------------------------------------------------------------------------ //
 
   using base_type::operator=;
+
+  // ------------------------------------------------------------------------ //
+
+  using expression_base_type::derived;
+
+  template <typename... Args>
+  inline auto view(Args&&... args) const&
+  {
+    return gt::view(derived(), std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  inline auto view(Args&&... args) &
+  {
+    return gt::view(derived(), std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  inline auto view(Args&&... args) &&
+  {
+    return gt::view(std::move(*this).derived(), std::forward<Args>(args)...);
+  }
 
   // ------------------------------------------------------------------------ //
 
