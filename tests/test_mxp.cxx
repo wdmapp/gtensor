@@ -666,11 +666,12 @@ TEST(mxp, view_s_2D)
                                       a * gt_X.view(_s(lj, uj), _s(lk, uk)) +
                                       a * gt_X.view(_s(lj, uj), _s(lk, uk));
 
-  for (int j = 0; j < mn[0]; ++j)
+  for (int j = 0; j < mn[0]; ++j) {
     for (int k = 0; k < mn[1]; ++k) {
       const int idx = j + k * mn[0];
       EXPECT_EQ(Y[idx], y_init);
     }
+  }
 
   const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
   /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
@@ -680,7 +681,7 @@ TEST(mxp, view_s_2D)
                                        a * mxp_X.view(_s(lj, uj), _s(lk, uk)) +
                                        a * mxp_X.view(_s(lj, uj), _s(lk, uk));
 
-  for (int j = 0; j < mn[0]; ++j)
+  for (int j = 0; j < mn[0]; ++j) {
     for (int k = 0; k < mn[1]; ++k) {
       const int idx = j + k * mn[0];
 
@@ -689,6 +690,7 @@ TEST(mxp, view_s_2D)
       else
         EXPECT_EQ(Y[idx], y_init);
     }
+  }
 }
 
 TEST(mxp, view_slice_2D)
@@ -714,11 +716,12 @@ TEST(mxp, view_slice_2D)
     gt_Y.view(_all, slice_idx) + a * gt_X.view(_all, slice_idx) +
     a * gt_X.view(_all, slice_idx) + a * gt_X.view(_all, slice_idx);
 
-  for (int j = 0; j < mn[0]; ++j)
+  for (int j = 0; j < mn[0]; ++j) {
     for (int k = 0; k < mn[1]; ++k) {
       const int idx = j + k * mn[0];
       EXPECT_EQ(Y[idx], y_init);
     }
+  }
 
   const auto mxp_X = mxp::adapt<2, double>(X.data(), mn);
   /* */ auto mxp_Y = mxp::adapt<2, double>(Y.data(), mn);
@@ -727,7 +730,7 @@ TEST(mxp, view_slice_2D)
     mxp_Y.view(_all, slice_idx) + a * mxp_X.view(_all, slice_idx) +
     a * mxp_X.view(_all, slice_idx) + a * mxp_X.view(_all, slice_idx);
 
-  for (int j = 0; j < mn[0]; ++j)
+  for (int j = 0; j < mn[0]; ++j) {
     for (int k = 0; k < mn[1]; ++k) {
       const int idx = j + k * mn[0];
 
@@ -736,6 +739,7 @@ TEST(mxp, view_slice_2D)
       else
         EXPECT_EQ(Y[idx], y_init);
     }
+  }
 }
 
 TEST(mxp, view_complex_axaxaxpy)
