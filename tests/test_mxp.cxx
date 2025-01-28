@@ -569,6 +569,13 @@ TEST(mxp, complex_op_divide_implicit)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
+#ifdef GTENSOR_DEVICE_CUDA
+  const double lb_err_expect_gt = 1.98e-07;
+#else
+  const double lb_err_expect_gt = 2.7e-07;
+#endif
+  const double ub_err_expect_mxp = 4.0e-08;;
+
   const complex32_t x_init{float(invval), 0.f};
   const complex32_t y_init{float(val), 0.f};
 
@@ -582,7 +589,7 @@ TEST(mxp, complex_op_divide_implicit)
   gt_y = gt_y / gt_x / gt_x;
 
   double gt_err = std::abs(y_a[1].real() - ref);
-  EXPECT_GT(gt_err, 2.7e-07);
+  EXPECT_GT(gt_err, lb_err_expect_gt);
 
   const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
   /* */ auto mxp_y = mxp::adapt<1, complex64_t>(y_b.data(), y_b.size());
@@ -591,7 +598,7 @@ TEST(mxp, complex_op_divide_implicit)
 
   double mxp_err = std::abs(y_b[1].real() - ref);
 
-  EXPECT_LT(mxp_err, 4.0e-08);
+  EXPECT_LT(mxp_err, ub_err_expect_mxp);
 }
 
 template <typename S, typename T>
@@ -628,6 +635,13 @@ TEST(mxp, complex_op_divide_explicit)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
+#ifdef GTENSOR_DEVICE_CUDA
+  const double lb_err_expect_gt = 1.98e-07;
+#else
+  const double lb_err_expect_gt = 2.7e-07;
+#endif
+  const double ub_err_expect_mxp = 4.0e-08;;
+
   const complex32_t x_init{float(invval), 0.f};
   const complex32_t y_init{float(val), 0.f};
 
@@ -638,13 +652,13 @@ TEST(mxp, complex_op_divide_explicit)
   generic_complex_op_divide_explicit_gt<gt::space::host>(n, x.data(), y_a.data());
 
   double gt_err = std::abs(y_a[1].real() - ref);
-  EXPECT_GT(gt_err, 2.7e-07);
+  EXPECT_GT(gt_err, lb_err_expect_gt);
 
   generic_complex_op_divide_explicit_mxp<gt::space::host, complex64_t>(n, x.data(), y_b.data());
 
   double mxp_err = std::abs(y_b[1].real() - ref);
 
-  EXPECT_LT(mxp_err, 4.0e-08);
+  EXPECT_LT(mxp_err, ub_err_expect_mxp);
 }
 
 TEST(mxp, view_axaxaxpy)
@@ -1114,6 +1128,13 @@ TEST(mxp, view_complex_op_divide)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
+#ifdef GTENSOR_DEVICE_CUDA
+  const double lb_err_expect_gt = 1.98e-07;
+#else
+  const double lb_err_expect_gt = 2.7e-07;
+#endif
+  const double ub_err_expect_mxp = 4.0e-08;;
+
   const complex32_t x_init{float(invval), 0.f};
   const complex32_t y_init{float(val), 0.f};
 
@@ -1133,7 +1154,7 @@ TEST(mxp, view_complex_op_divide)
   double gt_err = std::abs(y_a[1].real() - ref);
 
   EXPECT_EQ(y_a[0], y_init);
-  EXPECT_GT(gt_err, 2.7e-07);
+  EXPECT_GT(gt_err, lb_err_expect_gt);
   EXPECT_EQ(y_a[2], y_a[1]);
   EXPECT_EQ(y_a[3], y_a[1]);
   EXPECT_EQ(y_a[4], y_init);
@@ -1147,7 +1168,7 @@ TEST(mxp, view_complex_op_divide)
   double mxp_err = std::abs(y_b[1].real() - ref);
 
   EXPECT_EQ(y_b[0], y_init);
-  EXPECT_LT(mxp_err, 4.0e-08);
+  EXPECT_LT(mxp_err, ub_err_expect_mxp);
   EXPECT_EQ(y_b[2], y_b[1]);
   EXPECT_EQ(y_b[3], y_b[1]);
   EXPECT_EQ(y_b[4], y_init);
