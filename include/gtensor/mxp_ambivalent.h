@@ -32,7 +32,8 @@ public:
   // ------------------------------------------------------------------------ //
 
   // construct from reference
-  GT_INLINE explicit ambivalent_t(storage_type& value_ref) : value_ref_(value_ref)
+  GT_INLINE explicit ambivalent_t(storage_type& value_ref)
+    : value_ref_(value_ref)
   {}
 
   // ------------------------------------------------------------------------ //
@@ -40,7 +41,7 @@ public:
   // (compound) assignment ops [=, +=, -=, *=, /=]
 #define DEFINE_ASSIGNMENT_OPERATOR(op)                                         \
   template <typename T>                                                        \
-  GT_INLINE ambivalent_t& operator op(const T& rhs)                               \
+  GT_INLINE ambivalent_t& operator op(const T& rhs)                            \
   {                                                                            \
     value_ref_ op rhs;                                                         \
     return *this;                                                              \
