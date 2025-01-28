@@ -75,15 +75,34 @@ public:
   }
 
   // ------------------------------------------------------------------------ //
+
+  inline auto to_kernel() const -> self_type { return *this; }
+
+  // ------------------------------------------------------------------------ //
 };
 
 // -------------------------------------------------------------------------- //
 
+template <gt::size_type N, typename S, typename X, typename T>
+GT_INLINE auto adapt(gt::space_pointer<T, S> data,
+                     const gt::shape_type<N>& shape)
+{
+  return mxp_span<T, N, S, X>(data, shape, gt::calc_strides(shape));
+}
+
+// host
 template <gt::size_type N, typename X, typename T>
 GT_INLINE auto adapt(T* data, const gt::shape_type<N>& shape)
 {
-  return mxp_span<T, N, gt::space::host, X>(data, shape,
-                                            gt::calc_strides(shape));
+  return adapt<N, gt::space::host, X, T>(data, shape);
+}
+
+// device
+template <gt::size_type N, typename X, typename T>
+GT_INLINE auto adapt_device(T* data, const gt::shape_type<N>& shape)
+{
+  return adapt<N, gt::space::device, X, T>(gt::device_pointer_cast(data),
+                                           shape);
 }
 
 // -------------------------------------------------------------------------- //

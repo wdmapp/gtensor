@@ -32,7 +32,7 @@ public:
   // ------------------------------------------------------------------------ //
 
   // construct from reference
-  inline explicit ambivalent_t(storage_type& value_ref) : value_ref_(value_ref)
+  GT_INLINE explicit ambivalent_t(storage_type& value_ref) : value_ref_(value_ref)
   {}
 
   // ------------------------------------------------------------------------ //
@@ -40,7 +40,7 @@ public:
   // (compound) assignment ops [=, +=, -=, *=, /=]
 #define DEFINE_ASSIGNMENT_OPERATOR(op)                                         \
   template <typename T>                                                        \
-  inline ambivalent_t& operator op(const T& rhs)                               \
+  GT_INLINE ambivalent_t& operator op(const T& rhs)                               \
   {                                                                            \
     value_ref_ op rhs;                                                         \
     return *this;                                                              \
@@ -57,9 +57,9 @@ public:
 
   // the only type cast guarantees computations in desired precision
   template <typename T>
-  inline explicit operator T() const = delete;
+  GT_INLINE explicit operator T() const = delete;
 
-  inline operator compute_type() const
+  GT_INLINE operator compute_type() const
   {
     return static_cast<compute_type>(value_ref_);
   }

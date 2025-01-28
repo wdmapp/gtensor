@@ -76,7 +76,7 @@ void generic_axaxaxpy_explicit_gt(const int n, const T a, const T* x, T* y)
   const auto gt_x = gt::adapt<1, S>(x, n);
   /* */ auto gt_y = gt::adapt<1, S>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       gt_y(j) = gt_y(j) + a * gt_x(j) + a * gt_x(j) + a * gt_x(j);
     });
@@ -85,10 +85,10 @@ void generic_axaxaxpy_explicit_gt(const int n, const T a, const T* x, T* y)
 template <typename S, typename X, typename T>
 void generic_axaxaxpy_explicit_mxp(const int n, const T a, const T* x, T* y)
 {
-  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       mxp_y(j) = mxp_y(j) + a * mxp_x(j) + a * mxp_x(j) + a * mxp_x(j);
     });
@@ -160,7 +160,7 @@ void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a, const T* X, T* Y)
   const auto gt_X = gt::adapt<2, S>(X, mn);
   /* */ auto gt_Y = gt::adapt<2, S>(Y, mn);
 
-  gt::launch<2>(
+  gt::launch<2, S>(
     {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
       gt_Y(j, k) =
         gt_Y(j, k) + a * gt_X(j, k) + a * gt_X(j, k) + a * gt_X(j, k);
@@ -170,10 +170,10 @@ void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a, const T* X, T* Y)
 template <typename S, typename X, typename T>
 void generic_aXaXaXpy_2D_explicit_mxp(const int* mn, const T a, const T* xx, T* yy)
 {
-  const auto mxp_X = mxp::adapt<2, /*S,*/ X>(xx, mn);
-  /* */ auto mxp_Y = mxp::adapt<2, /*S,*/ X>(yy, mn);
+  const auto mxp_X = mxp::adapt<2, S, X>(xx, mn);
+  /* */ auto mxp_Y = mxp::adapt<2, S, X>(yy, mn);
 
-  gt::launch<2>(
+  gt::launch<2, S>(
     {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
       mxp_Y(j, k) =
         mxp_Y(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k);
@@ -254,7 +254,7 @@ void generic_complex_axaxaxpy_explicit_gt(const int n, const T* a, const gt::com
   const auto gt_x = gt::adapt<1, S>(x, n);
   /* */ auto gt_y = gt::adapt<1, S>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       gt_y(j) =
         gt_y(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j);
@@ -264,11 +264,11 @@ void generic_complex_axaxaxpy_explicit_gt(const int n, const T* a, const gt::com
 template <typename S, typename X, typename T>
 void generic_complex_axaxaxpy_explicit_mxp(const int n, const T* a, const gt::complex<T>* x, gt::complex<T>* y)
 {
-  const auto mxp_a = mxp::adapt<1, /*S,*/ X>(a, n);
-  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+  const auto mxp_a = mxp::adapt<1, S, X>(a, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       mxp_y(j) =
         mxp_y(j) + mxp_a(j) * mxp_x(j) + mxp_a(j) * mxp_x(j) + mxp_a(j) * mxp_x(j);
@@ -343,7 +343,7 @@ void generic_complex_op_plus_explicit_gt(const int n, const gt::complex<T>* x, g
   const auto gt_x = gt::adapt<1, S>(x, n);
   /* */ auto gt_y = gt::adapt<1, S>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j);
     });
@@ -352,10 +352,10 @@ void generic_complex_op_plus_explicit_gt(const int n, const gt::complex<T>* x, g
 template <typename S, typename X, typename T>
 void generic_complex_op_plus_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
 {
-  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       mxp_y(j) = mxp_y(j) + mxp_x(j) + mxp_x(j) + mxp_x(j);
     });
@@ -429,7 +429,7 @@ void generic_complex_op_minus_explicit_gt(const int n, const gt::complex<T>* x, 
   const auto gt_x = gt::adapt<1, S>(x, n);
   /* */ auto gt_y = gt::adapt<1, S>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j);
     });
@@ -438,10 +438,10 @@ void generic_complex_op_minus_explicit_gt(const int n, const gt::complex<T>* x, 
 template <typename S, typename X, typename T>
 void generic_complex_op_minus_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
 {
-  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       mxp_y(j) = mxp_y(j) - mxp_x(j) - mxp_x(j) - mxp_x(j);
     });
@@ -514,7 +514,7 @@ void generic_complex_op_multiply_explicit_gt(const int n, const gt::complex<T>* 
   const auto gt_x = gt::adapt<1, S>(x, n);
   /* */ auto gt_y = gt::adapt<1, S>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       gt_y(j) = gt_x(j) * gt_x(j) * gt_x(j);
     });
@@ -523,10 +523,10 @@ void generic_complex_op_multiply_explicit_gt(const int n, const gt::complex<T>* 
 template <typename S, typename X, typename T>
 void generic_complex_op_multiply_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
 {
-  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       mxp_y(j) = mxp_x(j) * mxp_x(j) * mxp_x(j);
     });
@@ -600,7 +600,7 @@ void generic_complex_op_divide_explicit_gt(const int n, const gt::complex<T>* x,
   const auto gt_x = gt::adapt<1, S>(x, n);
   /* */ auto gt_y = gt::adapt<1, S>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       gt_y(j) = gt_y(j) / gt_x(j) / gt_x(j);
     });
@@ -609,10 +609,10 @@ void generic_complex_op_divide_explicit_gt(const int n, const gt::complex<T>* x,
 template <typename S, typename X, typename T>
 void generic_complex_op_divide_explicit_mxp(const int n, const gt::complex<T>* x, gt::complex<T>* y)
 {
-  const auto mxp_x = mxp::adapt<1, /*S,*/ X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, /*S,*/ X>(y, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
 
-  gt::launch<1>(
+  gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
       mxp_y(j) = mxp_y(j) / mxp_x(j) / mxp_x(j);
     });
