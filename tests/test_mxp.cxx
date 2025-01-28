@@ -1591,4 +1591,197 @@ TEST(mxp, device_view_axaxaxpy)
                                      y_init + x_init, y_init}));
 }
 
+TEST(mxp, device_view_all_2D)
+{
+  const int mn[2]{3, 2};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
+  /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  const auto gt_X = gt::adapt_device<2>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto gt_Y = gt::adapt_device<2>(gt::raw_pointer_cast(Y.data()), mn);
+
+  using gt::placeholders::_all;
+
+  gt_Y.view(_all, _all) = gt_Y.view(_all, _all) + a * gt_X.view(_all, _all) +
+                          a * gt_X.view(_all, _all) + a * gt_X.view(_all, _all);
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  const auto mxp_X =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto mxp_Y =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(Y.data()), mn);
+
+  mxp_Y.view(_all, _all) = mxp_Y.view(_all, _all) + a * mxp_X.view(_all, _all) +
+                           a * mxp_X.view(_all, _all) +
+                           a * mxp_X.view(_all, _all);
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]),
+                                             y_init + x_init)));
+}
+
+TEST(mxp, device_view_newaxis_2D)
+{
+  const int mn[2]{3, 2};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 1> x(mn[0], x_init);
+  /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  const auto gt_x = gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), mn[0]);
+  /* */ auto gt_Y = gt::adapt_device<2>(gt::raw_pointer_cast(Y.data()), mn);
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_newaxis;
+
+  gt_Y.view(_all, _all) =
+    gt_Y.view(_all, _all) + a * gt_x.view(_all, _newaxis) +
+    a * gt_x.view(_all, _newaxis) + a * gt_x.view(_all, _newaxis);
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  const auto mxp_x =
+    mxp::adapt_device<1, double>(gt::raw_pointer_cast(x.data()), mn[0]);
+  /* */ auto mxp_Y =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(Y.data()), mn);
+
+  mxp_Y.view(_all, _all) =
+    mxp_Y.view(_all, _all) + a * mxp_x.view(_all, _newaxis) +
+    a * mxp_x.view(_all, _newaxis) + a * mxp_x.view(_all, _newaxis);
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]),
+                                             y_init + x_init)));
+}
+
+TEST(mxp, device_view_s_2D)
+{
+  const int mn[2]{4, 3};
+  const int lj = 2, uj = 4, lk = 1, uk = 3;
+
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
+  /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  const auto gt_X = gt::adapt_device<2>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto gt_Y = gt::adapt_device<2>(gt::raw_pointer_cast(Y.data()), mn);
+
+  using gt::placeholders::_s;
+
+  gt_Y.view(_s(lj, uj), _s(lk, uk)) = gt_Y.view(_s(lj, uj), _s(lk, uk)) +
+                                      a * gt_X.view(_s(lj, uj), _s(lk, uk)) +
+                                      a * gt_X.view(_s(lj, uj), _s(lk, uk)) +
+                                      a * gt_X.view(_s(lj, uj), _s(lk, uk));
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  const auto mxp_X =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto mxp_Y =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(Y.data()), mn);
+
+  mxp_Y.view(_s(lj, uj), _s(lk, uk)) = mxp_Y.view(_s(lj, uj), _s(lk, uk)) +
+                                       a * mxp_X.view(_s(lj, uj), _s(lk, uk)) +
+                                       a * mxp_X.view(_s(lj, uj), _s(lk, uk)) +
+                                       a * mxp_X.view(_s(lj, uj), _s(lk, uk));
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>{
+                 {y_init, y_init, y_init, y_init},
+                 {y_init, y_init, y_init + x_init, y_init + x_init},
+                 {y_init, y_init, y_init + x_init, y_init + x_init}}));
+}
+
+TEST(mxp, device_view_slice_2D)
+{
+  const int mn[2]{4, 3};
+  const int slice_idx = 1;
+
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
+  /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  const auto gt_X = gt::adapt_device<2>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto gt_Y = gt::adapt_device<2>(gt::raw_pointer_cast(Y.data()), mn);
+
+  using gt::placeholders::_all;
+
+  gt_Y.view(_all, slice_idx) =
+    gt_Y.view(_all, slice_idx) + a * gt_X.view(_all, slice_idx) +
+    a * gt_X.view(_all, slice_idx) + a * gt_X.view(_all, slice_idx);
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  const auto mxp_X =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto mxp_Y =
+    mxp::adapt_device<2, double>(gt::raw_pointer_cast(Y.data()), mn);
+
+  mxp_Y.view(_all, slice_idx) =
+    mxp_Y.view(_all, slice_idx) + a * mxp_X.view(_all, slice_idx) +
+    a * mxp_X.view(_all, slice_idx) + a * mxp_X.view(_all, slice_idx);
+
+  EXPECT_EQ(Y,
+            (gt::gtensor_device<float, 2>{{y_init, y_init, y_init, y_init},
+                                          {y_init + x_init, y_init + x_init,
+                                           y_init + x_init, y_init + x_init},
+                                          {y_init, y_init, y_init, y_init}}));
+}
+
+TEST(mxp, device_view_view_axaxaxpy)
+{
+  const int nx{3};
+  const int ny{5};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 1> x(nx, x_init);
+  /* */ gt::gtensor_device<float, 1> y(ny, y_init);
+
+  const auto gt_x =
+    gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto gt_y =
+    gt::adapt_device<1>(gt::raw_pointer_cast(y.data()), y.size());
+
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)).view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)).view(_s(1, -1)) + a * gt_x.view(_s(1, -1)) +
+    a * gt_x.view(_s(1, -1)) + a * gt_x.view(_s(1, -1));
+
+  EXPECT_EQ(y, (gt::gtensor_device<float, 1>(ny, y_init)));
+
+  const auto mxp_x =
+    mxp::adapt_device<1, double>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto mxp_y =
+    mxp::adapt_device<1, double>(gt::raw_pointer_cast(y.data()), y.size());
+
+  mxp_y.view(_s(1, -1)).view(_s(1, -1)) =
+    mxp_y.view(_s(1, -1)).view(_s(1, -1)) + a * mxp_x.view(_s(1, -1)) +
+    a * mxp_x.view(_s(1, -1)) + a * mxp_x.view(_s(1, -1));
+
+  EXPECT_EQ(y, (gt::gtensor_device<float, 1>{y_init, y_init, y_init + x_init,
+                                             y_init, y_init}));
+}
 #endif
