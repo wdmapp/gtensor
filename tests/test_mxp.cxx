@@ -1784,4 +1784,304 @@ TEST(mxp, device_view_view_axaxaxpy)
   EXPECT_EQ(y, (gt::gtensor_device<float, 1>{y_init, y_init, y_init + x_init,
                                              y_init, y_init}));
 }
+
+TEST(mxp, device_view_complex_axaxaxpy)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t y_init{1.f, 1.f};
+  const float a_init{1.f / 3.f};
+
+  EXPECT_NE(y_init.real(), y_init.real() + x_init.real());
+  EXPECT_NE(y_init.imag(), y_init.imag() + x_init.imag());
+
+  const gt::gtensor_device<float, 1> a(nx, a_init);
+  const gt::gtensor_device<complex32_t, 1> x(nx, x_init);
+  /* */ gt::gtensor_device<complex32_t, 1> y(ny, y_init);
+
+  const auto gt_a =
+    gt::adapt_device<1>(gt::raw_pointer_cast(a.data()), a.size());
+  const auto gt_x =
+    gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto gt_y =
+    gt::adapt_device<1>(gt::raw_pointer_cast(y.data()), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) + gt_a.view(_all) * gt_x.view(_all) +
+    gt_a.view(_all) * gt_x.view(_all) + gt_a.view(_all) * gt_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(ny, y_init)));
+
+  const auto mxp_a =
+    mxp::adapt_device<1, double>(gt::raw_pointer_cast(a.data()), a.size());
+  const auto mxp_x =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto mxp_y =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(y.data()), y.size());
+
+  mxp_y.view(_s(1, -1)) =
+    mxp_y.view(_s(1, -1)) + mxp_a.view(_all) * mxp_x.view(_all) +
+    mxp_a.view(_all) * mxp_x.view(_all) + mxp_a.view(_all) * mxp_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>{y_init, y_init + x_init,
+                                                   y_init + x_init,
+                                                   y_init + x_init, y_init}));
+}
+
+TEST(mxp, device_view_complex_op_plus)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t mxp_ref{y_init + 3.f * x_init};
+
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
+
+  const gt::gtensor_device<complex32_t, 1> x(nx, x_init);
+  /* */ gt::gtensor_device<complex32_t, 1> y(ny, y_init);
+
+  const auto gt_x =
+    gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto gt_y =
+    gt::adapt_device<1>(gt::raw_pointer_cast(y.data()), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) + gt_x.view(_all) + gt_x.view(_all) + gt_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(ny, y_init)));
+
+  const auto mxp_x =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto mxp_y =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(y.data()), y.size());
+
+  mxp_y.view(_s(1, -1)) = mxp_y.view(_s(1, -1)) + mxp_x.view(_all) +
+                          mxp_x.view(_all) + mxp_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>{y_init, mxp_ref, mxp_ref,
+                                                   mxp_ref, y_init}));
+}
+
+TEST(mxp, device_view_complex_op_minus)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t y_init{1.f, 1.f};
+
+  const complex32_t mxp_ref{y_init - 3.f * x_init};
+
+  EXPECT_NE(y_init.real(), mxp_ref.real());
+  EXPECT_NE(y_init.imag(), mxp_ref.imag());
+
+  const gt::gtensor_device<complex32_t, 1> x(nx, x_init);
+  /* */ gt::gtensor_device<complex32_t, 1> y(ny, y_init);
+
+  const auto gt_x =
+    gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto gt_y =
+    gt::adapt_device<1>(gt::raw_pointer_cast(y.data()), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) - gt_x.view(_all) - gt_x.view(_all) - gt_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(ny, y_init)));
+
+  const auto mxp_x =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto mxp_y =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(y.data()), y.size());
+
+  mxp_y.view(_s(1, -1)) = mxp_y.view(_s(1, -1)) - mxp_x.view(_all) -
+                          mxp_x.view(_all) - mxp_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>{y_init, mxp_ref, mxp_ref,
+                                                   mxp_ref, y_init}));
+}
+
+TEST(mxp, device_view_complex_op_multiply)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t y_init{-654.321f};
+
+  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+
+  EXPECT_NE(gt_ref.real(), mxp_ref.real());
+
+  const gt::gtensor_device<complex32_t, 1> x(nx, x_init);
+  /* */ gt::gtensor_device<complex32_t, 1> y(ny, y_init);
+
+  const auto gt_x =
+    gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto gt_y =
+    gt::adapt_device<1>(gt::raw_pointer_cast(y.data()), y.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) = gt_x.view(_all) * gt_x.view(_all) * gt_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>{y_init, gt_ref, gt_ref,
+                                                   gt_ref, y_init}));
+
+  const auto mxp_x =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto mxp_y =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(y.data()), y.size());
+
+  mxp_y.view(_s(1, -1)) =
+    mxp_x.view(_all) * mxp_x.view(_all) * mxp_x.view(_all);
+
+  EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>{y_init, mxp_ref, mxp_ref,
+                                                   mxp_ref, y_init}));
+}
+
+TEST(mxp, device_view_complex_op_divide)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int nx{3};
+  const int ny{5};
+  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double invval = 1. / val;
+  double ref = val / invval / invval;
+
+#ifdef GTENSOR_DEVICE_CUDA
+  const double lb_err_expect_gt = 1.98e-07;
+#else
+  const double lb_err_expect_gt = 2.7e-07;
+#endif
+  const double ub_err_expect_mxp = 4.0e-08;
+
+  const complex32_t x_init{float(invval), 0.f};
+  const complex32_t y_init{float(val), 0.f};
+
+  const gt::gtensor_device<complex32_t, 1> x(nx, x_init);
+  /* */ gt::gtensor_device<complex32_t, 1> y_a(ny, y_init);
+  /* */ gt::gtensor_device<complex32_t, 1> y_b(ny, y_init);
+
+  const auto gt_x =
+    gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto gt_y =
+    gt::adapt_device<1>(gt::raw_pointer_cast(y_a.data()), y_a.size());
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_s;
+
+  gt_y.view(_s(1, -1)) =
+    gt_y.view(_s(1, -1)) / gt_x.view(_all) / gt_x.view(_all);
+
+  /* */ gt::gtensor<complex32_t, 1> h_y(ny);
+  gt::copy(y_a, h_y);
+  double gt_err = gt::abs(h_y(1).real() - ref);
+
+  EXPECT_EQ(h_y(0), y_init);
+  EXPECT_GT(gt_err, lb_err_expect_gt);
+  EXPECT_EQ(h_y(2), h_y(1));
+  EXPECT_EQ(h_y(3), h_y(1));
+  EXPECT_EQ(h_y(4), y_init);
+
+  const auto mxp_x =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(x.data()), x.size());
+  /* */ auto mxp_y = mxp::adapt_device<1, complex64_t>(
+    gt::raw_pointer_cast(y_b.data()), y_b.size());
+
+  mxp_y.view(_s(1, -1)) =
+    mxp_y.view(_s(1, -1)) / mxp_x.view(_all) / mxp_x.view(_all);
+
+  gt::copy(y_b, h_y);
+  double mxp_err = std::abs(h_y(1).real() - ref);
+
+  EXPECT_EQ(h_y(0), y_init);
+  EXPECT_LT(mxp_err, ub_err_expect_mxp);
+  EXPECT_EQ(h_y(2), h_y(1));
+  EXPECT_EQ(h_y(3), h_y(1));
+  EXPECT_EQ(h_y(4), y_init);
+}
+
+TEST(mxp, device_view_placeholders_complex_aXaXaXpY_2D)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int mn[2]{4, 3};
+  const int lk = 1, uk = 2;
+
+  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t y_init{1.f, 1.f};
+  const float a_init{1.f / 3.f};
+
+  EXPECT_NE(y_init.real(), y_init.real() + x_init.real());
+  EXPECT_NE(y_init.imag(), y_init.imag() + x_init.imag());
+
+  const gt::gtensor_device<float, 1> a(mn[0], a_init);
+  const gt::gtensor_device<complex32_t, 1> x(mn[0], x_init);
+  /* */ gt::gtensor_device<complex32_t, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  const auto gt_a = gt::adapt_device<1>(gt::raw_pointer_cast(a.data()), mn[0]);
+  const auto gt_x = gt::adapt_device<1>(gt::raw_pointer_cast(x.data()), mn[0]);
+  /* */ auto gt_Y = gt::adapt_device<2>(gt::raw_pointer_cast(Y.data()), mn);
+
+  using gt::placeholders::_all;
+  using gt::placeholders::_newaxis;
+  using gt::placeholders::_s;
+
+  gt_Y.view(_all, _s(lk, uk)) =
+    gt_Y.view(_all, _s(lk, uk)) +
+    gt_a.view(_all, _newaxis) * gt_x.view(_all, _newaxis) +
+    gt_a.view(_all, _newaxis) * gt_x.view(_all, _newaxis) +
+    gt_a.view(_all, _newaxis) * gt_x.view(_all, _newaxis);
+
+  EXPECT_EQ(
+    Y, (gt::gtensor_device<complex32_t, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  const auto mxp_a =
+    mxp::adapt_device<1, double>(gt::raw_pointer_cast(a.data()), mn[0]);
+  const auto mxp_x =
+    mxp::adapt_device<1, complex64_t>(gt::raw_pointer_cast(x.data()), mn[0]);
+  /* */ auto mxp_Y =
+    mxp::adapt_device<2, complex64_t>(gt::raw_pointer_cast(Y.data()), mn);
+
+  mxp_Y.view(_all, _s(lk, uk)) =
+    mxp_Y.view(_all, _s(lk, uk)) +
+    mxp_a.view(_all, _newaxis) * mxp_x.view(_all, _newaxis) +
+    mxp_a.view(_all, _newaxis) * mxp_x.view(_all, _newaxis) +
+    mxp_a.view(_all, _newaxis) * mxp_x.view(_all, _newaxis);
+
+  EXPECT_EQ(
+    Y, (gt::gtensor_device<complex32_t, 2>{
+         {y_init, y_init, y_init, y_init},
+         {y_init + x_init, y_init + x_init, y_init + x_init, y_init + x_init},
+         {y_init, y_init, y_init, y_init}}));
+}
+
 #endif
