@@ -108,10 +108,11 @@ TEST(mxp, aXaXaXpY_2D_implicit)
 }
 
 template <typename S, typename T>
-void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a, const T* X, T* Y)
+void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a,
+  const gt::gtensor<T, 2, S>& xx, gt::gtensor<T, 2, S>& yy)
 {
-  const auto gt_X = gt::adapt<2, S>(X, mn);
-  /* */ auto gt_Y = gt::adapt<2, S>(Y, mn);
+  const auto gt_X = gt::adapt<2, S>(xx.data(), mn);
+  /* */ auto gt_Y = gt::adapt<2, S>(yy.data(), mn);
 
   gt::launch<2, S>(
     {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
@@ -121,10 +122,11 @@ void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a, const T* X, T* Y)
 }
 
 template <typename S, typename X, typename T>
-void generic_aXaXaXpy_2D_explicit_mxp(const int* mn, const T a, const T* xx, T* yy)
+void generic_aXaXaXpy_2D_explicit_mxp(const int* mn, const T a,
+  const gt::gtensor<T, 2, S>& xx, gt::gtensor<T, 2, S>& yy)
 {
-  const auto mxp_X = mxp::adapt<2, S, X>(xx, mn);
-  /* */ auto mxp_Y = mxp::adapt<2, S, X>(yy, mn);
+  const auto mxp_X = mxp::adapt<2, S, X>(xx.data(), mn);
+  /* */ auto mxp_Y = mxp::adapt<2, S, X>(yy.data(), mn);
 
   gt::launch<2, S>(
     {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
@@ -145,11 +147,11 @@ TEST(mxp, aXaXaXpY_2D_explicit)
   const gt::gtensor<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
   /* */ gt::gtensor<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
 
-  generic_aXaXaXpy_2D_explicit_gt<gt::space::host>(mn, a, X.data(), Y.data());
+  generic_aXaXaXpy_2D_explicit_gt<gt::space::host>(mn, a, X, Y);
 
   EXPECT_EQ(Y, (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
 
-  generic_aXaXaXpy_2D_explicit_mxp<gt::space::host, double>(mn, a, X.data(), Y.data());
+  generic_aXaXaXpy_2D_explicit_mxp<gt::space::host, double>(mn, a, X, Y);
 
   EXPECT_EQ(Y, (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init + x_init)));
 }
@@ -1153,6 +1155,54 @@ TEST(mxp, device_axaxaxpy_explicit)
   generic_axaxaxpy_explicit_mxp<gt::space::device, double>(n, a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init + x_init)));
+}
+
+TEST(mxp, device_aXaXaXpY_2D_implicit)
+{
+  const int mn[2]{2, 3};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
+  /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  const auto gt_X = gt::adapt_device<2>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto gt_Y = gt::adapt_device<2>(gt::raw_pointer_cast(Y.data()), mn);
+
+  gt_Y = gt_Y + a * gt_X + a * gt_X + a * gt_X;
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  const auto mxp_X = mxp::adapt_device<2, double>(gt::raw_pointer_cast(X.data()), mn);
+  /* */ auto mxp_Y = mxp::adapt_device<2, double>(gt::raw_pointer_cast(Y.data()), mn);
+
+  mxp_Y = mxp_Y + a * mxp_X + a * mxp_X + a * mxp_X;
+
+  EXPECT_EQ(Y, (gt::gtensor_device<float, 2>(gt::shape(mn[0], mn[1]), y_init + x_init)));
+}
+
+TEST(mxp, device_aXaXaXpY_2D_explicit)
+{
+  const int mn[2]{2, 3};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
+  /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
+
+  generic_aXaXaXpy_2D_explicit_gt<gt::space::device>(mn, a, X, Y);
+
+  EXPECT_EQ(Y, (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
+
+  generic_aXaXaXpy_2D_explicit_mxp<gt::space::device, double>(mn, a, X, Y);
+
+  EXPECT_EQ(Y, (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init + x_init)));
 }
 
 #endif
