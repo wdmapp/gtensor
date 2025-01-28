@@ -34,10 +34,11 @@ TEST(mxp, axaxaxpy_implicit)
 }
 
 template <typename S, typename T>
-void generic_axaxaxpy_explicit_gt(const int n, const T a, const T* x, T* y)
+void generic_axaxaxpy_explicit_gt(const int n, const T a,
+  const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y)
 {
-  const auto gt_x = gt::adapt<1, S>(x, n);
-  /* */ auto gt_y = gt::adapt<1, S>(y, n);
+  const auto gt_x = gt::adapt<1, S>(x.data(), n);
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
 
   gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
@@ -46,10 +47,11 @@ void generic_axaxaxpy_explicit_gt(const int n, const T a, const T* x, T* y)
 }
 
 template <typename S, typename X, typename T>
-void generic_axaxaxpy_explicit_mxp(const int n, const T a, const T* x, T* y)
+void generic_axaxaxpy_explicit_mxp(const int n, const T a,
+  const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y)
 {
-  const auto mxp_x = mxp::adapt<1, S, X>(x, n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y, n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
 
   gt::launch<1, S>(
     {n}, GT_LAMBDA(int j) {
@@ -69,11 +71,11 @@ TEST(mxp, axaxaxpy_explicit)
   const gt::gtensor<float, 1> x(n, x_init);
   /* */ gt::gtensor<float, 1> y(n, y_init);
 
-  generic_axaxaxpy_explicit_gt<gt::space::host>(n, a, x.data(), y.data());
+  generic_axaxaxpy_explicit_gt<gt::space::host>(n, a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init)));
 
-  generic_axaxaxpy_explicit_mxp<gt::space::host, double>(n, a, x.data(), y.data());
+  generic_axaxaxpy_explicit_mxp<gt::space::host, double>(n, a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init + x_init)));
 }
@@ -1130,6 +1132,27 @@ TEST(mxp, device_axaxaxpy_implicit)
   mxp_y = mxp_y + a * mxp_x + a * mxp_x + a * mxp_x;
 
   EXPECT_EQ(y, (gt::gtensor_device<float, 1>(n, y_init + x_init)));
+}
+
+TEST(mxp, device_axaxaxpy_explicit)
+{
+  const int n{2};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 1> x(n, x_init);
+  /* */ gt::gtensor_device<float, 1> y(n, y_init);
+
+  generic_axaxaxpy_explicit_gt<gt::space::device>(n, a, x, y);
+
+  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init)));
+
+  generic_axaxaxpy_explicit_mxp<gt::space::device, double>(n, a, x, y);
+
+  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init + x_init)));
 }
 
 #endif
