@@ -36,37 +36,6 @@ TEST(mxp, axaxaxpy_implicit)
   EXPECT_EQ(y[1], y_init + x_init);
 }
 
-#if defined GTENSOR_HAVE_DEVICE
-
-TEST(mxp, device_axaxaxpy_implicit)
-{
-  const int n{2};
-  const float x_init{exp2f(-23)};
-  const float y_init{1.f};
-  const float a{1.f / 3.f};
-
-  EXPECT_NE(y_init, y_init + x_init);
-
-  const gt::gtensor_device<float, 1> x(n, x_init);
-  /* */ gt::gtensor_device<float, 1> y(n, y_init);
-
-  const auto gt_x = gt::adapt<1, gt::space::device>(x.data(), x.size());
-  /* */ auto gt_y = gt::adapt<1, gt::space::device>(y.data(), y.size());
-
-  gt_y = gt_y + a * gt_x + a * gt_x + a * gt_x;
-
-  EXPECT_EQ(y, (gt::gtensor_device<float, 1>(n, y_init)));
-
-  const auto mxp_x = mxp::adapt<1, gt::space::device, double>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, gt::space::device, double>(y.data(), y.size());
-
-  mxp_y = mxp_y + a * mxp_x + a * mxp_x + a * mxp_x;
-
-  EXPECT_EQ(y, (gt::gtensor_device<float, 1>(n, y_init + x_init)));
-}
-
-#endif
-
 template <typename S, typename T>
 void generic_axaxaxpy_explicit_gt(const int n, const T a, const T* x, T* y)
 {
@@ -1232,3 +1201,34 @@ TEST(mxp, view_placeholders_complex_aXaXaXpY_2D)
     }
   }
 }
+
+#if defined GTENSOR_HAVE_DEVICE
+
+TEST(mxp, device_axaxaxpy_implicit)
+{
+  const int n{2};
+  const float x_init{exp2f(-23)};
+  const float y_init{1.f};
+  const float a{1.f / 3.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 1> x(n, x_init);
+  /* */ gt::gtensor_device<float, 1> y(n, y_init);
+
+  const auto gt_x = gt::adapt<1, gt::space::device>(x.data(), x.size());
+  /* */ auto gt_y = gt::adapt<1, gt::space::device>(y.data(), y.size());
+
+  gt_y = gt_y + a * gt_x + a * gt_x + a * gt_x;
+
+  EXPECT_EQ(y, (gt::gtensor_device<float, 1>(n, y_init)));
+
+  const auto mxp_x = mxp::adapt<1, gt::space::device, double>(x.data(), x.size());
+  /* */ auto mxp_y = mxp::adapt<1, gt::space::device, double>(y.data(), y.size());
+
+  mxp_y = mxp_y + a * mxp_x + a * mxp_x + a * mxp_x;
+
+  EXPECT_EQ(y, (gt::gtensor_device<float, 1>(n, y_init + x_init)));
+}
+
+#endif
