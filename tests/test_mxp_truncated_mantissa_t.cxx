@@ -34,116 +34,6 @@ float ref_truncated_add_float()
     return 2.f + exp2f(-13) + exp2f(-15) + exp2f(-16);
 }
 
-TEST(mxp_truncated_mantissa, add_float)
-{
-  const int n{3};
-
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
-  const float y_init{1.f};
-
-  EXPECT_NE(y_init, y_init + x_init);
-
-  const gt::gtensor<float, 1> x(n, x_init);
-  /* */ gt::gtensor<float, 1> y(n, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
-
-  gt_y.view() = y_init;
-  generic_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<0>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<1>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<2>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<3>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<4>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<5>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<6>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<7>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<8>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<9>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<10>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<11>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<12>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<13>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<14>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<15>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<16>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<17>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<18>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<19>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<20>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<21>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<22>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>(n, ref_truncated_add_float<23>())));
-}
-
 template <std::uint8_t bits>
 double ref_truncated_add_double()
 {
@@ -161,6 +51,69 @@ double ref_truncated_add_double()
     return 2. + exp2(-23) + exp2(-25) + exp2(-26);
 }
 
+template <std::uint8_t bits, typename T>
+T ref_truncated_add_gen()
+{
+  if (std::is_same<T, float>::value ||
+      std::is_same<T, gt::complex<float>>::value)
+    return ref_truncated_add_float<bits>();
+  else if (std::is_same<T, double>::value ||
+           std::is_same<T, gt::complex<double>>::value)
+    return ref_truncated_add_double<bits>();
+  else
+    return 0. / 0.;
+}
+
+template <std::uint8_t bits, typename S, typename T>
+void run_test_add(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
+                  const T y_init)
+{
+  auto gt_y = gt::adapt<1, S>(y.data(), y.size());
+  y.view() = y_init;
+
+  generic_truncated_add<bits, S>(x, y);
+  EXPECT_EQ(y,
+            (gt::gtensor<T, 1, S>(y.size(), ref_truncated_add_gen<bits, T>())));
+}
+
+TEST(mxp_truncated_mantissa, add_float)
+{
+  const int n{3};
+
+  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float y_init{1.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor<float, 1> x(n, x_init);
+  /* */ gt::gtensor<float, 1> y(n, y_init);
+
+  run_test_add<0, gt::space::host>(x, y, y_init);
+  run_test_add<1, gt::space::host>(x, y, y_init);
+  run_test_add<2, gt::space::host>(x, y, y_init);
+  run_test_add<3, gt::space::host>(x, y, y_init);
+  run_test_add<4, gt::space::host>(x, y, y_init);
+  run_test_add<5, gt::space::host>(x, y, y_init);
+  run_test_add<6, gt::space::host>(x, y, y_init);
+  run_test_add<7, gt::space::host>(x, y, y_init);
+  run_test_add<8, gt::space::host>(x, y, y_init);
+  run_test_add<9, gt::space::host>(x, y, y_init);
+  run_test_add<10, gt::space::host>(x, y, y_init);
+  run_test_add<11, gt::space::host>(x, y, y_init);
+  run_test_add<12, gt::space::host>(x, y, y_init);
+  run_test_add<13, gt::space::host>(x, y, y_init);
+  run_test_add<14, gt::space::host>(x, y, y_init);
+  run_test_add<15, gt::space::host>(x, y, y_init);
+  run_test_add<16, gt::space::host>(x, y, y_init);
+  run_test_add<17, gt::space::host>(x, y, y_init);
+  run_test_add<18, gt::space::host>(x, y, y_init);
+  run_test_add<19, gt::space::host>(x, y, y_init);
+  run_test_add<20, gt::space::host>(x, y, y_init);
+  run_test_add<21, gt::space::host>(x, y, y_init);
+  run_test_add<22, gt::space::host>(x, y, y_init);
+  run_test_add<23, gt::space::host>(x, y, y_init);
+}
+
 TEST(mxp_truncated_mantissa, add_double)
 {
   const int n{3};
@@ -172,223 +125,61 @@ TEST(mxp_truncated_mantissa, add_double)
 
   const gt::gtensor<double, 1> x(n, x_init);
   /* */ gt::gtensor<double, 1> y(n, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
 
-  gt_y.view() = y_init;
-  generic_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<0>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<1>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<2>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<3>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<4>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<5>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<6>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<7>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<8>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<9>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<10>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<11>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<12>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<13>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<14>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<15>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<16>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<17>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<18>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<19>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<20>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<21>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<22>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<23, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<23>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<24, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<24>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<25, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<25>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<26, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<26>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<27, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<27>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<28, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<28>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<29, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<29>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<30, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<30>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<31, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<31>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<32, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<32>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<33, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<33>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<34, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<34>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<35, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<35>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<36, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<36>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<37, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<37>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<38, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<38>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<39, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<39>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<40, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<40>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<41, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<41>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<42, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<42>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<43, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<43>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<44, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<44>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<45, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<45>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<46, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<46>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<47, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<47>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<48, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<48>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<49, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<49>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<50, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<50>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<51, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<51>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<52, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<52>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<53, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>(n, ref_truncated_add_double<53>())));
+  run_test_add<0, gt::space::host>(x, y, y_init);
+  run_test_add<1, gt::space::host>(x, y, y_init);
+  run_test_add<2, gt::space::host>(x, y, y_init);
+  run_test_add<3, gt::space::host>(x, y, y_init);
+  run_test_add<4, gt::space::host>(x, y, y_init);
+  run_test_add<5, gt::space::host>(x, y, y_init);
+  run_test_add<6, gt::space::host>(x, y, y_init);
+  run_test_add<7, gt::space::host>(x, y, y_init);
+  run_test_add<8, gt::space::host>(x, y, y_init);
+  run_test_add<9, gt::space::host>(x, y, y_init);
+  run_test_add<10, gt::space::host>(x, y, y_init);
+  run_test_add<11, gt::space::host>(x, y, y_init);
+  run_test_add<12, gt::space::host>(x, y, y_init);
+  run_test_add<13, gt::space::host>(x, y, y_init);
+  run_test_add<14, gt::space::host>(x, y, y_init);
+  run_test_add<15, gt::space::host>(x, y, y_init);
+  run_test_add<16, gt::space::host>(x, y, y_init);
+  run_test_add<17, gt::space::host>(x, y, y_init);
+  run_test_add<18, gt::space::host>(x, y, y_init);
+  run_test_add<19, gt::space::host>(x, y, y_init);
+  run_test_add<20, gt::space::host>(x, y, y_init);
+  run_test_add<21, gt::space::host>(x, y, y_init);
+  run_test_add<22, gt::space::host>(x, y, y_init);
+  run_test_add<23, gt::space::host>(x, y, y_init);
+  run_test_add<24, gt::space::host>(x, y, y_init);
+  run_test_add<25, gt::space::host>(x, y, y_init);
+  run_test_add<26, gt::space::host>(x, y, y_init);
+  run_test_add<27, gt::space::host>(x, y, y_init);
+  run_test_add<28, gt::space::host>(x, y, y_init);
+  run_test_add<29, gt::space::host>(x, y, y_init);
+  run_test_add<30, gt::space::host>(x, y, y_init);
+  run_test_add<31, gt::space::host>(x, y, y_init);
+  run_test_add<32, gt::space::host>(x, y, y_init);
+  run_test_add<33, gt::space::host>(x, y, y_init);
+  run_test_add<34, gt::space::host>(x, y, y_init);
+  run_test_add<35, gt::space::host>(x, y, y_init);
+  run_test_add<36, gt::space::host>(x, y, y_init);
+  run_test_add<37, gt::space::host>(x, y, y_init);
+  run_test_add<38, gt::space::host>(x, y, y_init);
+  run_test_add<39, gt::space::host>(x, y, y_init);
+  run_test_add<40, gt::space::host>(x, y, y_init);
+  run_test_add<41, gt::space::host>(x, y, y_init);
+  run_test_add<42, gt::space::host>(x, y, y_init);
+  run_test_add<43, gt::space::host>(x, y, y_init);
+  run_test_add<44, gt::space::host>(x, y, y_init);
+  run_test_add<45, gt::space::host>(x, y, y_init);
+  run_test_add<46, gt::space::host>(x, y, y_init);
+  run_test_add<47, gt::space::host>(x, y, y_init);
+  run_test_add<48, gt::space::host>(x, y, y_init);
+  run_test_add<49, gt::space::host>(x, y, y_init);
+  run_test_add<50, gt::space::host>(x, y, y_init);
+  run_test_add<51, gt::space::host>(x, y, y_init);
+  run_test_add<52, gt::space::host>(x, y, y_init);
+  run_test_add<53, gt::space::host>(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_float)
@@ -404,103 +195,31 @@ TEST(mxp_truncated_mantissa, add_complex_float)
 
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(n, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
 
-  gt_y.view() = y_init;
-  generic_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<0>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<1>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<2>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<3>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<4>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<5>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<6>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<7>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<8>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<9>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<10>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<11>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<12>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<13>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<14>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<15>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<16>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<17>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<18>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<19>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<20>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<21>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<22>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<23, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, ref_truncated_add_float<23>())));
+  run_test_add<0, gt::space::host>(x, y, y_init);
+  run_test_add<1, gt::space::host>(x, y, y_init);
+  run_test_add<2, gt::space::host>(x, y, y_init);
+  run_test_add<3, gt::space::host>(x, y, y_init);
+  run_test_add<4, gt::space::host>(x, y, y_init);
+  run_test_add<5, gt::space::host>(x, y, y_init);
+  run_test_add<6, gt::space::host>(x, y, y_init);
+  run_test_add<7, gt::space::host>(x, y, y_init);
+  run_test_add<8, gt::space::host>(x, y, y_init);
+  run_test_add<9, gt::space::host>(x, y, y_init);
+  run_test_add<10, gt::space::host>(x, y, y_init);
+  run_test_add<11, gt::space::host>(x, y, y_init);
+  run_test_add<12, gt::space::host>(x, y, y_init);
+  run_test_add<13, gt::space::host>(x, y, y_init);
+  run_test_add<14, gt::space::host>(x, y, y_init);
+  run_test_add<15, gt::space::host>(x, y, y_init);
+  run_test_add<16, gt::space::host>(x, y, y_init);
+  run_test_add<17, gt::space::host>(x, y, y_init);
+  run_test_add<18, gt::space::host>(x, y, y_init);
+  run_test_add<19, gt::space::host>(x, y, y_init);
+  run_test_add<20, gt::space::host>(x, y, y_init);
+  run_test_add<21, gt::space::host>(x, y, y_init);
+  run_test_add<22, gt::space::host>(x, y, y_init);
+  run_test_add<23, gt::space::host>(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_double)
@@ -516,267 +235,61 @@ TEST(mxp_truncated_mantissa, add_complex_double)
 
   const gt::gtensor<complex64_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex64_t, 1> y(n, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
 
-  gt_y.view() = y_init;
-  generic_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<0>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<1>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<2>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<3>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<4>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<5>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<6>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<7>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<8>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<9>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<10>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<11>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<12>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<13>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<14>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<15>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<16>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<17>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<18>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<19>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<20>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<21>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<22>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<23, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<23>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<24, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<24>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<25, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<25>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<26, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<26>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<27, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<27>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<28, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<28>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<29, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<29>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<30, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<30>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<31, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<31>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<32, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<32>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<33, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<33>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<34, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<34>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<35, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<35>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<36, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<36>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<37, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<37>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<38, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<38>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<39, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<39>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<40, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<40>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<41, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<41>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<42, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<42>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<43, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<43>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<44, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<44>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<45, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<45>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<46, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<46>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<47, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<47>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<48, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<48>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<49, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<49>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<50, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<50>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<51, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<51>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<52, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<52>())));
-
-  gt_y.view() = y_init;
-  generic_truncated_add<53, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<complex64_t, 1>(n, ref_truncated_add_double<53>())));
+  run_test_add<0, gt::space::host>(x, y, y_init);
+  run_test_add<1, gt::space::host>(x, y, y_init);
+  run_test_add<2, gt::space::host>(x, y, y_init);
+  run_test_add<3, gt::space::host>(x, y, y_init);
+  run_test_add<4, gt::space::host>(x, y, y_init);
+  run_test_add<5, gt::space::host>(x, y, y_init);
+  run_test_add<6, gt::space::host>(x, y, y_init);
+  run_test_add<7, gt::space::host>(x, y, y_init);
+  run_test_add<8, gt::space::host>(x, y, y_init);
+  run_test_add<9, gt::space::host>(x, y, y_init);
+  run_test_add<10, gt::space::host>(x, y, y_init);
+  run_test_add<11, gt::space::host>(x, y, y_init);
+  run_test_add<12, gt::space::host>(x, y, y_init);
+  run_test_add<13, gt::space::host>(x, y, y_init);
+  run_test_add<14, gt::space::host>(x, y, y_init);
+  run_test_add<15, gt::space::host>(x, y, y_init);
+  run_test_add<16, gt::space::host>(x, y, y_init);
+  run_test_add<17, gt::space::host>(x, y, y_init);
+  run_test_add<18, gt::space::host>(x, y, y_init);
+  run_test_add<19, gt::space::host>(x, y, y_init);
+  run_test_add<20, gt::space::host>(x, y, y_init);
+  run_test_add<21, gt::space::host>(x, y, y_init);
+  run_test_add<22, gt::space::host>(x, y, y_init);
+  run_test_add<23, gt::space::host>(x, y, y_init);
+  run_test_add<24, gt::space::host>(x, y, y_init);
+  run_test_add<25, gt::space::host>(x, y, y_init);
+  run_test_add<26, gt::space::host>(x, y, y_init);
+  run_test_add<27, gt::space::host>(x, y, y_init);
+  run_test_add<28, gt::space::host>(x, y, y_init);
+  run_test_add<29, gt::space::host>(x, y, y_init);
+  run_test_add<30, gt::space::host>(x, y, y_init);
+  run_test_add<31, gt::space::host>(x, y, y_init);
+  run_test_add<32, gt::space::host>(x, y, y_init);
+  run_test_add<33, gt::space::host>(x, y, y_init);
+  run_test_add<34, gt::space::host>(x, y, y_init);
+  run_test_add<35, gt::space::host>(x, y, y_init);
+  run_test_add<36, gt::space::host>(x, y, y_init);
+  run_test_add<37, gt::space::host>(x, y, y_init);
+  run_test_add<38, gt::space::host>(x, y, y_init);
+  run_test_add<39, gt::space::host>(x, y, y_init);
+  run_test_add<40, gt::space::host>(x, y, y_init);
+  run_test_add<41, gt::space::host>(x, y, y_init);
+  run_test_add<42, gt::space::host>(x, y, y_init);
+  run_test_add<43, gt::space::host>(x, y, y_init);
+  run_test_add<44, gt::space::host>(x, y, y_init);
+  run_test_add<45, gt::space::host>(x, y, y_init);
+  run_test_add<46, gt::space::host>(x, y, y_init);
+  run_test_add<47, gt::space::host>(x, y, y_init);
+  run_test_add<48, gt::space::host>(x, y, y_init);
+  run_test_add<49, gt::space::host>(x, y, y_init);
+  run_test_add<50, gt::space::host>(x, y, y_init);
+  run_test_add<51, gt::space::host>(x, y, y_init);
+  run_test_add<52, gt::space::host>(x, y, y_init);
+  run_test_add<53, gt::space::host>(x, y, y_init);
 }
 
 template <std::uint8_t bits, typename S, typename T>
@@ -793,6 +306,20 @@ void generic_view_truncated_add(const gt::gtensor<T, 1, S>& x,
   mxp_y.view(_s(1, -1)) = mxp_y.view(_s(1, -1)) + mxp_x.view(_all);
 }
 
+template <std::uint8_t bits, typename S, typename T>
+void run_test_view_add(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
+                       const T y_init)
+{
+  auto gt_y = gt::adapt<1, S>(y.data(), y.size());
+  y.view() = y_init;
+
+  generic_view_truncated_add<bits, S>(x, y);
+  EXPECT_EQ(y,
+            (gt::gtensor<T, 1, S>{y_init, ref_truncated_add_gen<bits, T>(),
+                                  ref_truncated_add_gen<bits, T>(),
+                                  ref_truncated_add_gen<bits, T>(), y_init}));
+}
+
 TEST(mxp_truncated_mantissa, view_add_float)
 {
   const int nx{3};
@@ -805,151 +332,31 @@ TEST(mxp_truncated_mantissa, view_add_float)
 
   const gt::gtensor<float, 1> x(nx, x_init);
   /* */ gt::gtensor<float, 1> y(ny, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
 
-  gt_y.view() = y_init;
-  generic_view_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<0>(),
-                                      ref_truncated_add_float<0>(),
-                                      ref_truncated_add_float<0>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<1>(),
-                                      ref_truncated_add_float<1>(),
-                                      ref_truncated_add_float<1>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<2>(),
-                                      ref_truncated_add_float<2>(),
-                                      ref_truncated_add_float<2>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<3>(),
-                                      ref_truncated_add_float<3>(),
-                                      ref_truncated_add_float<3>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<4>(),
-                                      ref_truncated_add_float<4>(),
-                                      ref_truncated_add_float<4>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<5>(),
-                                      ref_truncated_add_float<5>(),
-                                      ref_truncated_add_float<5>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<6>(),
-                                      ref_truncated_add_float<6>(),
-                                      ref_truncated_add_float<6>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<7>(),
-                                      ref_truncated_add_float<7>(),
-                                      ref_truncated_add_float<7>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<8>(),
-                                      ref_truncated_add_float<8>(),
-                                      ref_truncated_add_float<8>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<9>(),
-                                      ref_truncated_add_float<9>(),
-                                      ref_truncated_add_float<9>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<10>(),
-                                      ref_truncated_add_float<10>(),
-                                      ref_truncated_add_float<10>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<11>(),
-                                      ref_truncated_add_float<11>(),
-                                      ref_truncated_add_float<11>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<12>(),
-                                      ref_truncated_add_float<12>(),
-                                      ref_truncated_add_float<12>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<13>(),
-                                      ref_truncated_add_float<13>(),
-                                      ref_truncated_add_float<13>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<14>(),
-                                      ref_truncated_add_float<14>(),
-                                      ref_truncated_add_float<14>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<15>(),
-                                      ref_truncated_add_float<15>(),
-                                      ref_truncated_add_float<15>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<16>(),
-                                      ref_truncated_add_float<16>(),
-                                      ref_truncated_add_float<16>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<17>(),
-                                      ref_truncated_add_float<17>(),
-                                      ref_truncated_add_float<17>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<18>(),
-                                      ref_truncated_add_float<18>(),
-                                      ref_truncated_add_float<18>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<19>(),
-                                      ref_truncated_add_float<19>(),
-                                      ref_truncated_add_float<19>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<20>(),
-                                      ref_truncated_add_float<20>(),
-                                      ref_truncated_add_float<20>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<21>(),
-                                      ref_truncated_add_float<21>(),
-                                      ref_truncated_add_float<21>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<22>(),
-                                      ref_truncated_add_float<22>(),
-                                      ref_truncated_add_float<22>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<23, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<float, 1>{y_init, ref_truncated_add_float<23>(),
-                                      ref_truncated_add_float<23>(),
-                                      ref_truncated_add_float<23>(), y_init}));
+  run_test_view_add<0, gt::space::host>(x, y, y_init);
+  run_test_view_add<1, gt::space::host>(x, y, y_init);
+  run_test_view_add<2, gt::space::host>(x, y, y_init);
+  run_test_view_add<3, gt::space::host>(x, y, y_init);
+  run_test_view_add<4, gt::space::host>(x, y, y_init);
+  run_test_view_add<5, gt::space::host>(x, y, y_init);
+  run_test_view_add<6, gt::space::host>(x, y, y_init);
+  run_test_view_add<7, gt::space::host>(x, y, y_init);
+  run_test_view_add<8, gt::space::host>(x, y, y_init);
+  run_test_view_add<9, gt::space::host>(x, y, y_init);
+  run_test_view_add<10, gt::space::host>(x, y, y_init);
+  run_test_view_add<11, gt::space::host>(x, y, y_init);
+  run_test_view_add<12, gt::space::host>(x, y, y_init);
+  run_test_view_add<13, gt::space::host>(x, y, y_init);
+  run_test_view_add<14, gt::space::host>(x, y, y_init);
+  run_test_view_add<15, gt::space::host>(x, y, y_init);
+  run_test_view_add<16, gt::space::host>(x, y, y_init);
+  run_test_view_add<17, gt::space::host>(x, y, y_init);
+  run_test_view_add<18, gt::space::host>(x, y, y_init);
+  run_test_view_add<19, gt::space::host>(x, y, y_init);
+  run_test_view_add<20, gt::space::host>(x, y, y_init);
+  run_test_view_add<21, gt::space::host>(x, y, y_init);
+  run_test_view_add<22, gt::space::host>(x, y, y_init);
+  run_test_view_add<23, gt::space::host>(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_double)
@@ -964,375 +371,61 @@ TEST(mxp_truncated_mantissa, view_add_double)
 
   const gt::gtensor<double, 1> x(nx, x_init);
   /* */ gt::gtensor<double, 1> y(ny, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
 
-  gt_y.view() = y_init;
-  generic_view_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<0>(),
-                                       ref_truncated_add_double<0>(),
-                                       ref_truncated_add_double<0>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<1>(),
-                                       ref_truncated_add_double<1>(),
-                                       ref_truncated_add_double<1>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<2>(),
-                                       ref_truncated_add_double<2>(),
-                                       ref_truncated_add_double<2>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<3>(),
-                                       ref_truncated_add_double<3>(),
-                                       ref_truncated_add_double<3>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<4>(),
-                                       ref_truncated_add_double<4>(),
-                                       ref_truncated_add_double<4>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<5>(),
-                                       ref_truncated_add_double<5>(),
-                                       ref_truncated_add_double<5>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<6>(),
-                                       ref_truncated_add_double<6>(),
-                                       ref_truncated_add_double<6>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<7>(),
-                                       ref_truncated_add_double<7>(),
-                                       ref_truncated_add_double<7>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<8>(),
-                                       ref_truncated_add_double<8>(),
-                                       ref_truncated_add_double<8>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(y, (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<9>(),
-                                       ref_truncated_add_double<9>(),
-                                       ref_truncated_add_double<9>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<10>(),
-                                    ref_truncated_add_double<10>(),
-                                    ref_truncated_add_double<10>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<11>(),
-                                    ref_truncated_add_double<11>(),
-                                    ref_truncated_add_double<11>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<12>(),
-                                    ref_truncated_add_double<12>(),
-                                    ref_truncated_add_double<12>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<13>(),
-                                    ref_truncated_add_double<13>(),
-                                    ref_truncated_add_double<13>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<14>(),
-                                    ref_truncated_add_double<14>(),
-                                    ref_truncated_add_double<14>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<15>(),
-                                    ref_truncated_add_double<15>(),
-                                    ref_truncated_add_double<15>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<16>(),
-                                    ref_truncated_add_double<16>(),
-                                    ref_truncated_add_double<16>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<17>(),
-                                    ref_truncated_add_double<17>(),
-                                    ref_truncated_add_double<17>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<18>(),
-                                    ref_truncated_add_double<18>(),
-                                    ref_truncated_add_double<18>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<19>(),
-                                    ref_truncated_add_double<19>(),
-                                    ref_truncated_add_double<19>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<20>(),
-                                    ref_truncated_add_double<20>(),
-                                    ref_truncated_add_double<20>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<21>(),
-                                    ref_truncated_add_double<21>(),
-                                    ref_truncated_add_double<21>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<22>(),
-                                    ref_truncated_add_double<22>(),
-                                    ref_truncated_add_double<22>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<23, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<23>(),
-                                    ref_truncated_add_double<23>(),
-                                    ref_truncated_add_double<23>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<24, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<24>(),
-                                    ref_truncated_add_double<24>(),
-                                    ref_truncated_add_double<24>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<25, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<25>(),
-                                    ref_truncated_add_double<25>(),
-                                    ref_truncated_add_double<25>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<26, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<26>(),
-                                    ref_truncated_add_double<26>(),
-                                    ref_truncated_add_double<26>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<27, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<27>(),
-                                    ref_truncated_add_double<27>(),
-                                    ref_truncated_add_double<27>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<28, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<28>(),
-                                    ref_truncated_add_double<28>(),
-                                    ref_truncated_add_double<28>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<29, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<29>(),
-                                    ref_truncated_add_double<29>(),
-                                    ref_truncated_add_double<29>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<30, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<30>(),
-                                    ref_truncated_add_double<30>(),
-                                    ref_truncated_add_double<30>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<31, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<31>(),
-                                    ref_truncated_add_double<31>(),
-                                    ref_truncated_add_double<31>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<32, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<32>(),
-                                    ref_truncated_add_double<32>(),
-                                    ref_truncated_add_double<32>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<33, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<33>(),
-                                    ref_truncated_add_double<33>(),
-                                    ref_truncated_add_double<33>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<34, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<34>(),
-                                    ref_truncated_add_double<34>(),
-                                    ref_truncated_add_double<34>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<35, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<35>(),
-                                    ref_truncated_add_double<35>(),
-                                    ref_truncated_add_double<35>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<36, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<36>(),
-                                    ref_truncated_add_double<36>(),
-                                    ref_truncated_add_double<36>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<37, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<37>(),
-                                    ref_truncated_add_double<37>(),
-                                    ref_truncated_add_double<37>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<38, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<38>(),
-                                    ref_truncated_add_double<38>(),
-                                    ref_truncated_add_double<38>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<39, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<39>(),
-                                    ref_truncated_add_double<39>(),
-                                    ref_truncated_add_double<39>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<40, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<40>(),
-                                    ref_truncated_add_double<40>(),
-                                    ref_truncated_add_double<40>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<41, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<41>(),
-                                    ref_truncated_add_double<41>(),
-                                    ref_truncated_add_double<41>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<42, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<42>(),
-                                    ref_truncated_add_double<42>(),
-                                    ref_truncated_add_double<42>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<43, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<43>(),
-                                    ref_truncated_add_double<43>(),
-                                    ref_truncated_add_double<43>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<44, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<44>(),
-                                    ref_truncated_add_double<44>(),
-                                    ref_truncated_add_double<44>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<45, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<45>(),
-                                    ref_truncated_add_double<45>(),
-                                    ref_truncated_add_double<45>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<46, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<46>(),
-                                    ref_truncated_add_double<46>(),
-                                    ref_truncated_add_double<46>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<47, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<47>(),
-                                    ref_truncated_add_double<47>(),
-                                    ref_truncated_add_double<47>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<48, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<48>(),
-                                    ref_truncated_add_double<48>(),
-                                    ref_truncated_add_double<48>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<49, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<49>(),
-                                    ref_truncated_add_double<49>(),
-                                    ref_truncated_add_double<49>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<50, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<50>(),
-                                    ref_truncated_add_double<50>(),
-                                    ref_truncated_add_double<50>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<51, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<51>(),
-                                    ref_truncated_add_double<51>(),
-                                    ref_truncated_add_double<51>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<52, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<52>(),
-                                    ref_truncated_add_double<52>(),
-                                    ref_truncated_add_double<52>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<53, gt::space::host>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<double, 1>{y_init, ref_truncated_add_double<53>(),
-                                    ref_truncated_add_double<53>(),
-                                    ref_truncated_add_double<53>(), y_init}));
+  run_test_view_add<0, gt::space::host>(x, y, y_init);
+  run_test_view_add<1, gt::space::host>(x, y, y_init);
+  run_test_view_add<2, gt::space::host>(x, y, y_init);
+  run_test_view_add<3, gt::space::host>(x, y, y_init);
+  run_test_view_add<4, gt::space::host>(x, y, y_init);
+  run_test_view_add<5, gt::space::host>(x, y, y_init);
+  run_test_view_add<6, gt::space::host>(x, y, y_init);
+  run_test_view_add<7, gt::space::host>(x, y, y_init);
+  run_test_view_add<8, gt::space::host>(x, y, y_init);
+  run_test_view_add<9, gt::space::host>(x, y, y_init);
+  run_test_view_add<10, gt::space::host>(x, y, y_init);
+  run_test_view_add<11, gt::space::host>(x, y, y_init);
+  run_test_view_add<12, gt::space::host>(x, y, y_init);
+  run_test_view_add<13, gt::space::host>(x, y, y_init);
+  run_test_view_add<14, gt::space::host>(x, y, y_init);
+  run_test_view_add<15, gt::space::host>(x, y, y_init);
+  run_test_view_add<16, gt::space::host>(x, y, y_init);
+  run_test_view_add<17, gt::space::host>(x, y, y_init);
+  run_test_view_add<18, gt::space::host>(x, y, y_init);
+  run_test_view_add<19, gt::space::host>(x, y, y_init);
+  run_test_view_add<20, gt::space::host>(x, y, y_init);
+  run_test_view_add<21, gt::space::host>(x, y, y_init);
+  run_test_view_add<22, gt::space::host>(x, y, y_init);
+  run_test_view_add<23, gt::space::host>(x, y, y_init);
+  run_test_view_add<24, gt::space::host>(x, y, y_init);
+  run_test_view_add<25, gt::space::host>(x, y, y_init);
+  run_test_view_add<26, gt::space::host>(x, y, y_init);
+  run_test_view_add<27, gt::space::host>(x, y, y_init);
+  run_test_view_add<28, gt::space::host>(x, y, y_init);
+  run_test_view_add<29, gt::space::host>(x, y, y_init);
+  run_test_view_add<30, gt::space::host>(x, y, y_init);
+  run_test_view_add<31, gt::space::host>(x, y, y_init);
+  run_test_view_add<32, gt::space::host>(x, y, y_init);
+  run_test_view_add<33, gt::space::host>(x, y, y_init);
+  run_test_view_add<34, gt::space::host>(x, y, y_init);
+  run_test_view_add<35, gt::space::host>(x, y, y_init);
+  run_test_view_add<36, gt::space::host>(x, y, y_init);
+  run_test_view_add<37, gt::space::host>(x, y, y_init);
+  run_test_view_add<38, gt::space::host>(x, y, y_init);
+  run_test_view_add<39, gt::space::host>(x, y, y_init);
+  run_test_view_add<40, gt::space::host>(x, y, y_init);
+  run_test_view_add<41, gt::space::host>(x, y, y_init);
+  run_test_view_add<42, gt::space::host>(x, y, y_init);
+  run_test_view_add<43, gt::space::host>(x, y, y_init);
+  run_test_view_add<44, gt::space::host>(x, y, y_init);
+  run_test_view_add<45, gt::space::host>(x, y, y_init);
+  run_test_view_add<46, gt::space::host>(x, y, y_init);
+  run_test_view_add<47, gt::space::host>(x, y, y_init);
+  run_test_view_add<48, gt::space::host>(x, y, y_init);
+  run_test_view_add<49, gt::space::host>(x, y, y_init);
+  run_test_view_add<50, gt::space::host>(x, y, y_init);
+  run_test_view_add<51, gt::space::host>(x, y, y_init);
+  run_test_view_add<52, gt::space::host>(x, y, y_init);
+  run_test_view_add<53, gt::space::host>(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_float)
@@ -1349,175 +442,31 @@ TEST(mxp_truncated_mantissa, view_add_complex_float)
 
   const gt::gtensor<complex32_t, 1> x(nx, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(ny, y_init);
-  auto gt_y = gt::adapt<1>(y.data(), y.size());
 
-  gt_y.view() = y_init;
-  generic_view_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<0>(),
-                                    ref_truncated_add_float<0>(),
-                                    ref_truncated_add_float<0>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<1, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<1>(),
-                                    ref_truncated_add_float<1>(),
-                                    ref_truncated_add_float<1>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<2, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<2>(),
-                                    ref_truncated_add_float<2>(),
-                                    ref_truncated_add_float<2>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<3, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<3>(),
-                                    ref_truncated_add_float<3>(),
-                                    ref_truncated_add_float<3>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<4, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<4>(),
-                                    ref_truncated_add_float<4>(),
-                                    ref_truncated_add_float<4>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<5, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<5>(),
-                                    ref_truncated_add_float<5>(),
-                                    ref_truncated_add_float<5>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<6, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<6>(),
-                                    ref_truncated_add_float<6>(),
-                                    ref_truncated_add_float<6>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<7, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<7>(),
-                                    ref_truncated_add_float<7>(),
-                                    ref_truncated_add_float<7>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<8, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<8>(),
-                                    ref_truncated_add_float<8>(),
-                                    ref_truncated_add_float<8>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<9, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<9>(),
-                                    ref_truncated_add_float<9>(),
-                                    ref_truncated_add_float<9>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<10, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<10>(),
-                                    ref_truncated_add_float<10>(),
-                                    ref_truncated_add_float<10>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<11, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<11>(),
-                                    ref_truncated_add_float<11>(),
-                                    ref_truncated_add_float<11>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<12, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<12>(),
-                                    ref_truncated_add_float<12>(),
-                                    ref_truncated_add_float<12>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<13, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<13>(),
-                                    ref_truncated_add_float<13>(),
-                                    ref_truncated_add_float<13>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<14, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<14>(),
-                                    ref_truncated_add_float<14>(),
-                                    ref_truncated_add_float<14>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<15, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<15>(),
-                                    ref_truncated_add_float<15>(),
-                                    ref_truncated_add_float<15>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<16, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<16>(),
-                                    ref_truncated_add_float<16>(),
-                                    ref_truncated_add_float<16>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<17, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<17>(),
-                                    ref_truncated_add_float<17>(),
-                                    ref_truncated_add_float<17>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<18, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<18>(),
-                                    ref_truncated_add_float<18>(),
-                                    ref_truncated_add_float<18>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<19, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<19>(),
-                                    ref_truncated_add_float<19>(),
-                                    ref_truncated_add_float<19>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<20, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<20>(),
-                                    ref_truncated_add_float<20>(),
-                                    ref_truncated_add_float<20>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<21, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<21>(),
-                                    ref_truncated_add_float<21>(),
-                                    ref_truncated_add_float<21>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<22, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<22>(),
-                                    ref_truncated_add_float<22>(),
-                                    ref_truncated_add_float<22>(), y_init}));
-
-  gt_y.view() = y_init;
-  generic_view_truncated_add<23, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex32_t, 1>{y_init, ref_truncated_add_float<23>(),
-                                    ref_truncated_add_float<23>(),
-                                    ref_truncated_add_float<23>(), y_init}));
+  run_test_view_add<0, gt::space::host>(x, y, y_init);
+  run_test_view_add<1, gt::space::host>(x, y, y_init);
+  run_test_view_add<2, gt::space::host>(x, y, y_init);
+  run_test_view_add<3, gt::space::host>(x, y, y_init);
+  run_test_view_add<4, gt::space::host>(x, y, y_init);
+  run_test_view_add<5, gt::space::host>(x, y, y_init);
+  run_test_view_add<6, gt::space::host>(x, y, y_init);
+  run_test_view_add<7, gt::space::host>(x, y, y_init);
+  run_test_view_add<8, gt::space::host>(x, y, y_init);
+  run_test_view_add<9, gt::space::host>(x, y, y_init);
+  run_test_view_add<10, gt::space::host>(x, y, y_init);
+  run_test_view_add<11, gt::space::host>(x, y, y_init);
+  run_test_view_add<12, gt::space::host>(x, y, y_init);
+  run_test_view_add<13, gt::space::host>(x, y, y_init);
+  run_test_view_add<14, gt::space::host>(x, y, y_init);
+  run_test_view_add<15, gt::space::host>(x, y, y_init);
+  run_test_view_add<16, gt::space::host>(x, y, y_init);
+  run_test_view_add<17, gt::space::host>(x, y, y_init);
+  run_test_view_add<18, gt::space::host>(x, y, y_init);
+  run_test_view_add<19, gt::space::host>(x, y, y_init);
+  run_test_view_add<20, gt::space::host>(x, y, y_init);
+  run_test_view_add<21, gt::space::host>(x, y, y_init);
+  run_test_view_add<22, gt::space::host>(x, y, y_init);
+  run_test_view_add<23, gt::space::host>(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_double)
@@ -1537,9 +486,59 @@ TEST(mxp_truncated_mantissa, view_add_complex_double)
   auto gt_y = gt::adapt<1>(y.data(), y.size());
 
   gt_y.view() = y_init;
-  generic_view_truncated_add<0, gt::space::host>(x, y);
-  EXPECT_EQ(
-    y, (gt::gtensor<complex64_t, 1>{y_init, ref_truncated_add_double<0>(),
-                                    ref_truncated_add_double<0>(),
-                                    ref_truncated_add_double<0>(), y_init}));
+
+  run_test_view_add<0, gt::space::host>(x, y, y_init);
+  run_test_view_add<1, gt::space::host>(x, y, y_init);
+  run_test_view_add<2, gt::space::host>(x, y, y_init);
+  run_test_view_add<3, gt::space::host>(x, y, y_init);
+  run_test_view_add<4, gt::space::host>(x, y, y_init);
+  run_test_view_add<5, gt::space::host>(x, y, y_init);
+  run_test_view_add<6, gt::space::host>(x, y, y_init);
+  run_test_view_add<7, gt::space::host>(x, y, y_init);
+  run_test_view_add<8, gt::space::host>(x, y, y_init);
+  run_test_view_add<9, gt::space::host>(x, y, y_init);
+  run_test_view_add<10, gt::space::host>(x, y, y_init);
+  run_test_view_add<11, gt::space::host>(x, y, y_init);
+  run_test_view_add<12, gt::space::host>(x, y, y_init);
+  run_test_view_add<13, gt::space::host>(x, y, y_init);
+  run_test_view_add<14, gt::space::host>(x, y, y_init);
+  run_test_view_add<15, gt::space::host>(x, y, y_init);
+  run_test_view_add<16, gt::space::host>(x, y, y_init);
+  run_test_view_add<17, gt::space::host>(x, y, y_init);
+  run_test_view_add<18, gt::space::host>(x, y, y_init);
+  run_test_view_add<19, gt::space::host>(x, y, y_init);
+  run_test_view_add<20, gt::space::host>(x, y, y_init);
+  run_test_view_add<21, gt::space::host>(x, y, y_init);
+  run_test_view_add<22, gt::space::host>(x, y, y_init);
+  run_test_view_add<23, gt::space::host>(x, y, y_init);
+  run_test_view_add<24, gt::space::host>(x, y, y_init);
+  run_test_view_add<25, gt::space::host>(x, y, y_init);
+  run_test_view_add<26, gt::space::host>(x, y, y_init);
+  run_test_view_add<27, gt::space::host>(x, y, y_init);
+  run_test_view_add<28, gt::space::host>(x, y, y_init);
+  run_test_view_add<29, gt::space::host>(x, y, y_init);
+  run_test_view_add<30, gt::space::host>(x, y, y_init);
+  run_test_view_add<31, gt::space::host>(x, y, y_init);
+  run_test_view_add<32, gt::space::host>(x, y, y_init);
+  run_test_view_add<33, gt::space::host>(x, y, y_init);
+  run_test_view_add<34, gt::space::host>(x, y, y_init);
+  run_test_view_add<35, gt::space::host>(x, y, y_init);
+  run_test_view_add<36, gt::space::host>(x, y, y_init);
+  run_test_view_add<37, gt::space::host>(x, y, y_init);
+  run_test_view_add<38, gt::space::host>(x, y, y_init);
+  run_test_view_add<39, gt::space::host>(x, y, y_init);
+  run_test_view_add<40, gt::space::host>(x, y, y_init);
+  run_test_view_add<41, gt::space::host>(x, y, y_init);
+  run_test_view_add<42, gt::space::host>(x, y, y_init);
+  run_test_view_add<43, gt::space::host>(x, y, y_init);
+  run_test_view_add<44, gt::space::host>(x, y, y_init);
+  run_test_view_add<45, gt::space::host>(x, y, y_init);
+  run_test_view_add<46, gt::space::host>(x, y, y_init);
+  run_test_view_add<47, gt::space::host>(x, y, y_init);
+  run_test_view_add<48, gt::space::host>(x, y, y_init);
+  run_test_view_add<49, gt::space::host>(x, y, y_init);
+  run_test_view_add<50, gt::space::host>(x, y, y_init);
+  run_test_view_add<51, gt::space::host>(x, y, y_init);
+  run_test_view_add<52, gt::space::host>(x, y, y_init);
+  run_test_view_add<53, gt::space::host>(x, y, y_init);
 }
