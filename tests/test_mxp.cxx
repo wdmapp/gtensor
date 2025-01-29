@@ -34,29 +34,27 @@ TEST(mxp, axaxaxpy_implicit)
 }
 
 template <typename S, typename T>
-void generic_axaxaxpy_explicit_gt(const int n, const T a,
-                                  const gt::gtensor<T, 1, S>& x,
+void generic_axaxaxpy_explicit_gt(const T a, const gt::gtensor<T, 1, S>& x,
                                   gt::gtensor<T, 1, S>& y)
 {
-  const auto gt_x = gt::adapt<1, S>(x.data(), n);
-  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
+  const auto gt_x = gt::adapt<1, S>(x.data(), x.shape());
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) {
+    y.shape(), GT_LAMBDA(int j) {
       gt_y(j) = gt_y(j) + a * gt_x(j) + a * gt_x(j) + a * gt_x(j);
     });
 }
 
 template <typename S, typename X, typename T>
-void generic_axaxaxpy_explicit_mxp(const int n, const T a,
-                                   const gt::gtensor<T, 1, S>& x,
+void generic_axaxaxpy_explicit_mxp(const T a, const gt::gtensor<T, 1, S>& x,
                                    gt::gtensor<T, 1, S>& y)
 {
-  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), x.shape());
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) {
+    y.shape(), GT_LAMBDA(int j) {
       mxp_y(j) = mxp_y(j) + a * mxp_x(j) + a * mxp_x(j) + a * mxp_x(j);
     });
 }
@@ -73,11 +71,11 @@ TEST(mxp, axaxaxpy_explicit)
   const gt::gtensor<float, 1> x(n, x_init);
   /* */ gt::gtensor<float, 1> y(n, y_init);
 
-  generic_axaxaxpy_explicit_gt<gt::space::host>(n, a, x, y);
+  generic_axaxaxpy_explicit_gt<gt::space::host>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init)));
 
-  generic_axaxaxpy_explicit_mxp<gt::space::host, double>(n, a, x, y);
+  generic_axaxaxpy_explicit_mxp<gt::space::host, double>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init + x_init)));
 }
@@ -111,30 +109,28 @@ TEST(mxp, aXaXaXpY_2D_implicit)
 }
 
 template <typename S, typename T>
-void generic_aXaXaXpy_2D_explicit_gt(const int* mn, const T a,
-                                     const gt::gtensor<T, 2, S>& xx,
+void generic_aXaXaXpy_2D_explicit_gt(const T a, const gt::gtensor<T, 2, S>& xx,
                                      gt::gtensor<T, 2, S>& yy)
 {
-  const auto gt_X = gt::adapt<2, S>(xx.data(), mn);
-  /* */ auto gt_Y = gt::adapt<2, S>(yy.data(), mn);
+  const auto gt_X = gt::adapt<2, S>(xx.data(), xx.shape());
+  /* */ auto gt_Y = gt::adapt<2, S>(yy.data(), yy.shape());
 
   gt::launch<2, S>(
-    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
+    yy.shape(), GT_LAMBDA(int j, int k) {
       gt_Y(j, k) =
         gt_Y(j, k) + a * gt_X(j, k) + a * gt_X(j, k) + a * gt_X(j, k);
     });
 }
 
 template <typename S, typename X, typename T>
-void generic_aXaXaXpy_2D_explicit_mxp(const int* mn, const T a,
-                                      const gt::gtensor<T, 2, S>& xx,
+void generic_aXaXaXpy_2D_explicit_mxp(const T a, const gt::gtensor<T, 2, S>& xx,
                                       gt::gtensor<T, 2, S>& yy)
 {
-  const auto mxp_X = mxp::adapt<2, S, X>(xx.data(), mn);
-  /* */ auto mxp_Y = mxp::adapt<2, S, X>(yy.data(), mn);
+  const auto mxp_X = mxp::adapt<2, S, X>(xx.data(), xx.shape());
+  /* */ auto mxp_Y = mxp::adapt<2, S, X>(yy.data(), yy.shape());
 
   gt::launch<2, S>(
-    {mn[0], mn[1]}, GT_LAMBDA(int j, int k) {
+    yy.shape(), GT_LAMBDA(int j, int k) {
       mxp_Y(j, k) =
         mxp_Y(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k) + a * mxp_X(j, k);
     });
@@ -152,11 +148,11 @@ TEST(mxp, aXaXaXpY_2D_explicit)
   const gt::gtensor<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
   /* */ gt::gtensor<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
 
-  generic_aXaXaXpy_2D_explicit_gt<gt::space::host>(mn, a, X, Y);
+  generic_aXaXaXpy_2D_explicit_gt<gt::space::host>(a, X, Y);
 
   EXPECT_EQ(Y, (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
 
-  generic_aXaXaXpy_2D_explicit_mxp<gt::space::host, double>(mn, a, X, Y);
+  generic_aXaXaXpy_2D_explicit_mxp<gt::space::host, double>(a, X, Y);
 
   EXPECT_EQ(Y,
             (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init + x_init)));
@@ -198,16 +194,15 @@ TEST(mxp, complex_axaxaxpy_implicit)
 
 template <typename S, typename T>
 void generic_complex_axaxaxpy_explicit_gt(
-  const int n, const gt::gtensor<T, 1, S>& a,
-  const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<T, 1, S>& a, const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto gt_a = gt::adapt<1, S>(a.data(), n);
-  const auto gt_x = gt::adapt<1, S>(x.data(), n);
-  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
+  const auto gt_a = gt::adapt<1, S>(a.data(), a.shape());
+  const auto gt_x = gt::adapt<1, S>(x.data(), x.shape());
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) {
+    y.shape(), GT_LAMBDA(int j) {
       gt_y(j) =
         gt_y(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j) + gt_a(j) * gt_x(j);
     });
@@ -215,16 +210,15 @@ void generic_complex_axaxaxpy_explicit_gt(
 
 template <typename S, typename X, typename T>
 void generic_complex_axaxaxpy_explicit_mxp(
-  const int n, const gt::gtensor<T, 1, S>& a,
-  const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<T, 1, S>& a, const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto mxp_a = mxp::adapt<1, S, X>(a.data(), n);
-  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
+  const auto mxp_a = mxp::adapt<1, S, X>(a.data(), a.shape());
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), x.shape());
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) {
+    y.shape(), GT_LAMBDA(int j) {
       mxp_y(j) = mxp_y(j) + mxp_a(j) * mxp_x(j) + mxp_a(j) * mxp_x(j) +
                  mxp_a(j) * mxp_x(j);
     });
@@ -247,12 +241,11 @@ TEST(mxp, complex_axaxaxpy_explicit)
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(n, y_init);
 
-  generic_complex_axaxaxpy_explicit_gt<gt::space::host>(n, a, x, y);
+  generic_complex_axaxaxpy_explicit_gt<gt::space::host>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, y_init)));
 
-  generic_complex_axaxaxpy_explicit_mxp<gt::space::host, complex64_t>(n, a, x,
-                                                                      y);
+  generic_complex_axaxaxpy_explicit_mxp<gt::space::host, complex64_t>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, y_init + x_init)));
 }
@@ -291,26 +284,27 @@ TEST(mxp, complex_op_plus_implicit)
 
 template <typename S, typename T>
 void generic_complex_op_plus_explicit_gt(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto gt_x = gt::adapt<1, S>(x.data(), n);
-  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
+  const auto gt_x = gt::adapt<1, S>(x.data(), x.shape());
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j); });
+    y.shape(),
+    GT_LAMBDA(int j) { gt_y(j) = gt_y(j) + gt_x(j) + gt_x(j) + gt_x(j); });
 }
 
 template <typename S, typename X, typename T>
 void generic_complex_op_plus_explicit_mxp(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), x.shape());
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n},
+    y.shape(),
     GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) + mxp_x(j) + mxp_x(j) + mxp_x(j); });
 }
 
@@ -331,11 +325,11 @@ TEST(mxp, complex_op_plus_explicit)
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(n, y_init);
 
-  generic_complex_op_plus_explicit_gt<gt::space::host>(n, x, y);
+  generic_complex_op_plus_explicit_gt<gt::space::host>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, y_init)));
 
-  generic_complex_op_plus_explicit_mxp<gt::space::host, complex64_t>(n, x, y);
+  generic_complex_op_plus_explicit_mxp<gt::space::host, complex64_t>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, mxp_ref)));
 }
@@ -374,26 +368,27 @@ TEST(mxp, complex_op_minus_implicit)
 
 template <typename S, typename T>
 void generic_complex_op_minus_explicit_gt(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto gt_x = gt::adapt<1, S>(x.data(), n);
-  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
+  const auto gt_x = gt::adapt<1, S>(x.data(), x.shape());
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j); });
+    y.shape(),
+    GT_LAMBDA(int j) { gt_y(j) = gt_y(j) - gt_x(j) - gt_x(j) - gt_x(j); });
 }
 
 template <typename S, typename X, typename T>
 void generic_complex_op_minus_explicit_mxp(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), x.shape());
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n},
+    y.shape(),
     GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) - mxp_x(j) - mxp_x(j) - mxp_x(j); });
 }
 
@@ -414,11 +409,11 @@ TEST(mxp, complex_op_minus_explicit)
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(n, y_init);
 
-  generic_complex_op_minus_explicit_gt<gt::space::host>(n, x, y);
+  generic_complex_op_minus_explicit_gt<gt::space::host>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, y_init)));
 
-  generic_complex_op_minus_explicit_mxp<gt::space::host, complex64_t>(n, x, y);
+  generic_complex_op_minus_explicit_mxp<gt::space::host, complex64_t>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, mxp_ref)));
 }
@@ -456,26 +451,26 @@ TEST(mxp, complex_op_multiply_implicit)
 
 template <typename S, typename T>
 void generic_complex_op_multiply_explicit_gt(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto gt_x = gt::adapt<1, S>(x.data(), n);
-  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
+  const auto gt_x = gt::adapt<1, S>(x.data(), x.shape());
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_x(j) * gt_x(j) * gt_x(j); });
+    y.shape(), GT_LAMBDA(int j) { gt_y(j) = gt_x(j) * gt_x(j) * gt_x(j); });
 }
 
 template <typename S, typename X, typename T>
 void generic_complex_op_multiply_explicit_mxp(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), x.shape());
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) { mxp_y(j) = mxp_x(j) * mxp_x(j) * mxp_x(j); });
+    y.shape(), GT_LAMBDA(int j) { mxp_y(j) = mxp_x(j) * mxp_x(j) * mxp_x(j); });
 }
 
 TEST(mxp, complex_op_multiply_explicit)
@@ -494,12 +489,11 @@ TEST(mxp, complex_op_multiply_explicit)
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(n);
 
-  generic_complex_op_multiply_explicit_gt<gt::space::host>(n, x, y);
+  generic_complex_op_multiply_explicit_gt<gt::space::host>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, gt_ref)));
 
-  generic_complex_op_multiply_explicit_mxp<gt::space::host, complex64_t>(n, x,
-                                                                         y);
+  generic_complex_op_multiply_explicit_mxp<gt::space::host, complex64_t>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor<complex32_t, 1>(n, mxp_ref)));
 }
@@ -548,26 +542,26 @@ TEST(mxp, complex_op_divide_implicit)
 
 template <typename S, typename T>
 void generic_complex_op_divide_explicit_gt(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto gt_x = gt::adapt<1, S>(x.data(), n);
-  /* */ auto gt_y = gt::adapt<1, S>(y.data(), n);
+  const auto gt_x = gt::adapt<1, S>(x.data(), x.shape());
+  /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) { gt_y(j) = gt_y(j) / gt_x(j) / gt_x(j); });
+    y.shape(), GT_LAMBDA(int j) { gt_y(j) = gt_y(j) / gt_x(j) / gt_x(j); });
 }
 
 template <typename S, typename X, typename T>
 void generic_complex_op_divide_explicit_mxp(
-  const int n, const gt::gtensor<gt::complex<T>, 1, S>& x,
+  const gt::gtensor<gt::complex<T>, 1, S>& x,
   gt::gtensor<gt::complex<T>, 1, S>& y)
 {
-  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), n);
-  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), n);
+  const auto mxp_x = mxp::adapt<1, S, X>(x.data(), x.shape());
+  /* */ auto mxp_y = mxp::adapt<1, S, X>(y.data(), y.shape());
 
   gt::launch<1, S>(
-    {n}, GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) / mxp_x(j) / mxp_x(j); });
+    y.shape(), GT_LAMBDA(int j) { mxp_y(j) = mxp_y(j) / mxp_x(j) / mxp_x(j); });
 }
 
 TEST(mxp, complex_op_divide_explicit)
@@ -594,13 +588,12 @@ TEST(mxp, complex_op_divide_explicit)
   /* */ gt::gtensor<complex32_t, 1> y_a(n, y_init);
   /* */ gt::gtensor<complex32_t, 1> y_b(n, y_init);
 
-  generic_complex_op_divide_explicit_gt<gt::space::host>(n, x, y_a);
+  generic_complex_op_divide_explicit_gt<gt::space::host>(x, y_a);
 
   double gt_err = std::abs(y_a[1].real() - ref);
   EXPECT_GT(gt_err, lb_err_expect_gt);
 
-  generic_complex_op_divide_explicit_mxp<gt::space::host, complex64_t>(n, x,
-                                                                       y_b);
+  generic_complex_op_divide_explicit_mxp<gt::space::host, complex64_t>(x, y_b);
 
   double mxp_err = std::abs(y_b[1].real() - ref);
 
@@ -1151,11 +1144,11 @@ TEST(mxp, device_axaxaxpy_explicit)
   const gt::gtensor_device<float, 1> x(n, x_init);
   /* */ gt::gtensor_device<float, 1> y(n, y_init);
 
-  generic_axaxaxpy_explicit_gt<gt::space::device>(n, a, x, y);
+  generic_axaxaxpy_explicit_gt<gt::space::device>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init)));
 
-  generic_axaxaxpy_explicit_mxp<gt::space::device, double>(n, a, x, y);
+  generic_axaxaxpy_explicit_mxp<gt::space::device, double>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor<float, 1>(n, y_init + x_init)));
 }
@@ -1202,11 +1195,11 @@ TEST(mxp, device_aXaXaXpY_2D_explicit)
   const gt::gtensor_device<float, 2> X(gt::shape(mn[0], mn[1]), x_init);
   /* */ gt::gtensor_device<float, 2> Y(gt::shape(mn[0], mn[1]), y_init);
 
-  generic_aXaXaXpy_2D_explicit_gt<gt::space::device>(mn, a, X, Y);
+  generic_aXaXaXpy_2D_explicit_gt<gt::space::device>(a, X, Y);
 
   EXPECT_EQ(Y, (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init)));
 
-  generic_aXaXaXpy_2D_explicit_mxp<gt::space::device, double>(mn, a, X, Y);
+  generic_aXaXaXpy_2D_explicit_mxp<gt::space::device, double>(a, X, Y);
 
   EXPECT_EQ(Y,
             (gt::gtensor<float, 2>(gt::shape(mn[0], mn[1]), y_init + x_init)));
@@ -1269,11 +1262,11 @@ TEST(mxp, device_complex_axaxaxpy_explicit)
   const gt::gtensor_device<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor_device<complex32_t, 1> y(n, y_init);
 
-  generic_complex_axaxaxpy_explicit_gt<gt::space::device>(n, a, x, y);
+  generic_complex_axaxaxpy_explicit_gt<gt::space::device>(a, x, y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, y_init)));
 
-  generic_complex_axaxaxpy_explicit_mxp<gt::space::device, complex64_t>(n, a, x,
+  generic_complex_axaxaxpy_explicit_mxp<gt::space::device, complex64_t>(a, x,
                                                                         y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, y_init + x_init)));
@@ -1332,11 +1325,11 @@ TEST(mxp, device_complex_op_plus_explicit)
   const gt::gtensor_device<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor_device<complex32_t, 1> y(n, y_init);
 
-  generic_complex_op_plus_explicit_gt<gt::space::device>(n, x, y);
+  generic_complex_op_plus_explicit_gt<gt::space::device>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, y_init)));
 
-  generic_complex_op_plus_explicit_mxp<gt::space::device, complex64_t>(n, x, y);
+  generic_complex_op_plus_explicit_mxp<gt::space::device, complex64_t>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, mxp_ref)));
 }
@@ -1394,12 +1387,11 @@ TEST(mxp, device_complex_op_minus_explicit)
   const gt::gtensor_device<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor_device<complex32_t, 1> y(n, y_init);
 
-  generic_complex_op_minus_explicit_gt<gt::space::device>(n, x, y);
+  generic_complex_op_minus_explicit_gt<gt::space::device>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, y_init)));
 
-  generic_complex_op_minus_explicit_mxp<gt::space::device, complex64_t>(n, x,
-                                                                        y);
+  generic_complex_op_minus_explicit_mxp<gt::space::device, complex64_t>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, mxp_ref)));
 }
@@ -1455,11 +1447,11 @@ TEST(mxp, device_complex_op_multiply_explicit)
   const gt::gtensor_device<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor_device<complex32_t, 1> y(n);
 
-  generic_complex_op_multiply_explicit_gt<gt::space::device>(n, x, y);
+  generic_complex_op_multiply_explicit_gt<gt::space::device>(x, y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, gt_ref)));
 
-  generic_complex_op_multiply_explicit_mxp<gt::space::device, complex64_t>(n, x,
+  generic_complex_op_multiply_explicit_mxp<gt::space::device, complex64_t>(x,
                                                                            y);
 
   EXPECT_EQ(y, (gt::gtensor_device<complex32_t, 1>(n, mxp_ref)));
@@ -1537,14 +1529,14 @@ TEST(mxp, device_complex_op_divide_explicit)
   /* */ gt::gtensor_device<complex32_t, 1> y_a(n, y_init);
   /* */ gt::gtensor_device<complex32_t, 1> y_b(n, y_init);
 
-  generic_complex_op_divide_explicit_gt<gt::space::device>(n, x, y_a);
+  generic_complex_op_divide_explicit_gt<gt::space::device>(x, y_a);
 
   /* */ gt::gtensor<complex32_t, 1> h_y(n);
   gt::copy(y_a, h_y);
   double gt_err = gt::abs(h_y(1).real() - ref);
   EXPECT_GT(gt_err, lb_err_expect_gt);
 
-  generic_complex_op_divide_explicit_mxp<gt::space::device, complex64_t>(n, x,
+  generic_complex_op_divide_explicit_mxp<gt::space::device, complex64_t>(x,
                                                                          y_b);
 
   gt::copy(y_b, h_y);
