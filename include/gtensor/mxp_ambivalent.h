@@ -1,6 +1,8 @@
 #ifndef MXP_AMBIVALENT_H
 #define MXP_AMBIVALENT_H
 
+#include "mxp_truncated_mantissa_t.h"
+
 // __________________________________________________________________________ //
 
 namespace mxp
@@ -10,6 +12,32 @@ namespace mxp
 
 namespace detail
 {
+
+// -------------------------------------------------------------------------- //
+
+/*  ambivalent_t<CT, ST> below implements typecast compute_type() as:
+    storage_type --> intermediate_compute_type --> compute_type
+    for CT builtin, intermediate_compute_type = compute_type = CT */
+
+// -------------------------------------------------------------------------- //
+
+template <typename CT, typename ST>
+struct accessor
+{
+  typedef CT type;
+};
+
+template <typename fp_t, std::uint8_t bits, typename ST>
+struct accessor<truncated_mantissa_t<fp_t, bits>, ST>
+{
+  typedef std::enable_if_t<
+    std::is_same<std::decay_t<fp_t>, std::decay_t<ST>>::value,
+    std::decay_t<fp_t>>
+    type;
+};
+
+template <typename CT, typename ST>
+using accessor_t = typename accessor<CT, ST>::type;
 
 // -------------------------------------------------------------------------- //
 
@@ -27,7 +55,8 @@ class ambivalent_t
 {
 public:
   using storage_type = ST;
-  using compute_type = CT;
+  using intermediate_compute_type = CT;
+  using compute_type = accessor_t<CT, ST>;
 
   // ------------------------------------------------------------------------ //
 
@@ -62,7 +91,7 @@ public:
 
   GT_INLINE operator compute_type() const
   {
-    return static_cast<compute_type>(value_ref_);
+    return static_cast<intermediate_compute_type>(value_ref_);
   }
 
   // ------------------------------------------------------------------------ //

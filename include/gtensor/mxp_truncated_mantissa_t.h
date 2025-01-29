@@ -49,6 +49,53 @@ constexpr uint_t<fp_t> reduced_rounding_mask{mantissa_mask<fp_t> >> (bits + 1)};
 
 // -------------------------------------------------------------------------- //
 
+template <typename fp_t>
+struct is_decay_complex : std::false_type
+{};
+
+template <typename fp_t>
+struct is_decay_complex<gt::complex<fp_t>> : std::true_type
+{};
+
+template <typename fp_t>
+constexpr bool is_decay_complex_v{is_decay_complex<fp_t>::value};
+
+// -------------------------------------------------------------------------- //
+
+template <typename fp_t>
+struct strip_decay_complex
+{
+  typedef std::decay_t<fp_t> type;
+};
+
+template <typename fp_t>
+struct strip_decay_complex<gt::complex<fp_t>>
+{
+  typedef std::decay_t<fp_t> type;
+};
+
+template <typename fp_t>
+using strip_decay_complex_t = typename strip_decay_complex<fp_t>::type;
+
+// -------------------------------------------------------------------------- //
+
+struct componentwise
+{
+  template <typename F, typename Real>
+  GT_INLINE static Real apply(F&& f, const Real& arg)
+  {
+    return f(arg);
+  }
+
+  template <typename F, typename Real>
+  GT_INLINE static gt::complex<Real> apply(F&& f, const gt::complex<Real>& arg)
+  {
+    return {f(arg.real()), f(arg.imag())};
+  }
+};
+
+// -------------------------------------------------------------------------- //
+
 } // namespace detail
 
 // __________________________________________________________________________ //
@@ -57,7 +104,8 @@ template <typename fp_t, std::uint8_t bits>
 class truncated_mantissa_t
 {
 public:
-  using underlying_fp_t = std::decay_t<fp_t>;
+  using enclosing_fp_t = std::decay_t<fp_t>;
+  using underlying_fp_t = detail::strip_decay_complex_t<fp_t>;
   using uint_t = detail::uint_t<underlying_fp_t>;
 
   // ------------------------------------------------------------------------ //
@@ -72,9 +120,9 @@ public:
   GT_INLINE explicit operator T() const = delete;
 
   // returns value rounded to truncated mantissa
-  GT_INLINE operator underlying_fp_t() const
+  GT_INLINE operator enclosing_fp_t() const
   {
-    return get_truncated_mantissa_value(FP_src_);
+    return detail::componentwise::apply(get_truncated_mantissa_value, FP_src_);
   }
 
   // ------------------------------------------------------------------------ //
