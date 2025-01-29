@@ -93,4 +93,5 @@ endif()
 
 if (GTENSOR_ENABLE_MXP)
   add_gtensor_test(test_mxp)
+  add_gtensor_test(test_mxp_truncated_mantissa_t)
 endif()
