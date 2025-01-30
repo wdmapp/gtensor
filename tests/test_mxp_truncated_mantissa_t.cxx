@@ -440,4 +440,53 @@ TEST(mxp_truncated_mantissa, device_add_float)
   Loop<0, 23, run_test_add<gt::space::device>>::Run(x, y, y_init);
 }
 
+TEST(mxp_truncated_mantissa, device_add_double)
+{
+  const int n{3};
+
+  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double y_init{1.};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<double, 1> x(n, x_init);
+  gt::gtensor_device<double, 1> y(n, y_init);
+
+  Loop<0, 52, run_test_add<gt::space::device>>::Run(x, y, y_init);
+}
+
+TEST(mxp_truncated_mantissa, device_add_complex_float)
+{
+  using complex32_t = gt::complex<float>;
+
+  const int n{3};
+
+  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t y_init{1.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<complex32_t, 1> x(n, x_init);
+  gt::gtensor_device<complex32_t, 1> y(n, y_init);
+
+  Loop<0, 23, run_test_add<gt::space::device>>::Run(x, y, y_init);
+}
+
+TEST(mxp_truncated_mantissa, device_add_complex_double)
+{
+  using complex64_t = gt::complex<double>;
+
+  const int n{3};
+
+  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t y_init{1.};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<complex64_t, 1> x(n, x_init);
+  gt::gtensor_device<complex64_t, 1> y(n, y_init);
+
+  Loop<0, 52, run_test_add<gt::space::device>>::Run(x, y, y_init);
+}
+
 #endif
