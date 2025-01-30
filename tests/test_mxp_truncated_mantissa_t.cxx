@@ -1,10 +1,13 @@
 #include <gtest/gtest.h>
 
 #include <gtensor/gtensor.h>
+#include <gtensor/reductions.h>
 
 #include <gtensor/mxp.h>
 
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 #include <type_traits>
 
 // -------------------------------------------------------------------------- //
@@ -375,4 +378,55 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_double)
   /* */ gt::gtensor<complex64_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
   Loop<0, 52, run_test_view_2D_add_host>::Run(x, y, y_init);
+}
+
+struct run_test_error_bounds_host
+{
+  using S = gt::space::host;
+
+  template <std::uint8_t bits, typename T>
+  static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y)
+  {
+    const T hard_threshold = std::pow(T{2.}, -(bits + 1));
+
+    using mxp_type = mxp::truncated_mantissa_t<T, bits>;
+    const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
+    const auto gt_x = gt::adapt<1, S>(x.data(), x.size());
+    /* */ auto gt_y = gt::adapt<1, S>(y.data(), y.size());
+
+    gt_y = gt_x - mxp_x;
+
+    auto error = gt::norm_linf(y);
+    EXPECT_LE(error, hard_threshold);
+  }
+};
+
+TEST(mxp_truncated_mantissa, error_bounds_float)
+{
+  const int n{1000};
+
+  gt::gtensor<float, 1> x(n);
+  gt::gtensor<float, 1> y(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < x.size(); ++j)
+    x(j) = 1.f + 1.f * std::rand() /
+                   std::numeric_limits<decltype(std::rand())>::max();
+
+  Loop<0, 23, run_test_error_bounds_host>::Run(x, y);
+}
+
+TEST(mxp_truncated_mantissa, error_bounds_double)
+{
+  const int n{1000};
+
+  gt::gtensor<double, 1> x(n);
+  gt::gtensor<double, 1> y(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < x.size(); ++j)
+    x(j) =
+      1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max();
+
+  Loop<0, 52, run_test_error_bounds_host>::Run(x, y);
 }
