@@ -422,3 +422,22 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_double)
 
   Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
+
+#if defined GTENSOR_HAVE_DEVICE
+
+TEST(mxp_truncated_mantissa, device_add_float)
+{
+  const int n{3};
+
+  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float y_init{1.f};
+
+  EXPECT_NE(y_init, y_init + x_init);
+
+  const gt::gtensor_device<float, 1> x(n, x_init);
+  gt::gtensor_device<float, 1> y(n, y_init);
+
+  Loop<0, 23, run_test_add<gt::space::device>>::Run(x, y, y_init);
+}
+
+#endif
