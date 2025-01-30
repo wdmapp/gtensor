@@ -1125,6 +1125,28 @@ TEST(mxp, element_access_compare)
   EXPECT_EQ(mxp_x(1), mxp_x(0));
 }
 
+TEST(mxp, complex_element_access_compare)
+{
+  using complex32_t = gt::complex<float>;
+  using complex64_t = gt::complex<double>;
+
+  const int n{2};
+  const complex32_t x_init{1.234};
+
+  const gt::gtensor<complex32_t, 1> x(n, x_init);
+
+  const auto gt_x = gt::adapt<1>(x.data(), x.size());
+  const auto mxp_x = mxp::adapt<1, complex64_t>(x.data(), x.size());
+
+  EXPECT_EQ(gt_x(1), x_init);
+  EXPECT_NE(gt_x(1), -x_init);
+  EXPECT_EQ(gt_x(1), gt_x(0));
+
+  EXPECT_EQ(mxp_x(1), complex64_t{x_init});
+  EXPECT_NE(mxp_x(1), -complex64_t{x_init});
+  EXPECT_EQ(mxp_x(1), mxp_x(0));
+}
+
 #if defined GTENSOR_HAVE_DEVICE
 
 TEST(mxp, device_axaxaxpy_implicit)
