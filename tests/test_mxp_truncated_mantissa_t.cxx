@@ -59,10 +59,9 @@ T ref_truncated_add_gen()
     return 0. / 0.;
 }
 
-struct run_test_add_host
+template <typename S>
+struct run_test_add
 {
-  using S = gt::space::host;
-
   template <std::uint8_t bits, typename T>
   static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
                         const T y_init)
@@ -93,7 +92,7 @@ TEST(mxp_truncated_mantissa, add_float)
   const gt::gtensor<float, 1> x(n, x_init);
   gt::gtensor<float, 1> y(n, y_init);
 
-  Loop<0, 23, run_test_add_host>::Run(x, y, y_init);
+  Loop<0, 23, run_test_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_double)
@@ -108,7 +107,7 @@ TEST(mxp_truncated_mantissa, add_double)
   const gt::gtensor<double, 1> x(n, x_init);
   gt::gtensor<double, 1> y(n, y_init);
 
-  Loop<0, 52, run_test_add_host>::Run(x, y, y_init);
+  Loop<0, 52, run_test_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_float)
@@ -125,7 +124,7 @@ TEST(mxp_truncated_mantissa, add_complex_float)
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   gt::gtensor<complex32_t, 1> y(n, y_init);
 
-  Loop<0, 23, run_test_add_host>::Run(x, y, y_init);
+  Loop<0, 23, run_test_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_double)
@@ -142,13 +141,12 @@ TEST(mxp_truncated_mantissa, add_complex_double)
   const gt::gtensor<complex64_t, 1> x(n, x_init);
   gt::gtensor<complex64_t, 1> y(n, y_init);
 
-  Loop<0, 52, run_test_add_host>::Run(x, y, y_init);
+  Loop<0, 52, run_test_add<gt::space::host>>::Run(x, y, y_init);
 }
 
-struct run_test_view_add_host
+template <typename S>
+struct run_test_view_add
 {
-  using S = gt::space::host;
-
   template <std::uint8_t bits, typename T>
   static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
                         const T y_init)
@@ -184,7 +182,7 @@ TEST(mxp_truncated_mantissa, view_add_float)
   const gt::gtensor<float, 1> x(nx, x_init);
   gt::gtensor<float, 1> y(ny, y_init);
 
-  Loop<0, 23, run_test_view_add_host>::Run(x, y, y_init);
+  Loop<0, 23, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_double)
@@ -200,7 +198,7 @@ TEST(mxp_truncated_mantissa, view_add_double)
   const gt::gtensor<double, 1> x(nx, x_init);
   gt::gtensor<double, 1> y(ny, y_init);
 
-  Loop<0, 52, run_test_view_add_host>::Run(x, y, y_init);
+  Loop<0, 52, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_float)
@@ -218,7 +216,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_float)
   const gt::gtensor<complex32_t, 1> x(nx, x_init);
   gt::gtensor<complex32_t, 1> y(ny, y_init);
 
-  Loop<0, 23, run_test_view_add_host>::Run(x, y, y_init);
+  Loop<0, 23, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_double)
@@ -239,13 +237,12 @@ TEST(mxp_truncated_mantissa, view_add_complex_double)
 
   gt_y.view() = y_init;
 
-  Loop<0, 52, run_test_view_add_host>::Run(x, y, y_init);
+  Loop<0, 52, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
 }
 
-struct run_test_view_2D_add_host
+template <typename S>
+struct run_test_view_2D_add
 {
-  using S = gt::space::host;
-
   template <std::uint8_t bits, typename T>
   static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 2, S>& y,
                         const T y_init)
@@ -282,7 +279,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_float)
   const gt::gtensor<float, 1> x(nx, x_init);
   gt::gtensor<float, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 23, run_test_view_2D_add_host>::Run(x, y, y_init);
+  Loop<0, 23, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_2D_add_double)
@@ -298,7 +295,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_double)
   const gt::gtensor<double, 1> x(nx, x_init);
   gt::gtensor<double, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 52, run_test_view_2D_add_host>::Run(x, y, y_init);
+  Loop<0, 52, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_2D_add_complex_float)
@@ -316,7 +313,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_float)
   const gt::gtensor<complex32_t, 1> x(nx, x_init);
   gt::gtensor<complex32_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 23, run_test_view_2D_add_host>::Run(x, y, y_init);
+  Loop<0, 23, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_2D_add_complex_double)
@@ -334,13 +331,12 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_double)
   const gt::gtensor<complex64_t, 1> x(nx, x_init);
   gt::gtensor<complex64_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 52, run_test_view_2D_add_host>::Run(x, y, y_init);
+  Loop<0, 52, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
 }
 
-struct run_test_error_bounds_host
+template <typename S>
+struct run_test_error_bounds
 {
-  using S = gt::space::host;
-
   template <std::uint8_t bits, typename T>
   static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y)
   {
@@ -371,7 +367,7 @@ TEST(mxp_truncated_mantissa, error_bounds_float)
     x(j) = 1.f + 1.f * std::rand() /
                    std::numeric_limits<decltype(std::rand())>::max();
 
-  Loop<0, 23, run_test_error_bounds_host>::Run(x, y);
+  Loop<0, 23, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
 
 TEST(mxp_truncated_mantissa, error_bounds_double)
@@ -386,7 +382,7 @@ TEST(mxp_truncated_mantissa, error_bounds_double)
     x(j) =
       1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max();
 
-  Loop<0, 52, run_test_error_bounds_host>::Run(x, y);
+  Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
 
 TEST(mxp_truncated_mantissa, error_bounds_complex_float)
@@ -405,7 +401,7 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_float)
             1.f + 1.f * std::rand() /
                     std::numeric_limits<decltype(std::rand())>::max()};
 
-  Loop<0, 23, run_test_error_bounds_host>::Run(x, y);
+  Loop<0, 23, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
 
 TEST(mxp_truncated_mantissa, error_bounds_complex_double)
@@ -424,5 +420,5 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_double)
             1. + 1. * std::rand() /
                    std::numeric_limits<decltype(std::rand())>::max()};
 
-  Loop<0, 52, run_test_error_bounds_host>::Run(x, y);
+  Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
