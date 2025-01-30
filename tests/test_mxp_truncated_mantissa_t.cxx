@@ -41,7 +41,7 @@ void generic_truncated_add(const gt::gtensor<T, 1, S>& x,
 {
   using mxp_type = mxp::truncated_mantissa_t<T, bits>;
   const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, S, mxp_type>(y.data(), y.size());
+  auto mxp_y = mxp::adapt<1, S, mxp_type>(y.data(), y.size());
 
   mxp_y = mxp_y + mxp_x;
 }
@@ -120,7 +120,7 @@ TEST(mxp_truncated_mantissa, add_float)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<float, 1> x(n, x_init);
-  /* */ gt::gtensor<float, 1> y(n, y_init);
+  gt::gtensor<float, 1> y(n, y_init);
 
   Loop<0, 23, run_test_add_host>::Run(x, y, y_init);
 }
@@ -135,7 +135,7 @@ TEST(mxp_truncated_mantissa, add_double)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<double, 1> x(n, x_init);
-  /* */ gt::gtensor<double, 1> y(n, y_init);
+  gt::gtensor<double, 1> y(n, y_init);
 
   Loop<0, 52, run_test_add_host>::Run(x, y, y_init);
 }
@@ -152,7 +152,7 @@ TEST(mxp_truncated_mantissa, add_complex_float)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<complex32_t, 1> x(n, x_init);
-  /* */ gt::gtensor<complex32_t, 1> y(n, y_init);
+  gt::gtensor<complex32_t, 1> y(n, y_init);
 
   Loop<0, 23, run_test_add_host>::Run(x, y, y_init);
 }
@@ -169,7 +169,7 @@ TEST(mxp_truncated_mantissa, add_complex_double)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<complex64_t, 1> x(n, x_init);
-  /* */ gt::gtensor<complex64_t, 1> y(n, y_init);
+  gt::gtensor<complex64_t, 1> y(n, y_init);
 
   Loop<0, 52, run_test_add_host>::Run(x, y, y_init);
 }
@@ -180,7 +180,7 @@ void generic_view_truncated_add(const gt::gtensor<T, 1, S>& x,
 {
   using mxp_type = mxp::truncated_mantissa_t<T, bits>;
   const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<1, S, mxp_type>(y.data(), y.size());
+  auto mxp_y = mxp::adapt<1, S, mxp_type>(y.data(), y.size());
 
   using gt::placeholders::_all;
   using gt::placeholders::_s;
@@ -218,7 +218,7 @@ TEST(mxp_truncated_mantissa, view_add_float)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<float, 1> x(nx, x_init);
-  /* */ gt::gtensor<float, 1> y(ny, y_init);
+  gt::gtensor<float, 1> y(ny, y_init);
 
   Loop<0, 23, run_test_view_add_host>::Run(x, y, y_init);
 }
@@ -234,7 +234,7 @@ TEST(mxp_truncated_mantissa, view_add_double)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<double, 1> x(nx, x_init);
-  /* */ gt::gtensor<double, 1> y(ny, y_init);
+  gt::gtensor<double, 1> y(ny, y_init);
 
   Loop<0, 52, run_test_view_add_host>::Run(x, y, y_init);
 }
@@ -252,7 +252,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_float)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<complex32_t, 1> x(nx, x_init);
-  /* */ gt::gtensor<complex32_t, 1> y(ny, y_init);
+  gt::gtensor<complex32_t, 1> y(ny, y_init);
 
   Loop<0, 23, run_test_view_add_host>::Run(x, y, y_init);
 }
@@ -270,7 +270,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_double)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<complex64_t, 1> x(nx, x_init);
-  /* */ gt::gtensor<complex64_t, 1> y(ny, y_init);
+  gt::gtensor<complex64_t, 1> y(ny, y_init);
   auto gt_y = gt::adapt<1>(y.data(), y.size());
 
   gt_y.view() = y_init;
@@ -284,7 +284,7 @@ void generic_view_2D_truncated_add(const gt::gtensor<T, 1, S>& x,
 {
   using mxp_type = mxp::truncated_mantissa_t<T, bits>;
   const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
-  /* */ auto mxp_y = mxp::adapt<2, S, mxp_type>(y.data(), y.shape());
+  auto mxp_y = mxp::adapt<2, S, mxp_type>(y.data(), y.shape());
 
   using gt::placeholders::_all;
   using gt::placeholders::_s;
@@ -323,7 +323,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_float)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<float, 1> x(nx, x_init);
-  /* */ gt::gtensor<float, 2> y(gt::shape(mny[0], mny[1]), y_init);
+  gt::gtensor<float, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
   Loop<0, 23, run_test_view_2D_add_host>::Run(x, y, y_init);
 }
@@ -339,7 +339,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_double)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<double, 1> x(nx, x_init);
-  /* */ gt::gtensor<double, 2> y(gt::shape(mny[0], mny[1]), y_init);
+  gt::gtensor<double, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
   Loop<0, 52, run_test_view_2D_add_host>::Run(x, y, y_init);
 }
@@ -357,7 +357,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_float)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<complex32_t, 1> x(nx, x_init);
-  /* */ gt::gtensor<complex32_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
+  gt::gtensor<complex32_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
   Loop<0, 23, run_test_view_2D_add_host>::Run(x, y, y_init);
 }
@@ -375,7 +375,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_double)
   EXPECT_NE(y_init, y_init + x_init);
 
   const gt::gtensor<complex64_t, 1> x(nx, x_init);
-  /* */ gt::gtensor<complex64_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
+  gt::gtensor<complex64_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
   Loop<0, 52, run_test_view_2D_add_host>::Run(x, y, y_init);
 }
