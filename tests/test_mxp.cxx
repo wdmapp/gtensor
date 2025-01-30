@@ -1105,6 +1105,26 @@ TEST(mxp, view_placeholders_complex_aXaXaXpY_2D)
   }
 }
 
+TEST(mxp, element_access_compare)
+{
+  const int n{2};
+  const float x_init{1.234};
+
+  const gt::gtensor<float, 1> x(n, x_init);
+
+  const auto mxp_x = mxp::adapt<1, double>(x.data(), x.size());
+
+  EXPECT_LT(mxp_x(1), 2.f * x_init);
+  EXPECT_LE(mxp_x(1), 2.f * x_init);
+  EXPECT_LE(mxp_x(1), x_init);
+  EXPECT_EQ(mxp_x(1), x_init);
+  EXPECT_GE(mxp_x(1), x_init);
+  EXPECT_GE(mxp_x(1), x_init / 2.f);
+  EXPECT_GT(mxp_x(1), x_init / 2.f);
+  EXPECT_NE(mxp_x(1), -x_init);
+  EXPECT_EQ(mxp_x(1), mxp_x(0));
+}
+
 #if defined GTENSOR_HAVE_DEVICE
 
 TEST(mxp, device_axaxaxpy_implicit)
