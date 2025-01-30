@@ -387,7 +387,8 @@ struct run_test_error_bounds_host
   template <std::uint8_t bits, typename T>
   static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y)
   {
-    const T hard_threshold = std::pow(T{2.}, -(bits + 1));
+    auto hard_threshold =
+      std::pow(2., -(bits + 1)) * (gt::is_complex_v<T> ? 1.42 : 1.);
 
     using mxp_type = mxp::truncated_mantissa_t<T, bits>;
     const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
@@ -427,6 +428,44 @@ TEST(mxp_truncated_mantissa, error_bounds_double)
   for (int j = 0; j < x.size(); ++j)
     x(j) =
       1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max();
+
+  Loop<0, 52, run_test_error_bounds_host>::Run(x, y);
+}
+
+TEST(mxp_truncated_mantissa, error_bounds_complex_float)
+{
+  using complex32_t = gt::complex<float>;
+
+  const int n{1000};
+
+  gt::gtensor<complex32_t, 1> x(n);
+  gt::gtensor<complex32_t, 1> y(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < x.size(); ++j)
+    x(j) = {1.f + 1.f * std::rand() /
+                    std::numeric_limits<decltype(std::rand())>::max(),
+            1.f + 1.f * std::rand() /
+                    std::numeric_limits<decltype(std::rand())>::max()};
+
+  Loop<0, 23, run_test_error_bounds_host>::Run(x, y);
+}
+
+TEST(mxp_truncated_mantissa, error_bounds_complex_double)
+{
+  using complex64_t = gt::complex<double>;
+
+  const int n{1000};
+
+  gt::gtensor<complex64_t, 1> x(n);
+  gt::gtensor<complex64_t, 1> y(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < x.size(); ++j)
+    x(j) = {1. + 1. * std::rand() /
+                   std::numeric_limits<decltype(std::rand())>::max(),
+            1. + 1. * std::rand() /
+                   std::numeric_limits<decltype(std::rand())>::max()};
 
   Loop<0, 52, run_test_error_bounds_host>::Run(x, y);
 }
