@@ -396,7 +396,7 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_float)
 
   std::srand(time(nullptr));
   for (int j = 0; j < x.size(); ++j)
-    x(j) = {1.f + 1.f * std::rand() /
+    x(j) = complex32_t{1.f + 1.f * std::rand() /
                     std::numeric_limits<decltype(std::rand())>::max(),
             1.f + 1.f * std::rand() /
                     std::numeric_limits<decltype(std::rand())>::max()};
@@ -415,7 +415,7 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_double)
 
   std::srand(time(nullptr));
   for (int j = 0; j < x.size(); ++j)
-    x(j) = {1. + 1. * std::rand() /
+    x(j) = complex64_t{1. + 1. * std::rand() /
                    std::numeric_limits<decltype(std::rand())>::max(),
             1. + 1. * std::rand() /
                    std::numeric_limits<decltype(std::rand())>::max()};
