@@ -9,7 +9,7 @@
 TEST(mxp, axaxaxpy_implicit)
 {
   const int n{2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -62,7 +62,7 @@ void generic_axaxaxpy_explicit_mxp(const T a, const gt::gtensor<T, 1, S>& x,
 TEST(mxp, axaxaxpy_explicit)
 {
   const int n{2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -83,7 +83,7 @@ TEST(mxp, axaxaxpy_explicit)
 TEST(mxp, aXaXaXpY_2D_implicit)
 {
   const int mn[2]{2, 3};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -139,7 +139,7 @@ void generic_aXaXaXpy_2D_explicit_mxp(const T a, const gt::gtensor<T, 2, S>& xx,
 TEST(mxp, aXaXaXpY_2D_explicit)
 {
   const int mn[2]{2, 3};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -164,7 +164,7 @@ TEST(mxp, complex_axaxaxpy_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -230,7 +230,7 @@ TEST(mxp, complex_axaxaxpy_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -256,7 +256,7 @@ TEST(mxp, complex_op_plus_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t x_init{std::exp2f(-23) / 3.f, -std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init + 3.f * x_init};
@@ -314,7 +314,7 @@ TEST(mxp, complex_op_plus_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t x_init{std::exp2f(-23) / 3.f, -std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init + 3.f * x_init};
@@ -340,7 +340,7 @@ TEST(mxp, complex_op_minus_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t x_init{-std::exp2f(-23) / 3.f, std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init - 3.f * x_init};
@@ -398,7 +398,7 @@ TEST(mxp, complex_op_minus_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t x_init{-std::exp2f(-23) / 3.f, std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init - 3.f * x_init};
@@ -424,10 +424,10 @@ TEST(mxp, complex_op_multiply_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -479,10 +479,10 @@ TEST(mxp, complex_op_multiply_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -504,7 +504,7 @@ TEST(mxp, complex_op_divide_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double val = 1.5 + std::exp2f(-8) + std::exp2f(-15) + std::exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
@@ -570,7 +570,7 @@ TEST(mxp, complex_op_divide_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double val = 1.5 + std::exp2f(-8) + std::exp2f(-15) + std::exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
@@ -604,7 +604,7 @@ TEST(mxp, view_axaxaxpy)
 {
   const int nx{3};
   const int ny{5};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -637,7 +637,7 @@ TEST(mxp, view_axaxaxpy)
 TEST(mxp, view_all_2D)
 {
   const int mn[2]{3, 2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -670,7 +670,7 @@ TEST(mxp, view_all_2D)
 TEST(mxp, view_newaxis_2D)
 {
   const int mn[2]{3, 2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -707,7 +707,7 @@ TEST(mxp, view_s_2D)
   const int mn[2]{4, 3};
   const int lj = 2, uj = 4, lk = 1, uk = 3;
 
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -752,7 +752,7 @@ TEST(mxp, view_slice_2D)
   const int mn[2]{4, 3};
   const int slice_idx = 1;
 
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -794,7 +794,7 @@ TEST(mxp, view_view_axaxaxpy)
 {
   const int nx{3};
   const int ny{5};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -832,7 +832,7 @@ TEST(mxp, view_complex_axaxaxpy)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -876,7 +876,7 @@ TEST(mxp, view_complex_op_plus)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t x_init{std::exp2f(-23) / 3.f, -std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init + 3.f * x_init};
@@ -915,7 +915,7 @@ TEST(mxp, view_complex_op_minus)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t x_init{-std::exp2f(-23) / 3.f, std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init - 3.f * x_init};
@@ -954,11 +954,11 @@ TEST(mxp, view_complex_op_multiply)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
   const complex32_t y_init{-654.321f};
 
-  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -993,7 +993,7 @@ TEST(mxp, view_complex_op_divide)
 
   const int nx{3};
   const int ny{5};
-  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double val = 1.5 + std::exp2f(-8) + std::exp2f(-15) + std::exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
@@ -1051,7 +1051,7 @@ TEST(mxp, view_placeholders_complex_aXaXaXpY_2D)
   const int mn[2]{4, 3};
   const int lk = 1, uk = 2;
 
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -1104,7 +1104,7 @@ TEST(mxp, view_placeholders_complex_aXaXaXpY_2D)
 TEST(mxp, device_axaxaxpy_implicit)
 {
   const int n{2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1135,7 +1135,7 @@ TEST(mxp, device_axaxaxpy_implicit)
 TEST(mxp, device_axaxaxpy_explicit)
 {
   const int n{2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1156,7 +1156,7 @@ TEST(mxp, device_axaxaxpy_explicit)
 TEST(mxp, device_aXaXaXpY_2D_implicit)
 {
   const int mn[2]{2, 3};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1186,7 +1186,7 @@ TEST(mxp, device_aXaXaXpY_2D_implicit)
 TEST(mxp, device_aXaXaXpY_2D_explicit)
 {
   const int mn[2]{2, 3};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1211,7 +1211,7 @@ TEST(mxp, device_complex_axaxaxpy_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -1251,7 +1251,7 @@ TEST(mxp, device_complex_axaxaxpy_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -1278,7 +1278,7 @@ TEST(mxp, device_complex_op_plus_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t x_init{std::exp2f(-23) / 3.f, -std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init + 3.f * x_init};
@@ -1314,7 +1314,7 @@ TEST(mxp, device_complex_op_plus_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t x_init{std::exp2f(-23) / 3.f, -std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init + 3.f * x_init};
@@ -1340,7 +1340,7 @@ TEST(mxp, device_complex_op_minus_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t x_init{-std::exp2f(-23) / 3.f, std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init - 3.f * x_init};
@@ -1376,7 +1376,7 @@ TEST(mxp, device_complex_op_minus_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t x_init{-std::exp2f(-23) / 3.f, std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init - 3.f * x_init};
@@ -1402,10 +1402,10 @@ TEST(mxp, device_complex_op_multiply_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -1437,10 +1437,10 @@ TEST(mxp, device_complex_op_multiply_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -1463,7 +1463,7 @@ TEST(mxp, device_complex_op_divide_implicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double val = 1.5 + std::exp2f(-8) + std::exp2f(-15) + std::exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
@@ -1511,7 +1511,7 @@ TEST(mxp, device_complex_op_divide_explicit)
   using complex64_t = gt::complex<double>;
 
   const int n{2};
-  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double val = 1.5 + std::exp2f(-8) + std::exp2f(-15) + std::exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
@@ -1548,7 +1548,7 @@ TEST(mxp, device_view_axaxaxpy)
 {
   const int nx{3};
   const int ny{5};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1586,7 +1586,7 @@ TEST(mxp, device_view_axaxaxpy)
 TEST(mxp, device_view_all_2D)
 {
   const int mn[2]{3, 2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1621,7 +1621,7 @@ TEST(mxp, device_view_all_2D)
 TEST(mxp, device_view_newaxis_2D)
 {
   const int mn[2]{3, 2};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1660,7 +1660,7 @@ TEST(mxp, device_view_s_2D)
   const int mn[2]{4, 3};
   const int lj = 2, uj = 4, lk = 1, uk = 3;
 
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1702,7 +1702,7 @@ TEST(mxp, device_view_slice_2D)
   const int mn[2]{4, 3};
   const int slice_idx = 1;
 
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1742,7 +1742,7 @@ TEST(mxp, device_view_view_axaxaxpy)
 {
   const int nx{3};
   const int ny{5};
-  const float x_init{exp2f(-23)};
+  const float x_init{std::exp2f(-23)};
   const float y_init{1.f};
   const float a{1.f / 3.f};
 
@@ -1784,7 +1784,7 @@ TEST(mxp, device_view_complex_axaxaxpy)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 
@@ -1834,7 +1834,7 @@ TEST(mxp, device_view_complex_op_plus)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{exp2f(-23) / 3.f, -exp2f(-24) / 3.f};
+  const complex32_t x_init{std::exp2f(-23) / 3.f, -std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init + 3.f * x_init};
@@ -1877,7 +1877,7 @@ TEST(mxp, device_view_complex_op_minus)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{-exp2f(-23) / 3.f, exp2f(-24) / 3.f};
+  const complex32_t x_init{-std::exp2f(-23) / 3.f, std::exp2f(-24) / 3.f};
   const complex32_t y_init{1.f, 1.f};
 
   const complex32_t mxp_ref{y_init - 3.f * x_init};
@@ -1920,11 +1920,11 @@ TEST(mxp, device_view_complex_op_multiply)
 
   const int nx{3};
   const int ny{5};
-  const complex32_t x_init{1.f + exp2f(-12), 0.f};
+  const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
   const complex32_t y_init{-654.321f};
 
-  const complex32_t gt_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + exp2f(-11) + exp2f(-12) + exp2f(-22), 0.f};
+  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -1963,7 +1963,7 @@ TEST(mxp, device_view_complex_op_divide)
 
   const int nx{3};
   const int ny{5};
-  double val = 1.5 + exp2f(-8) + exp2f(-15) + exp2f(-23);
+  double val = 1.5 + std::exp2f(-8) + std::exp2f(-15) + std::exp2f(-23);
   double invval = 1. / val;
   double ref = val / invval / invval;
 
@@ -2028,7 +2028,7 @@ TEST(mxp, device_view_placeholders_complex_aXaXaXpY_2D)
   const int mn[2]{4, 3};
   const int lk = 1, uk = 2;
 
-  const complex32_t x_init{exp2f(-23), -exp2f(-24)};
+  const complex32_t x_init{std::exp2f(-23), -std::exp2f(-24)};
   const complex32_t y_init{1.f, 1.f};
   const float a_init{1.f / 3.f};
 

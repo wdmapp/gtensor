@@ -1,6 +1,10 @@
 #ifndef GTENSOR_MXP_TRUNCATED_MANTISSA_H
 #define GTENSOR_MXP_TRUNCATED_MANTISSA_H
 
+#include <cstdint>
+#include <cstring>
+#include <type_traits>
+
 // __________________________________________________________________________ //
 
 namespace mxp

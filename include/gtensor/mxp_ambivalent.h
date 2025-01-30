@@ -1,6 +1,9 @@
 #ifndef MXP_AMBIVALENT_H
 #define MXP_AMBIVALENT_H
 
+#include <cstdint>
+#include <iostream>
+#include <type_traits>
 #include "mxp_truncated_mantissa_t.h"
 
 // __________________________________________________________________________ //

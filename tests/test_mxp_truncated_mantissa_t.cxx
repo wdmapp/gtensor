@@ -6,6 +6,7 @@
 #include <gtensor/mxp.h>
 
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <type_traits>
@@ -18,15 +19,15 @@ float ref_truncated_add_float()
   if (bits < 12)
     return 2.f;
   else if (bits == 12)
-    return 2.f + exp2f(-12);
+    return 2.f + std::exp2f(-12);
   else if (bits == 13)
-    return 2.f + exp2f(-13);
+    return 2.f + std::exp2f(-13);
   else if (bits == 14)
-    return 2.f + exp2f(-13) + exp2f(-14);
+    return 2.f + std::exp2f(-13) + std::exp2f(-14);
   else if (bits == 15)
-    return 2.f + exp2f(-13) + exp2f(-15);
+    return 2.f + std::exp2f(-13) + std::exp2f(-15);
   else // bits > 15
-    return 2.f + exp2f(-13) + exp2f(-15) + exp2f(-16);
+    return 2.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16);
 }
 
 template <std::uint8_t bits>
@@ -35,15 +36,15 @@ double ref_truncated_add_double()
   if (bits < 22)
     return 2.;
   else if (bits == 22)
-    return 2. + exp2(-22);
+    return 2. + std::exp2(-22);
   else if (bits == 23)
-    return 2. + exp2(-23);
+    return 2. + std::exp2(-23);
   else if (bits == 24)
-    return 2. + exp2(-23) + exp2(-24);
+    return 2. + std::exp2(-23) + std::exp2(-24);
   else if (bits == 25)
-    return 2. + exp2(-23) + exp2(-25);
+    return 2. + std::exp2(-23) + std::exp2(-25);
   else // bits > 25
-    return 2. + exp2(-23) + exp2(-25) + exp2(-26);
+    return 2. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26);
 }
 
 template <std::uint8_t bits, typename T>
@@ -84,7 +85,7 @@ TEST(mxp_truncated_mantissa, add_float)
 {
   const int n{3};
 
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const float y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -99,7 +100,7 @@ TEST(mxp_truncated_mantissa, add_double)
 {
   const int n{3};
 
-  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const double y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -116,7 +117,7 @@ TEST(mxp_truncated_mantissa, add_complex_float)
 
   const int n{3};
 
-  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const complex32_t y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -133,7 +134,7 @@ TEST(mxp_truncated_mantissa, add_complex_double)
 
   const int n{3};
 
-  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const complex64_t y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -174,7 +175,7 @@ TEST(mxp_truncated_mantissa, view_add_float)
   const int nx{3};
   const int ny{5};
 
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const float y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -190,7 +191,7 @@ TEST(mxp_truncated_mantissa, view_add_double)
   const int nx{3};
   const int ny{5};
 
-  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const double y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -208,7 +209,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_float)
   const int nx{3};
   const int ny{5};
 
-  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const complex32_t y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -226,7 +227,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_double)
   const int nx{3};
   const int ny{5};
 
-  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const complex64_t y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -268,7 +269,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_float)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const float y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -284,7 +285,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_double)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const double y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -302,7 +303,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_float)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const complex32_t y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -320,7 +321,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_double)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const complex64_t y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -427,7 +428,7 @@ TEST(mxp_truncated_mantissa, device_add_float)
 {
   const int n{3};
 
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const float y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -442,7 +443,7 @@ TEST(mxp_truncated_mantissa, device_add_double)
 {
   const int n{3};
 
-  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const double y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -459,7 +460,7 @@ TEST(mxp_truncated_mantissa, device_add_complex_float)
 
   const int n{3};
 
-  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const complex32_t y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -476,7 +477,7 @@ TEST(mxp_truncated_mantissa, device_add_complex_double)
 
   const int n{3};
 
-  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const complex64_t y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -492,7 +493,7 @@ TEST(mxp_truncated_mantissa, device_view_add_float)
   const int nx{3};
   const int ny{5};
 
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const float y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -508,7 +509,7 @@ TEST(mxp_truncated_mantissa, device_view_add_double)
   const int nx{3};
   const int ny{5};
 
-  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const double y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -526,7 +527,7 @@ TEST(mxp_truncated_mantissa, device_view_add_complex_float)
   const int nx{3};
   const int ny{5};
 
-  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const complex32_t y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -544,7 +545,7 @@ TEST(mxp_truncated_mantissa, device_view_add_complex_double)
   const int nx{3};
   const int ny{5};
 
-  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const complex64_t y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -560,7 +561,7 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_float)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const float x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const float x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const float y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -576,7 +577,7 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_double)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const double x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const double x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const double y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -594,7 +595,7 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_complex_float)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const complex32_t x_init{1.f + exp2f(-13) + exp2f(-15) + exp2f(-16)};
+  const complex32_t x_init{1.f + std::exp2f(-13) + std::exp2f(-15) + std::exp2f(-16)};
   const complex32_t y_init{1.f};
 
   EXPECT_NE(y_init, y_init + x_init);
@@ -612,7 +613,7 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_complex_double)
   const int nx{3};
   const int mny[2]{5, 2};
 
-  const complex64_t x_init{1. + exp2(-23) + exp2(-25) + exp2(-26)};
+  const complex64_t x_init{1. + std::exp2(-23) + std::exp2(-25) + std::exp2(-26)};
   const complex64_t y_init{1.};
 
   EXPECT_NE(y_init, y_init + x_init);

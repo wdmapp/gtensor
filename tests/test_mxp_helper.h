@@ -1,6 +1,7 @@
 #ifndef GTENSOR_TEST_MXT_HELPER_H
 #define GTENSOR_TEST_MXT_HELPER_H
 
+#include <cstdint>
 #include <type_traits>
 
 // -------------------------------------------------------------------------- //
