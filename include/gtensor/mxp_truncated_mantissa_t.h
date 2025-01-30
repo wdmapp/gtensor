@@ -23,8 +23,11 @@ constexpr bool is_decay_double{std::is_same<std::decay_t<fp_t>, double>::value};
 
 // -------------------------------------------------------------------------- //
 
-template <typename fp_t, typename = std::enable_if_t<is_decay_float<fp_t> ||
-                                                     is_decay_double<fp_t>>>
+template <
+  typename fp_t,
+  typename = std::enable_if_t<
+    (is_decay_float<fp_t> && (sizeof(float) == sizeof(std::uint32_t))) ||
+    (is_decay_double<fp_t> && (sizeof(double) == sizeof(std::uint64_t)))>>
 using uint_t =
   std::conditional_t<is_decay_float<fp_t>, std::uint32_t, std::uint64_t>;
 
