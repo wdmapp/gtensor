@@ -426,8 +426,10 @@ TEST(mxp, complex_op_multiply_implicit)
   const int n{2};
   const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
+  const complex32_t gt_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -481,8 +483,10 @@ TEST(mxp, complex_op_multiply_explicit)
   const int n{2};
   const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
+  const complex32_t gt_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -957,8 +961,10 @@ TEST(mxp, view_complex_op_multiply)
   const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
   const complex32_t y_init{-654.321f};
 
-  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
+  const complex32_t gt_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -1404,8 +1410,10 @@ TEST(mxp, device_complex_op_multiply_implicit)
   const int n{2};
   const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
+  const complex32_t gt_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -1439,8 +1447,10 @@ TEST(mxp, device_complex_op_multiply_explicit)
   const int n{2};
   const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
 
-  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
+  const complex32_t gt_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
@@ -1923,8 +1933,10 @@ TEST(mxp, device_view_complex_op_multiply)
   const complex32_t x_init{1.f + std::exp2f(-12), 0.f};
   const complex32_t y_init{-654.321f};
 
-  const complex32_t gt_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
-  const complex32_t mxp_ref{1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
+  const complex32_t gt_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-23), 0.f};
+  const complex32_t mxp_ref{
+    1.f + std::exp2f(-11) + std::exp2f(-12) + std::exp2f(-22), 0.f};
 
   EXPECT_NE(gt_ref.real(), mxp_ref.real());
 
