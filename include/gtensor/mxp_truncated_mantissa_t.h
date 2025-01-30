@@ -40,12 +40,17 @@ constexpr uint_t<fp_t> mantissa_mask{
 
 // -------------------------------------------------------------------------- //
 
+// clang-format off
+// (messes with triple consecutive angle brackets)
+
 template <typename fp_t, std::uint8_t bits>
 constexpr uint_t<fp_t> reduced_mantissa_mask{mantissa_mask<fp_t> ^
                                              (mantissa_mask<fp_t> >> bits)};
 
 template <typename fp_t, std::uint8_t bits>
 constexpr uint_t<fp_t> reduced_rounding_mask{mantissa_mask<fp_t> >> (bits + 1)};
+
+// clang-format on
 
 // -------------------------------------------------------------------------- //
 
