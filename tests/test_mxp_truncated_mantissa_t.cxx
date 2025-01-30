@@ -10,30 +10,7 @@
 #include <ctime>
 #include <type_traits>
 
-// -------------------------------------------------------------------------- //
-
-template <std::uint8_t From, std::uint8_t To, typename Task>
-struct Loop
-{
-  template <typename... Args>
-  static std::enable_if_t<From <= To> Run(Args&&... args)
-  {
-    Task::template Iteration<From>(std::forward<Args>(args)...);
-    Loop<From + 1, To, Task>::Run(args...);
-  }
-};
-
-template <std::uint8_t FromTo, typename Task>
-struct Loop<FromTo, FromTo, Task>
-{
-  template <typename... Args>
-  static void Run(Args&&... args)
-  {
-    Task::template Iteration<FromTo>(std::forward<Args>(args)...);
-  }
-};
-
-// -------------------------------------------------------------------------- //
+#include "test_mxp_helper.h"
 
 template <std::uint8_t bits, typename S, typename T>
 void generic_truncated_add(const gt::gtensor<T, 1, S>& x,
