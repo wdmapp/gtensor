@@ -622,4 +622,84 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_complex_double)
   Loop<0, 52, run_test_view_2D_add<gt::space::device>>::Run(x, y, y_init);
 }
 
+TEST(mxp_truncated_mantissa, device_error_bounds_float)
+{
+  const int n{1000};
+
+  gt::gtensor<float, 1> h_x(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < h_x.size(); ++j)
+    h_x(j) = 1.f + 1.f * std::rand() /
+                   std::numeric_limits<decltype(std::rand())>::max();
+
+  gt::gtensor_device<float, 1> x(n);
+  gt::gtensor_device<float, 1> y(n);
+  gt::copy(h_x, x);
+
+  Loop<0, 23, run_test_error_bounds<gt::space::device>>::Run(x, y);
+}
+
+TEST(mxp_truncated_mantissa, device_error_bounds_double)
+{
+  const int n{1000};
+
+  gt::gtensor<double, 1> h_x(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < h_x.size(); ++j)
+    h_x(j) =
+      1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max();
+
+  gt::gtensor_device<double, 1> x(n);
+  gt::gtensor_device<double, 1> y(n);
+  gt::copy(h_x, x);
+
+  Loop<0, 52, run_test_error_bounds<gt::space::device>>::Run(x, y);
+}
+
+TEST(mxp_truncated_mantissa, device_error_bounds_complex_float)
+{
+  using complex32_t = gt::complex<float>;
+
+  const int n{1000};
+
+  gt::gtensor<complex32_t, 1> h_x(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < h_x.size(); ++j)
+    h_x(j) = complex32_t{1.f + 1.f * std::rand() /
+                    std::numeric_limits<decltype(std::rand())>::max(),
+            1.f + 1.f * std::rand() /
+                    std::numeric_limits<decltype(std::rand())>::max()};
+
+  gt::gtensor_device<complex32_t, 1> x(n);
+  gt::gtensor_device<complex32_t, 1> y(n);
+  gt::copy(h_x, x);
+
+  Loop<0, 23, run_test_error_bounds<gt::space::device>>::Run(x, y);
+}
+
+TEST(mxp_truncated_mantissa, device_error_bounds_complex_double)
+{
+  using complex64_t = gt::complex<double>;
+
+  const int n{1000};
+
+  gt::gtensor<complex64_t, 1> h_x(n);
+
+  std::srand(time(nullptr));
+  for (int j = 0; j < h_x.size(); ++j)
+    h_x(j) = complex64_t{1. + 1. * std::rand() /
+                   std::numeric_limits<decltype(std::rand())>::max(),
+            1. + 1. * std::rand() /
+                   std::numeric_limits<decltype(std::rand())>::max()};
+
+  gt::gtensor_device<complex64_t, 1> x(n);
+  gt::gtensor_device<complex64_t, 1> y(n);
+  gt::copy(h_x, x);
+
+  Loop<0, 52, run_test_error_bounds<gt::space::device>>::Run(x, y);
+}
+
 #endif
