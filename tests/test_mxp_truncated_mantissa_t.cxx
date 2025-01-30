@@ -5,6 +5,32 @@
 #include <gtensor/mxp.h>
 
 #include <cmath>
+#include <type_traits>
+
+// -------------------------------------------------------------------------- //
+
+template <std::uint8_t From, std::uint8_t To, typename Task>
+struct Loop
+{
+  template <typename... Args>
+  static std::enable_if_t<From <= To> Run(Args&&... args)
+  {
+    Task::template Iteration<From>(std::forward<Args>(args)...);
+    Loop<From + 1, To, Task>::Run(args...);
+  }
+};
+
+template <std::uint8_t FromTo, typename Task>
+struct Loop<FromTo, FromTo, Task>
+{
+  template <typename... Args>
+  static void Run(Args&&... args)
+  {
+    Task::template Iteration<FromTo>(std::forward<Args>(args)...);
+  }
+};
+
+// -------------------------------------------------------------------------- //
 
 template <std::uint8_t bits, typename S, typename T>
 void generic_truncated_add(const gt::gtensor<T, 1, S>& x,
@@ -64,17 +90,22 @@ T ref_truncated_add_gen()
     return 0. / 0.;
 }
 
-template <std::uint8_t bits, typename S, typename T>
-void run_test_add(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
-                  const T y_init)
+struct run_test_add_host
 {
-  auto gt_y = gt::adapt<1, S>(y.data(), y.size());
-  y.view() = y_init;
+  using S = gt::space::host;
 
-  generic_truncated_add<bits, S>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<T, 1, S>(y.size(), ref_truncated_add_gen<bits, T>())));
-}
+  template <std::uint8_t bits, typename T>
+  static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
+                        const T y_init)
+  {
+    auto gt_y = gt::adapt<1, S>(y.data(), y.size());
+    y.view() = y_init;
+
+    generic_truncated_add<bits, S>(x, y);
+    EXPECT_EQ(
+      y, (gt::gtensor<T, 1, S>(y.size(), ref_truncated_add_gen<bits, T>())));
+  }
+};
 
 TEST(mxp_truncated_mantissa, add_float)
 {
@@ -88,30 +119,7 @@ TEST(mxp_truncated_mantissa, add_float)
   const gt::gtensor<float, 1> x(n, x_init);
   /* */ gt::gtensor<float, 1> y(n, y_init);
 
-  run_test_add<0, gt::space::host>(x, y, y_init);
-  run_test_add<1, gt::space::host>(x, y, y_init);
-  run_test_add<2, gt::space::host>(x, y, y_init);
-  run_test_add<3, gt::space::host>(x, y, y_init);
-  run_test_add<4, gt::space::host>(x, y, y_init);
-  run_test_add<5, gt::space::host>(x, y, y_init);
-  run_test_add<6, gt::space::host>(x, y, y_init);
-  run_test_add<7, gt::space::host>(x, y, y_init);
-  run_test_add<8, gt::space::host>(x, y, y_init);
-  run_test_add<9, gt::space::host>(x, y, y_init);
-  run_test_add<10, gt::space::host>(x, y, y_init);
-  run_test_add<11, gt::space::host>(x, y, y_init);
-  run_test_add<12, gt::space::host>(x, y, y_init);
-  run_test_add<13, gt::space::host>(x, y, y_init);
-  run_test_add<14, gt::space::host>(x, y, y_init);
-  run_test_add<15, gt::space::host>(x, y, y_init);
-  run_test_add<16, gt::space::host>(x, y, y_init);
-  run_test_add<17, gt::space::host>(x, y, y_init);
-  run_test_add<18, gt::space::host>(x, y, y_init);
-  run_test_add<19, gt::space::host>(x, y, y_init);
-  run_test_add<20, gt::space::host>(x, y, y_init);
-  run_test_add<21, gt::space::host>(x, y, y_init);
-  run_test_add<22, gt::space::host>(x, y, y_init);
-  run_test_add<23, gt::space::host>(x, y, y_init);
+  Loop<0, 23, run_test_add_host>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_double)
@@ -126,60 +134,7 @@ TEST(mxp_truncated_mantissa, add_double)
   const gt::gtensor<double, 1> x(n, x_init);
   /* */ gt::gtensor<double, 1> y(n, y_init);
 
-  run_test_add<0, gt::space::host>(x, y, y_init);
-  run_test_add<1, gt::space::host>(x, y, y_init);
-  run_test_add<2, gt::space::host>(x, y, y_init);
-  run_test_add<3, gt::space::host>(x, y, y_init);
-  run_test_add<4, gt::space::host>(x, y, y_init);
-  run_test_add<5, gt::space::host>(x, y, y_init);
-  run_test_add<6, gt::space::host>(x, y, y_init);
-  run_test_add<7, gt::space::host>(x, y, y_init);
-  run_test_add<8, gt::space::host>(x, y, y_init);
-  run_test_add<9, gt::space::host>(x, y, y_init);
-  run_test_add<10, gt::space::host>(x, y, y_init);
-  run_test_add<11, gt::space::host>(x, y, y_init);
-  run_test_add<12, gt::space::host>(x, y, y_init);
-  run_test_add<13, gt::space::host>(x, y, y_init);
-  run_test_add<14, gt::space::host>(x, y, y_init);
-  run_test_add<15, gt::space::host>(x, y, y_init);
-  run_test_add<16, gt::space::host>(x, y, y_init);
-  run_test_add<17, gt::space::host>(x, y, y_init);
-  run_test_add<18, gt::space::host>(x, y, y_init);
-  run_test_add<19, gt::space::host>(x, y, y_init);
-  run_test_add<20, gt::space::host>(x, y, y_init);
-  run_test_add<21, gt::space::host>(x, y, y_init);
-  run_test_add<22, gt::space::host>(x, y, y_init);
-  run_test_add<23, gt::space::host>(x, y, y_init);
-  run_test_add<24, gt::space::host>(x, y, y_init);
-  run_test_add<25, gt::space::host>(x, y, y_init);
-  run_test_add<26, gt::space::host>(x, y, y_init);
-  run_test_add<27, gt::space::host>(x, y, y_init);
-  run_test_add<28, gt::space::host>(x, y, y_init);
-  run_test_add<29, gt::space::host>(x, y, y_init);
-  run_test_add<30, gt::space::host>(x, y, y_init);
-  run_test_add<31, gt::space::host>(x, y, y_init);
-  run_test_add<32, gt::space::host>(x, y, y_init);
-  run_test_add<33, gt::space::host>(x, y, y_init);
-  run_test_add<34, gt::space::host>(x, y, y_init);
-  run_test_add<35, gt::space::host>(x, y, y_init);
-  run_test_add<36, gt::space::host>(x, y, y_init);
-  run_test_add<37, gt::space::host>(x, y, y_init);
-  run_test_add<38, gt::space::host>(x, y, y_init);
-  run_test_add<39, gt::space::host>(x, y, y_init);
-  run_test_add<40, gt::space::host>(x, y, y_init);
-  run_test_add<41, gt::space::host>(x, y, y_init);
-  run_test_add<42, gt::space::host>(x, y, y_init);
-  run_test_add<43, gt::space::host>(x, y, y_init);
-  run_test_add<44, gt::space::host>(x, y, y_init);
-  run_test_add<45, gt::space::host>(x, y, y_init);
-  run_test_add<46, gt::space::host>(x, y, y_init);
-  run_test_add<47, gt::space::host>(x, y, y_init);
-  run_test_add<48, gt::space::host>(x, y, y_init);
-  run_test_add<49, gt::space::host>(x, y, y_init);
-  run_test_add<50, gt::space::host>(x, y, y_init);
-  run_test_add<51, gt::space::host>(x, y, y_init);
-  run_test_add<52, gt::space::host>(x, y, y_init);
-  run_test_add<53, gt::space::host>(x, y, y_init);
+  Loop<0, 52, run_test_add_host>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_float)
@@ -196,30 +151,7 @@ TEST(mxp_truncated_mantissa, add_complex_float)
   const gt::gtensor<complex32_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(n, y_init);
 
-  run_test_add<0, gt::space::host>(x, y, y_init);
-  run_test_add<1, gt::space::host>(x, y, y_init);
-  run_test_add<2, gt::space::host>(x, y, y_init);
-  run_test_add<3, gt::space::host>(x, y, y_init);
-  run_test_add<4, gt::space::host>(x, y, y_init);
-  run_test_add<5, gt::space::host>(x, y, y_init);
-  run_test_add<6, gt::space::host>(x, y, y_init);
-  run_test_add<7, gt::space::host>(x, y, y_init);
-  run_test_add<8, gt::space::host>(x, y, y_init);
-  run_test_add<9, gt::space::host>(x, y, y_init);
-  run_test_add<10, gt::space::host>(x, y, y_init);
-  run_test_add<11, gt::space::host>(x, y, y_init);
-  run_test_add<12, gt::space::host>(x, y, y_init);
-  run_test_add<13, gt::space::host>(x, y, y_init);
-  run_test_add<14, gt::space::host>(x, y, y_init);
-  run_test_add<15, gt::space::host>(x, y, y_init);
-  run_test_add<16, gt::space::host>(x, y, y_init);
-  run_test_add<17, gt::space::host>(x, y, y_init);
-  run_test_add<18, gt::space::host>(x, y, y_init);
-  run_test_add<19, gt::space::host>(x, y, y_init);
-  run_test_add<20, gt::space::host>(x, y, y_init);
-  run_test_add<21, gt::space::host>(x, y, y_init);
-  run_test_add<22, gt::space::host>(x, y, y_init);
-  run_test_add<23, gt::space::host>(x, y, y_init);
+  Loop<0, 23, run_test_add_host>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_double)
@@ -236,60 +168,7 @@ TEST(mxp_truncated_mantissa, add_complex_double)
   const gt::gtensor<complex64_t, 1> x(n, x_init);
   /* */ gt::gtensor<complex64_t, 1> y(n, y_init);
 
-  run_test_add<0, gt::space::host>(x, y, y_init);
-  run_test_add<1, gt::space::host>(x, y, y_init);
-  run_test_add<2, gt::space::host>(x, y, y_init);
-  run_test_add<3, gt::space::host>(x, y, y_init);
-  run_test_add<4, gt::space::host>(x, y, y_init);
-  run_test_add<5, gt::space::host>(x, y, y_init);
-  run_test_add<6, gt::space::host>(x, y, y_init);
-  run_test_add<7, gt::space::host>(x, y, y_init);
-  run_test_add<8, gt::space::host>(x, y, y_init);
-  run_test_add<9, gt::space::host>(x, y, y_init);
-  run_test_add<10, gt::space::host>(x, y, y_init);
-  run_test_add<11, gt::space::host>(x, y, y_init);
-  run_test_add<12, gt::space::host>(x, y, y_init);
-  run_test_add<13, gt::space::host>(x, y, y_init);
-  run_test_add<14, gt::space::host>(x, y, y_init);
-  run_test_add<15, gt::space::host>(x, y, y_init);
-  run_test_add<16, gt::space::host>(x, y, y_init);
-  run_test_add<17, gt::space::host>(x, y, y_init);
-  run_test_add<18, gt::space::host>(x, y, y_init);
-  run_test_add<19, gt::space::host>(x, y, y_init);
-  run_test_add<20, gt::space::host>(x, y, y_init);
-  run_test_add<21, gt::space::host>(x, y, y_init);
-  run_test_add<22, gt::space::host>(x, y, y_init);
-  run_test_add<23, gt::space::host>(x, y, y_init);
-  run_test_add<24, gt::space::host>(x, y, y_init);
-  run_test_add<25, gt::space::host>(x, y, y_init);
-  run_test_add<26, gt::space::host>(x, y, y_init);
-  run_test_add<27, gt::space::host>(x, y, y_init);
-  run_test_add<28, gt::space::host>(x, y, y_init);
-  run_test_add<29, gt::space::host>(x, y, y_init);
-  run_test_add<30, gt::space::host>(x, y, y_init);
-  run_test_add<31, gt::space::host>(x, y, y_init);
-  run_test_add<32, gt::space::host>(x, y, y_init);
-  run_test_add<33, gt::space::host>(x, y, y_init);
-  run_test_add<34, gt::space::host>(x, y, y_init);
-  run_test_add<35, gt::space::host>(x, y, y_init);
-  run_test_add<36, gt::space::host>(x, y, y_init);
-  run_test_add<37, gt::space::host>(x, y, y_init);
-  run_test_add<38, gt::space::host>(x, y, y_init);
-  run_test_add<39, gt::space::host>(x, y, y_init);
-  run_test_add<40, gt::space::host>(x, y, y_init);
-  run_test_add<41, gt::space::host>(x, y, y_init);
-  run_test_add<42, gt::space::host>(x, y, y_init);
-  run_test_add<43, gt::space::host>(x, y, y_init);
-  run_test_add<44, gt::space::host>(x, y, y_init);
-  run_test_add<45, gt::space::host>(x, y, y_init);
-  run_test_add<46, gt::space::host>(x, y, y_init);
-  run_test_add<47, gt::space::host>(x, y, y_init);
-  run_test_add<48, gt::space::host>(x, y, y_init);
-  run_test_add<49, gt::space::host>(x, y, y_init);
-  run_test_add<50, gt::space::host>(x, y, y_init);
-  run_test_add<51, gt::space::host>(x, y, y_init);
-  run_test_add<52, gt::space::host>(x, y, y_init);
-  run_test_add<53, gt::space::host>(x, y, y_init);
+  Loop<0, 52, run_test_add_host>::Run(x, y, y_init);
 }
 
 template <std::uint8_t bits, typename S, typename T>
@@ -306,19 +185,24 @@ void generic_view_truncated_add(const gt::gtensor<T, 1, S>& x,
   mxp_y.view(_s(1, -1)) = mxp_y.view(_s(1, -1)) + mxp_x.view(_all);
 }
 
-template <std::uint8_t bits, typename S, typename T>
-void run_test_view_add(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
-                       const T y_init)
+struct run_test_view_add_host
 {
-  auto gt_y = gt::adapt<1, S>(y.data(), y.size());
-  y.view() = y_init;
+  using S = gt::space::host;
 
-  generic_view_truncated_add<bits, S>(x, y);
-  EXPECT_EQ(y,
-            (gt::gtensor<T, 1, S>{y_init, ref_truncated_add_gen<bits, T>(),
-                                  ref_truncated_add_gen<bits, T>(),
-                                  ref_truncated_add_gen<bits, T>(), y_init}));
-}
+  template <std::uint8_t bits, typename T>
+  static void Iteration(const gt::gtensor<T, 1, S>& x, gt::gtensor<T, 1, S>& y,
+                        const T y_init)
+  {
+    auto gt_y = gt::adapt<1, S>(y.data(), y.size());
+    y.view() = y_init;
+
+    generic_view_truncated_add<bits, S>(x, y);
+    EXPECT_EQ(y,
+              (gt::gtensor<T, 1, S>{y_init, ref_truncated_add_gen<bits, T>(),
+                                    ref_truncated_add_gen<bits, T>(),
+                                    ref_truncated_add_gen<bits, T>(), y_init}));
+  }
+};
 
 TEST(mxp_truncated_mantissa, view_add_float)
 {
@@ -333,30 +217,7 @@ TEST(mxp_truncated_mantissa, view_add_float)
   const gt::gtensor<float, 1> x(nx, x_init);
   /* */ gt::gtensor<float, 1> y(ny, y_init);
 
-  run_test_view_add<0, gt::space::host>(x, y, y_init);
-  run_test_view_add<1, gt::space::host>(x, y, y_init);
-  run_test_view_add<2, gt::space::host>(x, y, y_init);
-  run_test_view_add<3, gt::space::host>(x, y, y_init);
-  run_test_view_add<4, gt::space::host>(x, y, y_init);
-  run_test_view_add<5, gt::space::host>(x, y, y_init);
-  run_test_view_add<6, gt::space::host>(x, y, y_init);
-  run_test_view_add<7, gt::space::host>(x, y, y_init);
-  run_test_view_add<8, gt::space::host>(x, y, y_init);
-  run_test_view_add<9, gt::space::host>(x, y, y_init);
-  run_test_view_add<10, gt::space::host>(x, y, y_init);
-  run_test_view_add<11, gt::space::host>(x, y, y_init);
-  run_test_view_add<12, gt::space::host>(x, y, y_init);
-  run_test_view_add<13, gt::space::host>(x, y, y_init);
-  run_test_view_add<14, gt::space::host>(x, y, y_init);
-  run_test_view_add<15, gt::space::host>(x, y, y_init);
-  run_test_view_add<16, gt::space::host>(x, y, y_init);
-  run_test_view_add<17, gt::space::host>(x, y, y_init);
-  run_test_view_add<18, gt::space::host>(x, y, y_init);
-  run_test_view_add<19, gt::space::host>(x, y, y_init);
-  run_test_view_add<20, gt::space::host>(x, y, y_init);
-  run_test_view_add<21, gt::space::host>(x, y, y_init);
-  run_test_view_add<22, gt::space::host>(x, y, y_init);
-  run_test_view_add<23, gt::space::host>(x, y, y_init);
+  Loop<0, 23, run_test_view_add_host>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_double)
@@ -372,60 +233,7 @@ TEST(mxp_truncated_mantissa, view_add_double)
   const gt::gtensor<double, 1> x(nx, x_init);
   /* */ gt::gtensor<double, 1> y(ny, y_init);
 
-  run_test_view_add<0, gt::space::host>(x, y, y_init);
-  run_test_view_add<1, gt::space::host>(x, y, y_init);
-  run_test_view_add<2, gt::space::host>(x, y, y_init);
-  run_test_view_add<3, gt::space::host>(x, y, y_init);
-  run_test_view_add<4, gt::space::host>(x, y, y_init);
-  run_test_view_add<5, gt::space::host>(x, y, y_init);
-  run_test_view_add<6, gt::space::host>(x, y, y_init);
-  run_test_view_add<7, gt::space::host>(x, y, y_init);
-  run_test_view_add<8, gt::space::host>(x, y, y_init);
-  run_test_view_add<9, gt::space::host>(x, y, y_init);
-  run_test_view_add<10, gt::space::host>(x, y, y_init);
-  run_test_view_add<11, gt::space::host>(x, y, y_init);
-  run_test_view_add<12, gt::space::host>(x, y, y_init);
-  run_test_view_add<13, gt::space::host>(x, y, y_init);
-  run_test_view_add<14, gt::space::host>(x, y, y_init);
-  run_test_view_add<15, gt::space::host>(x, y, y_init);
-  run_test_view_add<16, gt::space::host>(x, y, y_init);
-  run_test_view_add<17, gt::space::host>(x, y, y_init);
-  run_test_view_add<18, gt::space::host>(x, y, y_init);
-  run_test_view_add<19, gt::space::host>(x, y, y_init);
-  run_test_view_add<20, gt::space::host>(x, y, y_init);
-  run_test_view_add<21, gt::space::host>(x, y, y_init);
-  run_test_view_add<22, gt::space::host>(x, y, y_init);
-  run_test_view_add<23, gt::space::host>(x, y, y_init);
-  run_test_view_add<24, gt::space::host>(x, y, y_init);
-  run_test_view_add<25, gt::space::host>(x, y, y_init);
-  run_test_view_add<26, gt::space::host>(x, y, y_init);
-  run_test_view_add<27, gt::space::host>(x, y, y_init);
-  run_test_view_add<28, gt::space::host>(x, y, y_init);
-  run_test_view_add<29, gt::space::host>(x, y, y_init);
-  run_test_view_add<30, gt::space::host>(x, y, y_init);
-  run_test_view_add<31, gt::space::host>(x, y, y_init);
-  run_test_view_add<32, gt::space::host>(x, y, y_init);
-  run_test_view_add<33, gt::space::host>(x, y, y_init);
-  run_test_view_add<34, gt::space::host>(x, y, y_init);
-  run_test_view_add<35, gt::space::host>(x, y, y_init);
-  run_test_view_add<36, gt::space::host>(x, y, y_init);
-  run_test_view_add<37, gt::space::host>(x, y, y_init);
-  run_test_view_add<38, gt::space::host>(x, y, y_init);
-  run_test_view_add<39, gt::space::host>(x, y, y_init);
-  run_test_view_add<40, gt::space::host>(x, y, y_init);
-  run_test_view_add<41, gt::space::host>(x, y, y_init);
-  run_test_view_add<42, gt::space::host>(x, y, y_init);
-  run_test_view_add<43, gt::space::host>(x, y, y_init);
-  run_test_view_add<44, gt::space::host>(x, y, y_init);
-  run_test_view_add<45, gt::space::host>(x, y, y_init);
-  run_test_view_add<46, gt::space::host>(x, y, y_init);
-  run_test_view_add<47, gt::space::host>(x, y, y_init);
-  run_test_view_add<48, gt::space::host>(x, y, y_init);
-  run_test_view_add<49, gt::space::host>(x, y, y_init);
-  run_test_view_add<50, gt::space::host>(x, y, y_init);
-  run_test_view_add<51, gt::space::host>(x, y, y_init);
-  run_test_view_add<52, gt::space::host>(x, y, y_init);
-  run_test_view_add<53, gt::space::host>(x, y, y_init);
+  Loop<0, 52, run_test_view_add_host>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_float)
@@ -443,30 +251,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_float)
   const gt::gtensor<complex32_t, 1> x(nx, x_init);
   /* */ gt::gtensor<complex32_t, 1> y(ny, y_init);
 
-  run_test_view_add<0, gt::space::host>(x, y, y_init);
-  run_test_view_add<1, gt::space::host>(x, y, y_init);
-  run_test_view_add<2, gt::space::host>(x, y, y_init);
-  run_test_view_add<3, gt::space::host>(x, y, y_init);
-  run_test_view_add<4, gt::space::host>(x, y, y_init);
-  run_test_view_add<5, gt::space::host>(x, y, y_init);
-  run_test_view_add<6, gt::space::host>(x, y, y_init);
-  run_test_view_add<7, gt::space::host>(x, y, y_init);
-  run_test_view_add<8, gt::space::host>(x, y, y_init);
-  run_test_view_add<9, gt::space::host>(x, y, y_init);
-  run_test_view_add<10, gt::space::host>(x, y, y_init);
-  run_test_view_add<11, gt::space::host>(x, y, y_init);
-  run_test_view_add<12, gt::space::host>(x, y, y_init);
-  run_test_view_add<13, gt::space::host>(x, y, y_init);
-  run_test_view_add<14, gt::space::host>(x, y, y_init);
-  run_test_view_add<15, gt::space::host>(x, y, y_init);
-  run_test_view_add<16, gt::space::host>(x, y, y_init);
-  run_test_view_add<17, gt::space::host>(x, y, y_init);
-  run_test_view_add<18, gt::space::host>(x, y, y_init);
-  run_test_view_add<19, gt::space::host>(x, y, y_init);
-  run_test_view_add<20, gt::space::host>(x, y, y_init);
-  run_test_view_add<21, gt::space::host>(x, y, y_init);
-  run_test_view_add<22, gt::space::host>(x, y, y_init);
-  run_test_view_add<23, gt::space::host>(x, y, y_init);
+  Loop<0, 23, run_test_view_add_host>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_double)
@@ -487,58 +272,5 @@ TEST(mxp_truncated_mantissa, view_add_complex_double)
 
   gt_y.view() = y_init;
 
-  run_test_view_add<0, gt::space::host>(x, y, y_init);
-  run_test_view_add<1, gt::space::host>(x, y, y_init);
-  run_test_view_add<2, gt::space::host>(x, y, y_init);
-  run_test_view_add<3, gt::space::host>(x, y, y_init);
-  run_test_view_add<4, gt::space::host>(x, y, y_init);
-  run_test_view_add<5, gt::space::host>(x, y, y_init);
-  run_test_view_add<6, gt::space::host>(x, y, y_init);
-  run_test_view_add<7, gt::space::host>(x, y, y_init);
-  run_test_view_add<8, gt::space::host>(x, y, y_init);
-  run_test_view_add<9, gt::space::host>(x, y, y_init);
-  run_test_view_add<10, gt::space::host>(x, y, y_init);
-  run_test_view_add<11, gt::space::host>(x, y, y_init);
-  run_test_view_add<12, gt::space::host>(x, y, y_init);
-  run_test_view_add<13, gt::space::host>(x, y, y_init);
-  run_test_view_add<14, gt::space::host>(x, y, y_init);
-  run_test_view_add<15, gt::space::host>(x, y, y_init);
-  run_test_view_add<16, gt::space::host>(x, y, y_init);
-  run_test_view_add<17, gt::space::host>(x, y, y_init);
-  run_test_view_add<18, gt::space::host>(x, y, y_init);
-  run_test_view_add<19, gt::space::host>(x, y, y_init);
-  run_test_view_add<20, gt::space::host>(x, y, y_init);
-  run_test_view_add<21, gt::space::host>(x, y, y_init);
-  run_test_view_add<22, gt::space::host>(x, y, y_init);
-  run_test_view_add<23, gt::space::host>(x, y, y_init);
-  run_test_view_add<24, gt::space::host>(x, y, y_init);
-  run_test_view_add<25, gt::space::host>(x, y, y_init);
-  run_test_view_add<26, gt::space::host>(x, y, y_init);
-  run_test_view_add<27, gt::space::host>(x, y, y_init);
-  run_test_view_add<28, gt::space::host>(x, y, y_init);
-  run_test_view_add<29, gt::space::host>(x, y, y_init);
-  run_test_view_add<30, gt::space::host>(x, y, y_init);
-  run_test_view_add<31, gt::space::host>(x, y, y_init);
-  run_test_view_add<32, gt::space::host>(x, y, y_init);
-  run_test_view_add<33, gt::space::host>(x, y, y_init);
-  run_test_view_add<34, gt::space::host>(x, y, y_init);
-  run_test_view_add<35, gt::space::host>(x, y, y_init);
-  run_test_view_add<36, gt::space::host>(x, y, y_init);
-  run_test_view_add<37, gt::space::host>(x, y, y_init);
-  run_test_view_add<38, gt::space::host>(x, y, y_init);
-  run_test_view_add<39, gt::space::host>(x, y, y_init);
-  run_test_view_add<40, gt::space::host>(x, y, y_init);
-  run_test_view_add<41, gt::space::host>(x, y, y_init);
-  run_test_view_add<42, gt::space::host>(x, y, y_init);
-  run_test_view_add<43, gt::space::host>(x, y, y_init);
-  run_test_view_add<44, gt::space::host>(x, y, y_init);
-  run_test_view_add<45, gt::space::host>(x, y, y_init);
-  run_test_view_add<46, gt::space::host>(x, y, y_init);
-  run_test_view_add<47, gt::space::host>(x, y, y_init);
-  run_test_view_add<48, gt::space::host>(x, y, y_init);
-  run_test_view_add<49, gt::space::host>(x, y, y_init);
-  run_test_view_add<50, gt::space::host>(x, y, y_init);
-  run_test_view_add<51, gt::space::host>(x, y, y_init);
-  run_test_view_add<52, gt::space::host>(x, y, y_init);
-  run_test_view_add<53, gt::space::host>(x, y, y_init);
+  Loop<0, 52, run_test_view_add_host>::Run(x, y, y_init);
 }
