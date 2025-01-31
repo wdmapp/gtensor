@@ -7,7 +7,7 @@
 
 // __________________________________________________________________________ //
 
-namespace mxp
+namespace gt
 {
 
 // -------------------------------------------------------------------------- //
@@ -21,7 +21,7 @@ public:
   using self_type = mxp_span<T, N, S, X>;
   using base_type = gt::gtensor_span<T, N, S>;
   using expression_base_type = gt::expression<mxp_span<T, N, S, X>>;
-  using value_type = typename mxp::detail::ambivalent_t<X, T>;
+  using value_type = typename mxp_detail::ambivalent_t<X, T>;
 
   using typename base_type::pointer;
   using typename base_type::shape_type;
@@ -85,30 +85,30 @@ public:
 // -------------------------------------------------------------------------- //
 
 template <gt::size_type N, typename S, typename X, typename T>
-GT_INLINE auto adapt(gt::space_pointer<T, S> data,
-                     const gt::shape_type<N>& shape)
+GT_INLINE auto mxp_adapt(gt::space_pointer<T, S> data,
+                         const gt::shape_type<N>& shape)
 {
   return mxp_span<T, N, S, X>(data, shape, gt::calc_strides(shape));
 }
 
 // host
 template <gt::size_type N, typename X, typename T>
-GT_INLINE auto adapt(T* data, const gt::shape_type<N>& shape)
+GT_INLINE auto mxp_adapt(T* data, const gt::shape_type<N>& shape)
 {
-  return adapt<N, gt::space::host, X, T>(data, shape);
+  return mxp_adapt<N, gt::space::host, X, T>(data, shape);
 }
 
 // device
 template <gt::size_type N, typename X, typename T>
-GT_INLINE auto adapt_device(T* data, const gt::shape_type<N>& shape)
+GT_INLINE auto mxp_adapt_device(T* data, const gt::shape_type<N>& shape)
 {
-  return adapt<N, gt::space::device, X, T>(gt::device_pointer_cast(data),
-                                           shape);
+  return mxp_adapt<N, gt::space::device, X, T>(gt::device_pointer_cast(data),
+                                               shape);
 }
 
 // -------------------------------------------------------------------------- //
 
-}; // namespace mxp
+}; // namespace gt
 
 // __________________________________________________________________________ //
 

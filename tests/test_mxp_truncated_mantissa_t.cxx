@@ -70,9 +70,9 @@ struct run_test_add
     auto gt_y = gt::adapt<1, S>(y.data(), y.size());
     y.view() = y_init;
 
-    using mxp_type = mxp::truncated_mantissa_t<T, bits>;
-    const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
-    auto mxp_y = mxp::adapt<1, S, mxp_type>(y.data(), y.size());
+    using mxp_type = gt::mxp_truncated_mantissa_t<T, bits>;
+    const auto mxp_x = gt::mxp_adapt<1, S, mxp_type>(x.data(), x.size());
+    auto mxp_y = gt::mxp_adapt<1, S, mxp_type>(y.data(), y.size());
 
     mxp_y = mxp_y + mxp_x;
 
@@ -157,9 +157,9 @@ struct run_test_view_add
     auto gt_y = gt::adapt<1, S>(y.data(), y.size());
     y.view() = y_init;
 
-    using mxp_type = mxp::truncated_mantissa_t<T, bits>;
-    const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
-    auto mxp_y = mxp::adapt<1, S, mxp_type>(y.data(), y.size());
+    using mxp_type = gt::mxp_truncated_mantissa_t<T, bits>;
+    const auto mxp_x = gt::mxp_adapt<1, S, mxp_type>(x.data(), x.size());
+    auto mxp_y = gt::mxp_adapt<1, S, mxp_type>(y.data(), y.size());
 
     using gt::placeholders::_all;
     using gt::placeholders::_s;
@@ -252,9 +252,9 @@ struct run_test_view_2D_add
     auto gt_y = gt::adapt<2, S>(y.data(), y.shape());
     y.view() = y_init;
 
-    using mxp_type = mxp::truncated_mantissa_t<T, bits>;
-    const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
-    auto mxp_y = mxp::adapt<2, S, mxp_type>(y.data(), y.shape());
+    using mxp_type = gt::mxp_truncated_mantissa_t<T, bits>;
+    const auto mxp_x = gt::mxp_adapt<1, S, mxp_type>(x.data(), x.size());
+    auto mxp_y = gt::mxp_adapt<2, S, mxp_type>(y.data(), y.shape());
 
     using gt::placeholders::_all;
     using gt::placeholders::_s;
@@ -347,8 +347,8 @@ struct run_test_error_bounds
     auto hard_threshold =
       std::pow(2., -(bits + 1)) * (gt::is_complex_v<T> ? 1.42 : 1.);
 
-    using mxp_type = mxp::truncated_mantissa_t<T, bits>;
-    const auto mxp_x = mxp::adapt<1, S, mxp_type>(x.data(), x.size());
+    using mxp_type = gt::mxp_truncated_mantissa_t<T, bits>;
+    const auto mxp_x = gt::mxp_adapt<1, S, mxp_type>(x.data(), x.size());
     const auto gt_x = gt::adapt<1, S>(x.data(), x.size());
     auto gt_y = gt::adapt<1, S>(y.data(), y.size());
 

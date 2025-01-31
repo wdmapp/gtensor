@@ -8,12 +8,12 @@
 
 // __________________________________________________________________________ //
 
-namespace mxp
+namespace gt
 {
 
 // -------------------------------------------------------------------------- //
 
-namespace detail
+namespace mxp_detail
 {
 
 // -------------------------------------------------------------------------- //
@@ -21,7 +21,7 @@ namespace detail
 /*  ambivalent_t<CT, ST> below implements typecast compute_type() as:
     storage_type --> intermediate_compute_type --> compute_type
     for CT (complex) builtin, intermediate_compute_type = compute_type = CT
-    (intermediate_compute_type layer necessary for truncated_mantissa_t) */
+    (intermediate_compute_type layer necessary for mxp_truncated_mantissa_t) */
 
 // -------------------------------------------------------------------------- //
 
@@ -32,7 +32,7 @@ struct accessor
 };
 
 template <typename fp_t, std::uint8_t bits, typename ST>
-struct accessor<truncated_mantissa_t<fp_t, bits>, ST>
+struct accessor<mxp_truncated_mantissa_t<fp_t, bits>, ST>
 {
   typedef std::enable_if_t<
     std::is_same<std::decay_t<fp_t>, std::decay_t<ST>>::value,
@@ -49,7 +49,7 @@ using accessor_t = typename accessor<CT, ST>::type;
     doesn't know yet in which precision it will be used
     as this will depend on the operator context.
     Roughly, i.e., are you on LHS or on RHS of assignment?
-    It is designed s.t. mxp::mxp_span (mxp::adapt)
+    It is designed s.t. gt::mxp_span (gt::mxp_adapt)
     can be used for both, evaluation and assignment */
 
 // -------------------------------------------------------------------------- //
@@ -157,11 +157,11 @@ MAKE_AMBIVALENT_BINARY_OPERATOR(!=)
 
 // -------------------------------------------------------------------------- //
 
-} // namespace detail
+} // namespace mxp_detail
 
 // -------------------------------------------------------------------------- //
 
-} // namespace mxp
+} // namespace gt
 
 // __________________________________________________________________________ //
 

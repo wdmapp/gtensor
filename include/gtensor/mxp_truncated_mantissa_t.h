@@ -7,12 +7,12 @@
 
 // __________________________________________________________________________ //
 
-namespace mxp
+namespace gt
 {
 
 // __________________________________________________________________________ //
 
-namespace detail
+namespace mxp_detail
 {
 
 template <typename fp_t>
@@ -98,10 +98,8 @@ struct componentwise
 template <typename fp_t, std::uint8_t bits>
 struct mantissa_bits_available
   : public std::conditional_t<
-      (detail::is_decay_float<detail::decay_strip_complex_t<fp_t>> &&
-       (bits <= 23)) ||
-        (detail::is_decay_double<detail::decay_strip_complex_t<fp_t>> &&
-         (bits <= 52)),
+      (is_decay_float<decay_strip_complex_t<fp_t>> && (bits <= 23)) ||
+        (is_decay_double<decay_strip_complex_t<fp_t>> && (bits <= 52)),
       std::true_type, std::false_type>
 {};
 
@@ -111,23 +109,23 @@ constexpr bool mantissa_bits_available_v =
 
 // -------------------------------------------------------------------------- //
 
-} // namespace detail
+} // namespace mxp_detail
 
 // __________________________________________________________________________ //
 
 template <typename fp_t, std::uint8_t bits>
-class truncated_mantissa_t
+class mxp_truncated_mantissa_t
 {
 public:
   using enclosing_fp_t = std::decay_t<fp_t>;
   using underlying_fp_t =
-    std::enable_if_t<detail::mantissa_bits_available_v<fp_t, bits>,
-                     detail::decay_strip_complex_t<fp_t>>;
-  using uint_t = detail::uint_t<underlying_fp_t>;
+    std::enable_if_t<mxp_detail::mantissa_bits_available_v<fp_t, bits>,
+                     mxp_detail::decay_strip_complex_t<fp_t>>;
+  using uint_t = mxp_detail::uint_t<underlying_fp_t>;
 
   // ------------------------------------------------------------------------ //
 
-  GT_INLINE truncated_mantissa_t(const fp_t& FP_src) : FP_src_(FP_src) {}
+  GT_INLINE mxp_truncated_mantissa_t(const fp_t& FP_src) : FP_src_(FP_src) {}
 
   // ------------------------------------------------------------------------ //
   // the only type cast guarantees computations
@@ -139,7 +137,8 @@ public:
   // returns value rounded to truncated mantissa
   GT_INLINE operator enclosing_fp_t() const
   {
-    return detail::componentwise::apply(get_truncated_mantissa_value, FP_src_);
+    return mxp_detail::componentwise::apply(get_truncated_mantissa_value,
+                                            FP_src_);
   }
 
   // ------------------------------------------------------------------------ //
@@ -157,15 +156,15 @@ private:
 
     // binary BIN_oneexp: S E...E (1)0...0
     // [S, E like src; mantissa: implicit one, then all zeroes]
-    uint_t BIN_oneexp{(detail::sign_mask<underlying_fp_t> |
-                       detail::exponent_mask<underlying_fp_t>)&BIN_src};
+    uint_t BIN_oneexp{(mxp_detail::sign_mask<underlying_fp_t> |
+                       mxp_detail::exponent_mask<underlying_fp_t>)&BIN_src};
     underlying_fp_t FP_oneexp;
     std::memcpy(&FP_oneexp, &BIN_oneexp, sizeof(underlying_fp_t));
 
     // binary BIN_rounding: S E...E (1)0...01...1
     // [S, E like src; mantissa: implicit one, bits+1 zeroes, then all ones]
-    uint_t BIN_rounding{BIN_oneexp |
-                        detail::reduced_rounding_mask<underlying_fp_t, bits>};
+    uint_t BIN_rounding{
+      BIN_oneexp | mxp_detail::reduced_rounding_mask<underlying_fp_t, bits>};
     underlying_fp_t FP_rounding;
     std::memcpy(&FP_rounding, &BIN_rounding, sizeof(underlying_fp_t));
 
@@ -176,9 +175,9 @@ private:
 
     // truncate mantissa to length 'bits'
     uint_t BIN_result{
-      (detail::sign_mask<underlying_fp_t> |
-       detail::exponent_mask<underlying_fp_t> |
-       detail::reduced_mantissa_mask<underlying_fp_t, bits>)&BIN_tmp};
+      (mxp_detail::sign_mask<underlying_fp_t> |
+       mxp_detail::exponent_mask<underlying_fp_t> |
+       mxp_detail::reduced_mantissa_mask<underlying_fp_t, bits>)&BIN_tmp};
 
     underlying_fp_t FP_result;
     std::memcpy(&FP_result, &BIN_result, sizeof(underlying_fp_t));
@@ -190,7 +189,7 @@ private:
 
 // -------------------------------------------------------------------------- //
 
-} // namespace mxp
+} // namespace gt
 
 // __________________________________________________________________________ //
 
