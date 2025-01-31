@@ -20,7 +20,8 @@ namespace detail
 
 /*  ambivalent_t<CT, ST> below implements typecast compute_type() as:
     storage_type --> intermediate_compute_type --> compute_type
-    for CT builtin, intermediate_compute_type = compute_type = CT */
+    for CT (complex) builtin, intermediate_compute_type = compute_type = CT
+    (intermediate_compute_type layer necessary for truncated_mantissa_t) */
 
 // -------------------------------------------------------------------------- //
 
@@ -63,14 +64,12 @@ public:
 
   // ------------------------------------------------------------------------ //
 
-  // construct from reference
   GT_INLINE explicit ambivalent_t(storage_type& value_ref)
     : value_ref_(value_ref)
   {}
 
   // ------------------------------------------------------------------------ //
 
-  // (compound) assignment ops [=, +=, -=, *=, /=]
 #define DEFINE_ASSIGNMENT_OPERATOR(op)                                         \
   template <typename T>                                                        \
   GT_INLINE ambivalent_t& operator op(const T& rhs)                            \
