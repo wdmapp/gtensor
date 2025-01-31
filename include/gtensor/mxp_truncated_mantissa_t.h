@@ -62,32 +62,19 @@ constexpr uint_t<fp_t> reduced_rounding_mask{mantissa_mask<fp_t> >> (bits + 1)};
 // -------------------------------------------------------------------------- //
 
 template <typename fp_t>
-struct is_decay_complex : std::false_type
-{};
-
-template <typename fp_t>
-struct is_decay_complex<gt::complex<fp_t>> : std::true_type
-{};
-
-template <typename fp_t>
-constexpr bool is_decay_complex_v{is_decay_complex<fp_t>::value};
-
-// -------------------------------------------------------------------------- //
-
-template <typename fp_t>
-struct strip_decay_complex
+struct decay_strip_complex
 {
   typedef std::decay_t<fp_t> type;
 };
 
 template <typename fp_t>
-struct strip_decay_complex<gt::complex<fp_t>>
+struct decay_strip_complex<gt::complex<fp_t>>
 {
   typedef std::decay_t<fp_t> type;
 };
 
 template <typename fp_t>
-using strip_decay_complex_t = typename strip_decay_complex<fp_t>::type;
+using decay_strip_complex_t = typename decay_strip_complex<fp_t>::type;
 
 // -------------------------------------------------------------------------- //
 
@@ -111,9 +98,9 @@ struct componentwise
 template <typename fp_t, std::uint8_t bits>
 struct mantissa_bits_available
   : public std::conditional_t<
-      (detail::is_decay_float<detail::strip_decay_complex_t<fp_t>> &&
+      (detail::is_decay_float<detail::decay_strip_complex_t<fp_t>> &&
        (bits <= 23)) ||
-        (detail::is_decay_double<detail::strip_decay_complex_t<fp_t>> &&
+        (detail::is_decay_double<detail::decay_strip_complex_t<fp_t>> &&
          (bits <= 52)),
       std::true_type, std::false_type>
 {};
@@ -135,7 +122,7 @@ public:
   using enclosing_fp_t = std::decay_t<fp_t>;
   using underlying_fp_t =
     std::enable_if_t<detail::mantissa_bits_available_v<fp_t, bits>,
-                     detail::strip_decay_complex_t<fp_t>>;
+                     detail::decay_strip_complex_t<fp_t>>;
   using uint_t = detail::uint_t<underlying_fp_t>;
 
   // ------------------------------------------------------------------------ //
@@ -144,7 +131,7 @@ public:
 
   // ------------------------------------------------------------------------ //
   // the only type cast guarantees computations
-  // desired precision (underlying_fp_t) after rounding mantissa on read-access
+  // desired precision (enclosing_fp_t) after rounding mantissa on read-access
 
   template <typename T>
   GT_INLINE explicit operator T() const = delete;
