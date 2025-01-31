@@ -108,6 +108,22 @@ struct componentwise
 
 // -------------------------------------------------------------------------- //
 
+template <typename fp_t, std::uint8_t bits>
+struct mantissa_bits_available
+  : public std::conditional_t<
+      (detail::is_decay_float<detail::strip_decay_complex_t<fp_t>> &&
+       (bits <= 23)) ||
+        (detail::is_decay_double<detail::strip_decay_complex_t<fp_t>> &&
+         (bits <= 52)),
+      std::true_type, std::false_type>
+{};
+
+template <typename fp_t, std::uint8_t bits>
+constexpr bool mantissa_bits_available_v =
+  mantissa_bits_available<fp_t, bits>::value;
+
+// -------------------------------------------------------------------------- //
+
 } // namespace detail
 
 // __________________________________________________________________________ //
@@ -117,7 +133,9 @@ class truncated_mantissa_t
 {
 public:
   using enclosing_fp_t = std::decay_t<fp_t>;
-  using underlying_fp_t = detail::strip_decay_complex_t<fp_t>;
+  using underlying_fp_t =
+    std::enable_if_t<detail::mantissa_bits_available_v<fp_t, bits>,
+                     detail::strip_decay_complex_t<fp_t>>;
   using uint_t = detail::uint_t<underlying_fp_t>;
 
   // ------------------------------------------------------------------------ //
