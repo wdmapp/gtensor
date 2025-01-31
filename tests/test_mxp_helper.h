@@ -1,10 +1,13 @@
-#ifndef GTENSOR_TEST_MXT_HELPER_H
-#define GTENSOR_TEST_MXT_HELPER_H
+#ifndef GTENSOR_TEST_MXP_HELPER_H
+#define GTENSOR_TEST_MXP_HELPER_H
 
 #include <cstdint>
 #include <type_traits>
 
 // -------------------------------------------------------------------------- //
+
+// auxiliary to loop over compile time <bits>
+// in test_mxp_truncated_mantissa_t.cxx
 
 template <std::uint8_t From, std::uint8_t To, typename Task>
 struct Loop
@@ -29,4 +32,4 @@ struct Loop<Final, Final, Task>
 
 // -------------------------------------------------------------------------- //
 
-#endif // GTENSOR_TEST_MXT_HELPER_H
+#endif // GTENSOR_TEST_MXP_HELPER_H
