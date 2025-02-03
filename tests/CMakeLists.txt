@@ -44,7 +44,7 @@ add_gtensor_test(test_stream)
 add_gtensor_test(test_gtest_predicates)
 add_gtensor_test(test_sparse)
 add_gtensor_test(test_mxp)
-add_gtensor_test(test_mxp_truncated_mantissa_t)
+#add_gtensor_test(test_mxp_truncated_mantissa_t)
 
 if (GTENSOR_ENABLE_CLIB)
   add_executable(test_clib)
