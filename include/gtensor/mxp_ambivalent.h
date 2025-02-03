@@ -155,6 +155,30 @@ MAKE_AMBIVALENT_BINARY_OPERATOR(!=)
 
 #undef MAKE_AMBIVALENT_BINARY_OPERATOR
 
+// .../thrust/detail/complex/complex.inl provides operator==(T0&, complex<T1>&)
+// which leads to ambiguity with operator==(ambivalent_t<CT, ST>&, T&) above
+#define MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR(op)              \
+  template <typename T, typename CT, typename ST>                              \
+  GT_INLINE auto operator op(const gt::complex<T>& lhs,                        \
+                             const ambivalent_t<CT, ST>& rhs)                  \
+  {                                                                            \
+    using A_compute_t = typename ambivalent_t<CT, ST>::compute_type;           \
+    return lhs op A_compute_t(rhs);                                            \
+  }                                                                            \
+                                                                               \
+  template <typename CT, typename ST, typename T>                              \
+  GT_INLINE auto operator op(const ambivalent_t<CT, ST>& lhs,                  \
+                             const gt::complex<T>& rhs)                        \
+  {                                                                            \
+    using A_compute_t = typename ambivalent_t<CT, ST>::compute_type;           \
+    return A_compute_t(lhs) op rhs;                                            \
+  }
+
+MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR(==)
+MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR(!=)
+
+#undef MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR
+
 // -------------------------------------------------------------------------- //
 
 } // namespace mxp_detail
