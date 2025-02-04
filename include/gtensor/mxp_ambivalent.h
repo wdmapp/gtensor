@@ -2,7 +2,11 @@
 #define MXP_AMBIVALENT_H
 
 #include "mxp_truncated_mantissa_t.h"
+
+#ifdef GTENSOR_HAVE_THRUST
 #include "thrust_ext.h"
+#endif // GTENSOR_HAVE_THRUST
+
 #include <cstdint>
 #include <iostream>
 #include <type_traits>
@@ -36,9 +40,14 @@ template <typename fp_t, std::uint8_t bits, typename ST>
 struct accessor<mxp_truncated_mantissa_t<fp_t, bits>, ST>
 {
   typedef std::enable_if_t<
-    std::is_same<
-      std::decay_t<fp_t>,
-      std::decay_t<thrust::ext::remove_device_reference_t<ST>>>::value,
+    std::is_same<std::decay_t<fp_t>,
+                 std::decay_t<
+#ifdef GTENSOR_HAVE_THRUST
+                   thrust::ext::remove_device_reference_t<ST>
+#else
+                   ST
+#endif // GTENSOR_HAVE_THRUST
+                   >>::value,
     std::decay_t<fp_t>>
     type;
 };
@@ -56,11 +65,13 @@ struct to_value
     return arg;
   }
 
+#ifdef GTENSOR_HAVE_THRUST
   template <typename T>
   GT_INLINE static auto apply(const thrust::device_reference<T>& arg)
   {
     return static_cast<typename thrust::device_reference<T>::value_type>(arg);
   }
+#endif // GTENSOR_HAVE_THRUST
 };
 
 // -------------------------------------------------------------------------- //
@@ -78,8 +89,13 @@ template <typename CT, typename ST>
 class ambivalent_t
 {
 public:
-  using storage_reference_type =
-    std::conditional_t<thrust::ext::is_device_reference<ST>::value, ST, ST&>;
+  using storage_reference_type = std::conditional_t<
+#ifdef GTENSOR_HAVE_THRUST
+    thrust::ext::is_device_reference<ST>::value,
+#else
+    false,
+#endif // GTENSOR_HAVE_THRUST
+    ST, ST&>;
   using intermediate_compute_type = CT;
   using compute_type = accessor_t<CT, ST>;
 
@@ -176,6 +192,7 @@ MAKE_AMBIVALENT_BINARY_OPERATOR(!=)
 
 #undef MAKE_AMBIVALENT_BINARY_OPERATOR
 
+#ifdef GTENSOR_HAVE_THRUST
 // .../thrust/detail/complex/complex.inl provides operator==(T0&, complex<T1>&)
 // which leads to ambiguity with operator==(ambivalent_t<CT, ST>&, T&) above
 #define MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR(op)              \
@@ -199,6 +216,7 @@ MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR(==)
 MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR(!=)
 
 #undef MAKE_AMBIVALENT_GT_COMPLEX_BINARY_COMPARISON_OPERATOR
+#endif // GTENSOR_HAVE_THRUST
 
 // -------------------------------------------------------------------------- //
 
