@@ -21,11 +21,14 @@ public:
   using self_type = mxp_span<T, N, S, X>;
   using base_type = gt::gtensor_span<T, N, S>;
   using expression_base_type = gt::expression<mxp_span<T, N, S, X>>;
-  using value_type = typename mxp_detail::ambivalent_t<X, T>;
 
   using typename base_type::pointer;
   using typename base_type::shape_type;
   using typename base_type::strides_type;
+
+  using value_type = typename mxp_detail::ambivalent_t<
+    X, decltype(base_type(std::declval<pointer>(), std::declval<shape_type>(),
+                          std::declval<strides_type>())())>;
 
   // ------------------------------------------------------------------------ //
 

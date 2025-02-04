@@ -2,6 +2,7 @@
 #define MXP_AMBIVALENT_H
 
 #include "mxp_truncated_mantissa_t.h"
+#include "thrust_ext.h"
 #include <cstdint>
 #include <iostream>
 #include <type_traits>
@@ -35,13 +36,32 @@ template <typename fp_t, std::uint8_t bits, typename ST>
 struct accessor<mxp_truncated_mantissa_t<fp_t, bits>, ST>
 {
   typedef std::enable_if_t<
-    std::is_same<std::decay_t<fp_t>, std::decay_t<ST>>::value,
+    std::is_same<
+      std::decay_t<fp_t>,
+      std::decay_t<thrust::ext::remove_device_reference_t<ST>>>::value,
     std::decay_t<fp_t>>
     type;
 };
 
 template <typename CT, typename ST>
 using accessor_t = typename accessor<CT, ST>::type;
+
+// -------------------------------------------------------------------------- //
+
+struct to_value
+{
+  template <typename T>
+  GT_INLINE static T apply(const T& arg)
+  {
+    return arg;
+  }
+
+  template <typename T>
+  GT_INLINE static auto apply(const thrust::device_reference<T>& arg)
+  {
+    return static_cast<typename thrust::device_reference<T>::value_type>(arg);
+  }
+};
 
 // -------------------------------------------------------------------------- //
 
@@ -58,13 +78,14 @@ template <typename CT, typename ST>
 class ambivalent_t
 {
 public:
-  using storage_type = ST;
+  using storage_reference_type =
+    std::conditional_t<thrust::ext::is_device_reference<ST>::value, ST, ST&>;
   using intermediate_compute_type = CT;
   using compute_type = accessor_t<CT, ST>;
 
   // ------------------------------------------------------------------------ //
 
-  GT_INLINE explicit ambivalent_t(storage_type& value_ref)
+  GT_INLINE explicit ambivalent_t(storage_reference_type value_ref)
     : value_ref_(value_ref)
   {}
 
@@ -93,13 +114,13 @@ public:
 
   GT_INLINE operator compute_type() const
   {
-    return static_cast<intermediate_compute_type>(value_ref_);
+    return static_cast<intermediate_compute_type>(to_value::apply(value_ref_));
   }
 
   // ------------------------------------------------------------------------ //
 
 private:
-  storage_type& value_ref_;
+  storage_reference_type value_ref_;
 };
 
 // -------------------------------------------------------------------------- //
