@@ -512,7 +512,7 @@ TEST(mxp, complex_op_divide_implicit)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
   const double lb_err_expect_gt = 1.98e-07;
 #else
   const double lb_err_expect_gt = 2.7e-07;
@@ -578,7 +578,7 @@ TEST(mxp, complex_op_divide_explicit)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
   const double lb_err_expect_gt = 1.98e-07;
 #else
   const double lb_err_expect_gt = 2.7e-07;
@@ -1003,7 +1003,7 @@ TEST(mxp, view_complex_op_divide)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
   const double lb_err_expect_gt = 1.98e-07;
 #else
   const double lb_err_expect_gt = 2.7e-07;
@@ -1514,7 +1514,7 @@ TEST(mxp, device_complex_op_divide_implicit)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
   const double lb_err_expect_gt = 1.98e-07;
 #else
   const double lb_err_expect_gt = 2.7e-07;
@@ -1561,7 +1561,7 @@ TEST(mxp, device_complex_op_divide_explicit)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
   const double lb_err_expect_gt = 1.98e-07;
 #else
   const double lb_err_expect_gt = 2.7e-07;
@@ -2009,7 +2009,7 @@ TEST(mxp, device_view_complex_op_divide)
   double invval = 1. / val;
   double ref = val / invval / invval;
 
-#ifdef GTENSOR_DEVICE_CUDA
+#if defined(GTENSOR_DEVICE_CUDA) || defined(GTENSOR_DEVICE_HIP)
   const double lb_err_expect_gt = 1.98e-07;
 #else
   const double lb_err_expect_gt = 2.7e-07;
