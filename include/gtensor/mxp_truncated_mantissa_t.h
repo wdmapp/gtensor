@@ -78,23 +78,6 @@ using decay_strip_complex_t = typename decay_strip_complex<fp_t>::type;
 
 // -------------------------------------------------------------------------- //
 
-struct componentwise
-{
-  template <typename F, typename Real>
-  GT_INLINE static Real apply(F&& f, const Real& arg)
-  {
-    return f(arg);
-  }
-
-  template <typename F, typename Real>
-  GT_INLINE static gt::complex<Real> apply(F&& f, const gt::complex<Real>& arg)
-  {
-    return {f(arg.real()), f(arg.imag())};
-  }
-};
-
-// -------------------------------------------------------------------------- //
-
 template <typename fp_t, std::uint8_t bits>
 struct mantissa_bits_available
   : public std::conditional_t<
@@ -137,8 +120,7 @@ public:
   // returns value rounded to truncated mantissa
   GT_INLINE operator enclosing_fp_t() const
   {
-    return mxp_detail::componentwise::apply(get_truncated_mantissa_value,
-                                            FP_src_);
+    return get_truncated_mantissa_value(FP_src_);
   }
 
   // ------------------------------------------------------------------------ //
@@ -148,8 +130,26 @@ private:
 
   // ------------------------------------------------------------------------ //
 
+  template <typename Real>
+  static GT_INLINE enclosing_fp_t get_truncated_mantissa_value(const Real& arg)
+  {
+    return get_truncated_mantissa_value_impl(arg);
+  }
+
+  // ------------------------------------------------------------------------ //
+
+  template <typename Real>
+  static GT_INLINE enclosing_fp_t
+  get_truncated_mantissa_value(const gt::complex<Real>& arg)
+  {
+    return {get_truncated_mantissa_value_impl(arg.real()),
+            get_truncated_mantissa_value_impl(arg.imag())};
+  }
+
+  // ------------------------------------------------------------------------ //
+
   static GT_INLINE underlying_fp_t
-  get_truncated_mantissa_value(const underlying_fp_t& FP_src)
+  get_truncated_mantissa_value_impl(const underlying_fp_t& FP_src)
   {
     uint_t BIN_src;
     general_memcpy_single_val(&FP_src, &BIN_src);
