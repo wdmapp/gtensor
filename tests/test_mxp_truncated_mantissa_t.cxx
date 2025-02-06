@@ -369,7 +369,8 @@ TEST(mxp_truncated_mantissa, error_bounds_float)
   std::srand(time(nullptr));
   for (int j = 0; j < x.size(); ++j)
     x(j) = 1.f + 1.f * std::rand() /
-                   std::numeric_limits<decltype(std::rand())>::max();
+                   static_cast<float>(
+                     std::numeric_limits<decltype(std::rand())>::max());
 
   Loop<0, 23, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
@@ -383,8 +384,9 @@ TEST(mxp_truncated_mantissa, error_bounds_double)
 
   std::srand(time(nullptr));
   for (int j = 0; j < x.size(); ++j)
-    x(j) =
-      1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max();
+    x(j) = 1. + 1. * std::rand() /
+                  static_cast<double>(
+                    std::numeric_limits<decltype(std::rand())>::max());
 
   Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
@@ -402,9 +404,11 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_float)
   for (int j = 0; j < x.size(); ++j)
     x(j) =
       complex32_t{1.f + 1.f * std::rand() /
-                          std::numeric_limits<decltype(std::rand())>::max(),
+                          static_cast<float>(
+                            std::numeric_limits<decltype(std::rand())>::max()),
                   1.f + 1.f * std::rand() /
-                          std::numeric_limits<decltype(std::rand())>::max()};
+                          static_cast<float>(
+                            std::numeric_limits<decltype(std::rand())>::max())};
 
   Loop<0, 23, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
@@ -420,10 +424,13 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_double)
 
   std::srand(time(nullptr));
   for (int j = 0; j < x.size(); ++j)
-    x(j) = complex64_t{
-      1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max(),
-      1. +
-        1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max()};
+    x(j) =
+      complex64_t{1. + 1. * std::rand() /
+                         static_cast<double>(
+                           std::numeric_limits<decltype(std::rand())>::max()),
+                  1. + 1. * std::rand() /
+                         static_cast<double>(
+                           std::numeric_limits<decltype(std::rand())>::max())};
 
   Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
@@ -645,7 +652,8 @@ TEST(mxp_truncated_mantissa, device_error_bounds_float)
   std::srand(time(nullptr));
   for (int j = 0; j < h_x.size(); ++j)
     h_x(j) = 1.f + 1.f * std::rand() /
-                     std::numeric_limits<decltype(std::rand())>::max();
+                     static_cast<float>(
+                       std::numeric_limits<decltype(std::rand())>::max());
 
   gt::gtensor_device<float, 1> x(n);
   gt::gtensor_device<float, 1> y(n);
@@ -662,8 +670,9 @@ TEST(mxp_truncated_mantissa, device_error_bounds_double)
 
   std::srand(time(nullptr));
   for (int j = 0; j < h_x.size(); ++j)
-    h_x(j) =
-      1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max();
+    h_x(j) = 1. + 1. * std::rand() /
+                    static_cast<double>(
+                      std::numeric_limits<decltype(std::rand())>::max());
 
   gt::gtensor_device<double, 1> x(n);
   gt::gtensor_device<double, 1> y(n);
@@ -684,9 +693,11 @@ TEST(mxp_truncated_mantissa, device_error_bounds_complex_float)
   for (int j = 0; j < h_x.size(); ++j)
     h_x(j) =
       complex32_t{1.f + 1.f * std::rand() /
-                          std::numeric_limits<decltype(std::rand())>::max(),
+                          static_cast<float>(
+                            std::numeric_limits<decltype(std::rand())>::max()),
                   1.f + 1.f * std::rand() /
-                          std::numeric_limits<decltype(std::rand())>::max()};
+                          static_cast<float>(
+                            std::numeric_limits<decltype(std::rand())>::max())};
 
   gt::gtensor_device<complex32_t, 1> x(n);
   gt::gtensor_device<complex32_t, 1> y(n);
@@ -705,10 +716,13 @@ TEST(mxp_truncated_mantissa, device_error_bounds_complex_double)
 
   std::srand(time(nullptr));
   for (int j = 0; j < h_x.size(); ++j)
-    h_x(j) = complex64_t{
-      1. + 1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max(),
-      1. +
-        1. * std::rand() / std::numeric_limits<decltype(std::rand())>::max()};
+    h_x(j) =
+      complex64_t{1. + 1. * std::rand() /
+                         static_cast<double>(
+                           std::numeric_limits<decltype(std::rand())>::max()),
+                  1. + 1. * std::rand() /
+                         static_cast<double>(
+                           std::numeric_limits<decltype(std::rand())>::max())};
 
   gt::gtensor_device<complex64_t, 1> x(n);
   gt::gtensor_device<complex64_t, 1> y(n);
