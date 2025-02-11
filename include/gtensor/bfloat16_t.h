@@ -7,6 +7,9 @@
 #if __has_include(<cuda_bf16.h>)
 #include <cuda_bf16.h>
 #define GTENSOR_BF16_CUDA_HEADER
+#elif __has_include(<hip/hip_bf16.h>)
+#include <hip/hip_bf16.h>
+#define GTENSOR_BF16_HIP_HEADER
 #elif 0 // TODO check if other bf16 type available
 #else
 #error "GTENSOR_ENABLE_BF16=ON, but no bfloat16 type available!"
@@ -25,6 +28,8 @@ class bfloat16_t
 
 #if defined(GTENSOR_BF16_CUDA_HEADER)
   using storage_type = __nv_bfloat16;
+#elif defined(GTENSOR_BF16_HIP_HEADER)
+  using storage_type = __hip_bfloat16;
 #else
 #error "GTENSOR_ENABLE_BF16=ON, but no bfloat16 type available!"
 #endif
@@ -32,7 +37,10 @@ class bfloat16_t
 #if defined(GTENSOR_BF16_CUDA_HEADER) && defined(__CUDA_ARCH__) &&             \
   (__CUDA_ARCH__ >= 800)
   using compute_type = __nv_bfloat16;
-#define BFLOAT16T_ON_CUDA_DEVICE
+#define BFLOAT16T_ON_DEVICE
+#elif defined(GTENSOR_BF16_HIP_HEADER) && defined(__HIP_DEVICE_COMPILE__)
+  using compute_type = __hip_bfloat16;
+#define BFLOAT16T_ON_DEVICE
 #else
   using compute_type = float;
 #endif
@@ -52,7 +60,7 @@ public:
   // update operators [+=, -=, *=, /=]
   GT_INLINE bfloat16_t operator+=(const bfloat16_t& y)
   {
-#if defined(BFLOAT16T_ON_CUDA_DEVICE)
+#if defined(BFLOAT16T_ON_DEVICE)
     x += y.Get();
 #else
     x = this->Get() + y.Get();
@@ -61,7 +69,7 @@ public:
   }
   GT_INLINE bfloat16_t operator-=(const bfloat16_t& y)
   {
-#if defined(BFLOAT16T_ON_CUDA_DEVICE)
+#if defined(BFLOAT16T_ON_DEVICE)
     x -= y.Get();
 #else
     x = this->Get() - y.Get();
@@ -70,7 +78,7 @@ public:
   }
   GT_INLINE bfloat16_t operator*=(const bfloat16_t& y)
   {
-#if defined(BFLOAT16T_ON_CUDA_DEVICE)
+#if defined(BFLOAT16T_ON_DEVICE)
     x *= y.Get();
 #else
     x = this->Get() * y.Get();
@@ -79,7 +87,7 @@ public:
   }
   GT_INLINE bfloat16_t operator/=(const bfloat16_t& y)
   {
-#if defined(BFLOAT16T_ON_CUDA_DEVICE)
+#if defined(BFLOAT16T_ON_DEVICE)
     x /= y.Get();
 #else
     x = this->Get() / y.Get();
@@ -200,7 +208,7 @@ PROVIDE_MIXED_INTEGRAL_BFLOAT16T_COMPARISON_OPERATOR(!=, int);
 // function is sqrt
 GT_INLINE bfloat16_t sqrt(const bfloat16_t& x)
 {
-#if defined(BFLOAT16T_ON_CUDA_DEVICE)
+#if defined(BFLOAT16T_ON_DEVICE)
   return hsqrt(x.Get());
 #else
   return std::sqrt(x.Get());
@@ -216,7 +224,8 @@ std::ostream& operator<<(std::ostream& s, const bfloat16_t& h)
 } // namespace gt
 
 #undef GTENSOR_BF16_CUDA_HEADER
-#undef BFLOAT16T_ON_CUDA_DEVICE
+#undef GTENSOR_BF16_HIP_HEADER
+#undef BFLOAT16T_ON_DEVICE
 #undef PROVIDE_BFLOAT16T_UNARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_MIXED_BFLOAT16T_BINARY_ARITHMETIC_OPERATOR
