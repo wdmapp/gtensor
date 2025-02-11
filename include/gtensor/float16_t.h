@@ -37,10 +37,10 @@ class float16_t
 #if defined(GTENSOR_FP16_CUDA_HEADER) && defined(__CUDA_ARCH__) &&             \
   (__CUDA_ARCH__ >= 530)
   using compute_type = __half;
-#define FLOAT16T_ON_CUDA_DEVICE
+#define FLOAT16T_ON_DEVICE
 #elif defined(GTENSOR_FP16_HIP_HEADER) && defined(__HIP_DEVICE_COMPILE__)
   using compute_type = __half;
-#define FLOAT16T_ON_HIP_DEVICE
+#define FLOAT16T_ON_DEVICE
 #else
   using compute_type = float;
 #endif
@@ -60,7 +60,7 @@ public:
   // update operators [+=, -=, *=, /=]
   GT_INLINE float16_t operator+=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
+#if defined(FLOAT16T_ON_DEVICE)
     x += y.Get();
 #else
     x = this->Get() + y.Get();
@@ -69,7 +69,7 @@ public:
   }
   GT_INLINE float16_t operator-=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
+#if defined(FLOAT16T_ON_DEVICE)
     x -= y.Get();
 #else
     x = this->Get() - y.Get();
@@ -78,7 +78,7 @@ public:
   }
   GT_INLINE float16_t operator*=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
+#if defined(FLOAT16T_ON_DEVICE)
     x *= y.Get();
 #else
     x = this->Get() * y.Get();
@@ -87,7 +87,7 @@ public:
   }
   GT_INLINE float16_t operator/=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
+#if defined(FLOAT16T_ON_DEVICE)
     x /= y.Get();
 #else
     x = this->Get() / y.Get();
@@ -207,7 +207,7 @@ PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(!=, int);
 // function is sqrt
 GT_INLINE float16_t sqrt(const float16_t& x)
 {
-#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
+#if defined(FLOAT16T_ON_DEVICE)
   return hsqrt(x.Get());
 #else
   return std::sqrt(x.Get());
@@ -224,8 +224,7 @@ std::ostream& operator<<(std::ostream& s, const float16_t& h)
 
 #undef GTENSOR_FP16_CUDA_HEADER
 #undef GTENSOR_FP16_HIP_HEADER
-#undef FLOAT16T_ON_CUDA_DEVICE
-#undef FLOAT16T_ON_HIP_DEVICE
+#undef FLOAT16T_ON_DEVICE
 #undef PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_MIXED_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
