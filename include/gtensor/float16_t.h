@@ -7,6 +7,9 @@
 #if __has_include(<cuda_fp16.h>)
 #include <cuda_fp16.h>
 #define GTENSOR_FP16_CUDA_HEADER
+#elif __has_include(<hip/hip_fp16.h>)
+#include <hip/hip_fp16.h>
+#define GTENSOR_FP16_HIP_HEADER
 #elif 0 // TODO check if other fp16 type available, e.g., _Float16
 #else
 #error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
@@ -25,6 +28,8 @@ class float16_t
 
 #if defined(GTENSOR_FP16_CUDA_HEADER)
   using storage_type = __half;
+#elif defined(GTENSOR_FP16_HIP_HEADER)
+  using storage_type = __half;
 #else
 #error "GTENSOR_ENABLE_FP16=ON, but no 16-bit FP type available!"
 #endif
@@ -33,6 +38,9 @@ class float16_t
   (__CUDA_ARCH__ >= 530)
   using compute_type = __half;
 #define FLOAT16T_ON_CUDA_DEVICE
+#elif defined(GTENSOR_FP16_HIP_HEADER) && defined(__HIP_DEVICE_COMPILE__)
+  using compute_type = __half;
+#define FLOAT16T_ON_HIP_DEVICE
 #else
   using compute_type = float;
 #endif
@@ -52,7 +60,7 @@ public:
   // update operators [+=, -=, *=, /=]
   GT_INLINE float16_t operator+=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE)
+#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
     x += y.Get();
 #else
     x = this->Get() + y.Get();
@@ -61,7 +69,7 @@ public:
   }
   GT_INLINE float16_t operator-=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE)
+#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
     x -= y.Get();
 #else
     x = this->Get() - y.Get();
@@ -70,7 +78,7 @@ public:
   }
   GT_INLINE float16_t operator*=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE)
+#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
     x *= y.Get();
 #else
     x = this->Get() * y.Get();
@@ -79,7 +87,7 @@ public:
   }
   GT_INLINE float16_t operator/=(const float16_t& y)
   {
-#if defined(FLOAT16T_ON_CUDA_DEVICE)
+#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
     x /= y.Get();
 #else
     x = this->Get() / y.Get();
@@ -199,7 +207,7 @@ PROVIDE_MIXED_INTEGRAL_FLOAT16T_COMPARISON_OPERATOR(!=, int);
 // function is sqrt
 GT_INLINE float16_t sqrt(const float16_t& x)
 {
-#if defined(FLOAT16T_ON_CUDA_DEVICE)
+#if defined(FLOAT16T_ON_CUDA_DEVICE) || defined(FLOAT16T_ON_HIP_DEVICE)
   return hsqrt(x.Get());
 #else
   return std::sqrt(x.Get());
@@ -215,7 +223,9 @@ std::ostream& operator<<(std::ostream& s, const float16_t& h)
 } // namespace gt
 
 #undef GTENSOR_FP16_CUDA_HEADER
+#undef GTENSOR_FP16_HIP_HEADER
 #undef FLOAT16T_ON_CUDA_DEVICE
+#undef FLOAT16T_ON_HIP_DEVICE
 #undef PROVIDE_FLOAT16T_UNARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
 #undef PROVIDE_MIXED_FLOAT16T_BINARY_ARITHMETIC_OPERATOR
