@@ -47,56 +47,56 @@ class bfloat16_t
 
 public:
   bfloat16_t() = default;
-  GT_INLINE bfloat16_t(float x) : x(x){};
-  GT_INLINE bfloat16_t(storage_type x) : x(x){};
+  GT_INLINE bfloat16_t(float x) : x_(x){};
+  GT_INLINE bfloat16_t(storage_type x) : x_(x){};
 
   GT_INLINE const bfloat16_t& operator=(const float f)
   {
-    x = f;
+    x_ = f;
     return *this;
   }
-  GT_INLINE compute_type Get() const { return static_cast<compute_type>(x); }
+  GT_INLINE compute_type Get() const { return static_cast<compute_type>(x_); }
 
   // update operators [+=, -=, *=, /=]
   GT_INLINE bfloat16_t operator+=(const bfloat16_t& y)
   {
 #if defined(BFLOAT16T_ON_DEVICE)
-    x += y.Get();
+    x_ += y.Get();
 #else
-    x = this->Get() + y.Get();
+    x_ = this->Get() + y.Get();
 #endif
     return *this;
   }
   GT_INLINE bfloat16_t operator-=(const bfloat16_t& y)
   {
 #if defined(BFLOAT16T_ON_DEVICE)
-    x -= y.Get();
+    x_ -= y.Get();
 #else
-    x = this->Get() - y.Get();
+    x_ = this->Get() - y.Get();
 #endif
     return *this;
   }
   GT_INLINE bfloat16_t operator*=(const bfloat16_t& y)
   {
 #if defined(BFLOAT16T_ON_DEVICE)
-    x *= y.Get();
+    x_ *= y.Get();
 #else
-    x = this->Get() * y.Get();
+    x_ = this->Get() * y.Get();
 #endif
     return *this;
   }
   GT_INLINE bfloat16_t operator/=(const bfloat16_t& y)
   {
 #if defined(BFLOAT16T_ON_DEVICE)
-    x /= y.Get();
+    x_ /= y.Get();
 #else
-    x = this->Get() / y.Get();
+    x_ = this->Get() / y.Get();
 #endif
     return *this;
   }
 
 private:
-  storage_type x;
+  storage_type x_;
 };
 
 // op is unary [+, -]
