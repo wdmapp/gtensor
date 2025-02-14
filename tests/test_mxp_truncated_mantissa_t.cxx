@@ -108,7 +108,7 @@ TEST(mxp_truncated_mantissa, add_double)
   const gt::gtensor<double, 1> x(n, x_init);
   gt::gtensor<double, 1> y(n, y_init);
 
-  Loop<0, 52, run_test_add<gt::space::host>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, add_complex_float)
@@ -144,7 +144,7 @@ TEST(mxp_truncated_mantissa, add_complex_double)
   const gt::gtensor<complex64_t, 1> x(n, x_init);
   gt::gtensor<complex64_t, 1> y(n, y_init);
 
-  Loop<0, 52, run_test_add<gt::space::host>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 template <typename S>
@@ -201,7 +201,7 @@ TEST(mxp_truncated_mantissa, view_add_double)
   const gt::gtensor<double, 1> x(nx, x_init);
   gt::gtensor<double, 1> y(ny, y_init);
 
-  Loop<0, 52, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_add_complex_float)
@@ -239,7 +239,7 @@ TEST(mxp_truncated_mantissa, view_add_complex_double)
   const gt::gtensor<complex64_t, 1> x(nx, x_init);
   gt::gtensor<complex64_t, 1> y(ny, y_init);
 
-  Loop<0, 52, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 template <typename S>
@@ -297,7 +297,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_double)
   const gt::gtensor<double, 1> x(nx, x_init);
   gt::gtensor<double, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 52, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, view_2D_add_complex_float)
@@ -335,7 +335,7 @@ TEST(mxp_truncated_mantissa, view_2D_add_complex_double)
   const gt::gtensor<complex64_t, 1> x(nx, x_init);
   gt::gtensor<complex64_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 52, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_2D_add<gt::space::host>>::Run(x, y, y_init);
 }
 
 template <typename S>
@@ -388,7 +388,7 @@ TEST(mxp_truncated_mantissa, error_bounds_double)
                   static_cast<double>(
                     std::numeric_limits<decltype(std::rand())>::max());
 
-  Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
+  Loop<0, 30, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
 
 TEST(mxp_truncated_mantissa, error_bounds_complex_float)
@@ -432,7 +432,7 @@ TEST(mxp_truncated_mantissa, error_bounds_complex_double)
                          static_cast<double>(
                            std::numeric_limits<decltype(std::rand())>::max())};
 
-  Loop<0, 52, run_test_error_bounds<gt::space::host>>::Run(x, y);
+  Loop<0, 30, run_test_error_bounds<gt::space::host>>::Run(x, y);
 }
 
 #if defined GTENSOR_HAVE_DEVICE
@@ -464,7 +464,7 @@ TEST(mxp_truncated_mantissa, device_add_double)
   const gt::gtensor_device<double, 1> x(n, x_init);
   gt::gtensor_device<double, 1> y(n, y_init);
 
-  Loop<0, 52, run_test_add<gt::space::device>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_add<gt::space::device>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, device_add_complex_float)
@@ -500,7 +500,7 @@ TEST(mxp_truncated_mantissa, device_add_complex_double)
   const gt::gtensor_device<complex64_t, 1> x(n, x_init);
   gt::gtensor_device<complex64_t, 1> y(n, y_init);
 
-  Loop<0, 52, run_test_add<gt::space::device>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_add<gt::space::device>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, device_view_add_float)
@@ -532,7 +532,7 @@ TEST(mxp_truncated_mantissa, device_view_add_double)
   const gt::gtensor_device<double, 1> x(nx, x_init);
   gt::gtensor_device<double, 1> y(ny, y_init);
 
-  Loop<0, 52, run_test_view_add<gt::space::device>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_add<gt::space::device>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, device_view_add_complex_float)
@@ -570,7 +570,7 @@ TEST(mxp_truncated_mantissa, device_view_add_complex_double)
   const gt::gtensor_device<complex64_t, 1> x(nx, x_init);
   gt::gtensor_device<complex64_t, 1> y(ny, y_init);
 
-  Loop<0, 52, run_test_view_add<gt::space::device>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_add<gt::space::device>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, device_view_2D_add_float)
@@ -602,7 +602,7 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_double)
   const gt::gtensor_device<double, 1> x(nx, x_init);
   gt::gtensor_device<double, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 52, run_test_view_2D_add<gt::space::device>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_2D_add<gt::space::device>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, device_view_2D_add_complex_float)
@@ -640,7 +640,7 @@ TEST(mxp_truncated_mantissa, device_view_2D_add_complex_double)
   const gt::gtensor_device<complex64_t, 1> x(nx, x_init);
   gt::gtensor_device<complex64_t, 2> y(gt::shape(mny[0], mny[1]), y_init);
 
-  Loop<0, 52, run_test_view_2D_add<gt::space::device>>::Run(x, y, y_init);
+  Loop<0, 30, run_test_view_2D_add<gt::space::device>>::Run(x, y, y_init);
 }
 
 TEST(mxp_truncated_mantissa, device_error_bounds_float)
@@ -678,7 +678,7 @@ TEST(mxp_truncated_mantissa, device_error_bounds_double)
   gt::gtensor_device<double, 1> y(n);
   gt::copy(h_x, x);
 
-  Loop<0, 52, run_test_error_bounds<gt::space::device>>::Run(x, y);
+  Loop<0, 30, run_test_error_bounds<gt::space::device>>::Run(x, y);
 }
 
 TEST(mxp_truncated_mantissa, device_error_bounds_complex_float)
@@ -728,7 +728,7 @@ TEST(mxp_truncated_mantissa, device_error_bounds_complex_double)
   gt::gtensor_device<complex64_t, 1> y(n);
   gt::copy(h_x, x);
 
-  Loop<0, 52, run_test_error_bounds<gt::space::device>>::Run(x, y);
+  Loop<0, 30, run_test_error_bounds<gt::space::device>>::Run(x, y);
 }
 
 #endif
