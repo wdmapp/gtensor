@@ -50,11 +50,11 @@ constexpr uint_t<fp_t> mantissa_mask{
 // clang-format off
 // (messes with triple consecutive angle brackets)
 
-template <typename fp_t, std::uint8_t bits>
+template <typename fp_t, std::uint16_t bits>
 constexpr uint_t<fp_t> reduced_mantissa_mask{mantissa_mask<fp_t> ^
                                              (mantissa_mask<fp_t> >> bits)};
 
-template <typename fp_t, std::uint8_t bits>
+template <typename fp_t, std::uint16_t bits>
 constexpr uint_t<fp_t> reduced_rounding_mask{mantissa_mask<fp_t> >> (bits + 1)};
 
 // clang-format on
@@ -78,7 +78,7 @@ using decay_strip_complex_t = typename decay_strip_complex<fp_t>::type;
 
 // -------------------------------------------------------------------------- //
 
-template <typename fp_t, std::uint8_t bits>
+template <typename fp_t, std::uint16_t bits>
 struct mantissa_bits_available
   : public std::conditional_t<
       (is_decay_float<decay_strip_complex_t<fp_t>> && (bits <= 23)) ||
@@ -86,7 +86,7 @@ struct mantissa_bits_available
       std::true_type, std::false_type>
 {};
 
-template <typename fp_t, std::uint8_t bits>
+template <typename fp_t, std::uint16_t bits>
 constexpr bool mantissa_bits_available_v =
   mantissa_bits_available<fp_t, bits>::value;
 
@@ -96,7 +96,7 @@ constexpr bool mantissa_bits_available_v =
 
 // __________________________________________________________________________ //
 
-template <typename fp_t, std::uint8_t bits>
+template <typename fp_t, std::uint16_t bits>
 class mxp_truncated_mantissa_t
 {
 public:

@@ -36,7 +36,7 @@ struct accessor
   typedef CT type;
 };
 
-template <typename fp_t, std::uint8_t bits, typename ST>
+template <typename fp_t, std::uint16_t bits, typename ST>
 struct accessor<mxp_truncated_mantissa_t<fp_t, bits>, ST>
 {
   typedef std::enable_if_t<

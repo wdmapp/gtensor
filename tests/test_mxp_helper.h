@@ -9,7 +9,7 @@
 // auxiliary to loop over compile time <bits>
 // in test_mxp_truncated_mantissa_t.cxx
 
-template <std::uint8_t From, std::uint8_t To, typename Task>
+template <std::uint16_t From, std::uint16_t To, typename Task>
 struct Loop
 {
   template <typename... Args>
@@ -20,7 +20,7 @@ struct Loop
   }
 };
 
-template <std::uint8_t Final, typename Task>
+template <std::uint16_t Final, typename Task>
 struct Loop<Final, Final, Task>
 {
   template <typename... Args>
