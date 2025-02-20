@@ -151,13 +151,15 @@ private:
   static GT_INLINE underlying_fp_t
   get_truncated_mantissa_value_impl(const underlying_fp_t& FP_src)
   {
+    // clang-format off
+    // (messes with bitwise arithmetic operator&)
     uint_t BIN_src;
     general_memcpy_single_val(&FP_src, &BIN_src);
 
     // binary BIN_oneexp: S E...E (1)0...0
     // [S, E like src; mantissa: implicit one, then all zeroes]
     uint_t BIN_oneexp{(mxp_detail::sign_mask<underlying_fp_t> |
-                       mxp_detail::exponent_mask<underlying_fp_t>)&BIN_src};
+                       mxp_detail::exponent_mask<underlying_fp_t>) & BIN_src};
     underlying_fp_t FP_oneexp;
     general_memcpy_single_val(&BIN_oneexp, &FP_oneexp);
 
@@ -177,11 +179,12 @@ private:
     uint_t BIN_result{
       (mxp_detail::sign_mask<underlying_fp_t> |
        mxp_detail::exponent_mask<underlying_fp_t> |
-       mxp_detail::reduced_mantissa_mask<underlying_fp_t, bits>)&BIN_tmp};
+       mxp_detail::reduced_mantissa_mask<underlying_fp_t, bits>) & BIN_tmp};
 
     underlying_fp_t FP_result;
     general_memcpy_single_val(&BIN_result, &FP_result);
     return FP_result;
+    // clang-format on
   }
 
   // ------------------------------------------------------------------------ //
