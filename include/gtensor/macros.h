@@ -90,8 +90,11 @@ inline auto gpuGetLastError() { return cudaGetLastError(); }
 inline void gtLaunchCheck(dim3 numblocks, dim3 numthreads, const char* file,
                           int line)
 {
-  if (hipGetLastError() != hipSuccess) {
-    fprintf(stderr, "launch failed %s %d\n", file, line);
+  hipError_t last_error = hipGetLastError();
+  if (last_error != hipSuccess) {
+    fprintf(stderr, "launch failed %s %d, error_code: %d\n", file, line,
+            last_error);
+    fprintf(stderr, "(%s)\n", hipGetErrorString(last_error));
     fprintf(stderr, "blocks was [%d, %d, %d]\n", numblocks.x, numblocks.y,
             numblocks.z);
     fprintf(stderr, "threads was [%d, %d, %d]\n", numthreads.x, numthreads.y,
