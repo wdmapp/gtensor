@@ -201,8 +201,6 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_HAVE_DEVICE)
   target_compile_definitions(gtensor_hip INTERFACE GTENSOR_DEVICE_HIP)
 
-  #set(GPU_TARGETS "${HIP_GPU_ARCHITECTURES}"
-  #    CACHE STRING "GPU targets to compile for")
   find_package(hip REQUIRED)
   find_package(rocthrust REQUIRED)
 

@@ -92,7 +92,8 @@ inline void gtLaunchCheck(dim3 numblocks, dim3 numthreads, const char* file,
 {
   hipError_t last_error = hipGetLastError();
   if (last_error != hipSuccess) {
-    fprintf(stderr, "launch failed %s %d, error_code: %d\n", file, line,last_error);
+    fprintf(stderr, "launch failed %s %d, error_code: %d\n", file, line,
+            last_error);
     fprintf(stderr, "(%s)\n", hipGetErrorString(last_error));
     fprintf(stderr, "blocks was [%d, %d, %d]\n", numblocks.x, numblocks.y,
             numblocks.z);
