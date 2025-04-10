@@ -275,8 +275,11 @@ struct wrap_allocator
   using pointer = gt::space_pointer<T, S>;
   using size_type = gt::size_type;
 
-  pointer allocate(size_type n) { return pointer(A::template allocate<T>(n)); }
-  void deallocate(pointer p, size_type n)
+  static pointer allocate(size_type n)
+  {
+    return pointer(A::template allocate<T>(n));
+  }
+  static void deallocate(pointer p, size_type n)
   {
     A::deallocate(gt::pointer_traits<pointer>::get(p));
   }
