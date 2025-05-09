@@ -29,7 +29,7 @@ using complex = thrust::complex<T>;
 
 // TODO: this will hopefully be standardized soon and be sycl::complex
 template <typename T>
-using complex = gt::sycl_cplx::complex<T>;
+using complex = gt::sycl_cplx::complex<T, void>;
 
 #else // fallback to std::complex, e.g. for host backend
 
