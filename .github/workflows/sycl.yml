@@ -10,7 +10,7 @@ on:
 jobs:
   test-sycl:
     runs-on: ubuntu-latest
-    container: intel/oneapi-basekit:2023.1.0-devel-ubuntu22.04
+    container: intel/oneapi-basekit:2025.3.0-0-devel-ubuntu24.04
     env:
       GTEST_VERSION: 1.12.1
       GTEST_ROOT: ${{ github.workspace }}/googletest
