@@ -139,13 +139,7 @@ macro(add_gtensor_library DEVICE)
        $<INSTALL_INTERFACE:include>
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   )
-  if ("${GTENSOR_DEVICE}" STREQUAL "sycl")
-    # Note: SYCL 2020 standard requires C++17, and gtensor takes advantage of this
-    # in some SYCL backend specific code
-    target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_17)
-  else()
-    target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_14)
-  endif()
+  target_compile_features(gtensor_${DEVICE} INTERFACE cxx_std_17)
 
   list(APPEND GTENSOR_TARGETS gtensor_${DEVICE})
 
