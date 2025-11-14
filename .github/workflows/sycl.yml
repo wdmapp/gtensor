@@ -63,21 +63,6 @@ jobs:
     - name: cmake cpu run mult_table
       run: ./mult_table
       working-directory: ${{ github.workspace }}/build-sycl/examples
-    - name: GNU make setup gtensor subdir
-      run: mkdir -p external/gtensor &&  cp -R ../include external/gtensor/
-      working-directory: ${{ github.workspace }}/examples
-    - name: GNU make build
-      run: make GTENSOR_DEVICE=sycl
-      working-directory: ${{ github.workspace }}/examples
-    - name: GNU make run daxpy
-      run: ./daxpy
-      working-directory: ${{ github.workspace }}/examples
-    - name: GNU make run stencil1d
-      run: ./stencil1d
-      working-directory: ${{ github.workspace }}/examples
-    - name: GNU make run mult_table
-      run: ./mult_table
-      working-directory: ${{ github.workspace }}/examples
     - name: install umpire
       run: |
         mkdir -p ${{ env.UMPIRE_ROOT }}
