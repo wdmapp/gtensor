@@ -24,13 +24,13 @@ namespace sycl
 {
 
 // kernel name templates
-template <typename E1, typename E2, typename K1, typename K2>
+template <typename K1, typename K2>
 class Assign1;
-template <typename E1, typename E2, typename K1, typename K2>
+template <typename K1, typename K2>
 class Assign2;
-template <typename E1, typename E2, typename K1, typename K2>
+template <typename K1, typename K2>
 class Assign3;
-template <typename E1, typename E2, typename K1, typename K2>
+template <typename K1, typename K2>
 class AssignN;
 
 template <typename F>
