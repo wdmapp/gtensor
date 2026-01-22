@@ -263,3 +263,5 @@ extern "C" int gpuStreamSynchronize(gt::stream_view::stream_t stream)
 }
 
 #endif
+
+extern "C" void gpuAllocatorClearCache() { gt::allocator_clear_caches(); }
