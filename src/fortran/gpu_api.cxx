@@ -140,6 +140,11 @@ extern "C" int gpuEventSynchronize(cudaEvent_t event)
   return static_cast<int>(cudaEventSynchronize(event));
 }
 
+extern "C" int gpuStreamWaitEvent(cudaStream_t stream, cudaEvent_t event)
+{
+  return static_cast<int>(cudaStreamWaitEvent(stream, event));
+}
+
 extern "C" int gpuMemcpyAsync(void* dst, const void* src, size_t bytes,
                               cudaMemcpyKind kind, cudaStream_t stream)
 {
@@ -180,6 +185,11 @@ extern "C" int gpuEventDestroy(hipEvent_t event)
 extern "C" int gpuEventRecord(hipEvent_t event, hipStream_t stream)
 {
   return static_cast<int>(hipEventRecord(event, stream));
+}
+
+extern "C" int gpuStreamWaitEvent(hipStream_t stream, hipEvent_t event)
+{
+  return static_cast<int>(hipStreamWaitEvent(stream, event));
 }
 
 extern "C" int gpuEventSynchronize(hipEvent_t event)

@@ -149,6 +149,12 @@ module gpu_api_m
          integer(C_INT) :: gpuEventRecord
       end function gpuEventRecord
 
+      function gpuStreamWaitEvent(streamid, event) bind(c,name="gpuStreamWaitEvent")
+         import
+         type(C_PTR),value :: event,streamid
+         integer(C_INT) :: StreamWaitEvent
+      end function gpuStreamWaitEvent
+
       function gpuEventSynchronize(event) bind(c,name="gpuEventSynchronize")
          import
          type(C_PTR),value :: event
