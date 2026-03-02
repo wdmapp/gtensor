@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 project(gtensor
         VERSION 0.01
         LANGUAGES CXX
@@ -79,7 +79,7 @@ set(HIP_PATH "${ROCM_PATH}/hip" CACHE STRING "path to HIP installation")
 if(GTENSOR_GPU_ARCHITECTURES STREQUAL "default")
   set(CMAKE_HIP_ARCHITECTURES "gfx90a")
 else()
-  set(CMAKE_HIP_ARCHITECTURES ${GTENSOR_GPU_ARCHITECTURES})
+  set(CMAKE_HIP_ARCHITECTURES "${GTENSOR_GPU_ARCHITECTURES}")
 endif()
 
 # SYCL specific configuration
@@ -176,6 +176,7 @@ endif()
 
 if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   message(STATUS "${PROJECT_NAME}: adding gtensor_hip target")
+  enable_language(HIP)
   add_gtensor_library(hip)
 
   if(NOT (CMAKE_CXX_COMPILER MATCHES ".*/hcc$" OR CMAKE_CXX_COMPILER MATCHES ".*/hipcc$"))

@@ -8,6 +8,10 @@ function(target_gtensor_sources TARGET)
     set_source_files_properties(${target_gtensor_sources_PRIVATE}
                                 TARGET_DIRECTORY ${TARGET}
                                 PROPERTIES LANGUAGE CUDA)
+  elseif("${GTENSOR_DEVICE}" STREQUAL "hip")
+    set_source_files_properties(${target_gtensor_sources_PRIVATE}
+      TARGET_DIRECTORY ${TARGET}
+      PROPERTIES LANGUAGE HIP)
   else()
     set_source_files_properties(${target_gtensor_sources_PRIVATE}
                                 TARGET_DIRECTORY ${TARGET}
