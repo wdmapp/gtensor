@@ -179,9 +179,9 @@ if ("hip" IN_LIST GTENSOR_BUILD_DEVICES)
   enable_language(HIP)
   add_gtensor_library(hip)
 
-  if(NOT (CMAKE_CXX_COMPILER MATCHES ".*/hcc$" OR CMAKE_CXX_COMPILER MATCHES ".*/hipcc$"))
-    message(FATAL_ERROR "For GTENSOR_BUILD_DEVICES=hip, 'hcc' or 'hipcc' must be used as C++ compiler.")
-  endif()
+  #if(NOT (CMAKE_CXX_COMPILER MATCHES ".*/hcc$" OR CMAKE_CXX_COMPILER MATCHES ".*/hipcc$"))
+  #  message(FATAL_ERROR "For GTENSOR_BUILD_DEVICES=hip, 'hcc' or 'hipcc' must be used as C++ compiler.")
+  #endif()
 
   # The official ROCm/HIP cmake support causes problems on mixed language
   # executables, where hipcc specific flags leak into the other language
