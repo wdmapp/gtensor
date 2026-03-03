@@ -166,7 +166,7 @@ if ("cuda" IN_LIST GTENSOR_BUILD_DEVICES)
     CPMAddPackage(
       NAME rmm
       GITHUB_REPOSITORY rapidsai/rmm
-      VERSION 23.02.00
+      VERSION 26.02.00
     )
     target_compile_definitions(gtensor_cuda INTERFACE
       GTENSOR_USE_MEMORY_POOL GTENSOR_USE_RMM)
