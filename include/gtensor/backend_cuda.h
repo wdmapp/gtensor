@@ -264,7 +264,12 @@ public:
     if (mtype != gt::backend::managed_memory_type::device) {
       int device_id;
       gtGpuCheck(cudaGetDevice(&device_id));
+#if ( CUDA_VERSION / 1000 ) >=13
+      cudaMemLocation memLocation{cudaMemLocationTypeDevice,device_id};
+      gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), memLocation, device_id, nullptr));
+#else
       gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+#endif
     }
 #endif
   }
@@ -275,8 +280,14 @@ public:
 #ifndef GTENSOR_DISABLE_PREFETCH
     auto mtype = gt::backend::get_managed_memory_type();
     if (mtype != gt::backend::managed_memory_type::device) {
+#if ( CUDA_VERSION / 1000 ) >=13
+      cudaMemLocation memLocation;
+      memLocation.type=cudaMemLocationTypeHostNuma;
+      gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), memLocation, cudaCpuDeviceId, nullptr));
+#else
       gtGpuCheck(
         cudaMemPrefetchAsync(p, n * sizeof(T), cudaCpuDeviceId, nullptr));
+#endif
     }
 #endif
   }
