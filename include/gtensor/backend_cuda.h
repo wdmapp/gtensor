@@ -4,8 +4,8 @@
 
 #include "backend_common.h"
 
+#include <cuda.h>
 #include <cuda_runtime_api.h>
-
 // #include "thrust/cuda/system/execution_policy.h"
 #include "thrust/execution_policy.h"
 
@@ -264,7 +264,13 @@ public:
     if (mtype != gt::backend::managed_memory_type::device) {
       int device_id;
       gtGpuCheck(cudaGetDevice(&device_id));
+#if (CUDA_VERSION >= 13000)
+      cudaMemLocation memLocation{cudaMemLocationTypeDevice, device_id};
+      gtGpuCheck(
+        cudaMemPrefetchAsync(p, n * sizeof(T), memLocation, 0, nullptr));
+#else
       gtGpuCheck(cudaMemPrefetchAsync(p, n * sizeof(T), device_id, nullptr));
+#endif
     }
 #endif
   }
@@ -275,8 +281,14 @@ public:
 #ifndef GTENSOR_DISABLE_PREFETCH
     auto mtype = gt::backend::get_managed_memory_type();
     if (mtype != gt::backend::managed_memory_type::device) {
+#if (CUDA_VERSION >= 13000)
+      cudaMemLocation memLocation{cudaMemLocationTypeHostNuma, cudaCpuDeviceId};
+      gtGpuCheck(
+        cudaMemPrefetchAsync(p, n * sizeof(T), memLocation, 0, nullptr));
+#else
       gtGpuCheck(
         cudaMemPrefetchAsync(p, n * sizeof(T), cudaCpuDeviceId, nullptr));
+#endif
     }
 #endif
   }

@@ -14,7 +14,7 @@ GTENSOR_DEVICE_DEFINE := GTENSOR_DEVICE_$(shell echo $(GTENSOR_DEVICE) | tr a-z 
 GTENSOR_DEFINES = -D$(GTENSOR_DEVICE_DEFINE)
 GTENSOR_INCLUDES = -I$(GTENSOR_DIR)/include
 GTENSOR_LIBS =
-GTENSOR_OPTIONS = -std=c++14 -O2
+GTENSOR_OPTIONS = -std=c++17 -O2
 ifeq ($(GTENSOR_DEVICE),cuda)
   GTENSOR_CXX ?= nvcc
   GTENSOR_OPTIONS += -x cu --expt-extended-lambda --expt-relaxed-constexpr
