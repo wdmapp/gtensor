@@ -250,25 +250,29 @@ contains
    !! This is in contrast to round robin assignment, which could be
    !! added as an option in the future if needed.
    !! Assumptions:
-   !!  - all nodes have same number of devices and same number of MPI ranks.
    !!  - ranks are assigned to nodes in a linear fashion
    function get_gpu_device_for_rank(rank, ranks_per_node, devices_per_node) result(device_id)
       integer, intent(IN) :: rank, ranks_per_node, devices_per_node
       integer :: device_id
       integer :: node_rank, ranks_per_device
-
-      node_rank = modulo(rank, ranks_per_node)
-      ! Note: purposely truncate, non-divisor case handled by modulo below
-      ranks_per_device = ranks_per_node / devices_per_node
-      if (ranks_per_device == 0) then
-         ! ranks < devices per node
+      if (ranks_per_node==-1) then
+         !uneven distribution, linear in the node
          ranks_per_device = 1
-      end if
+         device_id = modulo(rank, devices_per_node)
+      else
+         node_rank = modulo(rank, ranks_per_node)
+         ! Note: purposely truncate, non-divisor case handled by modulo below
+         ranks_per_device = ranks_per_node / devices_per_node
+         if (ranks_per_device == 0) then
+            ! ranks < devices per node
+            ranks_per_device = 1
+         end if
 
-      ! Note: integer divide by ranks_per_device => linear assignment
-      !       modulo devices per node => round robin
-      ! Modulo is to handle uneven cases, e.g. 6 mpi 5 gpu
-      device_id = modulo(node_rank / ranks_per_device, devices_per_node)
+         ! Note: integer divide by ranks_per_device => linear assignment
+         !       modulo devices per node => round robin
+         ! Modulo is to handle uneven cases, e.g. 6 mpi 5 gpu
+         device_id = modulo(node_rank / ranks_per_device, devices_per_node)
+      endif
    end function get_gpu_device_for_rank
 
    !> Get a 10 character string representing the vendor id of the GPU
