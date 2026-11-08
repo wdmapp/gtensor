@@ -1,0 +1,117 @@
+name: CUDA tests (simulated H100)
+
+# Optional, non-required check. The hosted runners have no GPU, so this builds
+# the gtensor test suite with the CUDA backend and runs it on a simulated
+# NVIDIA H100 (https://github.com/pantheongpu/pantheonsim). A simulator cannot
+# reproduce hardware-specific behavior or timing, so it complements real-GPU
+# testing and does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "include/**"
+      - "src/**"
+      - "tests/**"
+      - "cmake/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cuda-sim:
+    name: CUDA 13.0, simulated H100
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up the simulated GPU and CUDA toolkit
+        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        with:
+          gpu: nvidia/h100
+          cuda-toolkit: "13.0"
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-gpu-sim-${{ github.sha }}
+          restore-keys: |
+            ccache-gpu-sim-
+
+      # The simulator runs PTX only (90-virtual) and needs a shared CUDA
+      # runtime. Test discovery is switched off so that nothing has to run a
+      # test binary while building. BLAS, FFT and the solver are left off:
+      # they need the cuBLAS, cuFFT and cuSOLVER libraries.
+      - name: Configure project
+        run: |
+          cmake -B build -S . -GNinja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
+                -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
+                -DCMAKE_CUDA_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared \
+                -DGTENSOR_DEVICE=cuda \
+                -DGTENSOR_GPU_ARCHITECTURES=90-virtual \
+                -DGTENSOR_USE_THRUST=ON \
+                -DGTENSOR_ENABLE_FP16=ON \
+                -DGTENSOR_ENABLE_BF16=ON \
+                -DGTENSOR_ENABLE_BLAS=OFF \
+                -DGTENSOR_ENABLE_FFT=OFF \
+                -DGTENSOR_ENABLE_SOLVER=OFF \
+                -DUSE_GTEST_DISCOVER_TESTS=OFF
+
+      # The two complex half-precision tests (test_complex_float16_t and
+      # test_complex_bfloat16_t) do not compile with Thrust on CUDA 13 (no
+      # matching gt::norm and gt::conj for the half complex types in
+      # complex_ops.h), independent of the simulator, so they are not built.
+      - name: Build tests
+        run: |
+          ccache -z
+          targets=$(ninja -C build -t targets all | grep -o '^tests/test_[a-z_0-9]*' | sort -u \
+                    | grep -v -e '_complex_float16_t$' -e '_complex_bfloat16_t$' | tr '\n' ' ')
+          echo "targets: $targets"
+          cmake --build build -j3 --target $targets
+          ccache -s
+
+      # Two cases in test_device_backend are skipped because they fail on a
+      # real GPU as well, independent of the simulator:
+      # - managed_prefetch: prefetch_host() calls cudaMemPrefetchAsync with
+      #   cudaMemLocationTypeHostNuma and cudaCpuDeviceId, which the CUDA 13
+      #   runtime rejects with "invalid argument" (cudaMemLocationTypeHost is
+      #   the location type for the host).
+      # - get_memory_type: cudaPointerGetAttributes reports plain host memory
+      #   as cudaMemoryTypeUnregistered (0) with success, which get_memory_type()
+      #   treats as unknown and aborts.
+      - name: Run tests
+        working-directory: build/tests
+        run: |
+          failed=""
+          for t in ./test_*; do
+            [ -x "$t" ] || continue
+            filter="*"
+            [ "$t" = "./test_device_backend" ] && filter="-device_backend.managed_prefetch:device_backend.get_memory_type"
+            echo "::group::$t"
+            vgpu run "$t" --gtest_filter="$filter" || failed="$failed $t"
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "Failed test programs:$failed"
+            exit 1
+          fi
